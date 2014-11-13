@@ -1,4 +1,4 @@
-QtApps
+Management System
 ======
 
 Qt Applications
