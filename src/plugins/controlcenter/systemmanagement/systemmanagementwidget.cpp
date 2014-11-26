@@ -145,25 +145,25 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
     if(departments.isEmpty()){
         departments.insert("it", tr("IT"));
-        departments.insert("ac", tr("Account"));
-        departments.insert("ad", tr("AdminDept"));
-        departments.insert("co", tr("Cost"));
+        departments.insert("ac", tr("Accounting"));
+        departments.insert("ad", tr("Administration"));
+        departments.insert("co", tr("Cost Control"));
         departments.insert("cu", tr("Custom"));
         departments.insert("gm", tr("GMO"));
         departments.insert("hr", tr("HR"));
         departments.insert("ma", tr("Marker"));
         departments.insert("pd", tr("PDS"));
         departments.insert("pg", tr("PG"));
-        departments.insert("pl", tr("Plan"));
+        departments.insert("pl", tr("Planning"));
         departments.insert("pm", tr("PMC"));
         departments.insert("qc", tr("QC"));
         departments.insert("re", tr("Retail"));
         departments.insert("sa", tr("Sales"));
         //departmentsHash.insert("", tr("Sample"));
         departments.insert("se", tr("Secretary"));
-        departments.insert("sh", tr("Ship"));
+        departments.insert("sh", tr("Shipping"));
         departments.insert("sp", tr("Shop"));
-        departments.insert("wh", tr("WHouse"));
+        departments.insert("wh", tr("Warehouse"));
     }
     QString department = computerName.mid(2, 2).toLower();
 //    int index = -1;
@@ -566,6 +566,8 @@ void SystemManagementWidget::on_pushButtonPrograms_clicked(){
 }
 
 void SystemManagementWidget::on_pushButtonShowAdmin_clicked(){
+    QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
+    return;
 
     bool ok = controlCenterPacketsParser->sendShowAdminPacket(m_peerSocket, m_computerName, m_users, true);
     if(!ok){

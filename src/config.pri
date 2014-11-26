@@ -3,9 +3,9 @@
 include( ../config_global.pri )
 
 
-VER_MAJ = 2013
-VER_MIN = 2
-VER_PAT = 19
+VER_MAJ = 2014
+VER_MIN = 11
+VER_PAT = 26
 VER_CMP = 1
 
 VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}.$${VER_CMP}

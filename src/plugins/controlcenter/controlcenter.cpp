@@ -211,7 +211,7 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
                 ui.lineEditComputerName->setReadOnly(false);
                 ui.lineEditUserName->setReadOnly(false);
 
-                ui.comboBoxWorkgroup->setEnabled(true);
+                //ui.comboBoxWorkgroup->setEnabled(true);
                 ui.comboBoxUSBSD->setEnabled(true);
 
                 ui.lineEditMACAddress->setReadOnly(false);
@@ -824,6 +824,8 @@ void ControlCenter::slotRemoteDesktop(){
 }
 
 void ControlCenter::slotVNC(){
+    QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
+    return;
 
     if(!vncProcess){
         vncProcess = new QProcess(this);
@@ -863,8 +865,10 @@ void ControlCenter::slotVNC(){
 }
 
 void ControlCenter::slotUpdateUserLogonPassword(){
+    QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
+    return;
     
-    if(m_adminName != "kiwa" && m_adminName != "hehui"){
+    if(m_adminName != "hehui"){
         QMessageBox::critical(this, tr("Error"), tr("You dont have the access permissions!"));
         return;
     }
@@ -886,8 +890,11 @@ void ControlCenter::slotUpdateUserLogonPassword(){
 }
 
 void ControlCenter::slotInformUserNewLogonPassword(){
+
+    QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
+    return;
     
-    if(m_adminName != "kiwa" && m_adminName != "hehui"){
+    if(m_adminName != "hehui"){
         QMessageBox::critical(this, tr("Error"), tr("You dont have the access permissions!"));
         return;
     }

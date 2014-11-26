@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>862</width>
+    <width>865</width>
     <height>515</height>
    </rect>
   </property>
@@ -121,12 +121,12 @@
              </item>
              <item>
               <property name="text">
-               <string notr="true">Account</string>
+               <string notr="true">Accounting</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string notr="true">AdminDept</string>
+               <string notr="true">Administration</string>
               </property>
              </item>
              <item>
@@ -141,7 +141,7 @@
              </item>
              <item>
               <property name="text">
-               <string>GMO</string>
+               <string notr="true">GMO</string>
               </property>
              </item>
              <item>
@@ -176,7 +176,7 @@
              </item>
              <item>
               <property name="text">
-               <string notr="true">Purchase</string>
+               <string notr="true">Purchasing</string>
               </property>
              </item>
              <item>
@@ -186,7 +186,7 @@
              </item>
              <item>
               <property name="text">
-               <string>Retail</string>
+               <string notr="true">Retail</string>
               </property>
              </item>
              <item>
@@ -206,7 +206,7 @@
              </item>
              <item>
               <property name="text">
-               <string notr="true">Ship</string>
+               <string notr="true">Shipping</string>
               </property>
              </item>
              <item>
@@ -506,7 +506,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>862</width>
+     <width>865</width>
      <height>23</height>
     </rect>
    </property>

@@ -504,20 +504,16 @@ void MainWindow::slotQuit() {
 void MainWindow::savePreferedStyle(const QString &preferedStyle, bool useStylePalette){
     Settings::instance()->setStyle(preferedStyle);
     Settings::instance()->setPalette(useStylePalette);
-
 }
 
 void MainWindow::savePreferedLanguage(const QString &preferedLanguage){
     Settings::instance()->setLanguage(preferedLanguage);
-
 }
 
 void MainWindow::retranslateUi() {
-
     //重新翻译UI
     //Retranslate UI
     ui.retranslateUi(this);
-
 }
 
 bool MainWindow::hasActiveMDIChild(){
