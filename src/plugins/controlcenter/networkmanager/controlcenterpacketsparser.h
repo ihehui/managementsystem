@@ -176,7 +176,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendSetupUSBSDPacket(int socketID, const QString &computerName, const QString &userName, bool enable, bool temporarilyAllowed, const QString &adminName){
+    bool sendSetupUSBSDPacket(int socketID, const QString &computerName, const QString &userName, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::AdminRequestSetupUSBSD));
@@ -185,7 +185,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << computerName << userName << enable << temporarilyAllowed << adminName;
+        out << m_localID << computerName << userName << usbSTORStatus << temporarilyAllowed << adminName;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -258,7 +258,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRenameComputerPacket(int socketID, const QString &oldComputerName, const QString &newComputerName, const QString &adminName){
+    bool sendRenameComputerPacket(int socketID, const QString &oldComputerName, const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::RenameComputer));
@@ -266,7 +266,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << oldComputerName << newComputerName << adminName;
+        out << m_localID << oldComputerName << newComputerName << adminName << domainAdminName << domainAdminPassword;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -278,7 +278,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendJoinOrUnjoinDomainPacket(int socketID, const QString &computerName, const QString &adminName, bool join, const QString &domainOrWorkgroupName){
+    bool sendJoinOrUnjoinDomainPacket(int socketID, const QString &computerName, const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::JoinOrUnjoinDomain));
@@ -286,7 +286,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << computerName << adminName << join << domainOrWorkgroupName;
+        out << m_localID << computerName << adminName << join << domainOrWorkgroupName << domainAdminName << domainAdminPassword;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -759,7 +759,7 @@ signals:
     void signalUserResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
     void signalNewPasswordRetrevedByUserPacketReceived(const QString &userName, const QString &computerName);
     
-    void signalClientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, bool usbsdEnabled, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
+    void signalClientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
 
 
     ///////////////////////////

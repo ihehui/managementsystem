@@ -58,12 +58,12 @@ private slots:
     void processClientDetailedInfoRequestedPacket(const QString &computerName, bool rescan, int socketID);
     void scanFinished(bool ok, const QString &message);
 
-    void processSetupUSBSDPacket(const QString &computerName, const QString &users, bool enable, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort);
+    void processSetupUSBSDPacket(const QString &computerName, const QString &users, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processSetupProgramesPacket(const QString &computerName, const QString &users, bool enable, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processShowAdminPacket(const QString &computerName, const QString &users, bool show);
     void processModifyAdminGroupUserPacket(const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
-    void processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
-    void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &adminAddress, quint16 adminPort);
+    void processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
+    void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 
     void processAdminRequestConnectionToClientPacket(int adminSocketID, const QString &computerName, const QString &users);
     void processAdminSearchClientPacket(const QString &adminAddress, quint16 adminPort, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName);
@@ -95,9 +95,10 @@ private slots:
 
     bool checkUsersAccount();
 
-    bool enableUSBSD(bool temporary);
-    void disableUSBSD();
-    bool isUSBSDEnabled();
+    bool setupUSBStorageDevice(bool readable, bool writeable, bool temporary);
+//    bool isUSBSDEnabled();
+    MS::USBSTORStatus readUSBStorageDeviceSettings();
+
     void checkUSBSD();
 
     bool enableProgrames(bool temporary);

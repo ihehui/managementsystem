@@ -22,7 +22,7 @@ class SystemManagementWidget : public QWidget
     Q_OBJECT
 
 public:
-    SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, const QString &computerName, const QString &users, const QString &peerIPAddress, const QString &peerMACAddress, bool usbsdEnabled = false, bool programesEnabled = false, const QString &admins = "", bool isJoinedToDomain = false, QWidget *parent = 0);
+    SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, const QString &computerName, const QString &users, const QString &peerIPAddress, const QString &peerMACAddress, quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown), bool programesEnabled = false, const QString &admins = "", bool isJoinedToDomain = false, QWidget *parent = 0);
     ~SystemManagementWidget();
 
 
@@ -80,7 +80,7 @@ private slots:
 
     void clientMessageReceived(const QString &computerName, const QString &message, quint8 clientMessageType);
 
-    void clientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, bool usbsdEnabled, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
+    void clientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
 
 
     void clientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
@@ -114,7 +114,7 @@ private:
     QString m_users;
     QHostAddress m_peerIPAddress;
     QString m_peerMACAddress;
-    bool m_usbsdEnabled;
+    quint8 m_usbSTORStatus;
     bool m_programesEnabled;
     bool m_isJoinedToDomain;
 

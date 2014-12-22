@@ -103,12 +103,12 @@
 #ifndef DOMAIN_NAME
 #define DOMAIN_NAME "sitoy.group"
 #endif
-#ifndef DOMAIN_ADMIN_NAME
-#define DOMAIN_ADMIN_NAME "dgadmin"
-#endif
-#ifndef DOMAIN_ADMIN_PASSWORD
-#define DOMAIN_ADMIN_PASSWORD "dmsto&*("
-#endif
+//#ifndef DOMAIN_ADMIN_NAME
+//#define DOMAIN_ADMIN_NAME "dgadmin"
+//#endif
+//#ifndef DOMAIN_ADMIN_PASSWORD
+//#define DOMAIN_ADMIN_PASSWORD "dmsto&*("
+//#endif
 
 #ifndef DEFAULT_MS_SERVER_HOST_NAME
 #define DEFAULT_MS_SERVER_HOST_NAME "DGIT01234"
@@ -241,7 +241,7 @@ namespace HEHUI {
 
         enum ClientMessageType{MSG_Information = 0, MSG_Warning, MSG_Critical};
         
-        
+        enum USBSTORStatus{USBSTOR_Disabled = 0, USBSTOR_ReadWrite, USBSTOR_ReadOnly, USBSTOR_Unknown};
 
     } // namespace MS
 

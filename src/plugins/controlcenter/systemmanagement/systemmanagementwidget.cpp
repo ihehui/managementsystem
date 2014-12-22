@@ -11,7 +11,7 @@
 
 #ifdef Q_OS_WIN32
     #include "HHSharedWindowsManagement/hwindowsmanagement.h"
-    #include "../../sharedms/global_shared.h"
+    //#include "../../sharedms/global_shared.h"
 #endif
 
 #include "constants.h"
@@ -23,8 +23,8 @@ namespace HEHUI {
 
 QMap<QString/*Short Name*/, QString/*Department*/> SystemManagementWidget::departments = QMap<QString, QString>();
 
-SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, const QString &computerName, const QString &users, const QString &peerIPAddress, const QString &peerMACAddress, bool usbsdEnabled, bool programesEnabled, const QString &admins, bool isJoinedToDomain, QWidget *parent)
-    : QWidget(parent), m_adminName(adminName), m_computerName(computerName), m_users(users), m_peerIPAddress(QHostAddress(peerIPAddress)), m_peerMACAddress(peerMACAddress), m_usbsdEnabled(usbsdEnabled), m_programesEnabled(programesEnabled), m_isJoinedToDomain(isJoinedToDomain)
+SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, const QString &computerName, const QString &users, const QString &peerIPAddress, const QString &peerMACAddress, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, QWidget *parent)
+    : QWidget(parent), m_adminName(adminName), m_computerName(computerName), m_users(users), m_peerIPAddress(QHostAddress(peerIPAddress)), m_peerMACAddress(peerMACAddress), m_usbSTORStatus(usbSTORStatus), m_programesEnabled(programesEnabled), m_isJoinedToDomain(isJoinedToDomain)
 {
     ui.setupUi(this);
 
@@ -56,9 +56,14 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
 #ifdef Q_OS_WIN32
 
+    WindowsManagement wm;
+
     if(localComputer){
         ui.groupBoxAdministrationTools->show();
         ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabFileManagement));
+
+        wm.getJoinInformation(&m_isJoinedToDomain);
+
     }else{
         int index = ui.tabWidget->indexOf(ui.tabLocalManagement);
         ui.tabWidget->removeTab(index);
@@ -68,8 +73,8 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
         //            ui.groupBoxAdministrationTools->hide();
     }
 
-    WindowsManagement wm;
     m_winDirPath = wm.getEnvironmentVariable("windir");
+    //m_winDirPath = QDir::rootPath() + "windows";
 
 
     if(m_isJoinedToDomain){
@@ -427,7 +432,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
     connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(int, const QString &, bool, const QString &)), this, SLOT(processClientResponseAdminConnectionResultPacket(int, const QString &, bool, const QString &)));
     connect(controlCenterPacketsParser, SIGNAL(signalClientMessagePacketReceived(const QString &, const QString &, quint8)), this, SLOT(clientMessageReceived(const QString &, const QString &, quint8)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, bool, bool, const QString&, bool, const QString&)), this, SLOT(clientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, bool, bool, const QString&, bool, const QString&)));
+    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), this, SLOT(clientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QString &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QString &)));
 
@@ -506,7 +511,7 @@ void SystemManagementWidget::on_pushButtonUSBSD_clicked(){
 //        return;
 //    }
 
-    QString text = tr("Do you really want to <font color = 'red'><b>%1</b></font> the USB SD on the computer?").arg(m_usbsdEnabled?tr("disable"):tr("enable"));
+    QString text = tr("Do you really want to <font color = 'red'><b>%1</b></font> the USB SD on the computer?").arg((m_usbSTORStatus == MS::USBSTOR_ReadWrite)?tr("disable"):tr("enable"));
     int ret = QMessageBox::question(this, tr("Question"), text,
                                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No
                                     );
@@ -520,11 +525,11 @@ void SystemManagementWidget::on_pushButtonUSBSD_clicked(){
     //    }
 
     bool m_temporarilyAllowed = true;
-    if(!m_usbsdEnabled){
+    if(!m_usbSTORStatus){
         m_temporarilyAllowed = temporarilyAllowed();
     }
 
-    bool ok = controlCenterPacketsParser->sendSetupUSBSDPacket(m_peerSocket, m_computerName, m_users, !m_usbsdEnabled, m_temporarilyAllowed, m_adminName);
+    bool ok = controlCenterPacketsParser->sendSetupUSBSDPacket(m_peerSocket, m_computerName, m_users, m_usbSTORStatus, m_temporarilyAllowed, m_adminName);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
@@ -703,7 +708,33 @@ void SystemManagementWidget::on_pushButtonRenameComputer_clicked(){
         return;
     }
 
-    ok = controlCenterPacketsParser->sendRenameComputerPacket(m_peerSocket, m_computerName, newComputerName, m_adminName);
+    QString domainAdminName = "",  domainAdminPassword = "";
+    if(m_isJoinedToDomain){
+        bool ok = false;
+        domainAdminName = QInputDialog::getText(this, tr("Authentication Required"),
+                                                tr("Domain Admin Name:"), QLineEdit::Normal,
+                                                "", &ok);
+
+        if(ok && !domainAdminName.isEmpty()){
+            ok = false;
+            do {
+                domainAdminPassword = QInputDialog::getText(this, tr("Authentication Required"),
+                                                  tr("Domain Admin Password:"), QLineEdit::Password,
+                                                  "", &ok);
+                if (!ok){
+                    return;
+                } if(domainAdminName.isEmpty()){
+                    QMessageBox::critical(this, tr("Error"), tr("Domain admin password is required!"));
+                }else{
+                    break;
+                }
+            } while (ok);
+        }
+
+    }
+
+
+    ok = controlCenterPacketsParser->sendRenameComputerPacket(m_peerSocket, m_computerName, newComputerName, m_adminName, domainAdminName, domainAdminPassword);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
@@ -730,8 +761,9 @@ void SystemManagementWidget::on_pushButtonDomain_clicked(){
 
     bool ok = false;
     QString domainOrWorkgroupName = "";
-    QString joinType = m_isJoinedToDomain?tr("Workgroup"):tr("Domain");
-//    if(!m_isJoinedToDomain){
+    if(!m_isJoinedToDomain){
+        QString joinType = m_isJoinedToDomain?tr("Workgroup"):tr("Domain");
+
         do {
             domainOrWorkgroupName = QInputDialog::getText(this, tr("Join To %1").arg(joinType), tr("%1 Name:").arg(joinType), QLineEdit::Normal, m_isJoinedToDomain?"WORKGROUP":DOMAIN_NAME, &ok).trimmed();
             if (ok){
@@ -743,13 +775,37 @@ void SystemManagementWidget::on_pushButtonDomain_clicked(){
             }
 
         } while (ok);
-//    }
+    }
 
     if(domainOrWorkgroupName.isEmpty()){
         return;
     }
 
-    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_computerName, m_adminName, !m_isJoinedToDomain, domainOrWorkgroupName);
+    QString domainAdminName = "",  domainAdminPassword = "";
+    if(m_isJoinedToDomain){
+        bool ok = false;
+        domainAdminName = QInputDialog::getText(this, tr("Authentication Required"),
+                                                tr("Domain Admin Name:"), QLineEdit::Normal,
+                                                "", &ok);
+
+        if(ok && !domainAdminName.isEmpty()){
+            ok = false;
+            do {
+                domainAdminPassword = QInputDialog::getText(this, tr("Authentication Required"),
+                                                  tr("Domain Admin Password:"), QLineEdit::Password,
+                                                  "", &ok);
+                if (!ok){
+                    return;
+                } if(domainAdminName.isEmpty()){
+                    QMessageBox::critical(this, tr("Error"), tr("Domain admin password is required!"));
+                }else{
+                    break;
+                }
+            } while (ok);
+        }
+    }
+
+    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_computerName, m_adminName, !m_isJoinedToDomain, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
@@ -1160,14 +1216,14 @@ void SystemManagementWidget::clientMessageReceived(const QString &computerName, 
 }
 
 
-void SystemManagementWidget::clientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, bool usbsdEnabled, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
+void SystemManagementWidget::clientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
 
     if(this->m_computerName.toLower() != computerName.toLower()){
         return;
     }
 
     m_users = usersInfo;
-    m_usbsdEnabled = usbsdEnabled;
+    m_usbSTORStatus = usbSTORStatus;
     m_programesEnabled = programesEnabled;
     m_administrators.clear();
     if(!admins.trimmed().isEmpty()){
@@ -1202,10 +1258,9 @@ void SystemManagementWidget::clientResponseClientSummaryInfoPacketReceived(const
 
     //ui.toolButtonRequestSystemInfo->setEnabled(true);
 
-    if(usbsdEnabled){
+    if(usbSTORStatus == quint8(MS::USBSTOR_ReadWrite)){
         ui.pushButtonUSBSD->setText(tr("Disable USB SD"));
     }else{
-
         ui.pushButtonUSBSD->setText(tr("Enable USB SD"));
     }
     ui.pushButtonUSBSD->setEnabled(true);

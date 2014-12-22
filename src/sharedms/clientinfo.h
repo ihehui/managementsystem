@@ -15,6 +15,7 @@
 #include <QStringList>
 
 #include "sharedmslib.h"
+#include "../sharedms/global_shared.h"
 
 
 namespace HEHUI {
@@ -189,9 +190,9 @@ public:
         return updateSummaryInfoStatement;
     }
 
-    bool getUsbSDEnabled() const
+    MS::USBSTORStatus getUsbSDEnabled() const
     {
-        return usbSDEnabled;
+        return usbSDStatus;
     }
 
     QString getUsers() const
@@ -334,9 +335,9 @@ public:
         this->updateSummaryInfoStatement = updateSummaryInfoStatement;
     }
 
-    void setUsbSDEnabled(bool usbSDEnabled)
+    void setUsbSDStatus(quint8 usbSDStatus)
     {
-        this->usbSDEnabled = usbSDEnabled;
+        this->usbSDStatus = MS::USBSTORStatus(usbSDStatus);
     }
 
     void setUsers(QString users)
@@ -393,7 +394,7 @@ private:
     QString network;
     QString users;
     QString os;
-    bool usbSDEnabled;
+    MS::USBSTORStatus usbSDStatus;
     bool programsEnabled;
     QString administrators;
     QDateTime lastOnlineTime;

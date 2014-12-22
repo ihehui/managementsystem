@@ -234,9 +234,10 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::ClientResponseClientSummaryInfo):
     {
         QString workgroupName = "", networkInfo = "", usersInfo = "", osInfo = "", admins = "", clientVersion = "";
-        bool usbsdEnabled = false, programesEnabled = false, isJoinedToDomain = false;
-        in >> workgroupName >> networkInfo >> usersInfo >> osInfo >> usbsdEnabled >> programesEnabled >> admins >> isJoinedToDomain >> clientVersion;
-        emit signalClientResponseClientSummaryInfoPacketReceived(peerID, workgroupName, networkInfo, usersInfo, osInfo, usbsdEnabled, programesEnabled, admins, isJoinedToDomain, clientVersion);
+        quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown);
+        bool programesEnabled = false, isJoinedToDomain = false;
+        in >> workgroupName >> networkInfo >> usersInfo >> osInfo >> usbSTORStatus >> programesEnabled >> admins >> isJoinedToDomain >> clientVersion;
+        emit signalClientResponseClientSummaryInfoPacketReceived(peerID, workgroupName, networkInfo, usersInfo, osInfo, usbSTORStatus, programesEnabled, admins, isJoinedToDomain, clientVersion);
         qDebug()<<"~~ClientResponseClientInfo";
     }
     break;

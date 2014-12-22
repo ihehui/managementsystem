@@ -86,7 +86,7 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void updateOrSaveClientInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, bool usbsdEnabled, bool programesEnabled, const QString &admins, bool isJoinedToDomain,const QString &clientVersion);
+    void updateOrSaveClientInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
     
     void processClientOnlineStatusChangedPacket(int socketID, const QString &clientName, bool online);
 
@@ -100,13 +100,12 @@ private:
 
 
 
-
 private:
     QString computerName() const;
     QString userName() const;
 
     QString workgroup() const;
-    QString usbsdEnabled();
+    QString usbsdStatus();
 
     QString macAddress() const;
     QString ipAddress() const;
@@ -114,16 +113,12 @@ private:
     QString osVersion() const;
     QString programesEnabled() const;
 
-
-
     void querySitoyClientInfo(const QString &queryString);
-
 
 private:
     Ui::ControlCenterClass ui;
 
     static bool running;
-
 
     QString databaseConnectionName;
     QSqlQueryModel *queryModel;

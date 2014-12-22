@@ -11,7 +11,6 @@
 #include "clientinfo.h"
 
 
-
 namespace HEHUI {
 
 ClientInfo::ClientInfo(const QString &computerName, QObject *parent)
@@ -22,7 +21,7 @@ ClientInfo::ClientInfo(const QString &computerName, QObject *parent)
     network = "";
     users = "";
     os = "";
-    usbSDEnabled = false;
+    usbSDStatus = MS::USBSTOR_Unknown;
     programsEnabled = false;
     administrators = "";
     lastOnlineTime = QDateTime();

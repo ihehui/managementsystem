@@ -37,14 +37,46 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
     : QMainWindow(parent), m_adminName(adminName)
 {
     ui.setupUi(this);
-
     //setWindowFlags(Qt::Dialog);
+
+
+    QMap<QString/*Short Name*/, QString/*Department*/> departments;
+    departments.insert("", tr(""));
+    departments.insert("it", tr("IT"));
+    departments.insert("ac", tr("Accounting"));
+    departments.insert("ad", tr("Administration"));
+    departments.insert("co", tr("Cost Control"));
+    departments.insert("cu", tr("Custom"));
+    departments.insert("gm", tr("GMO"));
+    departments.insert("hr", tr("HR"));
+    departments.insert("ma", tr("Marker"));
+    departments.insert("pd", tr("PDS"));
+    departments.insert("pg", tr("PG"));
+    departments.insert("pl", tr("Planning"));
+    departments.insert("pm", tr("PMC"));
+    departments.insert("qc", tr("QC"));
+    departments.insert("re", tr("Retail"));
+    departments.insert("sa", tr("Sales"));
+    //departmentsHash.insert("", tr("Sample"));
+    departments.insert("se", tr("Secretary"));
+    departments.insert("sh", tr("Shipping"));
+    departments.insert("sp", tr("Shop"));
+    departments.insert("wh", tr("Warehouse"));
+    //QString department = m_computerName.mid(2, 2).toLower();
+    foreach (QString key, departments.keys()) {
+        ui.comboBoxWorkgroup->addItem(departments.value(key), key);
+    }
+    ui.comboBoxWorkgroup->setCurrentIndex(0);
+
+    ui.comboBoxUSBSD->addItem(tr("All"), 255);
+    ui.comboBoxUSBSD->addItem(tr("ReadWrite"), quint8(MS::USBSTOR_ReadWrite));
+    ui.comboBoxUSBSD->addItem(tr("ReadOnly"), quint8(MS::USBSTOR_ReadOnly));
+    ui.comboBoxUSBSD->addItem(tr("Disabled"), quint8(MS::USBSTOR_Disabled));
+    ui.comboBoxUSBSD->addItem(tr("Unknown"), quint8(MS::USBSTOR_Unknown));
 
 
     localSystemManagementWidget = 0;
     localComputerName = QHostInfo::localHostName().toLower();
-
-
 
     //databaseConnectionName = QString(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME) + "-ControlCenter";
     databaseConnectionName = QString(DB_CONNECTION_NAME);
@@ -353,12 +385,9 @@ void ControlCenter::slotInitTabWidget(){
     //    ui.tabWidget->setCurrentWidget(ui.tabLocalComputer);
 
 
-
-    localSystemManagementWidget = new SystemManagementWidget(0, 0, m_adminName, localComputerName, "", "127.0.0.1", "");
+    localSystemManagementWidget = new SystemManagementWidget(0, 0, m_adminName, localComputerName, "", "127.0.0.1", "", 0, false);
     localSystemManagementWidget->setParent(this);
     ui.tabWidget->addTab(localSystemManagementWidget, tr("Local Computer"));
-
-
 
 
 }
@@ -445,7 +474,7 @@ void ControlCenter::slotRemoteManagement(){
     }
 
 
-    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, targetComputerName, userName(), ipAddress(), macAddress(), (usbsdEnabled() == "1"?true:false), (programesEnabled() == "1"?true:false), m_administrators, this);
+    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, targetComputerName, userName(), ipAddress(), macAddress(), usbsdStatus().toUShort(), (programesEnabled() == "1"?true:false), m_administrators, false, this);
     connect(systemManagementWidget, SIGNAL(requestRemoteAssistance()), this, SLOT(slotVNC()));
     
     ui.tabWidget->addTab(systemManagementWidget, targetComputerName);
@@ -485,26 +514,12 @@ QString ControlCenter::workgroup() const {
     return ui.comboBoxWorkgroup->currentText();
 }
 
-QString ControlCenter::usbsdEnabled(){
-    int index = ui.comboBoxUSBSD->currentIndex();
-    if(index == 1){
-        return "1";
-    }else if(index == 2){
-        return "0";
-    }else{
+QString ControlCenter::usbsdStatus(){
+    if(ui.comboBoxUSBSD->currentIndex() == 0){
         return "";
+    }else{
+        return QString::number(ui.comboBoxUSBSD->currentData().toUInt());
     }
-
-    //    QString text = ui.comboBoxUSBSD->currentText();
-    //    if(text == tr("Enabled")){
-    //        return "1";
-    //    }else if(text == tr("Disabled")){
-    //        return "0";
-    //    }else{
-    //        return "";
-    //    }
-
-
 }
 
 QString ControlCenter::macAddress() const {
@@ -514,12 +529,10 @@ QString ControlCenter::macAddress() const {
 
 QString ControlCenter::ipAddress() const {
     return ui.lineEditIPAddress->text().trimmed();
-
 }
 
 QString ControlCenter::osVersion() const{
     return ui.comboBoxOSVersion->currentText();
-
 }
 
 QString ControlCenter::programesEnabled() const{
@@ -551,7 +564,7 @@ void ControlCenter::slotQueryDatabase() {
     proxyModel->setSourceModel(queryModel);
     proxyModel->cleanFilters();
     
-    slotQueryClient(computerName(), userName(), workgroup(), macAddress(), ipAddress(), osVersion(), usbsdEnabled(), programesEnabled());
+    slotQueryClient(computerName(), userName(), workgroup(), macAddress(), ipAddress(), osVersion(), usbsdStatus(), programesEnabled());
     
     //statusBar()->showMessage(tr("Matched In Database:%1").arg(QString::number(queryModel->rowCount())));
     
@@ -598,7 +611,7 @@ void ControlCenter::filter(){
         workgroupRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
-    filterString = usbsdEnabled();
+    filterString = usbsdStatus();
     if(!filterString.trimmed().isEmpty()){
         usbSDRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
@@ -657,7 +670,7 @@ void ControlCenter::slotQueryClient(const QString &computerName, const QString &
     }
 
     if(!usbsd.isEmpty()){
-        queryString += QString(" and USBSD = %1 ").arg(usbsd == "1"?1:0);
+        queryString += QString(" and USBSD = %1 ").arg(usbsd);
     }
 
     if(!programes.isEmpty()){
@@ -691,8 +704,6 @@ void ControlCenter::querySitoyClientInfo(const QString &queryString){
 
     QSqlDatabase db;
     db = QSqlDatabase::database(databaseConnectionName);
-
-
 
     queryModel->setQuery(QSqlQuery(queryString, db));
 
@@ -752,7 +763,7 @@ void ControlCenter::slotShowClientInfo(const QModelIndex &index) {
     ui.comboBoxOSVersion->setCurrentIndex(ui.comboBoxOSVersion->findText(list.at(4),Qt::MatchStartsWith));
 
 
-    ui.comboBoxUSBSD->setCurrentIndex( ui.comboBoxUSBSD->findText((list.at(5) == "1"?tr("Enabled"):tr("Disabled")),Qt::MatchStartsWith));
+    ui.comboBoxUSBSD->setCurrentIndex( ui.comboBoxUSBSD->findData((list.at(5).toUShort())));
     ui.comboBoxPrograms->setCurrentIndex( ui.comboBoxPrograms->findText((list.at(6) == "1"?tr("Enabled"):tr("Disabled")),Qt::MatchStartsWith));
 
     m_administrators = list.at(7);
@@ -1017,7 +1028,7 @@ void ControlCenter::startNetwork(){
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
     connect(controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, bool, bool, const QString&, bool, const QString&)), this, SLOT(updateOrSaveClientInfo(const QString&, const QString&, const QString&, const QString&, const QString&, bool, bool, const QString&, bool, const QString&)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), this, SLOT(updateOrSaveClientInfo(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), Qt::QueuedConnection);
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
 
     if(localSystemManagementWidget){
@@ -1078,7 +1089,7 @@ void ControlCenter::serverFound(const QString &serverAddress, quint16 serverUDTL
 
 }
 
-void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, bool usbsdEnabled, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
+void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
 
     qDebug()<<"updateOrSaveClientInfo(...) "<<computerName<<" "<<workgroupName<<" "<<networkInfo<<" "<<usersInfo;
     
@@ -1102,7 +1113,7 @@ void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QS
     info->setNetwork(networkInfo);
     info->setUsers(usersInfo);
     info->setOs(osInfo);
-    info->setUsbSDEnabled(usbsdEnabled);
+    info->setUsbSDStatus(usbSTORStatus);
     info->setProgramsEnabled(programesEnabled);
     info->setAdministrators(admins);
     info->setClientVersion(clientVersion);
@@ -1201,8 +1212,6 @@ void ControlCenter::peerDisconnected(int socketID){
 //    }
 
 }
-
-
 
 
 

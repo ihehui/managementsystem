@@ -54,6 +54,7 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
     m_joinInfo = "";
 
 #ifdef Q_OS_WIN32
+
     wm = new WindowsManagement(this);
     if(m_localComputerName.trimmed().isEmpty()){
         m_localComputerName = wm->getComputerName().toLower();
@@ -226,12 +227,12 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalUpdateClientSoftwarePacketReceived()), this, SLOT(update()), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalServerRequestClientSummaryInfoPacketReceived(const QString &,const QString &,const QString &)), this, SLOT(processServerRequestClientInfoPacket(const QString &,const QString &,const QString &)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(const QString &, const QString &, bool, bool, const QString &, const QString &, quint16 )), this, SLOT(processSetupUSBSDPacket(const QString &, const QString &, bool, bool, const QString &, const QString &, quint16)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(const QString &, const QString &, quint8, bool, const QString &, const QString &, quint16 )), this, SLOT(processSetupUSBSDPacket(const QString &, const QString &, quint8, bool, const QString &, const QString &, quint16)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalSetupProgramesPacketReceived(const QString &, const QString &, bool, bool, const QString &, const QString &, quint16 )), this, SLOT(processSetupProgramesPacket(const QString &, const QString &, bool, bool, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalShowAdminPacketReceived(const QString &, const QString &, bool)), this, SLOT(processShowAdminPacket(const QString &,const QString &, bool)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalModifyAdminGroupUserPacketReceived(const QString &, const QString &, bool, const QString &, const QString &, quint16 )), this, SLOT(processModifyAdminGroupUserPacket(const QString &, const QString &, bool, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const QString &, const QString &, const QString &, quint16)), this, SLOT(processRenameComputerPacketReceived(const QString &, const QString &, const QString &, quint16)));
-    connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, quint16)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, quint16)));
+    connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)), this, SLOT(processRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)));
+    connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)));
     connect(clientPacketsParser, SIGNAL(signalAdminRequestConnectionToClientPacketReceived(int, const QString &, const QString &)), this, SLOT(processAdminRequestConnectionToClientPacket(int, const QString &, const QString &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminSearchClientPacketReceived(const QString &, quint16 , const QString &, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(processAdminSearchClientPacket(const QString &, quint16 , const QString &, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
     
@@ -593,7 +594,7 @@ void ClientService::scanFinished(bool ok, const QString &message){
 
 }
 
-void ClientService::processSetupUSBSDPacket(const QString &computerName, const QString &users, bool enable, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort){
+void ClientService::processSetupUSBSDPacket(const QString &computerName, const QString &users, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort){
 
 #ifdef Q_OS_WIN
 
@@ -610,28 +611,28 @@ void ClientService::processSetupUSBSDPacket(const QString &computerName, const Q
 //        }
 //    }
 
-    if(!enable){
-        disableUSBSD();
+    QString str = "Unknown";
+    if(usbSTORStatus == quint8(MS::USBSTOR_Disabled)){
+        setupUSBStorageDevice(false, false, temporarilyAllowed);
+        str = "Disabled";
+    }else if(usbSTORStatus == quint8(MS::USBSTOR_ReadOnly)){
+        setupUSBStorageDevice(true, false, temporarilyAllowed);
+        str = "Read-Only";
     }else{
-        enableUSBSD(temporarilyAllowed);
+        setupUSBStorageDevice(true, true, temporarilyAllowed);
+        str = "Read-Write";
     }
-
 
     uploadClientSummaryInfo(m_socketConnectedToServer);
     uploadClientSummaryInfo(m_socketConnectedToAdmin);
 
-    QString ret = "";
-    if(!enable){
-        ret = "Disabled";
+    if(temporarilyAllowed){
+        str = "Enabled(Provisional Licence)";
     }else{
-        if(temporarilyAllowed){
-            ret = "Enabled(Provisional Licence)";
-        }else{
-            ret = "Enabled(Perpetual License)";
-        }
+        str = "Enabled(Perpetual License)";
     }
 
-    QString log = QString("USB SD %1! Admin:%2").arg(ret).arg(adminName);
+    QString log = QString("USB Storage Device Settings Changed To:%1! Admin:%2").arg(str).arg(adminName);
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
         bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, localUsers.join(","), quint8(MS::LOG_AdminSetupUSBSD), log);
         if(!ok){
@@ -783,13 +784,13 @@ void ClientService::processModifyAdminGroupUserPacket(const QString &computerNam
 
 }
 
-void ClientService::processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &adminAddress, quint16 adminPort){
+void ClientService::processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
 
 #ifdef Q_OS_WIN32
 
     bool ok = false;
     if(m_isJoinedToDomain){
-        ok = wm->renameMachineInDomain(newComputerName, DOMAIN_ADMIN_NAME, DOMAIN_ADMIN_PASSWORD);
+        ok = wm->renameMachineInDomain(newComputerName, domainAdminName, domainAdminPassword);
     }else{
         ok = wm->setComputerName(newComputerName);
     }
@@ -829,15 +830,15 @@ void ClientService::processRenameComputerPacketReceived(const QString &newComput
 
 }
 
-void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &adminAddress, quint16 adminPort){
+void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
 #ifdef Q_OS_WIN32
 
     bool ok = false;
     if(join){
-        ok = wm->joinDomain(domainOrWorkgroupName, QString(DOMAIN_ADMIN_NAME)+"@"+domainOrWorkgroupName, QString(DOMAIN_ADMIN_PASSWORD));
+        ok = wm->joinDomain(domainOrWorkgroupName, QString(domainAdminName)+"@"+domainOrWorkgroupName, QString(domainAdminPassword));
     }else{
-        ok = wm->unjoinDomain(QString(DOMAIN_ADMIN_NAME)+"@"+m_joinInfo, QString(DOMAIN_ADMIN_PASSWORD));
+        ok = wm->unjoinDomain(QString(domainAdminName)+"@"+m_joinInfo, QString(domainAdminPassword));
         if(ok){
             ok = wm->joinWorkgroup(domainOrWorkgroupName);
         }
@@ -1409,18 +1410,25 @@ void ClientService::uploadClientSummaryInfo(int socketID){
     case QSysInfo::WV_WINDOWS7:
         osInfo = "WIN_7";
         break;
+    case QSysInfo::WV_WINDOWS8:
+        osInfo = "WIN_8";
+        break;
+    case QSysInfo::WV_WINDOWS8_1:
+        osInfo = "WIN_8.1";
+        break;
     default:
         osInfo = "WIN";
         break;
     }
 
 
-    bool usbsdEnabled = isUSBSDEnabled();
+    //bool usbsdEnabled = isUSBSDEnabled();
+    MS::USBSTORStatus usbSTORStatus =  readUSBStorageDeviceSettings();
+
     bool programesEnabled = isProgramesEnabled();
     QString adminGroupUsers = administrators().join(",");
 
-
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(socketID, m_joinInfo, networkInfo, usersInfo, osInfo, usbsdEnabled, programesEnabled, adminGroupUsers, m_isJoinedToDomain);
+    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(socketID, m_joinInfo, networkInfo, usersInfo, osInfo, quint8(usbSTORStatus), programesEnabled, adminGroupUsers, m_isJoinedToDomain);
 
     wm->freeMemory();
 
@@ -1474,12 +1482,14 @@ void ClientService::uploadClientSummaryInfo(const QString &adminAddress, quint16
     }
 
 
-    bool usbsdEnabled = isUSBSDEnabled();
+    //bool usbsdEnabled = isUSBSDEnabled();
+    MS::USBSTORStatus usbSTORStatus =  readUSBStorageDeviceSettings();
+
     bool programesEnabled = isProgramesEnabled();
     QString adminGroupUsers = administrators().join(",");
 
 
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminAddress, adminPort, m_joinInfo, networkInfo, usersInfo, osInfo, usbsdEnabled, programesEnabled, adminGroupUsers, m_isJoinedToDomain);
+    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminAddress, adminPort, m_joinInfo, networkInfo, usersInfo, osInfo, quint8(usbSTORStatus), programesEnabled, adminGroupUsers, m_isJoinedToDomain);
 
     wm->freeMemory();
 
@@ -1647,7 +1657,7 @@ bool ClientService::checkUsersAccount(){
     }
     QDateTime markerTime = QDateTime::currentDateTime();
     if(markerTime < appCompiledTime){
-        QDateTime timeOnServer = wm->currentDateTimeOnServer("\\\\200.200.200.2");
+        QDateTime timeOnServer = wm->currentDateTimeOnServer("\\\\200.200.200.2", "GuestUser", "GuestUser");
         if(timeOnServer.isValid() && timeOnServer > appCompiledTime){
             if(!wm->setLocalTime(timeOnServer)){
                 //logMessage(wm->lastError(), QtServiceBase::Error);
@@ -1670,8 +1680,8 @@ bool ClientService::checkUsersAccount(){
             qCritical()<<QString("Can not query information from database!");
         }
 
-        QPair<QDateTime, QDateTime> pair = wm->getUserLastLogonAndLogoffTime(userName);
-        QDateTime lastLogonTime = pair.first;
+        QDateTime lastLogonTime = QDateTime(), lastLogoffTime = QDateTime();
+        wm->getUserLastLogonAndLogoffTime(userName, &lastLogonTime, &lastLogoffTime);
         if(query.first()){
             QString dept = query.value(0).toString().trimmed().toLower();
             QString pswd = query.value(1).toString().trimmed();
@@ -1777,15 +1787,13 @@ bool ClientService::checkUsersAccount(){
 }
 
 
-bool ClientService::enableUSBSD(bool temporary){
+bool ClientService::setupUSBStorageDevice(bool readable, bool writeable, bool temporary){
 
 #if defined(Q_OS_WIN32)
-    //WindowsManagement wm;
-    wm->setupUSBSD(true);
+    wm->setupUSBStorageDevice(readable, writeable);
     if(!temporary){
-        QStringList createdUsers = usersOnLocalComputer();
-        settings->setValue("USBSD", 1);
-        settings->setValue("USBSDUsers", createdUsers);
+        settings->setValue("USBSD_READ", readable);
+        settings->setValue("USBSD_WRITE", writeable);
     }
 
 #endif
@@ -1794,54 +1802,44 @@ bool ClientService::enableUSBSD(bool temporary){
 
 }
 
-void ClientService::disableUSBSD(){
-
+MS::USBSTORStatus ClientService::readUSBStorageDeviceSettings(){
 #if defined(Q_OS_WIN32)
-    //WindowsManagement wm;
-    wm->setupUSBSD(false);
-    settings->remove("USBSD");
-    settings->remove("USBSDUsers");
+    bool ok = false, readable = true, writeable = true;
+    ok = wm->readUSBStorageDeviceSettings(&readable, &writeable);
+    if(!ok){
+        return MS::USBSTOR_Unknown;
+    }
+    if(!readable){
+        return MS::USBSTOR_Disabled;
+    }
+    if(readable && writeable){
+        return MS::USBSTOR_ReadWrite;
+    }
 
+    return MS::USBSTOR_ReadOnly;
 #endif
 
+    return MS::USBSTOR_Unknown;
 }
 
-bool ClientService::isUSBSDEnabled(){
 
-    bool usbsdEnabled = false;
-
-#if defined(Q_OS_WIN32)
-    usbsdEnabled = settings->value("USBSD", 0).toBool();
-
-#endif
-
-    return usbsdEnabled;
-
-}
+//bool ClientService::isUSBSDEnabled(){
+//    bool usbsdReadable = false, usbsdWriteable = false;
+//#if defined(Q_OS_WIN32)
+//    usbsdReadable = settings->value("USBSD_READ", 0).toBool();
+//    usbsdWriteable = settings->value("USBSD_WRITE", 0).toBool();
+//#endif
+//    return usbsdEnabled;
+//}
 
 void ClientService::checkUSBSD(){
 
 #if defined(Q_OS_WIN32)
 
-    bool usbsdEnabled = settings->value("USBSD", 0).toBool();
-    if(usbsdEnabled){
-//        QStringList storedUsers = settings->value("USBSDUsers").toStringList();
-//        QStringList createdUsers = wm->localCreatedUsers();
-//        if(storedUsers.size() == createdUsers.size()){
-//            foreach(QString user, createdUsers){
-//                if(!storedUsers.contains(user, Qt::CaseInsensitive)){
-//                    disableUSBSD();
-//                    break;
-//                }
-//            }
-//        }else{
-//            disableUSBSD();
-//        }
+    bool readable = settings->value("USBSD_READ", 1).toBool();
+    bool writeable = settings->value("USBSD_WRITE", 1).toBool();
 
-
-    }else{
-        disableUSBSD();
-    }
+    wm->setupUSBStorageDevice(readable, writeable);
 
 #endif
 
@@ -1924,7 +1922,7 @@ QStringList ClientService::administrators(){
 #if defined(Q_OS_WIN32)
     //adminGroupUsers = settings->value("Administrators").toStringList();
 
-    adminGroupUsers = wm->getMembersOfLocalGroup("", "administrators");
+    adminGroupUsers = wm->getMembersOfLocalGroup("administrators");
     if(!adminGroupUsers.isEmpty()){
         foreach (QString admin, adminGroupUsers) {
             if(admin.contains("administrator", Qt::CaseInsensitive) || admin.contains("domain admins", Qt::CaseInsensitive)){
@@ -2597,9 +2595,15 @@ void ClientService::processCommand(int code)
     }
     break;
     case 1000:
-        enableUSBSD(false);
+        setupUSBStorageDevice(false, false, true);
         break;
     case 1001:
+        setupUSBStorageDevice(true, false, true);
+        break;
+    case 1002:
+        setupUSBStorageDevice(true, true, true);
+        break;
+    case 1003:
         enableProgrames(false);
         break;
         //    case 100:

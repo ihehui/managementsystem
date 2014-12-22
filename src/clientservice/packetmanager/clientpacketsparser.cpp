@@ -273,19 +273,16 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         break;
     case quint8(MS::AdminRequestSetupUSBSD):
     {
-
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
         QString computerName = "", users = "", adminName = "";
-        bool enable = false;
+        quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown);
         bool temporarilyAllowed = true;
-        in >> computerName >> users >> enable >> temporarilyAllowed >> adminName;
+        in >> computerName >> users >> usbSTORStatus >> temporarilyAllowed >> adminName;
 
         if(computerName.toLower() != m_localComputerName){
             return;
         }
 
-        emit signalSetupUSBSDPacketReceived(computerName, users, enable, temporarilyAllowed, adminName, peerAddress.toString(), peerPort);
+        emit signalSetupUSBSDPacketReceived(computerName, users, usbSTORStatus, temporarilyAllowed, adminName, peerAddress.toString(), peerPort);
         qDebug()<<"~~SetupUSBSD";
     }
     break;
@@ -342,28 +339,28 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     break;
     case quint8(MS::RenameComputer):
     {
-        QString oldComputerName = "", newComputerName = "", adminName = "";
-        in >> oldComputerName >> newComputerName >> adminName;
+        QString oldComputerName = "", newComputerName = "", adminName = "", domainAdminName = "", domainAdminPassword = "";
+        in >> oldComputerName >> newComputerName >> adminName >> domainAdminName >> domainAdminPassword;
 
         if(oldComputerName.toLower() != m_localComputerName){
             return;
         }
 
-        emit signalRenameComputerPacketReceived(newComputerName, adminName, peerAddress.toString(), peerPort);
+        emit signalRenameComputerPacketReceived(newComputerName, adminName, domainAdminName, domainAdminPassword);
         qDebug()<<"~~RenameComputer";
     }
     break;
     case quint8(MS::JoinOrUnjoinDomain):
     {
-        QString computerName = "", adminName = "", domainOrWorkgroupName = "";
+        QString computerName = "", adminName = "", domainOrWorkgroupName = "", domainAdminName = "", domainAdminPassword = "";
         bool join = false;
-        in >> computerName >> adminName >> join >> domainOrWorkgroupName;
+        in >> computerName >> adminName >> join >> domainOrWorkgroupName >> domainAdminName >> domainAdminPassword;
 
         if(computerName.toLower() != m_localComputerName){
             return;
         }
 
-        emit signalJoinOrUnjoinDomainPacketReceived(adminName, join, domainOrWorkgroupName, peerAddress.toString(), peerPort);
+        emit signalJoinOrUnjoinDomainPacketReceived(adminName, join, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
         qDebug()<<"~~JoinOrUnjoinDomain";
     }
     break;

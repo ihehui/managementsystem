@@ -168,7 +168,7 @@ bool ServerService::startMainService(){
     //connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
 
     connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, bool, bool, const QString&, bool, const QString&)), this, SLOT(updateOrSaveClientSummaryInfo(const QString&, const QString&, const QString&, const QString&, const QString&, bool, bool, const QString&, bool, const QString&)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), this, SLOT(updateOrSaveClientSummaryInfo(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QString &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QString &)));
 
 //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
@@ -252,7 +252,7 @@ void ServerService::sendServerOnlinePacket(){
 
 }
 
-void ServerService::updateOrSaveClientSummaryInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, bool usbsdEnabled, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
+void ServerService::updateOrSaveClientSummaryInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
     //    qWarning()<<"ServerService::updateOrSaveClientSummaryInfo(...)";
 
     if(computerName.trimmed().isEmpty()){
@@ -300,7 +300,7 @@ void ServerService::updateOrSaveClientSummaryInfo(const QString &computerName, c
             //info->setOs(osInfo);
         }
         //if(usbsdEnabled != info->getUsbSDEnabled()){
-        statement += QString(", USBSD = %1 ").arg(QVariant(usbsdEnabled).toUInt());
+        statement += QString(", USBSD = %1 ").arg(usbSTORStatus);
         //info->setUsbSDEnabled(usbsdEnabled);
         //}
         //if(programesEnabled != info->getProgramsEnabled()){
@@ -331,7 +331,7 @@ void ServerService::updateOrSaveClientSummaryInfo(const QString &computerName, c
         statement += QString("INSERT INTO summaryinfo (ComputerName, Workgroup, Network, Users, OS, USBSD, Programes, JoinedToDomain, Administrators, ClientVersion) "
                              "VALUES ('%1', '%2', '%3', '%4', '%5', %6, %7, %8, '%9', '%10'); ")
                 .arg(computerName).arg(workgroupName).arg(networkInfo).arg(usersInfo).arg(osInfo)
-                .arg(QVariant(usbsdEnabled).toUInt()).arg(QVariant(programesEnabled).toUInt())
+                .arg(usbSTORStatus).arg(QVariant(programesEnabled).toUInt())
                 .arg(QVariant(isJoinedToDomain).toUInt()).arg(admins).arg(clientVersion);
 
         statement += QString("INSERT INTO detailedinfo (ComputerName) "
@@ -350,7 +350,7 @@ void ServerService::updateOrSaveClientSummaryInfo(const QString &computerName, c
             info->setNetwork(networkInfo);
             info->setUsers(usersInfo);
             info->setOs(osInfo);
-            info->setUsbSDEnabled(usbsdEnabled);
+            info->setUsbSDStatus(usbSTORStatus);
             info->setProgramsEnabled(programesEnabled);
             info->setAdministrators(admins);
             info->setIsJoinedToDomain(isJoinedToDomain);
