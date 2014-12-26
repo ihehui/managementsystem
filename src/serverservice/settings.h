@@ -5,7 +5,7 @@
 #include <QCoreApplication>
 
 #include "app_constants.h"
-
+#include "../sharedms/global_shared.h"
 
 #include "HHSharedCore/hsettingscore.h"
 #include "HHSharedCore/hcryptography.h"
@@ -56,7 +56,7 @@ public:
     void setDBServerUserName(const QString &userName){
         QByteArray *destination = new QByteArray();
         Cryptography cryptography;
-        cryptography.teaCrypto(destination, userName.toUtf8(), key, true);
+        cryptography.teaCrypto(destination, userName.toUtf8(), encryptionKey, true);
         setValue("Database/UserName", *destination);
         delete destination;
     }
@@ -68,7 +68,7 @@ public:
         }else{
             QByteArray *destination = new QByteArray();
             Cryptography cryptography;
-            cryptography.teaCrypto(destination, userNameArray, key, false);
+            cryptography.teaCrypto(destination, userNameArray, encryptionKey, false);
             userName = QString(*destination);
             delete destination;
 
@@ -79,7 +79,7 @@ public:
     void setDBServerUserPassword(const QString &userPassword){
         QByteArray *destination = new QByteArray();
         Cryptography cryptography;
-        cryptography.teaCrypto(destination, userPassword.toUtf8(), key, true);
+        cryptography.teaCrypto(destination, userPassword.toUtf8(), encryptionKey, true);
         setValue("Database/Password", *destination);
         delete destination;
     }
@@ -91,7 +91,7 @@ public:
         }else{
             QByteArray *destination = new QByteArray();
             Cryptography cryptography;
-            cryptography.teaCrypto(destination, passwordArray, key, false);
+            cryptography.teaCrypto(destination, passwordArray, encryptionKey, false);
             password = QString(*destination);
             delete destination;
 
@@ -113,7 +113,7 @@ private:
 
 
 private:
-    QByteArray key;
+    QByteArray encryptionKey;
 
 
 

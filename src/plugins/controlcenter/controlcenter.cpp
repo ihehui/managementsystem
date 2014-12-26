@@ -79,7 +79,7 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
     localComputerName = QHostInfo::localHostName().toLower();
 
     //databaseConnectionName = QString(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME) + "-ControlCenter";
-    databaseConnectionName = QString(DB_CONNECTION_NAME);
+    databaseConnectionName = QString(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
     queryModel = new QSqlQueryModel(this);
 
     clientInfoModel = new ClientInfoModel(this);

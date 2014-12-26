@@ -36,6 +36,7 @@
 //#include "../../shared/core/user.h"
 //#include "../../shared/gui/login/loginbase.h"
 #include "HHSharedCore/huser.h"
+#include "HHSharedCore/hsettingscore.h"
 #include "HHSharedGUI/hloginbase.h"
 
 
@@ -44,6 +45,16 @@ namespace HEHUI {
 
 ControlCenterPlugin::ControlCenterPlugin() {
     widgetList = QList<QWidget *> ();
+
+    m_connectionName = REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME;
+    m_driver = REMOTE_SITOY_COMPUTERS_DB_DRIVER;
+    m_host = REMOTE_SITOY_COMPUTERS_DB_SERVER_HOST;
+    m_port = REMOTE_SITOY_COMPUTERS_DB_SERVER_PORT;
+    m_user = REMOTE_SITOY_COMPUTERS_DB_USER_NAME;
+    m_passwd = REMOTE_SITOY_COMPUTERS_DB_USER_PASSWORD;
+    m_databaseName = REMOTE_SITOY_COMPUTERS_DB_NAME;
+    m_databaseType = HEHUI::MYSQL ;
+
 }
 
 ControlCenterPlugin::~ControlCenterPlugin() {
@@ -153,12 +164,44 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
         return;
     }
 
-    QWidget *parentWidget = qobject_cast<QWidget *> (parent());
+    SettingsCore settings(name(), version(), name(), "./");
+    QByteArray encryptionKey = QByteArray("HEHUI");
+    if(settings.contains("ControlCenter/DB_DRIVER")){
+        m_driver = settings.getValueWithDecryption("ControlCenter/DB_DRIVER", encryptionKey).toString();
+        m_host = settings.getValueWithDecryption("ControlCenter/DB_SERVER_HOST", encryptionKey).toString();
+        m_port = settings.getValueWithDecryption("ControlCenter/DB_SERVER_PORT", encryptionKey).toUInt();
+        m_user = settings.getValueWithDecryption("ControlCenter/DB_USER_NAME", encryptionKey).toString();
+        m_passwd = settings.getValueWithDecryption("ControlCenter/DB_USER_PASSWORD", encryptionKey).toString();
+        m_databaseName = settings.getValueWithDecryption("ControlCenter/DB_NAME", encryptionKey).toString();
+        m_databaseType = HEHUI::DatabaseType(settings.getValueWithDecryption("ControlCenter/DB_TYPE", encryptionKey).toUInt());
+    }
 
+    QWidget *parentWidget = qobject_cast<QWidget *> (parent());
     HEHUI::User user;
     HEHUI::LoginBase login(&user, name(), parentWidget);
-    if (!login.isVerified()) {
+    login.setDatabaseOptions(
+                m_connectionName,
+                m_driver,
+                m_host,
+                m_port,
+                m_user,
+                m_passwd,
+                m_databaseName,
+                m_databaseType
+                );
+    if(!login.isVerified()) {
         return ;
+    }
+
+    if(login.isSettingsModified()){
+        settings.setValueWithEncryption("ControlCenter/DB_DRIVER", login.driverName(), encryptionKey);
+        settings.setValueWithEncryption("ControlCenter/DB_SERVER_HOST", login.hostName(), encryptionKey);
+        settings.setValueWithEncryption("ControlCenter/DB_SERVER_PORT", login.port(), encryptionKey);
+        settings.setValueWithEncryption("ControlCenter/DB_USER_NAME", login.userName(), encryptionKey);
+        settings.setValueWithEncryption("ControlCenter/DB_USER_PASSWORD", login.passWord(), encryptionKey);
+        settings.setValueWithEncryption("ControlCenter/DB_NAME", login.databaseName(), encryptionKey);
+        settings.setValueWithEncryption("ControlCenter/DB_TYPE", login.databaseType(), encryptionKey);
+
     }
 
     ControlCenter *wgt = new ControlCenter(user.getUserID(), parentWidget);

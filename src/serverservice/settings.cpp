@@ -10,13 +10,12 @@ Settings::Settings( const QString& pName, const QString& pVersion, const QString
     : SettingsCore(pName, pVersion, fileBaseName, fileDirPath, parent )
 {
 
-    key = QString("HEHUI").toUtf8();
+    encryptionKey = QString("HEHUI").toUtf8();
 
 }
 
 Settings::~Settings()
 {
-
 
 
 }

@@ -26,6 +26,11 @@ int main(int argc, char *argv[])
 //    QTextCodec::setCodecForTr(codec);
 
     QApplication a(argc, argv);
+    a.addLibraryPath(QCoreApplication::applicationDirPath());
+    a.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(PLUGINS_MAIN_DIR));
+    a.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(MYLIBS_DIR));
+    qDebug()<<"--Library Paths:"<<a.libraryPaths ();
+
 
     for(int i = 0; i < argc; i++){
         if(QString(argv[i]).toLower() == "-log"){
@@ -41,13 +46,6 @@ int main(int argc, char *argv[])
         qDebug()<<"Application has expired! Please update!";
         return 0;
     }
-
-
-    //a.addLibraryPath(QCoreApplication::applicationDirPath());
-    a.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(PLUGINS_MAIN_DIR));
-    a.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(MYLIBS_DIR));
-    qDebug()<<"--Library Paths:"<<a.libraryPaths ();
-
 
     //创建Splash Screen
     //Create Splash Screen

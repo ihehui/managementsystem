@@ -852,7 +852,7 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     DatabaseConnecter dc(this);
-    if(!dc.isDatabaseOpened(DB_CONNECTION_NAME,
+    if(!dc.isDatabaseOpened(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME,
                             REMOTE_SITOY_COMPUTERS_DB_DRIVER,
                             REMOTE_SITOY_COMPUTERS_DB_SERVER_HOST,
                             REMOTE_SITOY_COMPUTERS_DB_SERVER_PORT,
@@ -869,7 +869,7 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
 
 
     QSqlDatabase db;
-    db = QSqlDatabase::database(DB_CONNECTION_NAME);
+    db = QSqlDatabase::database(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
 
 
     if(!queryModel){
@@ -890,7 +890,7 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
         //MySQL数据库重启，重新连接
         if(error.number() == 2006){
             db.close();
-            QSqlDatabase::removeDatabase(DB_CONNECTION_NAME);
+            QSqlDatabase::removeDatabase(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
             return;
         }
 

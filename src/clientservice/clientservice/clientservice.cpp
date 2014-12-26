@@ -6,6 +6,7 @@
 #include <QByteArray>
 
 #include "clientservice.h"
+#include "../sharedms/global_shared.h"
 
 #include "HHSharedNetwork/hnetworkutilities.h"
 #include "HHSharedCore/hutilities.h"
@@ -283,13 +284,8 @@ bool ClientService::startMainService(){
 
     mainServiceStarted = true;
 
-//    if(m_joinInfo == "plan"){
-//        updateAdministratorPassword("trousefcktrouse");
-//    //}else if(m_joinInfo == "pds"){
-//    //    updateAdministratorPassword("trousemisdg");
-//    }else{
-        updateAdministratorPassword(WIN_ADMIN_PASSWORD);
-//    }
+
+//    updateAdministratorPassword(WIN_ADMIN_PASSWORD);
 
     //qWarning()<<"Check User Account!";
     //checkUsersAccount();
@@ -308,13 +304,13 @@ bool ClientService::startMainService(){
     if(time.isNull() || (time.addDays(1) < QDateTime::currentDateTime())){
 
 #if defined(Q_OS_WIN32)
-        wm->modifySystemSettings();
+//        wm->modifySystemSettings();
 
-        QSettings computerNameSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\HEHUI", QSettings::NativeFormat, this);
-        QString storedComputerName = computerNameSettings.value("ComputerName", "").toString().trimmed();
-        if(!storedComputerName.isEmpty() && (storedComputerName.toLower() != m_localComputerName) ){
-            wm->setComputerName(storedComputerName);
-        }
+//        QSettings computerNameSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\HEHUI", QSettings::NativeFormat, this);
+//        QString storedComputerName = computerNameSettings.value("ComputerName", "").toString().trimmed();
+//        if(!storedComputerName.isEmpty() && (storedComputerName.toLower() != m_localComputerName) ){
+//            wm->setComputerName(storedComputerName);
+//        }
 
 #endif
 
@@ -333,12 +329,12 @@ bool ClientService::startMainService(){
 
 #if defined(Q_OS_WIN32)
 
-    section = serviceName() + "/LastCleanTemporaryFiles";
-    time = settings.value(section, QDateTime()).toDateTime();
-    if(time.isNull() || (time.addDays(7) < QDateTime::currentDateTime())){
-        wm->cleanTemporaryFiles();
-        settings.setValue(section, QDateTime::currentDateTime());
-    }
+//    section = serviceName() + "/LastCleanTemporaryFiles";
+//    time = settings.value(section, QDateTime()).toDateTime();
+//    if(time.isNull() || (time.addDays(7) < QDateTime::currentDateTime())){
+//        wm->cleanTemporaryFiles();
+//        settings.setValue(section, QDateTime::currentDateTime());
+//    }
 
     qWarning()<<"Clean Temporary Files!";
 

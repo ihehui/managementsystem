@@ -42,6 +42,7 @@
 
 //#include "../../shared/gui/plugin/guipluginbase.h"
 #include "HHSharedGUI/hguipluginbase.h"
+#include "HHSharedCore/hglobal_core.h"
 
 namespace HEHUI {
 
@@ -76,6 +77,14 @@ public slots:
 private:
     QList<QWidget *> widgetList;
 
+    QString m_connectionName;
+    QString m_driver;
+    QString m_host;
+    quint16 m_port;
+    QString m_user;
+    QString m_passwd;
+    QString m_databaseName;
+    HEHUI::DatabaseType m_databaseType;
 
 
 };
