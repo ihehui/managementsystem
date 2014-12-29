@@ -189,11 +189,9 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
                 m_databaseName,
                 m_databaseType
                 );
-    if(!login.isVerified()) {
-        return ;
-    }
 
-    if(login.isSettingsModified()){
+    bool verified = login.isVerified();
+    if(login.isSettingsModified() && login.saveSettings()){
         settings.setValueWithEncryption("ControlCenter/DB_DRIVER", login.driverName(), encryptionKey);
         settings.setValueWithEncryption("ControlCenter/DB_SERVER_HOST", login.hostName(), encryptionKey);
         settings.setValueWithEncryption("ControlCenter/DB_SERVER_PORT", login.port(), encryptionKey);
@@ -201,7 +199,9 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
         settings.setValueWithEncryption("ControlCenter/DB_USER_PASSWORD", login.passWord(), encryptionKey);
         settings.setValueWithEncryption("ControlCenter/DB_NAME", login.databaseName(), encryptionKey);
         settings.setValueWithEncryption("ControlCenter/DB_TYPE", login.databaseType(), encryptionKey);
-
+    }
+    if(!verified) {
+        return ;
     }
 
     ControlCenter *wgt = new ControlCenter(user.getUserID(), parentWidget);
