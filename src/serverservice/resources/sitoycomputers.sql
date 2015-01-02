@@ -1,31 +1,60 @@
--- MySQL Administrator dump 1.4
+-- MySQL dump 10.13  Distrib 5.5.15, for Win32 (x86)
 --
+-- Host: 200.200.200.40    Database: sitoycomputers
 -- ------------------------------------------------------
--- Server version	5.1.36-community
-
+-- Server version	5.5.28a-MariaDB-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8 */;
-
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-
-
---
--- Create schema sitoycomputers
---
-
-CREATE DATABASE IF NOT EXISTS sitoycomputers;
-USE sitoycomputers;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Definition of table `detailedinfo`
+-- Current Database: `sitoycomputers`
+--
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `sitoycomputers` /*!40100 DEFAULT CHARACTER SET utf8 */;
+
+USE `sitoycomputers`;
+
+--
+-- Table structure for table `UsersLogin`
+--
+
+DROP TABLE IF EXISTS `UsersLogin`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `UsersLogin` (
+  `UserID` varchar(20) NOT NULL,
+  `_Date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `PCName` varchar(20) DEFAULT NULL,
+  `Remark` varchar(800) DEFAULT NULL,
+  `IP` varchar(60) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `UsersLogin`
+--
+
+LOCK TABLES `UsersLogin` WRITE;
+/*!40000 ALTER TABLE `UsersLogin` DISABLE KEYS */;
+/*!40000 ALTER TABLE `UsersLogin` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `detailedinfo`
 --
 
 DROP TABLE IF EXISTS `detailedinfo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `detailedinfo` (
   `ComputerName` varchar(32) NOT NULL DEFAULT '',
   `InstallationDate` date DEFAULT NULL,
@@ -47,20 +76,24 @@ CREATE TABLE `detailedinfo` (
   PRIMARY KEY (`ComputerName`) USING BTREE,
   CONSTRAINT `FK_detailedinfo_ComputerName_summaryinfo` FOREIGN KEY (`ComputerName`) REFERENCES `summaryinfo` (`ComputerName`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `detailedinfo`
 --
 
+LOCK TABLES `detailedinfo` WRITE;
 /*!40000 ALTER TABLE `detailedinfo` DISABLE KEYS */;
 /*!40000 ALTER TABLE `detailedinfo` ENABLE KEYS */;
-
+UNLOCK TABLES;
 
 --
--- Definition of table `installedsoftware`
+-- Table structure for table `installedsoftware`
 --
 
 DROP TABLE IF EXISTS `installedsoftware`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `installedsoftware` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ComputerName` varchar(32) NOT NULL,
@@ -72,21 +105,25 @@ CREATE TABLE `installedsoftware` (
   PRIMARY KEY (`ID`),
   KEY `FK_installedsoftware_ComputerName` (`ComputerName`),
   CONSTRAINT `FK_installedsoftware_ComputerName` FOREIGN KEY (`ComputerName`) REFERENCES `summaryinfo` (`ComputerName`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `installedsoftware`
 --
 
+LOCK TABLES `installedsoftware` WRITE;
 /*!40000 ALTER TABLE `installedsoftware` DISABLE KEYS */;
 /*!40000 ALTER TABLE `installedsoftware` ENABLE KEYS */;
-
+UNLOCK TABLES;
 
 --
--- Definition of table `logs`
+-- Table structure for table `logs`
 --
 
 DROP TABLE IF EXISTS `logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `logs` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ComputerName` varchar(16) NOT NULL,
@@ -97,21 +134,25 @@ CREATE TABLE `logs` (
   `ClientTime` datetime DEFAULT NULL,
   `ServerTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `logs`
 --
 
+LOCK TABLES `logs` WRITE;
 /*!40000 ALTER TABLE `logs` DISABLE KEYS */;
 /*!40000 ALTER TABLE `logs` ENABLE KEYS */;
-
+UNLOCK TABLES;
 
 --
--- Definition of table `software`
+-- Table structure for table `software`
 --
 
 DROP TABLE IF EXISTS `software`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `software` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `InternalName` varchar(64) NOT NULL,
@@ -126,20 +167,24 @@ CREATE TABLE `software` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `Index_2` (`InternalName`,`Framework`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `software`
 --
 
+LOCK TABLES `software` WRITE;
 /*!40000 ALTER TABLE `software` DISABLE KEYS */;
 /*!40000 ALTER TABLE `software` ENABLE KEYS */;
-
+UNLOCK TABLES;
 
 --
--- Definition of table `summaryinfo`
+-- Table structure for table `summaryinfo`
 --
 
 DROP TABLE IF EXISTS `summaryinfo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `summaryinfo` (
   `ComputerName` varchar(32) NOT NULL,
   `Workgroup` varchar(32) NOT NULL,
@@ -148,26 +193,83 @@ CREATE TABLE `summaryinfo` (
   `OS` varchar(45) NOT NULL,
   `USBSD` tinyint(3) unsigned DEFAULT '0',
   `Programes` tinyint(3) unsigned DEFAULT '0',
+  `JoinedToDomain` tinyint(3) unsigned DEFAULT '0',
   `Administrators` varchar(255) DEFAULT NULL,
   `LastOnlineTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `ClientVersion` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`ComputerName`) USING BTREE,
   UNIQUE KEY `Index_ComputerName` (`ComputerName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `summaryinfo`
 --
 
+LOCK TABLES `summaryinfo` WRITE;
 /*!40000 ALTER TABLE `summaryinfo` DISABLE KEYS */;
 /*!40000 ALTER TABLE `summaryinfo` ENABLE KEYS */;
-
+UNLOCK TABLES;
 
 --
--- Definition of table `windowsadminpassword`
+-- Table structure for table `systemadministrators`
+--
+
+DROP TABLE IF EXISTS `systemadministrators`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `systemadministrators` (
+  `UserID` varchar(24) NOT NULL,
+  `UserName` varchar(24) NOT NULL,
+  `BusinessAddress` varchar(16) NOT NULL,
+  `PassWD` varchar(56) NOT NULL,
+  `LastLoginTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Remark` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`UserID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `systemadministrators`
+--
+
+LOCK TABLES `systemadministrators` WRITE;
+/*!40000 ALTER TABLE `systemadministrators` DISABLE KEYS */;
+INSERT INTO `systemadministrators` VALUES ('admindg','','DG','c8HdVaYFOAXZ2oYjM4L6gqTIiFk=','0000-00-00 00:00:00',''),('adminhk','','HK','ImosDlUaBd8YyNUrX7pfHTuuI3A=','0000-00-00 00:00:00',''),('adminyd','','YD','MXuRPpxRE1xTPP/X4zO1bNkgy/0=','0000-00-00 00:00:00',''),('hehui','','DG','KlcsSsfmfp6B3ya+LliE2bHO2uc=','2015-01-02 09:41:20',''),('king','','DG','apJt8QFtRPAZaUawJkZZTVFEiOo=','0000-00-00 00:00:00',''),('lhc','','DG','es9NRQZZf2kbdGvMp/GrkV0+OV0=','0000-00-00 00:00:00',''),('lj','','DG','v+7twKPCWLNfk9pWrsDVB/CEQ1c=','0000-00-00 00:00:00',''),('ljf','','DG','RvhSIcEL1/AeICOvyeoCNMvXh3g=','0000-00-00 00:00:00',''),('zk','','DG','usJrQRUF6lLB0kUaoWJco3bFht8=','0000-00-00 00:00:00','');
+/*!40000 ALTER TABLE `systemadministrators` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `versioninfo`
+--
+
+DROP TABLE IF EXISTS `versioninfo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `versioninfo` (
+  `LatestVersion` int(11) NOT NULL,
+  `Remark` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`LatestVersion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `versioninfo`
+--
+
+LOCK TABLES `versioninfo` WRITE;
+/*!40000 ALTER TABLE `versioninfo` DISABLE KEYS */;
+INSERT INTO `versioninfo` VALUES (141225,'');
+/*!40000 ALTER TABLE `versioninfo` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `windowsadminpassword`
 --
 
 DROP TABLE IF EXISTS `windowsadminpassword`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `windowsadminpassword` (
   `Department` varchar(16) NOT NULL,
   `Password` varchar(45) NOT NULL DEFAULT 'trousetrouse',
@@ -176,37 +278,21 @@ CREATE TABLE `windowsadminpassword` (
   `Admin` varchar(45) NOT NULL DEFAULT 'HeHui',
   PRIMARY KEY (`Department`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `windowsadminpassword`
 --
 
+LOCK TABLES `windowsadminpassword` WRITE;
 /*!40000 ALTER TABLE `windowsadminpassword` DISABLE KEYS */;
-INSERT INTO `windowsadminpassword` (`Department`,`Password`,`OldPassword`,`UpdateTime`,`Admin`) VALUES 
- ('Account','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('AdminDept','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Cost','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Custom','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('GMO','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('HR','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Marker','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('PDS','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('PG','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Plan','trouseplantrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('PMC','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Purchase','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('QC','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Retail','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Sales','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Sample','trousetrouse','computermisdg','2011-05-28 17:01:16','HeHui'),
- ('Secretary','trousetrouse','computermisdg','2011-05-28 17:01:17','HeHui'),
- ('Ship','trousetrouse','computermisdg','2011-05-28 17:01:17','HeHui'),
- ('Shop','trousetrouse','computermisdg','2011-05-28 17:01:17','HeHui'),
- ('WHouse','trousetrouse','computermisdg','2011-05-28 17:01:17','HeHui');
 /*!40000 ALTER TABLE `windowsadminpassword` ENABLE KEYS */;
+UNLOCK TABLES;
 
-
-
+--
+-- Dumping routines for database 'sitoycomputers'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
@@ -214,4 +300,6 @@ INSERT INTO `windowsadminpassword` (`Department`,`Password`,`OldPassword`,`Updat
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2015-01-02  9:19:27
