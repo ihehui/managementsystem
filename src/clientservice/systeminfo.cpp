@@ -23,7 +23,7 @@ SystemInfo::SystemInfo(QObject *parent) :
 
     process = 0;
 
-    QDir::setCurrent(QCoreApplication::applicationDirPath ());
+    QDir::setCurrent(QCoreApplication::applicationDirPath());
     //QString everestDirPath = QCoreApplication::applicationDirPath () + QString("/everest");
     everestDirPath = QString("./aida64business");
 

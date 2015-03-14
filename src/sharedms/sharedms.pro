@@ -18,6 +18,7 @@ include(../config.pri)
 
 HHSharedLibs += HHSharedCore \
     HHSharedNetwork \
+    HHSharedENET \
     HHSharedUDT
 include(../../HHSharedLibs.pri)
 
@@ -29,14 +30,16 @@ HEADERS += clientinfo.h \
     filemanager.h \
     sharedmslib.h \
     tcpserver.h \
-    rtp.h
+    rtp.h \
+    enetprotocol.h
 FORMS += 
 SOURCES += clientinfo.cpp \
     udtprotocol.cpp \
     resourcesmanager.cpp \
     filemanager.cpp \
     tcpserver.cpp \
-    rtp.cpp
+    rtp.cpp \
+    enetprotocol.cpp
 RESOURCES += resources.qrc
 
 DEFINES += SHAREDMSLIB_LIBRARY_EXPORT

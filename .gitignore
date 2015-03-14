@@ -44,3 +44,6 @@ Makefile*
 .directory
 Desktop.ini
 Thumbs.db
+
+#Others
+*.ini

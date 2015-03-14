@@ -178,31 +178,31 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
 
     QWidget *parentWidget = qobject_cast<QWidget *> (parent());
     HEHUI::User user;
-    HEHUI::LoginBase login(&user, name(), parentWidget);
-    login.setDatabaseOptions(
-                m_connectionName,
-                m_driver,
-                m_host,
-                m_port,
-                m_user,
-                m_passwd,
-                m_databaseName,
-                m_databaseType
-                );
+//    HEHUI::LoginBase login(&user, name(), parentWidget);
+//    login.setDatabaseOptions(
+//                m_connectionName,
+//                m_driver,
+//                m_host,
+//                m_port,
+//                m_user,
+//                m_passwd,
+//                m_databaseName,
+//                m_databaseType
+//                );
 
-    bool verified = login.isVerified();
-    if(login.isSettingsModified() && login.saveSettings()){
-        settings.setValueWithEncryption("ControlCenter/DB_DRIVER", login.driverName(), encryptionKey);
-        settings.setValueWithEncryption("ControlCenter/DB_SERVER_HOST", login.hostName(), encryptionKey);
-        settings.setValueWithEncryption("ControlCenter/DB_SERVER_PORT", login.port(), encryptionKey);
-        settings.setValueWithEncryption("ControlCenter/DB_USER_NAME", login.userName(), encryptionKey);
-        settings.setValueWithEncryption("ControlCenter/DB_USER_PASSWORD", login.passWord(), encryptionKey);
-        settings.setValueWithEncryption("ControlCenter/DB_NAME", login.databaseName(), encryptionKey);
-        settings.setValueWithEncryption("ControlCenter/DB_TYPE", login.databaseType(), encryptionKey);
-    }
-    if(!verified) {
-        return ;
-    }
+//    bool verified = login.isVerified();
+//    if(login.isSettingsModified() && login.saveSettings()){
+//        settings.setValueWithEncryption("ControlCenter/DB_DRIVER", login.driverName(), encryptionKey);
+//        settings.setValueWithEncryption("ControlCenter/DB_SERVER_HOST", login.hostName(), encryptionKey);
+//        settings.setValueWithEncryption("ControlCenter/DB_SERVER_PORT", login.port(), encryptionKey);
+//        settings.setValueWithEncryption("ControlCenter/DB_USER_NAME", login.userName(), encryptionKey);
+//        settings.setValueWithEncryption("ControlCenter/DB_USER_PASSWORD", login.passWord(), encryptionKey);
+//        settings.setValueWithEncryption("ControlCenter/DB_NAME", login.databaseName(), encryptionKey);
+//        settings.setValueWithEncryption("ControlCenter/DB_TYPE", login.databaseType(), encryptionKey);
+//    }
+//    if(!verified) {
+//        return ;
+//    }
 
     ControlCenter *wgt = new ControlCenter(user.getUserID(), parentWidget);
     //connect(controlCenter, SIGNAL(destroyed(QObject *)), SLOT(slotControlCenterWidgetDestoryed(QObject *)));

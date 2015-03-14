@@ -24,6 +24,9 @@
 
 #ifdef Q_OS_WIN32
     #include "HHSharedWindowsManagement/hwindowsmanagement.h"
+    #include "HHSharedWindowsManagement/hhardwaremonitor.h"
+    #include "HHSharedWindowsManagement/WinUtilities"
+
     #ifndef SITOY_USERS_DB_CONNECTION_NAME
     #define SITOY_USERS_DB_CONNECTION_NAME "200.200.200.2/mis/users"
     #endif
@@ -81,6 +84,12 @@ private slots:
     void consoleProcessOutputRead(const QString &output);
 
     void processLocalUserOnlineStatusChanged(int socketID, const QString &userName, bool online);
+
+
+
+    void processAdminRequestTemperaturesPacket(int socketID, bool cpu = true, bool harddisk = false);
+    void processAdminRequestScreenshotPacket(int socketID, bool fullScreen = true);
+
 
     QStringList usersOnLocalComputer();
     void uploadClientSummaryInfo(int socketID);
@@ -182,7 +191,9 @@ private:
 
 
 #if defined(Q_OS_WIN32)
-    WindowsManagement *wm;
+    WindowsManagement *m_wm;
+
+    HardwareMonitor *m_hardwareMonitor;
 
 
 #endif

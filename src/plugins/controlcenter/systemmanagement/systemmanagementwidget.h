@@ -70,6 +70,9 @@ private slots:
     void on_toolButtonRescanSystemInfo_clicked();
     void on_toolButtonSaveAs_clicked();
 
+    void on_groupBoxTemperatures_clicked(bool checked);
+    void requestUpdateTemperatures();
+
     void on_toolButtonRunRemoteApplication_clicked();
     void on_toolButtonSendCommand_clicked();
 
@@ -92,6 +95,8 @@ private slots:
 
     void userResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
 
+    void updateTemperatures(const QString &cpuTemperature, const QString &harddiskTemperature);
+    void updateScreenshot(const QByteArray &screenshot);
 
     void peerDisconnected(int socketID);
     void peerDisconnected(bool normalClose);
@@ -157,7 +162,7 @@ private:
 
     FileManagement *m_fileManagementWidget;
 
-
+    QTimer *m_updateTemperaturesTimer;
 
 
 };

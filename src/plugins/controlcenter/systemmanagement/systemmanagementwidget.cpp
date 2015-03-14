@@ -44,8 +44,9 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     }
 
     ui.comboBoxProtocol->addItem(tr("Auto"), quint8(RTP::AUTO));
-    ui.comboBoxProtocol->addItem("UDT", quint8(RTP::UDT));
     ui.comboBoxProtocol->addItem("TCP", quint8(RTP::TCP));
+    ui.comboBoxProtocol->addItem("ENET", quint8(RTP::ENET));
+    ui.comboBoxProtocol->addItem("UDT", quint8(RTP::UDT));
 
 
 
@@ -266,7 +267,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 //    connect(m_fileManagementWidget, SIGNAL(signalUploadFilesToRemote(const QStringList &, const QString &)), this, SLOT(requestUploadFilesToRemote(const QStringList &, const QString &)));
 //    connect(m_fileManagementWidget, SIGNAL(signalDownloadFileFromRemote(const QStringList &, const QString &)), this, SLOT(requestDownloadFileFromRemote(const QStringList &, const QString &)));
 
-
+    m_updateTemperaturesTimer = 0;
 
 }
 
@@ -307,6 +308,11 @@ SystemManagementWidget::~SystemManagementWidget()
     //    delete ClientInfo;
     //    ClientInfo = 0;
 
+
+    if(m_updateTemperaturesTimer){
+        m_updateTemperaturesTimer->stop();
+        delete m_updateTemperaturesTimer;
+    }
 
 }
 
@@ -441,6 +447,12 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
 
     connect(controlCenterPacketsParser, SIGNAL(signalUserResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)), this, SLOT(userResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)));
     
+
+
+    connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QByteArray &)), this, SLOT(updateScreenshot(const QByteArray &)));
+
+
 //    ////////////////////
 //    connect(controlCenterPacketsParser, SIGNAL(signalFileSystemInfoReceived(int, const QString &, const QByteArray &)), this, SLOT(fileSystemInfoReceived(int, const QString &, const QByteArray &)));
 //    //File TX
@@ -1020,8 +1032,6 @@ void SystemManagementWidget::on_toolButtonRescanSystemInfo_clicked(){
 
 void SystemManagementWidget::on_toolButtonSaveAs_clicked(){
 
-
-
     QString path = QFileDialog::getSaveFileName(this, tr("File Save Path:"), QDir::homePath() + "/" + m_computerName, tr("INI (*.ini);;All(*.*)"));
     if(path.isEmpty()){
         return;
@@ -1039,6 +1049,30 @@ void SystemManagementWidget::on_toolButtonSaveAs_clicked(){
         QMessageBox::critical(this, tr("Error"), tr("Can not save file!"));
     }
 
+}
+
+void SystemManagementWidget::on_groupBoxTemperatures_clicked(bool checked){
+    if(checked){
+        if(!m_updateTemperaturesTimer){
+            m_updateTemperaturesTimer = new QTimer(this);
+            connect(m_updateTemperaturesTimer, SIGNAL(timeout()), this, SLOT(requestUpdateTemperatures()));
+            m_updateTemperaturesTimer->setSingleShot(false);
+        }
+        m_updateTemperaturesTimer->start(5000);
+
+    }else{
+        m_updateTemperaturesTimer->stop();
+        delete m_updateTemperaturesTimer;
+        m_updateTemperaturesTimer = 0;
+    }
+}
+
+void SystemManagementWidget::requestUpdateTemperatures(){
+    bool cpu = ui.checkBoxCPUTemperature->isChecked();
+    bool harddisk = ui.checkBoxHarddiskTemperature->isChecked();
+    if(cpu || harddisk){
+        controlCenterPacketsParser->sendRequestTemperaturesPacket(m_peerSocket, cpu, harddisk);
+    }
 }
 
 void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
@@ -1152,6 +1186,8 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(in
         ui.toolButtonRequestSystemInfo->setEnabled(true);
         ui.toolButtonRescanSystemInfo->setEnabled(true);
 
+        ui.groupBoxTemperatures->setEnabled(true);
+
         m_fileManagementWidget->setPeerSocket(m_peerSocket);
         ui.tabFileManagement->setEnabled(true);
 
@@ -1167,6 +1203,9 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(in
 
         ui.toolButtonRequestSystemInfo->setEnabled(false);
         ui.toolButtonRescanSystemInfo->setEnabled(false);
+
+        ui.groupBoxTemperatures->setEnabled(false);
+
         ui.toolButtonVerify->setEnabled(true);
 
         //m_fileManagementWidget->setPeerSocket(m_peerSocket);
@@ -1174,9 +1213,6 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(in
 
         QMessageBox::critical(this, tr("Connection Error"), message);
     }
-
-
-
 
 }
 
@@ -1552,6 +1588,45 @@ void SystemManagementWidget::userResponseRemoteAssistancePacketReceived(const QS
     if(!accept){
         QMessageBox::critical(this, tr("Error"), tr("Remote Assistance Rejected By %1!").arg(userName+"@"+computerName));
     }
+}
+
+void SystemManagementWidget::updateTemperatures(const QString &cpuTemperature, const QString &harddiskTemperature){
+
+    QStringList temperatures;
+
+    if(!cpuTemperature.trimmed().isEmpty()){
+        foreach (QString temperature, cpuTemperature) {
+            temperatures.append(temperature + "\u2103");
+        }
+    }
+    ui.labelCPUTemperature->setText(temperatures.join(" "));
+    temperatures.clear();
+
+    if(!harddiskTemperature.trimmed().isEmpty()){
+        foreach (QString temperature, harddiskTemperature) {
+            temperatures.append(temperature + "\u2103");
+        }
+    }
+    ui.labelHarddiskTemperature->setText(temperatures.join(" "));
+}
+
+void SystemManagementWidget::updateScreenshot(const QByteArray &screenshot){
+
+    QPixmap pixmap;
+    pixmap.loadFromData(screenshot);
+    ui.labelScreenshot->setPixmap(pixmap);
+
+
+//    QString format = "jpg";
+//    QString initialPath = QDir::currentPath() + tr("/Screenshot%1.%2").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss")).arg(format) ;
+
+//    QFile file(initialPath);
+//    if (!file.open(QIODevice::WriteOnly)){
+//        return;
+//    }
+//    file.write(screenshot);
+//    file.flush();
+
 }
 
 void SystemManagementWidget::peerDisconnected(int socketID){

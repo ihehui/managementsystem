@@ -260,7 +260,13 @@ namespace HEHUI {
 
             RenameComputer,
             JoinOrUnjoinDomain,
-            Remark
+            Remark,
+
+            RequestTemperatures,
+            ResponseTemperatures,
+
+            RequestScreenshot,
+            ResponseScreenshot
 
             
 

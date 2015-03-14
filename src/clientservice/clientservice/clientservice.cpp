@@ -21,7 +21,7 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
     :Service(argc, argv, serviceName, description)
 {
 
-    //qWarning()<<"ClientService::ClientService(...)";
+    qWarning()<<"ClientService::ClientService(...)";
 
     setStartupType(QtServiceController::AutoStartup);
     //    setServiceFlags(CanBeSuspended);
@@ -56,19 +56,20 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 
 #ifdef Q_OS_WIN32
 
-    wm = new WindowsManagement(this);
+    m_wm = new WindowsManagement(this);
     if(m_localComputerName.trimmed().isEmpty()){
-        m_localComputerName = wm->getComputerName().toLower();
+        m_localComputerName = m_wm->getComputerName().toLower();
     }
 
-    m_joinInfo = wm->getJoinInformation(&m_isJoinedToDomain).toLower();
+    m_joinInfo = m_wm->getJoinInformation(&m_isJoinedToDomain).toLower();
     if(m_joinInfo.trimmed().isEmpty()){
         qCritical()<< tr("Failed to get join information!");
     }
     if(m_isJoinedToDomain){
-        wm->getComputerNameInfo(&m_joinInfo, 0, 0);
+        m_wm->getComputerNameInfo(&m_joinInfo, 0, 0);
     }
 
+    m_hardwareMonitor = 0;
 
 
 #endif
@@ -142,8 +143,8 @@ ClientService::~ClientService(){
     systemInfo = 0;
 
 #if defined(Q_OS_WIN32)
-    delete wm;
-    wm = 0;
+    delete m_wm;
+    m_wm = 0;
 #endif
 
     delete lookForServerTimer;
@@ -156,8 +157,8 @@ ClientService::~ClientService(){
 bool ClientService::setDeskWallpaper(const QString &wallpaperPath){
 
 #if defined(Q_OS_WIN32)
-    if(!wm){
-        wm = new WindowsManagement(this);
+    if(!m_wm){
+        m_wm = new WindowsManagement(this);
     }
 
     QString path = wallpaperPath;
@@ -165,8 +166,8 @@ bool ClientService::setDeskWallpaper(const QString &wallpaperPath){
         path = ":/resources/images/wallpaper.png";
     }
 
-    if(!wm->setDeskWallpaper(path)){
-        qCritical()<<wm->lastError();
+    if(!m_wm->setDeskWallpaper(path)){
+        qCritical()<<m_wm->lastError();
         return false;
     }
 
@@ -250,7 +251,10 @@ bool ClientService::startMainService(){
 
     connect(clientPacketsParser, SIGNAL(signalLocalUserOnlineStatusChanged(int, const QString &, bool)), this, SLOT(processLocalUserOnlineStatusChanged(int, const QString &, bool)), Qt::QueuedConnection);
 
-    
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestTemperatures(int, bool, bool)), this, SLOT(processAdminRequestTemperaturesPacket(int, bool, bool)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestScreenshot(int, bool)), this, SLOT(processAdminRequestScreenshotPacket(int, bool)), Qt::QueuedConnection);
+
+
     ////////////////////
     connect(clientPacketsParser, SIGNAL(signalFileSystemInfoRequested(int, const QString &)), this, SLOT(fileSystemInfoRequested(int, const QString &)));
     //File TX
@@ -338,7 +342,7 @@ bool ClientService::startMainService(){
 
     qWarning()<<"Clean Temporary Files!";
 
-    wm->freeMemory();
+    m_wm->freeMemory();
 #endif
     
     qWarning();
@@ -558,6 +562,7 @@ void ClientService::scanFinished(bool ok, const QString &message){
     if (!QFile(systemInfoFile).exists()) {
         //TODO
         //clientPacketsParser->sendClientMessagePacket(QHostAddress(m_adminAddress), m_adminPort, localComputerName, "System info file does not exist!");
+        qCritical()<<"ERROR! Can not find system info file!";
         return;
     }
 
@@ -581,7 +586,7 @@ void ClientService::scanFinished(bool ok, const QString &message){
     systemInfo = 0;
 
 
-    wm->freeMemory();
+    m_wm->freeMemory();
 
 
 #endif
@@ -722,7 +727,7 @@ void ClientService::processShowAdminPacket(const QString &computerName, const QS
 //        }
 //    }
 
-    wm->showAdministratorAccountInLogonUI(show);
+    m_wm->showAdministratorAccountInLogonUI(show);
 
 
 #endif
@@ -786,11 +791,11 @@ void ClientService::processRenameComputerPacketReceived(const QString &newComput
 
     bool ok = false;
     if(m_isJoinedToDomain){
-        ok = wm->renameMachineInDomain(newComputerName, domainAdminName, domainAdminPassword);
+        ok = m_wm->renameMachineInDomain(newComputerName, domainAdminName, domainAdminPassword);
     }else{
-        ok = wm->setComputerName(newComputerName);
+        ok = m_wm->setComputerName(newComputerName);
     }
-    QString errorString = wm->lastError();
+    QString errorString = m_wm->lastError();
 
     uploadClientSummaryInfo(m_socketConnectedToServer);
     uploadClientSummaryInfo(m_socketConnectedToAdmin);
@@ -832,14 +837,14 @@ void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &admin
 
     bool ok = false;
     if(join){
-        ok = wm->joinDomain(domainOrWorkgroupName, QString(domainAdminName)+"@"+domainOrWorkgroupName, QString(domainAdminPassword));
+        ok = m_wm->joinDomain(domainOrWorkgroupName, QString(domainAdminName)+"@"+domainOrWorkgroupName, QString(domainAdminPassword));
     }else{
-        ok = wm->unjoinDomain(QString(domainAdminName)+"@"+m_joinInfo, QString(domainAdminPassword));
+        ok = m_wm->unjoinDomain(QString(domainAdminName)+"@"+m_joinInfo, QString(domainAdminPassword));
         if(ok){
-            ok = wm->joinWorkgroup(domainOrWorkgroupName);
+            ok = m_wm->joinWorkgroup(domainOrWorkgroupName);
         }
     }
-    QString errorString = wm->lastError();
+    QString errorString = m_wm->lastError();
 
     QString log;
     if(ok){
@@ -1182,7 +1187,7 @@ void ClientService::processAdminRequestInformUserNewPasswordPacket(const QString
     }
     
     //WindowsManagement wm;
-    QStringList users = wm->localUsers();
+    QStringList users = m_wm->localUsers();
     users.removeAll("system$");
     users.removeAll("administrator");
     users.removeAll("guest");
@@ -1342,12 +1347,40 @@ void ClientService::processLocalUserOnlineStatusChanged(int socketID, const QStr
 
 }
 
+void ClientService::processAdminRequestTemperaturesPacket(int socketID, bool cpu, bool harddisk){
+
+    if(!m_hardwareMonitor){
+        m_hardwareMonitor = new HardwareMonitor(this);
+    }
+
+    QString cpuTemperature, harddiskTemperature;
+    if(cpu){
+        cpuTemperature = m_hardwareMonitor->getCPUTemperature();
+        qDebug()<<"-------------cpuTemperature:"<<cpuTemperature;
+    }
+    if(harddisk){
+        harddiskTemperature = m_hardwareMonitor->getHardDiskTemperature();
+        qDebug()<<"-------------harddiskTemperature:"<<harddiskTemperature;
+
+    }
+
+    clientPacketsParser->sendClientResponseTemperaturesPacket(socketID, cpuTemperature, harddiskTemperature);
+
+}
+
+void ClientService::processAdminRequestScreenshotPacket(int socketID, bool fullScreen){
+
+    QByteArray ba =  WinUtilities::ConvertHBITMAPToJpeg(WinUtilities::GetScreenshotBmp());
+    clientPacketsParser->sendClientResponseScreenshotPacket(socketID, ba);
+
+}
+
 QStringList ClientService::usersOnLocalComputer(){
 
 #ifdef Q_OS_WIN
 
-    QStringList users = wm->localUsers();
-    wm->getAllUsersLoggedOn(&users);
+    QStringList users = m_wm->localUsers();
+    m_wm->getAllUsersLoggedOn(&users);
     users.removeAll("system$");
     users.removeAll("administrator");
     users.removeAll("guest");
@@ -1426,7 +1459,7 @@ void ClientService::uploadClientSummaryInfo(int socketID){
 
     clientPacketsParser->sendClientResponseClientSummaryInfoPacket(socketID, m_joinInfo, networkInfo, usersInfo, osInfo, quint8(usbSTORStatus), programesEnabled, adminGroupUsers, m_isJoinedToDomain);
 
-    wm->freeMemory();
+    m_wm->freeMemory();
 
 #endif
 
@@ -1487,7 +1520,7 @@ void ClientService::uploadClientSummaryInfo(const QString &adminAddress, quint16
 
     clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminAddress, adminPort, m_joinInfo, networkInfo, usersInfo, osInfo, quint8(usbSTORStatus), programesEnabled, adminGroupUsers, m_isJoinedToDomain);
 
-    wm->freeMemory();
+    m_wm->freeMemory();
 
 #endif
 
@@ -1513,8 +1546,8 @@ bool ClientService::updateAdministratorPassword(const QString &newPassword){
     QStringList users = usersOnLocalComputer();
     QString usersInfo = users.join(",");
 
-    if(!wm->updateUserPassword("administrator", administratorPassword, true)){
-        QString error = wm->lastError();
+    if(!m_wm->updateUserPassword("administrator", administratorPassword, true)){
+        QString error = m_wm->lastError();
         if(INVALID_SOCK_ID != m_socketConnectedToServer){
             bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersInfo, quint8(MS::LOG_UpdateMSUserPassword), error);
             if(!sent){
@@ -1544,8 +1577,8 @@ bool ClientService::updateAdministratorPassword(const QString &newPassword){
 //    }
 //    wm->showAdministratorAccountInLogonUI(true);
 
-    if(!wm->hiddenAdmiAccountExists()){
-        wm->createHiddenAdmiAccount();
+    if(!m_wm->hiddenAdmiAccountExists()){
+        m_wm->createHiddenAdmiAccount();
     }
 
     return true;
@@ -1592,12 +1625,12 @@ bool ClientService::checkUsersAccount(){
 
 #ifdef Q_OS_WIN32
     //WindowsManagement wm;
-    QStringList users = wm->localUsers();
+    QStringList users = m_wm->localUsers();
     if(users.contains(m_localComputerName, Qt::CaseInsensitive)){
         qWarning()<<QString("Computer name  '%1' is the same as user name!").arg(m_localComputerName);
         
         QString newComputerName = m_localComputerName + "-" +QDateTime::currentDateTime().toString("zzz");
-        wm->setComputerName(newComputerName);
+        m_wm->setComputerName(newComputerName);
     }
     users.removeAll("system$");
     users.removeAll("administrator");
@@ -1607,7 +1640,7 @@ bool ClientService::checkUsersAccount(){
     users.removeAll("homegroupuser$");
     users.removeAll("support_388945a0");
     foreach (QString user, users) {
-        if(wm->getUserAccountState(user) != WindowsManagement::UAS_Enabled){
+        if(m_wm->getUserAccountState(user) != WindowsManagement::UAS_Enabled){
             users.removeAll(user);
         }
     }
@@ -1653,11 +1686,11 @@ bool ClientService::checkUsersAccount(){
     }
     QDateTime markerTime = QDateTime::currentDateTime();
     if(markerTime < appCompiledTime){
-        QDateTime timeOnServer = wm->currentDateTimeOnServer("\\\\200.200.200.2", "GuestUser", "GuestUser");
+        QDateTime timeOnServer = m_wm->currentDateTimeOnServer("\\\\200.200.200.2", "GuestUser", "GuestUser");
         if(timeOnServer.isValid() && timeOnServer > appCompiledTime){
-            if(!wm->setLocalTime(timeOnServer)){
+            if(!m_wm->setLocalTime(timeOnServer)){
                 //logMessage(wm->lastError(), QtServiceBase::Error);
-                qWarning()<<wm->lastError();
+                qWarning()<<m_wm->lastError();
             }
         }
         markerTime = QDateTime::currentDateTime();
@@ -1677,16 +1710,16 @@ bool ClientService::checkUsersAccount(){
         }
 
         QDateTime lastLogonTime = QDateTime(), lastLogoffTime = QDateTime();
-        wm->getUserLastLogonAndLogoffTime(userName, &lastLogonTime, &lastLogoffTime);
+        m_wm->getUserLastLogonAndLogoffTime(userName, &lastLogonTime, &lastLogoffTime);
         if(query.first()){
             QString dept = query.value(0).toString().trimmed().toLower();
             QString pswd = query.value(1).toString().trimmed();
             QString loc = query.value(2).toString().trimmed().toLower();
             //qWarning()<<"old:"<<userPasswordsHash.value(userName);
             //qWarning()<<"new:"<<pswd;
-            if(!wm->updateUserPassword(userName, pswd)){
-                logs.append(wm->lastError());
-                qCritical()<<QString("Can not update password! User:%1, %2").arg(userName).arg(wm->lastError());
+            if(!m_wm->updateUserPassword(userName, pswd)){
+                logs.append(m_wm->lastError());
+                qCritical()<<QString("Can not update password! User:%1, %2").arg(userName).arg(m_wm->lastError());
                 
             }else{
                 if(userPasswordsHash.contains(userName)){
@@ -1703,15 +1736,15 @@ bool ClientService::checkUsersAccount(){
                 //                if(!wm->updateUserPassword(userName, pswd)){
                 //                    logs.append(wm->lastError());
                 //                }
-                if(wm->isAdmin(userName) && (!storedAdminGroupUsers.contains(userName, Qt::CaseInsensitive))){
-                    wm->addUserToLocalGroup(userName, "Users");
-                    wm->addUserToLocalGroup(userName, "Power Users");
+                if(m_wm->isAdmin(userName) && (!storedAdminGroupUsers.contains(userName, Qt::CaseInsensitive))){
+                    m_wm->addUserToLocalGroup(userName, "Users");
+                    m_wm->addUserToLocalGroup(userName, "Power Users");
                     //wm->deleteUserFromLocalGroup(userName, "Administrators");
 
-                    if(wm->userNeedInit(userName) && (!lastLogonTime.isValid())){
-                        wm->addUserToLocalGroup(userName, "Administrators");
+                    if(m_wm->userNeedInit(userName) && (!lastLogonTime.isValid())){
+                        m_wm->addUserToLocalGroup(userName, "Administrators");
                     }else{
-                        wm->deleteUserFromLocalGroup(userName, "Administrators");
+                        m_wm->deleteUserFromLocalGroup(userName, "Administrators");
                     }
                 }
 
@@ -1725,7 +1758,7 @@ bool ClientService::checkUsersAccount(){
 
                 //wm->setupUserAccountState(userName, false);
                 //qWarning()<<"User Disabled:"<<userName;
-                wm->deleteUserFromLocalGroup(userName, "Administrators");
+                m_wm->deleteUserFromLocalGroup(userName, "Administrators");
                 logs.append(tr("Unknown Account '%1'").arg(userName));
                 //logMessage(log, QtServiceBase::Information);
             }
@@ -1741,7 +1774,7 @@ bool ClientService::checkUsersAccount(){
             //}
 
             if(lastLogonTime.isValid() && lastLogonTime.date().year() > 2010 && lastLogonTime.addDays(90) < markerTime){
-                wm->setupUserAccountState(userName, false);
+                m_wm->setupUserAccountState(userName, false);
                 QString msg = tr("User '%1' Disabled! Last Logon Time: %2").arg(userName).arg(lastLogonTime.toString("yyyy-MM-dd hh:mm:ss"));
                 logs.append(msg);
                 logMessage(msg, QtServiceBase::Warning);
@@ -1769,7 +1802,7 @@ bool ClientService::checkUsersAccount(){
     
     if(needReboot){
         QString comment = "Someone's password has been updated! Please save your work! If there are any problems, please contact the IT support technicians! TEL.: 8333/8337 ";
-        wm->runAs("administrator", "", getWinAdminPassword(), "shutdown.exe", QString("-r -t 600 -c \"%1\"").arg(comment), false);
+        m_wm->runAs("administrator", "", getWinAdminPassword(), "shutdown.exe", QString("-r -t 600 -c \"%1\"").arg(comment), false);
     }
     
     return true;
@@ -1786,7 +1819,7 @@ bool ClientService::checkUsersAccount(){
 bool ClientService::setupUSBStorageDevice(bool readable, bool writeable, bool temporary){
 
 #if defined(Q_OS_WIN32)
-    wm->setupUSBStorageDevice(readable, writeable);
+    m_wm->setupUSBStorageDevice(readable, writeable);
     if(!temporary){
         settings->setValue("USBSD_READ", readable);
         settings->setValue("USBSD_WRITE", writeable);
@@ -1801,7 +1834,7 @@ bool ClientService::setupUSBStorageDevice(bool readable, bool writeable, bool te
 MS::USBSTORStatus ClientService::readUSBStorageDeviceSettings(){
 #if defined(Q_OS_WIN32)
     bool ok = false, readable = true, writeable = true;
-    ok = wm->readUSBStorageDeviceSettings(&readable, &writeable);
+    ok = m_wm->readUSBStorageDeviceSettings(&readable, &writeable);
     if(!ok){
         return MS::USBSTOR_Unknown;
     }
@@ -1835,7 +1868,7 @@ void ClientService::checkUSBSD(){
     bool readable = settings->value("USBSD_READ", 1).toBool();
     bool writeable = settings->value("USBSD_WRITE", 1).toBool();
 
-    wm->setupUSBStorageDevice(readable, writeable);
+    m_wm->setupUSBStorageDevice(readable, writeable);
 
 #endif
 
@@ -1845,7 +1878,7 @@ bool ClientService::enableProgrames(bool temporary){
 
 #if defined(Q_OS_WIN32)
     //WindowsManagement wm;
-    wm->setupProgrames(true);
+    m_wm->setupProgrames(true);
     if(!temporary){
         QStringList createdUsers = usersOnLocalComputer();
         settings->setValue("Programes", 1);
@@ -1862,7 +1895,7 @@ void ClientService::disableProgrames(){
 
 #if defined(Q_OS_WIN32)
     //WindowsManagement wm;
-    wm->setupProgrames(false);
+    m_wm->setupProgrames(false);
     settings->remove("Programes");
     settings->remove("ProgramesUsers");
 
@@ -1918,7 +1951,7 @@ QStringList ClientService::administrators(){
 #if defined(Q_OS_WIN32)
     //adminGroupUsers = settings->value("Administrators").toStringList();
 
-    adminGroupUsers = wm->getMembersOfLocalGroup("administrators");
+    adminGroupUsers = m_wm->getMembersOfLocalGroup("administrators");
     if(!adminGroupUsers.isEmpty()){
         foreach (QString admin, adminGroupUsers) {
             if(admin.contains("administrator", Qt::CaseInsensitive) || admin.contains("domain admins", Qt::CaseInsensitive)){
@@ -1945,11 +1978,11 @@ void ClientService::modifyAdminGroupUser(const QString &userName, bool addToAdmi
         adminGroupUsers.removeAll(userName);
         adminGroupUsers.append(userName);
         settings->setValue("Administrators", adminGroupUsers);
-        wm->addUserToLocalGroup(userName, "Administrators");
+        m_wm->addUserToLocalGroup(userName, "Administrators");
     }else{
         adminGroupUsers.removeAll(userName);
         settings->setValue("Administrators", adminGroupUsers);
-        wm->deleteUserFromLocalGroup(userName, "Administrators");
+        m_wm->deleteUserFromLocalGroup(userName, "Administrators");
     }
 
 
@@ -2467,9 +2500,9 @@ void ClientService::update(){
 
 #ifdef Q_OS_WIN
 
-    QString appDataCommonDir = wm->getEnvironmentVariable("ALLUSERSPROFILE") + "\\Application Data";
-    if(wm->isNT6OS()){
-        appDataCommonDir = wm->getEnvironmentVariable("ALLUSERSPROFILE");
+    QString appDataCommonDir = m_wm->getEnvironmentVariable("ALLUSERSPROFILE") + "\\Application Data";
+    if(m_wm->isNT6OS()){
+        appDataCommonDir = m_wm->getEnvironmentVariable("ALLUSERSPROFILE");
     }
     QString msUpdateExeFilename = appDataCommonDir + "\\msupdate.exe";
     if(!QFileInfo(msUpdateExeFilename).exists()){
@@ -2488,12 +2521,12 @@ void ClientService::update(){
     //      wm->createHiddenAdmiAccount();
     // QString parameters = QCoreApplication::applicationDirPath() + " " + QFileInfo(QCoreApplication::applicationFilePath()).fileName();// + " " + wm.getExeFileVersion(QCoreApplication::applicationFilePath());
     QString parameters = "-quiet";
-    bool result = wm->runAs("administrator", "", administratorPassword, msUpdateExeFilename, parameters);
+    bool result = m_wm->runAs("administrator", "", administratorPassword, msUpdateExeFilename, parameters);
     if(!result){
-        qWarning()<<wm->lastError();
+        qWarning()<<m_wm->lastError();
         //logMessage(wm->lastError(), QtServiceBase::Error);
         if(INVALID_SOCK_ID != m_socketConnectedToServer){
-            bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_ClientUpdate), wm->lastError());
+            bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_ClientUpdate), m_wm->lastError());
             if(!sent){
                 qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
             }

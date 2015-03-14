@@ -120,7 +120,9 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << localUDTListeningPort << computerName << rescan;
+        //out << m_localID << localUDTListeningPort << computerName << rescan;
+        out << m_localID << m_localENETListeningPort << computerName << rescan;
+
         packet->setPacketData(ba);
 
         ba.clear();
@@ -507,7 +509,49 @@ public slots:
 
     }
 
+    bool sendRequestTemperaturesPacket(int socketID, bool cpu = true, bool harddisk = false){
 
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::RequestTemperatures));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_6);
+        out << m_localID << (cpu?quint8(1):quint8(0)) << (harddisk?quint8(1):quint8(0));
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        return m_rtp->sendReliableData(socketID, &ba);
+
+    }
+
+    bool sendRequestScreenshotPacket(int socketID, bool fullScreen = true){
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::RequestScreenshot));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_6);
+        out << m_localID << (fullScreen?quint8(1):quint8(0));
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        return m_rtp->sendReliableData(socketID, &ba);
+
+    }
 
 
     //////////////////////////////
@@ -761,6 +805,9 @@ signals:
     
     void signalClientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
 
+    void signalTemperaturesPacketReceived(const QString &cpuTemperature, const QString &harddiskTemperature);
+    void signalScreenshotPacketReceived(const QByteArray &screenshot);
+
 
     ///////////////////////////
     void signalFileSystemInfoReceived(int socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData);
@@ -788,6 +835,14 @@ private:
     quint16 getLastReceivedPacketSN(const QString &peerID);
 
 private:
+
+    ResourcesManagerInstance *m_resourcesManager;
+    UDPServer *m_udpServer;
+    RTP *m_rtp;
+    UDTProtocol *m_udtProtocol;
+    TCPServer *m_tcpServer;
+    ENETProtocol *m_enetProtocol;
+
     QHostAddress serverAddress;
     quint16 serverUDTListeningPort;
 
@@ -796,10 +851,6 @@ private:
 
     QHostAddress ipmcGroupAddress;
     quint16 ipmcListeningPort;
-
-    quint16 localUDTListeningPort;
-    quint16 m_localTCPServerListeningPort;
-
 
     PacketHandlerBase *m_packetHandlerBase;
     //NetworkManagerInstance *networkManager;
@@ -810,12 +861,11 @@ private:
 
     QMultiHash<QString /*Peer ID*/, QPair<quint16 /*Packet Serial Number*/, QDateTime/*Received Time*/> > m_receivedPacketsHash;
 
-    ResourcesManagerInstance *m_resourcesManager;
-    UDPServer *m_udpServer;
-    RTP *m_rtp;
-    UDTProtocol *m_udtProtocol;
-    TCPServer *m_tcpServer;
 
+
+    //    quint16 localUDTListeningPort;
+    quint16 m_localTCPServerListeningPort;
+    quint16 m_localENETListeningPort;
 
 
 };

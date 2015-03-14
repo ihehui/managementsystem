@@ -3,9 +3,12 @@
 
 #include <QObject>
 
+#include <limits>
+
 #include "sharedmslib.h"
 #include "udtprotocol.h"
 #include "tcpserver.h"
+#include "enetprotocol.h"
 
 
 namespace HEHUI {
@@ -15,7 +18,7 @@ class SHAREDMSLIB_API RTP : public QObject
 {
     Q_OBJECT
 public:
-    enum Protocol{AUTO = 0, UDT, TCP};
+    enum Protocol{AUTO = 0, TCP, ENET, UDT};
 
     explicit RTP(QObject *parent = 0);
     ~RTP();
@@ -31,7 +34,11 @@ public:
     TCPServer * startTCPServer(const QHostAddress &address = QHostAddress::Any, quint16 port = 0, bool tryOtherPort = true, QString *errorMessage = 0);
     quint16 getTCPServerPort();
 
-    int connectToHost ( const QHostAddress &hostAddress, quint16 port, int waitMsecs = 0, QString *errorMessage = 0, Protocol protocol= AUTO);
+    ENETProtocol * getENETProtocol(){return m_enetProtocol;}
+    ENETProtocol * startENETProtocol(const QHostAddress &address = QHostAddress::Any, quint16 port = 0, bool tryOtherPort = true, QString *errorMessage = 0);
+    quint16 getENETProtocolPort();
+
+    int connectToHost( const QHostAddress &hostAddress, quint16 port, int waitMsecs = 0, QString *errorMessage = 0, Protocol protocol= AUTO);
     void closeSocket(int socketID);
     bool isSocketConnected(int socketID);
     bool getAddressInfoFromSocket(int socketID, QString *address, quint16 *port, bool getPeerInfo = true);
@@ -41,8 +48,8 @@ public:
     QString lastErrorString(){return m_lastErrorString;}
 
 signals:
-    void connected (int socketID, const QString &peerAddress, quint16 peerPort);
-    void disconnected (int socketID/*, const QString &peerAddress, quint16 peerPort*/);
+//    void connected (int socketID, const QString &peerAddress, quint16 peerPort);
+    void disconnected (quint32 socketID/*, const QString &peerAddress, quint16 peerPort*/);
 
     
 public slots:
@@ -50,8 +57,11 @@ public slots:
 
 private:
 
+    QHash<int /*socketID*/, Protocol> m_socketInfoHash;
+
     UDTProtocol *m_udtProtocol;
     TCPServer *m_tcpServer;
+    ENETProtocol *m_enetProtocol;
 
     QString m_lastErrorString;
     

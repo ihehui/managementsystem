@@ -62,15 +62,19 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
     m_rtp = m_resourcesManager->getRTP();
     Q_ASSERT(m_rtp);
 
-    m_udtProtocol = m_rtp->getUDTProtocol();
-    Q_ASSERT(m_udtProtocol);
-    m_udtProtocol->startWaitingForIOInOneThread(10);
-    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
-    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+//    m_udtProtocol = m_rtp->getUDTProtocol();
+//    Q_ASSERT(m_udtProtocol);
+//    m_udtProtocol->startWaitingForIOInOneThread(10);
+//    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
+//    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
     m_tcpServer = m_rtp->getTCPServer();
     Q_ASSERT(m_tcpServer);
     connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+
+    m_enetProtocol = m_rtp->getENETProtocol();
+    Q_ASSERT(m_enetProtocol);
+    connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
 
 
@@ -84,8 +88,9 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
     ipmcListeningPort = quint16(IP_MULTICAST_GROUP_PORT);
 
 
-    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
+    //localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
     m_localTCPServerListeningPort = m_tcpServer->getTCPServerListeningPort();
+    m_localENETListeningPort = m_rtp->getENETProtocolPort();
 
 
     m_localComputerName = QHostInfo::localHostName().toLower();
@@ -337,7 +342,24 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::ResponseTemperatures):
+    {
+        QString cpuTemperature, harddiskTemperature;
+        in >> cpuTemperature >> harddiskTemperature ;
 
+        emit signalTemperaturesPacketReceived(cpuTemperature, harddiskTemperature);
+
+    }
+    break;
+    case quint8(MS::ResponseScreenshot):
+    {
+        QByteArray screenshot;
+        in >> screenshot ;
+
+        emit signalScreenshotPacketReceived(screenshot);
+
+    }
+    break;
 
 ///////////////////////////////////////////////
     case quint8(MS::ResponseFileSystemInfo):

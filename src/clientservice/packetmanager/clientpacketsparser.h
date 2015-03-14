@@ -485,7 +485,49 @@ public slots:
         return m_rtp->sendReliableData(userSocketID, &ba);
     }
 
+    bool sendClientResponseTemperaturesPacket(int socketID, const QString &cpuTemperature, const QString &harddiskTemperature){
+        qWarning()<<"----sendClientResponseTemperaturesPacket(...):"<<cpuTemperature<<" "<<harddiskTemperature;
 
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::ResponseTemperatures));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_7);
+        out << m_localComputerName << cpuTemperature << harddiskTemperature;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
+    bool sendClientResponseScreenshotPacket(int socketID, const QByteArray &screenshot){
+        qWarning()<<"----sendClientResponseScreenshotPacket(...):";
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::ResponseScreenshot));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_7);
+        out << m_localComputerName << screenshot;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
 
 //////////////////////////////
     bool responseFileSystemInfo(int socketID, QString parentDirPath, const QByteArray &fileSystemInfoData){
@@ -730,6 +772,10 @@ signals:
 
     void signalLocalUserOnlineStatusChanged(int socketID, const QString &userName, bool online);
 
+    void signalAdminRequestTemperatures(int socketID, bool cpu, bool harddisk);
+    void signalAdminRequestScreenshot(int socketID, bool fullScreen);
+
+
 ///////////////////////////
     void signalFileSystemInfoRequested(int socketID, const QString &parentDirPath);
 
@@ -750,9 +796,9 @@ private:
 
 
     QHostAddress m_localUDTListeningAddress;
-    quint16 m_localUDTServerListeningPort;
+//    quint16 m_localUDTServerListeningPort;
     quint16 m_localTCPServerListeningPort;
-
+    quint16 m_localENETListeningPort;
 
 
     QString m_localComputerName;
@@ -764,6 +810,7 @@ private:
     RTP *m_rtp;
     UDTProtocol *m_udtProtocol;
     TCPServer *m_tcpServer;
+    ENETProtocol *m_enetProtocol;
 
     QHash<int /*UDT Socket ID*/, QString /*User Name*/> m_localUserSocketsHash;
 

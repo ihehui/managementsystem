@@ -14,6 +14,10 @@
 #include <iostream>
 using namespace std;
 
+
+#include <QLibraryInfo>
+
+
 int main(int argc, char **argv)
 {
     Q_INIT_RESOURCE(resources);
@@ -25,8 +29,17 @@ int main(int argc, char **argv)
 //    qWarning("(Example uses dummy settings file: %s/QtSoftware.conf)", QDir::tempPath().toLatin1().constData());
 //#endif
 
+
+    QCoreApplication a(argc, argv);
+
+
     //HEHUI::ServerService service(argc, argv, "ServerService", "Server Service For Computer Management System");
     HEHUI::ServerService service(argc, argv, SERVICE_NAME, APP_NAME);
+
+
+//    qWarning()<<"--Library Paths:"<<QCoreApplication::libraryPaths ();
+//    qWarning()<<"--PluginsPath:"<<QLibraryInfo::location(QLibraryInfo::PluginsPath);
+
 
     cout<<qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION))<<endl<<endl;
 

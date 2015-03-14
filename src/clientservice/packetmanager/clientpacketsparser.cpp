@@ -51,23 +51,28 @@ ClientPacketsParser::ClientPacketsParser(ClientResourcesManager *manager, QObjec
     m_rtp = m_resourcesManager->getRTP();
     Q_ASSERT(m_rtp);
 
-    m_udtProtocol = m_rtp->getUDTProtocol();
-    Q_ASSERT(m_udtProtocol);
-    m_udtProtocol->startWaitingForIOInOneThread(10);
-    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
-    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+//    m_udtProtocol = m_rtp->getUDTProtocol();
+//    Q_ASSERT(m_udtProtocol);
+//    m_udtProtocol->startWaitingForIOInOneThread(10);
+//    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
+//    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
     m_tcpServer = m_rtp->getTCPServer();
     Q_ASSERT(m_tcpServer);
     connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+
+    m_enetProtocol = m_rtp->getENETProtocol();
+    Q_ASSERT(m_enetProtocol);
+    connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
 
     serverAddress = QHostAddress::Null;
     serverUDTListeningPort = 0;
     serverName = "";
 
-    m_localUDTServerListeningPort = m_udtProtocol->getUDTListeningPort();
-    m_localTCPServerListeningPort = m_tcpServer->getTCPServerListeningPort();
+//    m_localUDTServerListeningPort = m_udtProtocol->getUDTListeningPort();
+    m_localTCPServerListeningPort = m_rtp->getTCPServerPort();
+    m_localENETListeningPort = m_rtp->getENETProtocolPort();
 
     m_localComputerName = QHostInfo::localHostName().toLower();
     
@@ -483,7 +488,30 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::RequestTemperatures):
+    {
+        quint8 cpu = 1, harddisk = 0;
+        in >> cpu >> harddisk;
 
+        emit signalAdminRequestTemperatures(socketID, cpu, harddisk);
+
+        qDebug()<<"~~Temperatures";
+
+    }
+    break;
+    case quint8(MS::RequestScreenshot):
+    {
+        quint8 fullScreen = 1;
+        in >> fullScreen;
+
+        emit signalAdminRequestScreenshot(socketID, fullScreen);
+
+        qDebug()<<"~~RequestScreenshot";
+
+    }
+    break;
+
+////////////////////////////////////////////
     case quint8(MS::RequestFileSystemInfo):
     {
         QString parentDirPath = "";
