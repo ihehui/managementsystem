@@ -26,7 +26,7 @@ public:
     void startServers(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
     void stopServers();
 
-    UDTProtocol * getUDTProtocol(){return m_udtProtocol;}
+//    UDTProtocol * getUDTProtocol(){return m_udtProtocol;}
     UDTProtocol * startUDTProtocol(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
     quint16 getUDTServerPort();
 
@@ -38,26 +38,29 @@ public:
     ENETProtocol * startENETProtocol(const QHostAddress &address = QHostAddress::Any, quint16 port = 0, bool tryOtherPort = true, QString *errorMessage = 0);
     quint16 getENETProtocolPort();
 
-    int connectToHost( const QHostAddress &hostAddress, quint16 port, int waitMsecs = 0, QString *errorMessage = 0, Protocol protocol= AUTO);
-    void closeSocket(int socketID);
-    bool isSocketConnected(int socketID);
-    bool getAddressInfoFromSocket(int socketID, QString *address, quint16 *port, bool getPeerInfo = true);
-    bool isUDTSocket(int socketID);
+    SOCKETID connectToHost( const QHostAddress &hostAddress, quint16 port, int waitMsecs = 0, QString *errorMessage = 0, Protocol protocol= AUTO);
+    void closeSocket(SOCKETID socketID);
+    bool isSocketConnected(SOCKETID socketID);
+    bool getAddressInfoFromSocket(SOCKETID socketID, QString *address, quint16 *port, bool getPeerInfo = true);
 
-    bool sendReliableData(int socketID, const QByteArray *byteArray);
+    QString socketProtocolString(SOCKETID socketID);
+
+    bool sendReliableData(SOCKETID socketID, const QByteArray *byteArray);
     QString lastErrorString(){return m_lastErrorString;}
 
 signals:
 //    void connected (int socketID, const QString &peerAddress, quint16 peerPort);
-    void disconnected (quint32 socketID/*, const QString &peerAddress, quint16 peerPort*/);
+    void disconnected (SOCKETID socketID/*, const QString &peerAddress, quint16 peerPort*/);
 
     
-public slots:
-
+private slots:
+    void tcpPeerConnected(SOCKETID socketID, const QString &address, quint16 port);
+    void enetPeerConnected(SOCKETID socketID, const QString &address, quint16 port);
+    void udtPeerConnected(SOCKETID socketID, const QString &address, quint16 port);
 
 private:
 
-    QHash<int /*socketID*/, Protocol> m_socketInfoHash;
+    QHash<SOCKETID /*socketID*/, Protocol> m_socketInfoHash;
 
     UDTProtocol *m_udtProtocol;
     TCPServer *m_tcpServer;

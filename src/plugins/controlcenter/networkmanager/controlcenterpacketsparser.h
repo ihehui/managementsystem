@@ -82,11 +82,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, address, quint16(IP_MULTICAST_GROUP_PORT));
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, address, quint16(IP_MULTICAST_GROUP_PORT));
     }
 
-    bool sendAdminOnlineStatusChangedPacket(int socketID, const QString &clientName, const QString &adminName, bool online){
+    bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online){
         qDebug()<<"----sendAdminOnlineStatusChangedPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -105,14 +106,15 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
 
 
 
-    bool sendRequestClientDetailedInfoPacket(int socketID, const QString &computerName, bool rescan){
+    bool sendRequestClientDetailedInfoPacket(SOCKETID socketID, const QString &computerName, bool rescan){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::ClientDetailedInfoRequested));
@@ -131,11 +133,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendAdminRequestRemoteConsolePacket(int socketID, const QString &computerName, const QString &applicationPath, const QString &adminID, bool startProcess = true){
+    bool sendAdminRequestRemoteConsolePacket(SOCKETID socketID, const QString &computerName, const QString &applicationPath, const QString &adminID, bool startProcess = true){
         qDebug()<<"----sendServerRequestRemoteConsolePacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -153,10 +156,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRemoteConsoleCMDFromAdminPacket(int socketID, const QString &computerName, const QString &command){
+    bool sendRemoteConsoleCMDFromAdminPacket(SOCKETID socketID, const QString &computerName, const QString &command){
         qDebug()<<"----sendRemoteConsoleCMDFromServerPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -175,10 +180,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendSetupUSBSDPacket(int socketID, const QString &computerName, const QString &userName, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName){
+    bool sendSetupUSBSDPacket(SOCKETID socketID, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::AdminRequestSetupUSBSD));
@@ -187,7 +194,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << computerName << userName << usbSTORStatus << temporarilyAllowed << adminName;
+        out << m_localID << usbSTORStatus << temporarilyAllowed << adminName;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -196,10 +203,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendSetupProgramesPacket(int socketID, const QString &computerName, const QString &userName, bool enable, bool temporarilyAllowed, const QString &adminName){
+    bool sendSetupProgramesPacket(SOCKETID socketID, bool enable, bool temporarilyAllowed, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::AdminRequestSetupProgrames));
@@ -208,7 +217,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << computerName << userName << enable << temporarilyAllowed << adminName;
+        out << m_localID << enable << temporarilyAllowed << adminName;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -217,10 +226,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendShowAdminPacket(int socketID, const QString &computerName, const QString &userName, bool show){
+    bool sendShowAdminPacket(SOCKETID socketID, bool show){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::ShowAdmin));
@@ -228,7 +239,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << computerName << userName << show;
+        out << m_localID << show;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -237,10 +248,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendModifyAdminGroupUserPacket(int socketID, const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName){
+    bool sendModifyAdminGroupUserPacket(SOCKETID socketID, const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::ModifyAdminGroupUser));
@@ -257,10 +270,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRenameComputerPacket(int socketID, const QString &oldComputerName, const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
+    bool sendRenameComputerPacket(SOCKETID socketID, const QString &oldComputerName, const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::RenameComputer));
@@ -277,10 +292,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendJoinOrUnjoinDomainPacket(int socketID, const QString &computerName, const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
+    bool sendJoinOrUnjoinDomainPacket(SOCKETID socketID, const QString &computerName, const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::JoinOrUnjoinDomain));
@@ -297,11 +314,13 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
 
-    bool sendAdminRequestConnectionToClientPacket(int socketID, const QString &computerName, const QString &users){
+    bool sendAdminRequestConnectionToClientPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::AdminRequestConnectionToClient));
@@ -309,7 +328,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << computerName << users ;
+        out << m_localID << adminComputerName << adminName ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -317,6 +336,8 @@ public slots:
         QVariant v;
         v.setValue(*packet);
         out << v;
+
+        PacketHandlerBase::recylePacket(packet);
 
         return m_rtp->sendReliableData(socketID, &ba);
     }
@@ -339,10 +360,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_udpServer->sendDatagram(ba, targetAddress, quint16(IP_MULTICAST_GROUP_PORT));
     }
     
-    bool sendRemoteAssistancePacket(int socketID, const QString &computerName, const QString &adminName){
+    bool sendRemoteAssistancePacket(SOCKETID socketID, const QString &computerName, const QString &adminName, const QString &userName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -351,7 +374,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << computerName << adminName;
+        out << m_localID << computerName << adminName << userName;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -359,6 +382,8 @@ public slots:
         QVariant v;
         v.setValue(*packet);
         out << v;
+
+        PacketHandlerBase::recylePacket(packet);
 
         return m_rtp->sendReliableData(socketID, &ba);
     }
@@ -385,11 +410,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
     }
     
-    bool sendUpdateMSUserPasswordPacket(int socketID, const QString &workgroupName, const QString &adminName){
+    bool sendUpdateMSUserPasswordPacket(SOCKETID socketID, const QString &workgroupName, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::UpdateMSWUserPassword));
@@ -400,15 +426,15 @@ public slots:
         out << m_localID << workgroupName << adminName;
         packet->setPacketData(ba);
 
-
         ba.clear();
         out.device()->seek(0);
         QVariant v;
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
 
@@ -434,11 +460,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
     }
     
-    bool sendInformUpdatePasswordPacket(int socketID, const QString &workgroupName, const QString &adminName){
+    bool sendInformUpdatePasswordPacket(SOCKETID socketID, const QString &workgroupName, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -456,12 +483,13 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
 
-    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, const QString &groupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, bool mustRead = true){
+    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, const QString &groupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead = true){
         qDebug()<<"--sendAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" computerName:"<<computerName;
         Packet *packet = PacketHandlerBase::getPacket();
         QHostAddress targetAddress = QHostAddress(peerAddress);
@@ -474,7 +502,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << groupName << computerName << announcementID << announcement << adminName << (mustRead?quint8(1):quint8(0));
+        out << m_localID << groupName << computerName << announcementID << announcement << adminName << userName << (mustRead?quint8(1):quint8(0));
         packet->setPacketData(ba);
 
         ba.clear();
@@ -483,11 +511,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
     }
 
-    bool sendAnnouncementPacket(int socketID, const QString &groupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, bool mustRead = true){
+    bool sendAnnouncementPacket(SOCKETID socketID, const QString &groupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, bool mustRead = true){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -505,11 +534,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRequestTemperaturesPacket(int socketID, bool cpu = true, bool harddisk = false){
+    bool sendRequestTemperaturesPacket(SOCKETID socketID, bool cpu = true, bool harddisk = false){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -527,11 +557,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRequestScreenshotPacket(int socketID, bool fullScreen = true){
+    bool sendRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen = true){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -540,7 +571,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_6);
-        out << m_localID << (fullScreen?quint8(1):quint8(0));
+        out << m_localID << userName << (fullScreen?quint8(1):quint8(0));
         packet->setPacketData(ba);
 
         ba.clear();
@@ -549,13 +580,14 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
 
     //////////////////////////////
-    bool requestFileSystemInfo(int socketID, const QString &parentDirPath){
+    bool requestFileSystemInfo(SOCKETID socketID, const QString &parentDirPath){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::RequestFileSystemInfo));
@@ -572,10 +604,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool requestUploadFile(int socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &remoteFileSaveDir = "./"){
+    bool requestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &remoteFileSaveDir = "./"){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::RequestUploadFile));
@@ -592,10 +626,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool requestDownloadFile(int socketID, const QString &remoteBaseDir, const QString &remoteFileName, const QString &localFileSaveDir){
+    bool requestDownloadFile(SOCKETID socketID, const QString &remoteBaseDir, const QString &remoteFileName, const QString &localFileSaveDir){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::RequestDownloadFile));
@@ -612,10 +648,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool acceptFileDownloadRequest(int socketID, const QString &fileName, bool accepted, const QByteArray &fileMD5Sum, quint64 size, const QString &remoteFileSaveDir){
+    bool acceptFileDownloadRequest(SOCKETID socketID, const QString &fileName, bool accepted, const QByteArray &fileMD5Sum, quint64 size, const QString &remoteFileSaveDir){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -633,9 +671,11 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
-    bool denyFileDownloadRequest(int socketID, const QString &fileName, bool accepted, const QString &message){
+    bool denyFileDownloadRequest(SOCKETID socketID, const QString &fileName, bool accepted, const QString &message){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::ResponseFileDownloadRequest));
@@ -652,10 +692,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool responseFileUploadRequest(int socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message){
+    bool responseFileUploadRequest(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::ResponseFileUploadRequest));
@@ -672,10 +714,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool requestFileData(int socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
+    bool requestFileData(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::RequestFileData));
@@ -692,10 +736,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendFileData(int socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray *data, const QByteArray *sha1){
+    bool sendFileData(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray *data, const QByteArray *sha1){
         qDebug()<<"--sendFileData(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -714,10 +760,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool fileTXStatusChanged(int socketID, const QByteArray &fileMD5, quint8 status){
+    bool fileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::FileTXStatusChanged));
@@ -734,10 +782,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool fileTXError(int socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString){
+    bool fileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString){
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
         packet->setPacketType(quint8(MS::FileTXError));
@@ -753,6 +803,8 @@ public slots:
         QVariant v;
         v.setValue(*packet);
         out << v;
+
+        PacketHandlerBase::recylePacket(packet);
 
         return m_rtp->sendReliableData(socketID, &ba);
     }
@@ -775,7 +827,7 @@ signals:
     void signalServerOnlinePacketReceived(const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
     void signalServerOfflinePacketReceived(const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
 
-    void signalClientOnlineStatusChanged(int socketID, const QString &clientName, bool online);
+    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &clientName, bool online);
 
     //    void signalAdminLoggedOnToServerRequestPacketReceived(const QHostAddress adminAddress, quint16 adminPort, const QString &adminID);
     //    void signalServerRequestRemoteConsolePacketReceived(const QString &adminID);
@@ -786,8 +838,8 @@ signals:
 
 
     void signalClientResponseClientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
-    void signalClientResponseUSBInfoPacketReceived(int socketID, const QString &computerName, const QString &usbInfo);
-    void signalClientResponseProgramesInfoPacketReceived(int socketID, const QString &computerName, const QString &usbInfo);
+    void signalClientResponseUSBInfoPacketReceived(SOCKETID socketID, const QString &computerName, const QString &usbInfo);
+    void signalClientResponseProgramesInfoPacketReceived(SOCKETID socketID, const QString &computerName, const QString &usbInfo);
 
 
 
@@ -797,32 +849,34 @@ signals:
     //    void  signalServerAnnouncementPacketReceived(const QString &groupName, const QString &computerName, const QString &announcement, bool mustRead = true);
 
 
-    void signalClientResponseAdminConnectionResultPacketReceived(int socketID, const QString &computerName, bool result, const QString &message);
+    void signalClientResponseAdminConnectionResultPacketReceived(SOCKETID socketID, const QString &computerName, bool result, const QString &message);
     void signalClientMessagePacketReceived(const QString &computerName, const QString &message, quint8 clientMessageType);
 
     void signalUserResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
     void signalNewPasswordRetrevedByUserPacketReceived(const QString &userName, const QString &computerName);
     
-    void signalClientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
+    void signalUserOnlineStatusChanged(const QString &userName, const QString &computerName, bool online);
+
+    void signalClientResponseClientSummaryInfoPacketReceived(SOCKETID socketID, const QByteArray &clientSummaryInfo);
 
     void signalTemperaturesPacketReceived(const QString &cpuTemperature, const QString &harddiskTemperature);
-    void signalScreenshotPacketReceived(const QByteArray &screenshot);
+    void signalScreenshotPacketReceived(const QString &userName, const QByteArray &screenshot);
 
 
     ///////////////////////////
-    void signalFileSystemInfoReceived(int socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData);
+    void signalFileSystemInfoReceived(SOCKETID socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData);
 
-    void signalAdminRequestUploadFile(int socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
-    void signalAdminRequestDownloadFile(int socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
+    void signalAdminRequestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
+    void signalAdminRequestDownloadFile(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
 
-    void signalFileDownloadRequestAccepted(int socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &localFileSaveDir);
-    void signalFileDownloadRequestDenied(int socketID, const QString &remoteFileName, const QString &message);
-    void signalFileUploadRequestResponsed(int socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message);
+    void signalFileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &localFileSaveDir);
+    void signalFileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message);
+    void signalFileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message);
 
-    void signalFileDataRequested(int socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
-    void signalFileDataReceived(int socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
-    void signalFileTXStatusChanged(int socketID, const QByteArray &fileMD5, quint8 status);
-    void signalFileTXError(int socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
+    void signalFileDataRequested(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
+    void signalFileDataReceived(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
+    void signalFileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status);
+    void signalFileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
 
 
 public slots:
@@ -863,7 +917,7 @@ private:
 
 
 
-    //    quint16 localUDTListeningPort;
+//        quint16 localUDTListeningPort;
     quint16 m_localTCPServerListeningPort;
     quint16 m_localENETListeningPort;
 

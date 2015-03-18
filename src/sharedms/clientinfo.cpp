@@ -64,10 +64,73 @@ ClientInfo::ClientInfo(const QString &computerName, QObject *parent)
     clientUDTListeningAddress = "";
     clientUDTListeningPort = 0;
 
+    onlineUsers = "";
+
 }
 
 ClientInfo::~ClientInfo() {
     // TODO Auto-generated destructor stub
+}
+
+ClientInfo & ClientInfo::operator = (const ClientInfo &clientInfo){
+
+    computerName = clientInfo.getComputerName();
+    workgroup = clientInfo.getWorkgroup();
+    network = clientInfo.getNetwork();
+    users = clientInfo.getUsers();
+    os = clientInfo.getOs();
+    usbSDStatus = clientInfo.getUsbSDStatus();
+    programsEnabled = clientInfo.getProgramsEnabled();
+    administrators = clientInfo.getAdministrators();
+    lastOnlineTime = clientInfo.getLastOnlineTime();
+    clientVersion = clientInfo.getClientVersion();
+
+    updateSummaryInfoStatement = clientInfo.getUpdateSummaryInfoStatement();
+    summaryInfoSavedTODatabase = clientInfo.getSummaryInfoSavedTODatabase();
+
+
+    installationDate = clientInfo.getInstallationDate();
+    windowsDir = clientInfo.getWindowsDir();
+    osKey = clientInfo.getOsKey();
+
+    cpu = clientInfo.getCpu();
+    memory = clientInfo.getMemory();
+    motherboardName = clientInfo.getMotherboardName();
+    dmiUUID = clientInfo.getDmiUUID();
+    chipset = clientInfo.getChipset();
+    video = clientInfo.getVideo();
+    monitor = clientInfo.getMonitor();
+    audio = clientInfo.getAudio();
+    storage = clientInfo.getStorage();
+
+    nic1Info = clientInfo.getNic1Info();
+    nic2Info = clientInfo.getNic2Info();
+
+    m_isJoinedToDomain = clientInfo.isJoinedToDomain();
+
+
+    updateDetailedInfoStatement = clientInfo.getUpdateDetailedInfoStatement();
+    detailedInfoSavedTODatabase = clientInfo.getDetailedInfoSavedTODatabase();
+
+
+
+    installedSoftwaresCount = clientInfo.getinstalledSoftwaresCount();
+    updateInstalledSoftwaresInfoStatement = clientInfo.getUpdateInstalledSoftwaresInfoStatement();
+    installedSoftwaresInfoSavedTODatabase = clientInfo.isInstalledSoftwaresInfoSavedTODatabase();
+
+
+    lastHeartbeatTime = clientInfo.getLastHeartbeatTime();
+
+    online = clientInfo.getOnline();
+
+    clientUDTListeningAddress = clientInfo.getClientUDTListeningAddress();
+    clientUDTListeningPort = clientInfo.getClientUDTListeningPort();
+
+    onlineUsers = clientInfo.getOnlineUsers();
+
+
+
+    return *this;
 }
 
 bool ClientInfo::isValid(){

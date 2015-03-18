@@ -61,7 +61,7 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
 
     m_udpServer = 0;
     m_rtp = 0;
-    m_udtProtocol = 0;
+//    m_udtProtocol = 0;
 
     databaseUtility = 0;
     query = 0;
@@ -146,19 +146,10 @@ bool ServerService::startMainService(){
 
 
     m_rtp = resourcesManager->startRTP(QHostAddress::Any, UDT_LISTENING_PORT, true, &errorMessage);
-    connect(m_rtp, SIGNAL(disconnected(int)), this, SLOT(peerDisconnected(int)), Qt::QueuedConnection);
+    connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)), Qt::QueuedConnection);
 
-    m_udtProtocol = m_rtp->getUDTProtocol();
-
-//    if(!m_udtProtocol){
-//        QString error = tr("Can not start UDT listening on port %1! %2").arg(UDT_LISTENING_PORT).arg(errorMessage);
-//        logMessage(error, QtServiceBase::Error);
-//        return false;
-//    }else{
-//        qWarning()<<QString("UDT listening on port %1!").arg(UDT_LISTENING_PORT);
-//    }
-//    connect(m_udtProtocol, SIGNAL(disconnected(int)), this, SLOT(peerDisconnected(int)));
-    m_udtProtocol->startWaitingForIOInOneThread(30);
+//    m_udtProtocol = m_rtp->getUDTProtocol();
+//    m_udtProtocol->startWaitingForIOInOneThread(30);
     //m_udtProtocol->startWaitingForIOInSeparateThread(10, 500);
 
 
@@ -167,13 +158,13 @@ bool ServerService::startMainService(){
     //connect(m_udpServer, SIGNAL(signalNewUDPPacketReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
     //connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
 
-    connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), this, SLOT(updateOrSaveClientSummaryInfo(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(SOCKETID, const QByteArray &)), this, SLOT(updateOrSaveClientSummaryInfo(SOCKETID , const QByteArray &)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QString &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QString &)));
 
 //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(int, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(int, const QString&, const QString&, bool)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
 
     //Single Process Thread
     //QtConcurrent::run(serverPacketsParser, &ServerPacketsParser::run);
@@ -201,7 +192,7 @@ bool ServerService::startMainService(){
     return true;
 }
 
-void ServerService::saveClientLog(const QString &computerName, const QString &users, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime){
+void ServerService::saveClientLog(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime){
     //qWarning()<<"ServerService::saveClientLog(...) IP:"<<clientAddress<<" log:"<<log;
 
     if(!query){
@@ -216,7 +207,7 @@ void ServerService::saveClientLog(const QString &computerName, const QString &us
                    "VALUES (:ComputerName, :Users, :IPAddress, :Type, :Content, :ClientTime)");
 
     query->bindValue(":ComputerName", computerName);
-    query->bindValue(":Users", users);
+    query->bindValue(":Users", "");
     query->bindValue(":IPAddress", clientAddress);
     query->bindValue(":Type", logType);
     query->bindValue(":Content", log);
@@ -252,13 +243,32 @@ void ServerService::sendServerOnlinePacket(){
 
 }
 
-void ServerService::updateOrSaveClientSummaryInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
+void ServerService::updateOrSaveClientSummaryInfo(SOCKETID socketID, const QByteArray &clientSummaryInfo){
     //    qWarning()<<"ServerService::updateOrSaveClientSummaryInfo(...)";
 
-    if(computerName.trimmed().isEmpty()){
-        qCritical()<<"Invalid Computer Name!";
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(clientSummaryInfo, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
         return;
     }
+    QJsonObject obj = doc.object();
+
+    QString computerName = obj["computerName"].toString();
+    QString workgroupName = obj["workgroupName"].toString();
+    QString networkInfo = obj["networkInfo"].toString();
+    QString usersInfo = obj["usersInfo"].toString();
+    QString osInfo = obj["osInfo"].toString();
+    quint8 usbSTORStatus = obj["usbSTORStatus"].toInt();
+    bool programesEnabled = obj["programesEnabled"].toBool();
+    QString admins = obj["admins"].toString();
+    bool isJoinedToDomain = obj["isJoinedToDomain"].toBool();
+    QString clientVersion = obj["clientVersion"].toString();
+
+
+
+
     //qWarning()<<"Computer Name:"<<computerName;
     //qWarning()<<"isRecordExistInDB:"<<isRecordExistInDB(computerName);
 
@@ -807,7 +817,7 @@ void ServerService::getRecordsInDatabase(){
 
 //}
 
-void ServerService::processClientOnlineStatusChangedPacket(int socketID, const QString &clientName, bool online){
+void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online){
     qDebug()<<"ServerService::processClientOnlineStatusChangedPacket(...)"<<" socketID:"<<socketID<<" clientName:"<<clientName<<" online:"<<online;
 
     QString ip = "";
@@ -821,7 +831,7 @@ void ServerService::processClientOnlineStatusChangedPacket(int socketID, const Q
         }
 
         if(clientSocketsHash.values().contains(clientName)){
-            int preSocketID = clientSocketsHash.key(clientName);
+            SOCKETID preSocketID = clientSocketsHash.key(clientName);
             qDebug()<<"---------preSocketID:"<<preSocketID<<" socketID:"<<socketID;
             if(preSocketID != socketID){
                 m_rtp->closeSocket(preSocketID);
@@ -865,13 +875,13 @@ void ServerService::processClientOnlineStatusChangedPacket(int socketID, const Q
     }
 
     qWarning();
-    qWarning()<<QString("Client '%1' From %2:%3 %4 via %5! Time:%6 Socket: %7").arg(clientName).arg(ip).arg(port).arg(online?"Online":"Offline").arg(m_rtp->isUDTSocket(socketID)?"UDT":"TCP").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")).arg(socketID);
+    qWarning()<<QString("Client '%1' From %2:%3 %4 via %5! Time:%6 Socket: %7").arg(clientName).arg(ip).arg(port).arg(online?"Online":"Offline").arg(m_rtp->socketProtocolString(socketID)).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")).arg(socketID);
     qWarning()<<QString("Total Online Clients:%1").arg(clientSocketsHash.size());
 
 
 }
 
-void ServerService::processAdminOnlineStatusChangedPacket(int socketID, const QString &clientName, const QString &adminName, bool online){
+void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online){
 
     QString ip = "";
     quint16 port = 0;
@@ -913,7 +923,7 @@ void ServerService::peerDisconnected(const QHostAddress &peerAddress, quint16 pe
 
 }
 
-void ServerService::peerDisconnected(int socketID){
+void ServerService::peerDisconnected(SOCKETID socketID){
     qDebug()<<"ServerService::peerDisconnected(...)"<<" socketID:"<<socketID;
     qDebug()<<"----------3----------"<<" socketID:"<<socketID<<" Time:"<<QDateTime::currentDateTime().toString("mm:ss:zzz")<<" ThreadID:"<<QThread::currentThreadId();
 

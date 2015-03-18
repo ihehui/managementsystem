@@ -22,7 +22,7 @@ signals:
 
 
 private:
-    void processData(int socketID, QByteArray *data);
+    void processData(SOCKETID socketID, QByteArray *data);
 
 
 

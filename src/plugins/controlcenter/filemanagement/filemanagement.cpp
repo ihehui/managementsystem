@@ -508,19 +508,19 @@ void FileManagement::setPacketsParser(ControlCenterPacketsParser *parser){
     controlCenterPacketsParser = parser;
 
     ////////////////////
-    connect(controlCenterPacketsParser, SIGNAL(signalFileSystemInfoReceived(int, const QString &, const QByteArray &)), this, SLOT(fileSystemInfoReceived(int, const QString &, const QByteArray &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalFileSystemInfoReceived(SOCKETID, const QString &, const QByteArray &)), this, SLOT(fileSystemInfoReceived(SOCKETID, const QString &, const QByteArray &)));
     //File TX
-    connect(controlCenterPacketsParser, SIGNAL(signalAdminRequestUploadFile(int, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processPeerRequestUploadFilePacket(int, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalAdminRequestDownloadFile(int, const QString &, const QString &, const QString &)), this, SLOT(processPeerRequestDownloadFilePacket(int, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalAdminRequestUploadFile(SOCKETID, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processPeerRequestUploadFilePacket(SOCKETID, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalAdminRequestDownloadFile(SOCKETID, const QString &, const QString &, const QString &)), this, SLOT(processPeerRequestDownloadFilePacket(SOCKETID, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
 
-    connect(controlCenterPacketsParser, SIGNAL(signalFileDownloadRequestAccepted(int, const QString &, const QByteArray &, quint64, const QString &)), this, SLOT(fileDownloadRequestAccepted(int, const QString &, const QByteArray &, quint64, const QString &)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalFileDownloadRequestDenied(int , const QString &, const QString &)), this, SLOT(fileDownloadRequestDenied(int , const QString &, const QString &)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalFileUploadRequestResponsed(int, const QByteArray &, bool, const QString &)), this, SLOT(fileUploadRequestResponsed(int, const QByteArray &, bool, const QString &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalFileDownloadRequestAccepted(SOCKETID, const QString &, const QByteArray &, quint64, const QString &)), this, SLOT(fileDownloadRequestAccepted(SOCKETID, const QString &, const QByteArray &, quint64, const QString &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalFileDownloadRequestDenied(SOCKETID , const QString &, const QString &)), this, SLOT(fileDownloadRequestDenied(SOCKETID , const QString &, const QString &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalFileUploadRequestResponsed(SOCKETID, const QByteArray &, bool, const QString &)), this, SLOT(fileUploadRequestResponsed(SOCKETID, const QByteArray &, bool, const QString &)), Qt::QueuedConnection);
 
-    connect(controlCenterPacketsParser, SIGNAL(signalFileDataRequested(int, const QByteArray &, int, int )), this, SLOT(processFileDataRequestPacket(int,const QByteArray &, int, int )), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalFileDataReceived(int, const QByteArray &, int, const QByteArray &, const QByteArray &)), this, SLOT(processFileDataReceivedPacket(int, const QByteArray &, int, const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalFileTXStatusChanged(int, const QByteArray &, quint8)), this, SLOT(processFileTXStatusChangedPacket(int, const QByteArray &, quint8)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalFileTXError(int , const QByteArray &, quint8 , const QString &)), this, SLOT(processFileTXErrorFromPeer(int , const QByteArray &, quint8 , const QString &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalFileDataRequested(SOCKETID, const QByteArray &, int, int )), this, SLOT(processFileDataRequestPacket(SOCKETID,const QByteArray &, int, int )), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalFileDataReceived(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), this, SLOT(processFileDataReceivedPacket(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalFileTXStatusChanged(SOCKETID, const QByteArray &, quint8)), this, SLOT(processFileTXStatusChangedPacket(SOCKETID, const QByteArray &, quint8)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalFileTXError(SOCKETID , const QByteArray &, quint8 , const QString &)), this, SLOT(processFileTXErrorFromPeer(SOCKETID , const QByteArray &, quint8 , const QString &)), Qt::QueuedConnection);
 
 
 
@@ -801,7 +801,7 @@ void FileManagement::requestFileSystemInfo(const QString &parentDirPath){
 
 }
 
-void FileManagement::fileSystemInfoReceived(int socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData){
+void FileManagement::fileSystemInfoReceived(SOCKETID socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData){
 
     if(socketID != m_peerSocket){
         return;
@@ -919,7 +919,7 @@ void FileManagement::startFileManager(){
 
 }
 
-void FileManagement::processPeerRequestUploadFilePacket(int socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir){
+void FileManagement::processPeerRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir){
 
     if(socketID != m_peerSocket){
         return;
@@ -949,7 +949,7 @@ void FileManagement::processPeerRequestUploadFilePacket(int socketID, const QByt
 
 }
 
-void FileManagement::processPeerRequestDownloadFilePacket(int socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir){
+void FileManagement::processPeerRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir){
 
     if(socketID != m_peerSocket){
         return;
@@ -997,7 +997,7 @@ void FileManagement::processPeerRequestDownloadFilePacket(int socketID, const QS
 
 }
 
-void FileManagement::fileDownloadRequestAccepted(int socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &localFileSaveDir){
+void FileManagement::fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &localFileSaveDir){
 
     if(socketID != m_peerSocket){
         return;
@@ -1032,7 +1032,7 @@ void FileManagement::fileDownloadRequestAccepted(int socketID, const QString &re
 
 }
 
-void FileManagement::fileDownloadRequestDenied(int socketID, const QString &remoteFileName, const QString &message){
+void FileManagement::fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message){
 
     if(socketID != m_peerSocket){
         return;
@@ -1043,7 +1043,7 @@ void FileManagement::fileDownloadRequestDenied(int socketID, const QString &remo
 
 }
 
-void FileManagement::fileUploadRequestResponsed(int socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message){
+void FileManagement::fileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message){
 
     if(socketID != m_peerSocket){
         return;
@@ -1066,7 +1066,7 @@ void FileManagement::fileUploadRequestResponsed(int socketID, const QByteArray &
 
 }
 
-void FileManagement::processFileDataRequestPacket(int socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
+void FileManagement::processFileDataRequestPacket(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
     qDebug()<<"--FileManagement::processFileDataRequestPacket(...) "<<" startPieceIndex:"<<startPieceIndex<<" endPieceIndex:"<<endPieceIndex;
 
     if(socketID != m_peerSocket){
@@ -1099,7 +1099,7 @@ void FileManagement::processFileDataRequestPacket(int socketID, const QByteArray
 
 }
 
-void FileManagement::processFileDataReceivedPacket(int socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1){
+void FileManagement::processFileDataReceivedPacket(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1){
 
     if(socketID != m_peerSocket){
         return;
@@ -1113,7 +1113,7 @@ void FileManagement::processFileDataReceivedPacket(int socketID, const QByteArra
 
 }
 
-void FileManagement::processFileTXStatusChangedPacket(int socketID, const QByteArray &fileMD5, quint8 status){
+void FileManagement::processFileTXStatusChangedPacket(SOCKETID socketID, const QByteArray &fileMD5, quint8 status){
 
     if(socketID != m_peerSocket){
         return;
@@ -1166,7 +1166,7 @@ void FileManagement::processFileTXStatusChangedPacket(int socketID, const QByteA
 
 }
 
-void FileManagement::processFileTXErrorFromPeer(int socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorMessage){
+void FileManagement::processFileTXErrorFromPeer(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorMessage){
     qDebug()<<"--FileManagement::processFileTXErrorFromPeer(...) " <<" socketID:"<<socketID;
     qCritical()<<errorMessage;
 

@@ -71,7 +71,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_7);
-        out << m_serverName << localUDTListeningAddress.toString() << localUDTListeningPort << m_localTCPServerListeningPort << QString(APP_VERSION) << serverInstanceID;
+        out << m_serverName << localUDTListeningAddress << localUDTListeningPort << m_localTCPServerListeningPort << QString(APP_VERSION) << serverInstanceID;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -79,6 +79,8 @@ public slots:
         QVariant v;
         v.setValue(*packet);
         out << v;
+
+        PacketHandlerBase::recylePacket(packet);
 
         return m_udpServer->sendDatagram(ba, peerAddress, peerPort);
 
@@ -94,7 +96,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_7);
-        out << m_serverName << localUDTListeningAddress.toString() << localUDTListeningPort;
+        out << m_serverName << localUDTListeningAddress << localUDTListeningPort;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -103,8 +105,9 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
     bool sendServerOfflinePacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
@@ -117,7 +120,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_7);
-        out << m_serverName << localUDTListeningAddress.toString() << localUDTListeningPort;
+        out << m_serverName << localUDTListeningAddress << localUDTListeningPort;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -126,8 +129,9 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
 
@@ -151,11 +155,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
     }
 
-    bool sendServerRequestClientSummaryInfoPacket(int socketID, const QString &groupName, const QString &computerName, const QString &userName){
+    bool sendServerRequestClientSummaryInfoPacket(SOCKETID socketID, const QString &groupName, const QString &computerName, const QString &userName){
         qDebug()<<"----sendServerRequestClientInfoPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -174,8 +179,9 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendRequestClientDetailedInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &computerName = "", bool rescan = true){
@@ -197,11 +203,12 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
     }
 
-    bool sendRequestClientDetailedInfoPacket(int socketID, const QString &computerName = "", bool rescan = true){
+    bool sendRequestClientDetailedInfoPacket(SOCKETID socketID, const QString &computerName = "", bool rescan = true){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setTransmissionProtocol(TP_UDT);
@@ -219,11 +226,13 @@ public slots:
         v.setValue(*packet);
         out << v;
 
+        PacketHandlerBase::recylePacket(packet);
+
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
 
-    bool sendServerResponseSoftwareVersionPacket(int socketID, const QString &softwareName, const QString &version){
+    bool sendServerResponseSoftwareVersionPacket(SOCKETID socketID, const QString &softwareName, const QString &version){
         qDebug()<<"----sendServerResponseSoftwareVersionPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -242,8 +251,9 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_rtp->sendReliableData(socketID, &ba);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendUpdateClientSoftwarePacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
@@ -265,8 +275,9 @@ public slots:
         v.setValue(*packet);
         out << v;
 
-        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
+        PacketHandlerBase::recylePacket(packet);
 
+        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
 
@@ -279,27 +290,27 @@ signals:
     //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber, quint16 packetSerialNumbe2);
 
     void signalClientLookForServerPacketReceived(const QHostAddress &clientAddress, quint16 clientTCPListeningPort, const QString &clientName);
-    void signalClientDeclarePacketReceived(int socketID, const QString &clientName, bool isAdmin);
+    void signalClientDeclarePacketReceived(SOCKETID socketID, const QString &clientName, bool isAdmin);
 
     //void signalClientOnlinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
     //void signalClientOfflinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
 
-    void signalClientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
+    void signalClientResponseClientSummaryInfoPacketReceived(SOCKETID socketID, const QByteArray &clientSummaryInfo);
     void signalClientResponseClientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
 
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
 
-    void signalClientLogReceived(const QString &computerName, const QString &users, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
+    void signalClientLogReceived(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
 
-    void signalClientOnlineStatusChanged(int socketID, const QString &clientName, bool online);
+    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &clientName, bool online);
 
-    void signalAdminOnlineStatusChanged(int socketID, const QString &clientName, const QString &adminName, bool online);
-
-private:
+    void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online);
 
 private:
-    QHostAddress localUDTListeningAddress;
+
+private:
+    QString localUDTListeningAddress;
     quint16 localUDTListeningPort;
     quint16 m_localTCPServerListeningPort;
 
@@ -312,8 +323,9 @@ private:
     UDPServer *m_udpServer;
 
     RTP *m_rtp;
-    UDTProtocol *m_udtProtocol;
+//    UDTProtocol *m_udtProtocol;
     TCPServer *m_tcpServer;
+    ENETProtocol *m_enetProtocol;
 
 
 };

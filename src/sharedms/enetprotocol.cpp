@@ -22,7 +22,7 @@ ENETProtocol::ENETProtocol(QObject *parent) :
 
 
 
-void ENETProtocol::processReceivedData(quint32 peerID, QByteArray &data){
+void ENETProtocol::processReceivedData(quint32 peerID, QByteArray data){
     //qDebug()<<"--ENETProtocolTest::processReceivedData(...) "<<"peerID:"<<peerID;
 
     convertDataToPacket(peerID, &data);

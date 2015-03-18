@@ -56,25 +56,29 @@ ServerPacketsParser::ServerPacketsParser(ResourcesManagerInstance *manager, QObj
 
     m_udpServer = m_resourcesManager->getUDPServer();
     Q_ASSERT_X(m_udpServer, "ServerPacketsParser::ServerPacketsParser(...)", "Invalid UDPServer!");
-
+    connect(m_udpServer, SIGNAL(signalNewUDPPacketReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
     m_rtp = m_resourcesManager->getRTP();
     Q_ASSERT(m_rtp);
 
-    m_udtProtocol = m_rtp->getUDTProtocol();
-    Q_ASSERT(m_udtProtocol);
+//    m_udtProtocol = m_rtp->getUDTProtocol();
+//    Q_ASSERT(m_udtProtocol);
+//    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
     m_tcpServer = m_rtp->getTCPServer();
     Q_ASSERT(m_tcpServer);
-
-    connect(m_udpServer, SIGNAL(signalNewUDPPacketReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
-    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
     connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
 
+    m_enetProtocol = m_rtp->getENETProtocol();
+    Q_ASSERT(m_enetProtocol);
+    connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
-    localUDTListeningAddress = m_udtProtocol->getUDTListeningAddress();
-    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
+
+//    localUDTListeningAddress = m_udtProtocol->getUDTListeningAddress();
+//    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
+    m_enetProtocol->getLocalListeningAddressInfo(&localUDTListeningAddress, &localUDTListeningPort);
+
     m_localTCPServerListeningPort = m_tcpServer->getTCPServerListeningPort();
 
     m_serverName = QHostInfo::localHostName().toLower();
@@ -113,7 +117,7 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     quint16 peerPort = packet->getPeerHostPort();
 //    quint16 packetSerialNumber = packet->getPacketSerialNumber();
     quint8 packetType = packet->getPacketType();
-    int socketID = packet->getSocketID();
+    SOCKETID socketID = packet->getSocketID();
 //    qDebug()<<"--ServerPacketsParser::parseIncomingPacketData(...) "<<" peerID:"<<peerID<<" peerAddress:"<<peerAddress<<" peerPort:"<<peerPort<<" packetSerialNumber:"<<packetSerialNumber<<" packetType:"<<packetType;
 
     switch(packetType){
@@ -233,11 +237,9 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     //        break;
     case quint8(MS::ClientResponseClientSummaryInfo):
     {
-        QString workgroupName = "", networkInfo = "", usersInfo = "", osInfo = "", admins = "", clientVersion = "";
-        quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown);
-        bool programesEnabled = false, isJoinedToDomain = false;
-        in >> workgroupName >> networkInfo >> usersInfo >> osInfo >> usbSTORStatus >> programesEnabled >> admins >> isJoinedToDomain >> clientVersion;
-        emit signalClientResponseClientSummaryInfoPacketReceived(peerID, workgroupName, networkInfo, usersInfo, osInfo, usbSTORStatus, programesEnabled, admins, isJoinedToDomain, clientVersion);
+        QByteArray clientSummaryInfo;
+        in >> clientSummaryInfo;
+        emit signalClientResponseClientSummaryInfoPacketReceived(socketID, clientSummaryInfo);
         qDebug()<<"~~ClientResponseClientInfo";
     }
     break;
@@ -270,10 +272,10 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     {
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerID);
 
-        QString users = "", log = "", clientTime = "";
+        QString log = "", clientTime = "";
         quint8 logType = 0;
-        in >> users >> logType >> log >> clientTime;
-        emit signalClientLogReceived(peerID, users, packet->getPeerHostAddress().toString(), logType, log, clientTime);
+        in >> logType >> log >> clientTime;
+        emit signalClientLogReceived(peerID, packet->getPeerHostAddress().toString(), logType, log, clientTime);
         qDebug()<<"~~ClientLog";
     }
     break;

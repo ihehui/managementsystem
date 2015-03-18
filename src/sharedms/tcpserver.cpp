@@ -20,7 +20,7 @@ quint16 TCPServer::getTCPServerListeningPort(){
     return port;
 }
 
-void TCPServer::processData(int socketID, QByteArray *data){
+void TCPServer::processData(SOCKETID socketID, QByteArray *data){
 
     QString address;
     quint16 port;

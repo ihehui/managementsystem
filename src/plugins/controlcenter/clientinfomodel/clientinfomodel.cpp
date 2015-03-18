@@ -110,7 +110,7 @@ QVariant ClientInfoModel::data ( const QModelIndex & index, int role) const{
                 return info->getOs();
                 break;
             case 5:
-                return info->getUsbSDEnabled()?"1":"0";
+                return info->getUsbSDStatus()?"1":"0";
                 break;
             case 6:
                 return info->getProgramsEnabled()?"1":"0";

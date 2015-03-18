@@ -61,7 +61,7 @@ private slots:
     void slotNewTab();
     void slotcloseTab();
 
-    void slotRemoteManagement();
+    void slotRemoteManagement(const QModelIndex &index = QModelIndex());
 
     void slotQueryDatabase();
     void slotSearchNetwork();
@@ -86,14 +86,14 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void updateOrSaveClientInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
+    void updateOrSaveClientInfo(SOCKETID socketID, const QByteArray &clientInfo);
     
-    void processClientOnlineStatusChangedPacket(int socketID, const QString &clientName, bool online);
+    void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
     void signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort);
     void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
-    void peerDisconnected(int socketID);
+    void peerDisconnected(SOCKETID socketID);
 
 private:
     void updateActions();
@@ -160,7 +160,7 @@ private:
 
     RTP *m_rtp;
     quint16 m_localRTPListeningPort;
-    UDTSOCKET m_socketConnectedToServer;
+    SOCKETID m_socketConnectedToServer;
 
 
 //    QHash<int/*Socket ID*/, QHostAddress/*IP*/> clientSocketsHash;

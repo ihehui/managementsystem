@@ -26,6 +26,7 @@ public:
     ClientInfo(const QString &computerName = "", QObject *parent = 0);
     virtual ~ClientInfo();
 
+    ClientInfo & operator = (const ClientInfo &clientInfo);
 
 public:
     bool isValid();
@@ -56,13 +57,13 @@ public:
         this->m_isJoinedToDomain = joined;
     }
 
-    bool isJoinedToDomain(){
-        return m_isJoinedToDomain;
+    bool isJoinedToDomain() const{
+        return this->m_isJoinedToDomain;
     }
 
     QString getStorage() const
     {
-        return storage;
+        return this->storage;
     }
 
     void setStorage(QString storage)
@@ -72,57 +73,57 @@ public:
 
     QString getAdministrators() const
     {
-        return administrators;
+        return this->administrators;
     }
 
     QString getAudio() const
     {
-        return audio;
+        return this->audio;
     }
 
     QString getChipset() const
     {
-        return chipset;
+        return this->chipset;
     }
 
     QString getClientUDTListeningAddress() const
     {
-        return clientUDTListeningAddress;
+        return this->clientUDTListeningAddress;
     }
 
     quint16 getClientUDTListeningPort() const
     {
-        return clientUDTListeningPort;
+        return this->clientUDTListeningPort;
     }
 
     QString getClientVersion() const
     {
-        return clientVersion;
+        return this->clientVersion;
     }
 
     QString getComputerName() const
     {
-        return computerName;
+        return this->computerName;
     }
 
     QString getCpu() const
     {
-        return cpu;
+        return this->cpu;
     }
 
     bool getDetailedInfoSavedTODatabase() const
     {
-        return detailedInfoSavedTODatabase;
+        return this->detailedInfoSavedTODatabase;
     }
 
     QString getDmiUUID() const
     {
-        return dmiUUID;
+        return this->dmiUUID;
     }
 
     QString getInstallationDate() const
     {
-        return installationDate;
+        return this->installationDate;
     }
 
     QDateTime getLastHeartbeatTime() const
@@ -190,7 +191,7 @@ public:
         return updateSummaryInfoStatement;
     }
 
-    MS::USBSTORStatus getUsbSDEnabled() const
+    MS::USBSTORStatus getUsbSDStatus() const
     {
         return usbSDStatus;
     }
@@ -367,24 +368,32 @@ public:
     //        this->installedSoftwaresInfo = list;
     //    }
 
-    int getinstalledSoftwaresCount(){
-        return installedSoftwaresCount;
+    int getinstalledSoftwaresCount() const{
+        return this->installedSoftwaresCount;
     }
     void setInstalledSoftwaresCount(int count){
         this->installedSoftwaresCount = count;
     }
 
-    QString getUpdateInstalledSoftwaresInfoStatement(){
+    QString getUpdateInstalledSoftwaresInfoStatement() const{
         return updateInstalledSoftwaresInfoStatement;
     }
     void setUpdateInstalledSoftwaresInfoStatement(const QString &statement){
         this->updateInstalledSoftwaresInfoStatement = statement;
     }
-    bool isInstalledSoftwaresInfoSavedTODatabase(){
+    bool isInstalledSoftwaresInfoSavedTODatabase() const{
         return installedSoftwaresInfoSavedTODatabase;
     }
     void setInstalledSoftwaresInfoSavedTODatabase(bool saved){
         this->installedSoftwaresInfoSavedTODatabase = saved;
+    }
+
+
+    QString getOnlineUsers() const{
+        return onlineUsers;
+    }
+    void setOnlineUsers(const QString &users){
+        this->onlineUsers = users;
     }
 
 private:
@@ -447,6 +456,8 @@ private:
 
     QString clientUDTListeningAddress;
     quint16 clientUDTListeningPort;
+
+    QString onlineUsers;
 
 
 

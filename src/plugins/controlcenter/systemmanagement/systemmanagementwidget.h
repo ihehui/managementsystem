@@ -11,6 +11,7 @@
 
 #include "networkmanager/controlcenterpacketsparser.h"
 
+#include "../../sharedms/clientinfo.h"
 
 
 
@@ -22,7 +23,7 @@ class SystemManagementWidget : public QWidget
     Q_OBJECT
 
 public:
-    SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, const QString &computerName, const QString &users, const QString &peerIPAddress, const QString &peerMACAddress, quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown), bool programesEnabled = false, const QString &admins = "", bool isJoinedToDomain = false, QWidget *parent = 0);
+    SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, ClientInfo *clientInfo = 0,  QWidget *parent = 0);
     ~SystemManagementWidget();
 
 
@@ -76,14 +77,17 @@ private slots:
     void on_toolButtonRunRemoteApplication_clicked();
     void on_toolButtonSendCommand_clicked();
 
-    void processClientOnlineStatusChangedPacket(int socketID, const QString &computerName, bool online);
-    void processClientResponseAdminConnectionResultPacket(int socketID, const QString &computerName, bool result, const QString &message);
+    void on_pushButtonRefreshScreenshot_clicked();
+
+
+    void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online);
+    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool result, const QString &message);
 
     void requestConnectionToClientTimeout();
 
     void clientMessageReceived(const QString &computerName, const QString &message, quint8 clientMessageType);
 
-    void clientResponseClientSummaryInfoPacketReceived(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
+    void clientResponseClientSummaryInfoPacketReceived(SOCKETID socketID, const QByteArray &clientInfo);
 
 
     void clientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
@@ -93,12 +97,14 @@ private slots:
     void remoteConsoleCMDResultFromClientPacketReceived(const QString &computerName, const QString &result);
     void requestRemoteConsoleTimeout();
 
+    void userOnlineStatusChangedPacketReceived(const QString &userName, const QString &computerName, bool online);
+
     void userResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
 
     void updateTemperatures(const QString &cpuTemperature, const QString &harddiskTemperature);
-    void updateScreenshot(const QByteArray &screenshot);
+    void updateScreenshot(const QString &userName, const QByteArray &screenshot);
 
-    void peerDisconnected(int socketID);
+    void peerDisconnected(SOCKETID socketID);
     void peerDisconnected(bool normalClose);
 
 
@@ -114,16 +120,23 @@ private:
     Ui::SystemManagementWidgetClass ui;
 
     QString m_adminName;
-    ControlCenterPacketsParser *controlCenterPacketsParser;
-    QString m_computerName;
-    QString m_users;
+    ClientInfo m_clientInfo;
+
+    QString m_peerComputerName;
+
     QHostAddress m_peerIPAddress;
-    QString m_peerMACAddress;
-    quint8 m_usbSTORStatus;
-    bool m_programesEnabled;
-    bool m_isJoinedToDomain;
+
+    ControlCenterPacketsParser *controlCenterPacketsParser;
+
+//    QString m_users;
+
+//    QString m_peerMACAddress;
+//    quint8 m_usbSTORStatus;
+//    bool m_programesEnabled;
+
 
     bool localComputer;
+    bool m_isJoinedToDomain;
 
     QString m_winDirPath;
     //QString m_joinInfo;
@@ -131,7 +144,8 @@ private:
     static QMap<QString/*Short Name*/, QString/*Department*/>departments;
 
     QMenu *administratorsManagementMenu;
-    QStringList m_administrators;
+
+    QStringList m_onlineUsers;
 
 
     QStringList adminProcesses;
@@ -143,7 +157,7 @@ private:
     QSqlQueryModel *queryModel;
 
     RTP *m_rtp;
-    int m_peerSocket;
+    SOCKETID m_peerSocket;
 
     bool m_aboutToCloseSocket;
 
@@ -163,6 +177,7 @@ private:
     FileManagement *m_fileManagementWidget;
 
     QTimer *m_updateTemperaturesTimer;
+
 
 
 };

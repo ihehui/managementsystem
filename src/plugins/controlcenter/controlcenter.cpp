@@ -12,7 +12,8 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QHostInfo>
-//#include <QDesktopWidget>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 
 
@@ -105,7 +106,7 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
 
     connect(ui.tableViewClientList, SIGNAL(clicked(const QModelIndex &)), this, SLOT(slotShowClientInfo(const QModelIndex &)));
     //connect(ui.tableViewClientList->selectionModel(), SIGNAL(currentRowChanged(QModelIndex &,QModelIndex &)), this, SLOT(slotShowUserInfo(const QModelIndex &)));
-    connect(ui.tableViewClientList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(slotRemoteManagement()));
+    connect(ui.tableViewClientList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(slotRemoteManagement(const QModelIndex &)));
 
     connect(ui.tableViewClientList, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(slotShowCustomContextMenu(QPoint)));
@@ -316,7 +317,7 @@ void ControlCenter::closeEvent(QCloseEvent *e) {
     }
 
 
-    if(controlCenterPacketsParser){
+    if(controlCenterPacketsParser && m_socketConnectedToServer){
         controlCenterPacketsParser->sendAdminOnlineStatusChangedPacket(m_socketConnectedToServer, localComputerName, m_adminName, false);
         m_rtp->closeSocket(m_socketConnectedToServer);
     }
@@ -361,17 +362,17 @@ void ControlCenter::slotInitTabWidget(){
     ui.tabWidget->setCornerWidget(newTabButton, Qt::TopLeftCorner);
     newTabButton->setCursor(Qt::ArrowCursor);
     newTabButton->setAutoRaise(true);
-    newTabButton->setIcon(QIcon(":/resources/images/addtab.png"));
+    newTabButton->setIcon(QIcon(":/icon/resources/images/addtab.png"));
     QObject::connect(newTabButton, SIGNAL(clicked()), this, SLOT(slotNewTab()));
     newTabButton->setToolTip(tr("Add Page"));
-    newTabButton->setEnabled(false);
+    newTabButton->setEnabled(true);
 
     QToolButton *closeTabButton = new QToolButton(this);
     //closeTabButton->setPalette(pal);
     ui.tabWidget->setCornerWidget(closeTabButton, Qt::TopRightCorner);
     closeTabButton->setCursor(Qt::ArrowCursor);
     closeTabButton->setAutoRaise(true);
-    closeTabButton->setIcon(QIcon(":/resources/images/closetab.png"));
+    closeTabButton->setIcon(QIcon(":/icon/resources/images/closetab.png"));
     QObject::connect(closeTabButton, SIGNAL(clicked()), this, SLOT(slotcloseTab()));
     closeTabButton->setToolTip(tr("Close Page"));
     closeTabButton->setEnabled(false);
@@ -385,7 +386,8 @@ void ControlCenter::slotInitTabWidget(){
     //    ui.tabWidget->setCurrentWidget(ui.tabLocalComputer);
 
 
-    localSystemManagementWidget = new SystemManagementWidget(0, 0, m_adminName, localComputerName, "", "127.0.0.1", "", 0, false);
+    ClientInfo localInfo(localComputerName);
+    localSystemManagementWidget = new SystemManagementWidget(0, 0, m_adminName, &localInfo);
     localSystemManagementWidget->setParent(this);
     ui.tabWidget->addTab(localSystemManagementWidget, tr("Local Computer"));
 
@@ -418,6 +420,15 @@ void ControlCenter::slotNewTab(){
     //    ui.tabWidget->addTab(systemManagementWidget, tr("Computer"));
     //    ui.tabWidget->setCurrentWidget(systemManagementWidget);
 
+
+    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, 0, this);
+    connect(systemManagementWidget, SIGNAL(requestRemoteAssistance()), this, SLOT(slotVNC()));
+
+    ui.tabWidget->addTab(systemManagementWidget, "System Management");
+    //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
+    ui.tabWidget->setCurrentWidget(systemManagementWidget);
+
+
 }
 
 void ControlCenter::slotcloseTab(){
@@ -448,18 +459,26 @@ void ControlCenter::slotcloseTab(){
 
 }
 
-void ControlCenter::slotRemoteManagement(){
+void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 
-//    if(!m_networkReady && (computerName() != localComputerName)){
-//        QMessageBox::critical(this, tr("Error"), tr("The Network is not available! Remote Management is not available!"));
-//        return;
+    ClientInfo *info = 0;
+    QString targetComputerName = computerName();
+
+//    if(index.isValid()){
+//        int row = index.row();
+//        QModelIndex idx =  index.sibling(row,0);
+//        QString computerName = idx.data().toString();
+//        info = clientInfoHash.value(computerName);
+//        //QMessageBox::information(this,QString(row),idx.data().toString());
+
 //    }
 
 
-    QString targetComputerName = computerName();
     if(targetComputerName == localComputerName){
         ui.tabWidget->setCurrentWidget(localSystemManagementWidget);
         return;
+    }else{
+        info = clientInfoHash.value(targetComputerName);
     }
 
     int tabPages = ui.tabWidget->count();
@@ -474,30 +493,12 @@ void ControlCenter::slotRemoteManagement(){
     }
 
 
-    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, targetComputerName, userName(), ipAddress(), macAddress(), usbsdStatus().toUShort(), (programesEnabled() == "1"?true:false), m_administrators, false, this);
+    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, info, this);
     connect(systemManagementWidget, SIGNAL(requestRemoteAssistance()), this, SLOT(slotVNC()));
     
     ui.tabWidget->addTab(systemManagementWidget, targetComputerName);
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
     ui.tabWidget->setCurrentWidget(systemManagementWidget);
-
-
-    //    QDialog dlg(this);
-    //    QVBoxLayout layout;
-    //    SystemManagementWidget systemManagementWidget(m_adminName, controlCenterPacketsParser, computerName(), userName(), ipAddress(), macAddress(), (usbsdEnabled() == "1"?true:false), (programesEnabled() == "1"?true:false), m_administrators, &dlg);
-    //    layout.addWidget(&systemManagementWidget);
-    //    layout.setSizeConstraint(QLayout::SetFixedSize);
-    //    layout.setContentsMargins(3,3,3,3);
-
-    //    dlg.setLayout(&layout);
-    //    dlg.setWindowTitle("System Management");
-    //    dlg.exec();
-
-    //    ui.comboBoxUSBSD->setCurrentIndex(0);
-    //    ui.comboBoxPrograms->setCurrentIndex(0);
-    //    slotQueryButtonClicked();
-    //    ui.tableViewClientList->setFocus();
-
 
 }
 
@@ -1028,7 +1029,7 @@ void ControlCenter::startNetwork(){
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
     connect(controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), this, SLOT(updateOrSaveClientInfo(const QString&, const QString&, const QString&, const QString&, const QString&, quint8, bool, const QString&, bool, const QString&)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(SOCKETID, const QByteArray &)), this, SLOT(updateOrSaveClientInfo(SOCKETID, const QByteArray &)), Qt::QueuedConnection);
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
 
     if(localSystemManagementWidget){
@@ -1056,10 +1057,6 @@ void ControlCenter::serverFound(const QString &serverAddress, quint16 serverUDTL
     }
 
     controlCenterPacketsParser->sendAdminOnlineStatusChangedPacket(m_socketConnectedToServer, localComputerName, m_adminName, true);
-
-
-
-
 
 //    if(m_serverInstanceID != 0 && serverInstanceID != m_serverInstanceID){
 //        controlCenterPacketsParser->sendClientOnlinePacket(networkManager->localRUDPListeningAddress(), networkManager->localRUDPListeningPort(), m_adminName+"@"+localComputerName, true);
@@ -1089,7 +1086,27 @@ void ControlCenter::serverFound(const QString &serverAddress, quint16 serverUDTL
 
 }
 
-void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion){
+void ControlCenter::updateOrSaveClientInfo(SOCKETID socketID, const QByteArray &clientInfo){
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(clientInfo, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+
+    QJsonObject obj = doc.object();
+    QString computerName = obj["computerName"].toString();
+    QString workgroupName = obj["workgroupName"].toString();
+    QString networkInfo = obj["networkInfo"].toString();
+    QString usersInfo = obj["usersInfo"].toString();
+    QString osInfo = obj["osInfo"].toString();
+    quint8 usbSTORStatus = obj["usbSTORStatus"].toInt();
+    bool programesEnabled = obj["programesEnabled"].toBool();
+    QString admins = obj["admins"].toString();
+    bool isJoinedToDomain = obj["isJoinedToDomain"].toBool();
+    QString clientVersion = obj["clientVersion"].toString();
+
 
     qDebug()<<"updateOrSaveClientInfo(...) "<<computerName<<" "<<workgroupName<<" "<<networkInfo<<" "<<usersInfo;
     
@@ -1132,7 +1149,7 @@ void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QS
 
 }
 
-void ControlCenter::processClientOnlineStatusChangedPacket(int socketID, const QString &clientName, bool online){
+void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online){
     qDebug()<<"--ControlCenter::processClientOnlineStatusChangedPacket(...)";
 
 //    QString ip = "";
@@ -1193,7 +1210,7 @@ void ControlCenter::peerDisconnected(const QHostAddress &peerAddress, quint16 pe
 
 }
 
-void ControlCenter::peerDisconnected(int socketID){
+void ControlCenter::peerDisconnected(SOCKETID socketID){
     qDebug()<<"--ControlCenter::peerDisconnected(...) socketID:"<<socketID;
 
 //    if(clientSocketsHash.contains(socketID)){

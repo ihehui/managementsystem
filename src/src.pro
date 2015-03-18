@@ -5,4 +5,5 @@ SUBDIRS += sharedms \
     mainapp \  
     clientservice \
     serverservice \
+    helper \
     plugins

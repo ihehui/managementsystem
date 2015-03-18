@@ -75,6 +75,8 @@ ClientPacketsParser::ClientPacketsParser(ClientResourcesManager *manager, QObjec
     m_localENETListeningPort = m_rtp->getENETProtocolPort();
 
     m_localComputerName = QHostInfo::localHostName().toLower();
+
+    m_socketConnectedToAdmin = INVALID_SOCK_ID;
     
 }
 
@@ -105,7 +107,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     QHostAddress peerAddress = packet->getPeerHostAddress();
     quint16 peerPort = packet->getPeerHostPort();
     quint8 packetType = packet->getPacketType();
-    int socketID = packet->getSocketID();
+    SOCKETID socketID = packet->getSocketID();
 
     PacketHandlerBase::recylePacket(packet);
 
@@ -170,7 +172,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
             }
         }
 
-        emit signalClientDetailedInfoRequestedPacketReceived(computerName, rescan, socketID);
+        emit signalClientDetailedInfoRequestedPacketReceived(socketID, computerName, rescan);
         qDebug()<<"~~ClientDetailedInfoRequested";
     }
     break;
@@ -245,28 +247,28 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     {
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
 
-        QString groupName = "", computerName = "", announcement = "", adminName = "";
+        QString groupName = "", computerName = "", announcement = "", adminName = "", userName = "";
         quint32 announcementID = 0;
         quint8 mustRead = 1;
-        in >> groupName >> computerName >> announcementID >> announcement >> adminName >> mustRead ;
+        in >> groupName >> computerName >> announcementID >> announcement >> adminName >> userName >> mustRead ;
 
-        if(!computerName.trimmed().isEmpty()){
-            if(!m_localComputerName.contains(computerName, Qt::CaseInsensitive)){
-                return;
+
+        if(userName.trimmed().isEmpty()){
+            foreach (SOCKETID sID, localUserSockets()) {
+                sendServerAnnouncementPacket(sID, adminName, announcementID, announcement);
             }
+        }else{
+            SOCKETID sID = socketIDOfUser(userName);
+            if(INVALID_SOCK_ID == sID){return;}
+            sendServerAnnouncementPacket(sID, adminName, announcementID, announcement);
         }
 
-        emit signalServerAnnouncementPacketReceived(groupName, computerName, announcementID, announcement, adminName, (mustRead == quint8(0))?false:true);
 
-        qDebug()<<"~~ServerAnnouncement"<<"groupName:"<<groupName<<"computerName:"<<computerName<<"announcement:"<<announcement<<"mustRead:"<<mustRead;
+        //emit signalServerAnnouncementPacketReceived(groupName, computerName, announcementID, announcement, adminName, userName, (mustRead == quint8(0))?false:true);
+
+        qDebug()<<"~~ServerAnnouncement"<<"groupName:"<<groupName<<"computerName:"<<computerName<<" announcement:"<<announcement<<" userName:"<<userName<<" mustRead:"<<mustRead;
         
-        //            foreach (QString userName, localUsersHash.keys()) {
-        //                if(userName.trimmed().isEmpty()){
-        //                    continue;
-        //                }
-        //                sendServerAnnouncementPacket(QHostAddress::LocalHost, localUsersHash.value(userName), adminName, announcement);
 
-        //            }
 
         //            qWarning()<<"~~ServerAnnouncement";
 
@@ -278,16 +280,13 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         break;
     case quint8(MS::AdminRequestSetupUSBSD):
     {
-        QString computerName = "", users = "", adminName = "";
         quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown);
         bool temporarilyAllowed = true;
-        in >> computerName >> users >> usbSTORStatus >> temporarilyAllowed >> adminName;
+        QString adminName = "";
 
-        if(computerName.toLower() != m_localComputerName){
-            return;
-        }
+        in >> usbSTORStatus >> temporarilyAllowed >> adminName;
 
-        emit signalSetupUSBSDPacketReceived(computerName, users, usbSTORStatus, temporarilyAllowed, adminName, peerAddress.toString(), peerPort);
+        emit signalSetupUSBSDPacketReceived(usbSTORStatus, temporarilyAllowed, adminName);
         qDebug()<<"~~SetupUSBSD";
     }
     break;
@@ -296,16 +295,12 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
 
-        QString computerName = "", users = "", adminName = "";
+        QString adminName = "";
         bool enable = false;
         bool temporarilyAllowed = true;
-        in >> computerName >> users >> enable >> temporarilyAllowed >> adminName;
+        in >> enable >> temporarilyAllowed >> adminName;
 
-        if(computerName.toLower() != m_localComputerName){
-            return;
-        }
-
-        emit signalSetupProgramesPacketReceived(computerName, users, enable, temporarilyAllowed, adminName, peerAddress.toString(), peerPort);
+        emit signalSetupProgramesPacketReceived(enable, temporarilyAllowed, adminName);
         qDebug()<<"~~SetupProgrames";
     }
     break;
@@ -313,15 +308,10 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     {
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
 
-        QString computerName = "", users = "";
         bool show = false;
-        in >> computerName >> users >> show;
+        in >> show;
 
-        if(computerName.toLower() != m_localComputerName){
-            return;
-        }
-
-        emit signalShowAdminPacketReceived(computerName, users, show);
+        emit signalShowAdminPacketReceived(show);
         qDebug()<<"~~ShowAdmin";
     }
     break;
@@ -373,15 +363,16 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::AdminRequestConnectionToClient):
     {
 
-        QString computerName = "", users = "" ;
-        in >> computerName >> users ;
+        QString adminComputerName = "", adminName = "" ;
+        in >> adminComputerName >> adminName ;
 
-        if(computerName.toLower() != m_localComputerName){
-            m_udtProtocol->closeSocket(socketID);
-            return;
-        }
+//        if(computerName.toLower() != m_localComputerName){
+//            //m_udtProtocol->closeSocket(socketID);
+//            m_rtp->closeSocket(socketID);
+//            return;
+//        }
 
-        emit signalAdminRequestConnectionToClientPacketReceived(socketID, computerName, users);
+        emit signalAdminRequestConnectionToClientPacketReceived(socketID, adminComputerName, adminName);
         qDebug()<<"~~AdminRequestConnectionToClient";
     }
     break;
@@ -407,17 +398,17 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::AdminRequestRemoteAssistance):
     {
 
-        QString computerName = "", adminName = "";
-        in >> computerName >> adminName;
+        QString computerName = "", adminName = "", userName = "";
+        in >> computerName >> adminName >> userName;
         //emit signalAdminRequestRemoteAssistancePacketReceived(peerName, adminName, peerAddress.toString(), peerPort);
-
 
         if(computerName.toLower() != m_localComputerName){
             return;
         }
 
-        foreach (int socketID, m_localUserSocketsHash.keys()) {
-            sendRequestRemoteAssistancePacket(socketID, peerAddress.toString(), peerPort, adminName);
+        SOCKETID sID = socketIDOfUser(userName);
+        if(INVALID_SOCK_ID != sID){
+            sendRequestRemoteAssistancePacket(sID, peerAddress.toString(), peerPort, adminName);
         }
 
         qDebug()<<"~~AdminRequestRemoteAssistance";
@@ -452,39 +443,17 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     break;
 
 
-    case quint8(MS::LocalUserOnline):
+    case quint8(MS::LocalUserOnlineStatusChanged):
     {
-        QString userName = "", computerName = "";
-        in >> userName >> computerName;
+        QString userName = "";
+        quint8 online = 0;
+        in >> userName >> online;
         
-        if(computerName.toLower() != m_localComputerName){
-            return;
-        }
-        m_localUserSocketsHash.insert(socketID, userName);
+        changeLocalUserOnlineStatus(socketID, online, userName);
         
-        emit signalLocalUserOnlineStatusChanged(socketID, userName, true);
+//        emit signalLocalUserOnlineStatusChanged(socketID, userName, online);
 
-        qDebug()<<"~~UserOnline"<<"Name:"<<userName<<" Port:"<<peerPort;
-        
-        
-    }
-    break;
-
-    case quint8(MS::LocalUserOffline):
-    {
-        QString userName = "", computerName = "";
-        in >> userName >> computerName;
-        
-        if(computerName.toLower() != m_localComputerName){
-            return;
-        }
-
-        m_localUserSocketsHash.remove(socketID);
-
-        emit signalLocalUserOnlineStatusChanged(socketID, userName, false);
-        
-        qDebug()<<"~~UserOffline";
-        
+        qDebug()<<"~~LocalUserOnlineStatusChanged"<<"Name:"<<userName<<" Port:"<<peerPort <<" Online:"<<online;
     }
     break;
 
@@ -501,13 +470,27 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     break;
     case quint8(MS::RequestScreenshot):
     {
+        QString userName = "";
         quint8 fullScreen = 1;
-        in >> fullScreen;
+        in >> userName >> fullScreen;
 
-        emit signalAdminRequestScreenshot(socketID, fullScreen);
+        requestScreenshot(socketID, userName);
+
+        //emit signalAdminRequestScreenshot(socketID, userName, fullScreen);s
 
         qDebug()<<"~~RequestScreenshot";
 
+    }
+    break;
+
+    case quint8(MS::ResponseScreenshot):
+    {
+        //From local user
+        QByteArray screenshot;
+        in >> screenshot ;
+
+        sendClientResponseScreenshotPacket(m_socketConnectedToAdmin, userNameOfSocket(socketID), screenshot);
+        qDebug()<<"~~ResponseScreenshot";
     }
     break;
 
@@ -616,12 +599,65 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
 }
 
-void ClientPacketsParser::localUserOffline(int socketID){
-    if(m_localUserSocketsHash.contains(socketID)){
-        qWarning()<<tr("Local user %1 offine!").arg(m_localUserSocketsHash.value(socketID));
-    }
-    m_localUserSocketsHash.remove(socketID);
+void ClientPacketsParser::changeLocalUserOnlineStatus(SOCKETID userSocketID, bool online, const QString &userName){
+    qDebug()<<"--ClientPacketsParser::changeLocalUserOnlineStatus(...)  userSocketID:"<<userSocketID<<" online:"<<online<<" userName"<<userName;
 
+    QMutexLocker locker(&m_localUserSocketsHashMutex);
+
+    QString name = userName;
+    if(!online && name.isEmpty()){
+        name = m_localUserSocketsHash.value(userSocketID);
+    }
+
+    if(INVALID_SOCK_ID != m_socketConnectedToAdmin && (!name.isEmpty()) ){
+        sendLocalUserOnlineStatusChangedPacket(m_socketConnectedToAdmin, name, online);
+    }
+
+    if(online){
+        m_localUserSocketsHash.insert(userSocketID, name);
+    }else{
+        m_localUserSocketsHash.remove(userSocketID);
+    }
+
+}
+
+QString ClientPacketsParser::userNameOfSocket(SOCKETID socketID){
+    QMutexLocker locker(&m_localUserSocketsHashMutex);
+
+    if(!m_localUserSocketsHash.contains(socketID)){
+        return "";
+    }
+    return m_localUserSocketsHash.value(socketID);
+}
+
+SOCKETID ClientPacketsParser::socketIDOfUser(const QString &userName){
+    QMutexLocker locker(&m_localUserSocketsHashMutex);
+
+    if(!m_localUserSocketsHash.values().contains(userName)){
+        return INVALID_SOCK_ID;
+    }
+    return m_localUserSocketsHash.key(userName);
+}
+
+QList<SOCKETID> ClientPacketsParser::localUserSockets(){
+    QMutexLocker locker(&m_localUserSocketsHashMutex);
+    return m_localUserSocketsHash.keys();
+}
+
+void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QString &userName){
+
+    SOCKETID userSocketID = socketIDOfUser(userName);
+    if(INVALID_SOCK_ID == userSocketID){
+        sendClientMessagePacket(adminSocketID, "User not connected!", MS::MSG_Critical);
+        return;
+    }
+
+    sendAdminRequestScreenshotPacket(userSocketID);
+
+}
+
+void ClientPacketsParser::setSocketConnectedToAdmin(SOCKETID socketID){
+    m_socketConnectedToAdmin = socketID;
 }
 
 

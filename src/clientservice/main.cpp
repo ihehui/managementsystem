@@ -34,22 +34,25 @@ int main(int argc, char **argv)
 
     std::cout<<qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION))<<std::endl<<std::endl;
 
+
+
     //reset the message handler
     qInstallMessageHandler(0);
 
-    for(int i = 0; i < argc; i++){
-        if(QString(argv[i]).toLower() == "-log"){
-            qInstallMessageHandler(logDebug);
-            qAddPostRoutine(closeDebugLog);
-        }else if(QString(argv[i]).toLower() == "-setwallpaper"){
-            QString imagePath = "";
-            if(i < (argc - 1) ){
-                imagePath = QString::fromLocal8Bit(argv[i + 1]);
-                //qDebug()<<imagePath;
-            }
-            service.setDeskWallpaper(imagePath);
-        }
-    }
+
+//    for(int i = 0; i < argc; i++){
+//        if(QString(argv[i]).toLower() == "-log"){
+//            qInstallMessageHandler(logDebug);
+//            qAddPostRoutine(closeDebugLog);
+//        }else if(QString(argv[i]).toLower() == "-setwallpaper"){
+//            QString imagePath = "";
+//            if(i < (argc - 1) ){
+//                imagePath = QString::fromLocal8Bit(argv[i + 1]);
+//                //qDebug()<<imagePath;
+//            }
+//            service.setDeskWallpaper(imagePath);
+//        }
+//    }
 
 
 

@@ -88,7 +88,7 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
     ipmcListeningPort = quint16(IP_MULTICAST_GROUP_PORT);
 
 
-    //localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
+//    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
     m_localTCPServerListeningPort = m_tcpServer->getTCPServerListeningPort();
     m_localENETListeningPort = m_rtp->getENETProtocolPort();
 
@@ -124,7 +124,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     quint16 peerPort = packet->getPeerHostPort();
 //    quint16 packetSerialNumber = packet->getPacketSerialNumber();
     quint8 packetType = packet->getPacketType();
-    int socketID = packet->getSocketID();
+    SOCKETID socketID = packet->getSocketID();
 
     PacketHandlerBase::recylePacket(packet);
 //    qDebug()<<"--ControlCenterPacketsParser::parseIncomingPacketData(...) "<<" peerName:"<<peerName<<" peerAddress:"<<peerAddress<<" peerPort:"<<peerPort<<" packetSerialNumber:"<<packetSerialNumber<<" packetType:"<<packetType;
@@ -290,11 +290,9 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ClientResponseClientSummaryInfo):
     {
-        QString workgroupName = "", networkInfo = "", usersInfo = "", osInfo = "", admins = "", clientVersion = "";
-        quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown);
-        bool programesEnabled = false, isJoinedToDomain = false;
-        in >> workgroupName >> networkInfo >> usersInfo >> osInfo >> usbSTORStatus >> programesEnabled >> admins >> isJoinedToDomain >> clientVersion;
-        emit signalClientResponseClientSummaryInfoPacketReceived(peerName, workgroupName, networkInfo, usersInfo, osInfo, usbSTORStatus, programesEnabled, admins, isJoinedToDomain, clientVersion);
+        QByteArray info;
+        in >> info;
+        emit signalClientResponseClientSummaryInfoPacketReceived(socketID, info);
         //qWarning()<<"~~ClientResponseClientSummaryInfo";
     }
     break;
@@ -342,6 +340,17 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::LocalUserOnlineStatusChanged):
+    {
+        QString userName = "", computerName = "";
+        quint8 online = 0;
+        in >> computerName >> userName >> online;
+
+        emit signalUserOnlineStatusChanged(userName, computerName, online);
+
+    }
+    break;
+
     case quint8(MS::ResponseTemperatures):
     {
         QString cpuTemperature, harddiskTemperature;
@@ -353,10 +362,11 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     break;
     case quint8(MS::ResponseScreenshot):
     {
+        QString userName = "";
         QByteArray screenshot;
-        in >> screenshot ;
+        in >> userName >> screenshot ;
 
-        emit signalScreenshotPacketReceived(screenshot);
+        emit signalScreenshotPacketReceived(userName, screenshot);
 
     }
     break;

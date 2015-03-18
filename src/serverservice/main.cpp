@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 //#endif
 
 
-    QCoreApplication a(argc, argv);
+    //QCoreApplication a(argc, argv);
 
 
     //HEHUI::ServerService service(argc, argv, "ServerService", "Server Service For Computer Management System");
@@ -49,12 +49,12 @@ int main(int argc, char **argv)
     }
 
     //reset the message handler
-    qInstallMessageHandler(0);
+    //qInstallMessageHandler(0);
 
-    if(arguments.contains("-log", Qt::CaseInsensitive)){
-        qInstallMessageHandler(logDebug);
-        qAddPostRoutine(closeDebugLog);
-    }
+//    if(arguments.contains("-log", Qt::CaseInsensitive)){
+//        qInstallMessageHandler(logDebug);
+//        qAddPostRoutine(closeDebugLog);
+//    }
 
     if(arguments.contains("-setup", Qt::CaseInsensitive)){
         QStringList databaseTypes;

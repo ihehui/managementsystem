@@ -63,10 +63,10 @@ signals:
 private slots:
     bool startMainService();
     //void saveClientLog(const QString &computerName, const QString &users, const QString &log, const QString &clientAddress);
-    void saveClientLog(const QString &computerName, const QString &users, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
+    void saveClientLog(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
 
     void sendServerOnlinePacket();
-    void updateOrSaveClientSummaryInfo(const QString &computerName, const QString &workgroupName, const QString &networkInfo, const QString &usersInfo, const QString &osInfo, quint8 usbSTORStatus, bool programesEnabled, const QString &admins, bool isJoinedToDomain, const QString &clientVersion);
+    void updateOrSaveClientSummaryInfo(SOCKETID socketID, const QByteArray &clientSummaryInfo);
     bool updateOrSaveClientInfoToDatabase(ClientInfo *info);
     void updateOrSaveAllClientsInfoToDatabase();
     void clientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
@@ -75,15 +75,15 @@ private slots:
 
 //    void processHeartbeatPacket(const QString &clientAddress, const QString &computerName);
 
-    void processClientOnlineStatusChangedPacket(int socketID, const QString &clientName, bool online);
-    void processAdminOnlineStatusChangedPacket(int socketID, const QString &clientName, const QString &adminName, bool online);
+    void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
+    void processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online);
 
 
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
     void signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort);
     void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
 
-    void peerDisconnected(int socketID);
+    void peerDisconnected(SOCKETID socketID);
 
 
 private:
@@ -107,7 +107,7 @@ private:
     UDPServer *m_udpServer;
     RTP *m_rtp;
 
-    UDTProtocol *m_udtProtocol;
+//    UDTProtocol *m_udtProtocol;
     //UDTSOCKET m_socketConnectedToAdmin;
 
     bool mainServiceStarted;
@@ -118,8 +118,8 @@ private:
     QTimer *sendServerOnlinePacketTimer;
 
     QHash<QString/*Client Name*/, ClientInfo *> clientInfoHash;
-    QHash<int /*Socket ID*/, QString/*Client Name*/> clientSocketsHash;
-    QHash<int /*Socket ID*/, QString/*Admin Name*/> adminSocketsHash;
+    QHash<SOCKETID /*Socket ID*/, QString/*Client Name*/> clientSocketsHash;
+    QHash<SOCKETID /*Socket ID*/, QString/*Admin Name*/> adminSocketsHash;
 
 
     int onlineAdminsCount;

@@ -73,7 +73,7 @@
 #endif
 
 #ifndef INVALID_SOCK_ID
-#define INVALID_SOCK_ID	-1
+#define INVALID_SOCK_ID	0
 #endif
 
 #ifndef WIN_ADMIN_PASSWORD
@@ -243,8 +243,7 @@ namespace HEHUI {
             NewPasswordRetrevedByUser,
             
             LocalServiceServerDeclare,
-            LocalUserOnline,
-            LocalUserOffline,
+            LocalUserOnlineStatusChanged,
 
             //File TX
             RequestFileSystemInfo,

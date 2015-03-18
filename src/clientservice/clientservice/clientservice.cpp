@@ -58,15 +58,15 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 
     m_wm = new WindowsManagement(this);
     if(m_localComputerName.trimmed().isEmpty()){
-        m_localComputerName = m_wm->getComputerName().toLower();
+        m_localComputerName = WinUtilities::getComputerName().toLower();
     }
 
-    m_joinInfo = m_wm->getJoinInformation(&m_isJoinedToDomain).toLower();
+    m_joinInfo = WinUtilities::getJoinInformation(&m_isJoinedToDomain).toLower();
     if(m_joinInfo.trimmed().isEmpty()){
         qCritical()<< tr("Failed to get join information!");
     }
     if(m_isJoinedToDomain){
-        m_wm->getComputerNameInfo(&m_joinInfo, 0, 0);
+        WinUtilities::getComputerNameInfo(&m_joinInfo, 0, 0);
     }
 
     m_hardwareMonitor = 0;
@@ -100,6 +100,7 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 //    delete wm;
 //    wm = 0;
 //#endif
+
 
 }
 
@@ -202,7 +203,7 @@ bool ClientService::startMainService(){
     }
 
     m_rtp = resourcesManager->startRTP(QHostAddress::Any, UDT_LISTENING_PORT, true, &errorMessage);
-    connect(m_rtp, SIGNAL(disconnected(int)), this, SLOT(peerDisconnected(int)));
+    connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)));
 
 //    m_udtProtocol = m_rtp->getUDTProtocol();
 //    if(!m_udtProtocol){
@@ -229,41 +230,41 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalUpdateClientSoftwarePacketReceived()), this, SLOT(update()), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalServerRequestClientSummaryInfoPacketReceived(const QString &,const QString &,const QString &)), this, SLOT(processServerRequestClientInfoPacket(const QString &,const QString &,const QString &)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(const QString &, const QString &, quint8, bool, const QString &, const QString &, quint16 )), this, SLOT(processSetupUSBSDPacket(const QString &, const QString &, quint8, bool, const QString &, const QString &, quint16)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalSetupProgramesPacketReceived(const QString &, const QString &, bool, bool, const QString &, const QString &, quint16 )), this, SLOT(processSetupProgramesPacket(const QString &, const QString &, bool, bool, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalShowAdminPacketReceived(const QString &, const QString &, bool)), this, SLOT(processShowAdminPacket(const QString &,const QString &, bool)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(quint8, bool, const QString & )), this, SLOT(processSetupUSBSDPacket(quint8, bool, const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalSetupProgramesPacketReceived( bool, bool, const QString &)), this, SLOT(processSetupProgramesPacket(bool, bool, const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalShowAdminPacketReceived(bool)), this, SLOT(processShowAdminPacket(bool)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalModifyAdminGroupUserPacketReceived(const QString &, const QString &, bool, const QString &, const QString &, quint16 )), this, SLOT(processModifyAdminGroupUserPacket(const QString &, const QString &, bool, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)), this, SLOT(processRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)));
     connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)));
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestConnectionToClientPacketReceived(int, const QString &, const QString &)), this, SLOT(processAdminRequestConnectionToClientPacket(int, const QString &, const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestConnectionToClientPacketReceived(SOCKETID, const QString &, const QString &)), this, SLOT(processAdminRequestConnectionToClientPacket(SOCKETID, const QString &, const QString &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminSearchClientPacketReceived(const QString &, quint16 , const QString &, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(processAdminSearchClientPacket(const QString &, quint16 , const QString &, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
     
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestRemoteAssistancePacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestRemoteAssistancePacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalAdminRequestRemoteAssistancePacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestRemoteAssistancePacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminRequestUpdateMSUserPasswordPacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestUpdateMSUserPasswordPacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminRequestInformUserNewPasswordPacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestInformUserNewPasswordPacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalClientDetailedInfoRequestedPacketReceived(const QString &, bool, int )), this, SLOT(processClientDetailedInfoRequestedPacket(const QString &, bool, int )), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalClientDetailedInfoRequestedPacketReceived(SOCKETID, const QString &, bool)), this, SLOT(processClientDetailedInfoRequestedPacket(SOCKETID, const QString &, bool)), Qt::QueuedConnection);
 
     connect(clientPacketsParser, SIGNAL(signalAdminRequestRemoteConsolePacketReceived(const QString &, const QString &, const QString &, bool, const QString &, quint16)), this, SLOT(processAdminRequestRemoteConsolePacket(const QString &, const QString &, const QString &, bool, const QString &, quint16)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalRemoteConsoleCMDFromServerPacketReceived(const QString &, const QString &, const QString &, quint16)), this, SLOT(processRemoteConsoleCMDFromServerPacket(const QString &, const QString &, const QString &, quint16)), Qt::QueuedConnection);
     
-    connect(clientPacketsParser, SIGNAL(signalServerAnnouncementPacketReceived(const QString &,const QString &, quint32, const QString &,const QString &,bool)), this, SLOT(processServerAnnouncementPacket(const QString &, const QString &, quint32, const QString &, const QString &, bool)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalServerAnnouncementPacketReceived(const QString &,const QString &, quint32, const QString &,const QString &,const QString &,bool)), this, SLOT(processServerAnnouncementPacket(const QString &, const QString &, quint32, const QString &, const QString &, const QString &,bool)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalLocalUserOnlineStatusChanged(int, const QString &, bool)), this, SLOT(processLocalUserOnlineStatusChanged(int, const QString &, bool)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalLocalUserOnlineStatusChanged(SOCKETID, const QString &, bool)), this, SLOT(processLocalUserOnlineStatusChanged(SOCKETID, const QString &, bool)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestTemperatures(int, bool, bool)), this, SLOT(processAdminRequestTemperaturesPacket(int, bool, bool)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestScreenshot(int, bool)), this, SLOT(processAdminRequestScreenshotPacket(int, bool)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestTemperatures(SOCKETID, bool, bool)), this, SLOT(processAdminRequestTemperaturesPacket(SOCKETID, bool, bool)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalAdminRequestScreenshot(SOCKETID, const QString &, bool)), this, SLOT(processAdminRequestScreenshotPacket(SOCKETID, const QString &, bool)), Qt::QueuedConnection);
 
 
     ////////////////////
-    connect(clientPacketsParser, SIGNAL(signalFileSystemInfoRequested(int, const QString &)), this, SLOT(fileSystemInfoRequested(int, const QString &)));
+    connect(clientPacketsParser, SIGNAL(signalFileSystemInfoRequested(SOCKETID, const QString &)), this, SLOT(fileSystemInfoRequested(SOCKETID, const QString &)));
     //File TX
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestUploadFile(int, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processAdminRequestUploadFilePacket(int, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestDownloadFile(int, const QString &, const QString &, const QString &)), this, SLOT(processAdminRequestDownloadFilePacket(int, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileDataRequested(int, const QByteArray &, int, int )), this, SLOT(processFileDataRequestPacket(int,const QByteArray &, int, int )), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileDataReceived(int, const QByteArray &, int, const QByteArray &, const QByteArray &)), this, SLOT(processFileDataReceivedPacket(int, const QByteArray &, int, const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileTXStatusChanged(int, const QByteArray &,quint8)), this, SLOT(processFileTXStatusChangedPacket(int, const QByteArray &, quint8)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileTXError(int , const QByteArray &, quint8 , const QString &)), this, SLOT(processFileTXErrorFromPeer(int , const QByteArray &, quint8 , const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestUploadFile(SOCKETID, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processAdminRequestUploadFilePacket(SOCKETID, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestDownloadFile(SOCKETID, const QString &, const QString &, const QString &)), this, SLOT(processAdminRequestDownloadFilePacket(SOCKETID, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalFileDataRequested(SOCKETID, const QByteArray &, int, int )), this, SLOT(processFileDataRequestPacket(SOCKETID,const QByteArray &, int, int )), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalFileDataReceived(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), this, SLOT(processFileDataReceivedPacket(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalFileTXStatusChanged(SOCKETID, const QByteArray &,quint8)), this, SLOT(processFileTXStatusChangedPacket(SOCKETID, const QByteArray &, quint8)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalFileTXError(SOCKETID , const QByteArray &, quint8 , const QString &)), this, SLOT(processFileTXErrorFromPeer(SOCKETID , const QByteArray &, quint8 , const QString &)), Qt::QueuedConnection);
 
 
 
@@ -437,7 +438,7 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverUDTL
     }
 
     if(logs.size()){
-        bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_CheckMSUsersAccount), logs.join(" | "));
+        bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_CheckMSUsersAccount), logs.join(" | "));
         if(ok){
             logs.clear();
         }
@@ -455,7 +456,7 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverUDTL
     QSettings settings(QCoreApplication::applicationDirPath()+"/.settings", QSettings::IniFormat, this);
     QDateTime time = settings.value(section, QDateTime()).toDateTime();
     if(time.isNull() || (time.addDays(7) < QDateTime::currentDateTime())){
-        processClientDetailedInfoRequestedPacket("", true, m_socketConnectedToServer);
+        processClientDetailedInfoRequestedPacket(m_socketConnectedToServer, "", true);
         settings.setValue(section, QDateTime::currentDateTime());
     }
 
@@ -511,7 +512,7 @@ void ClientService::processServerRequestClientInfoPacket(const QString &groupNam
 
 }
 
-void ClientService::processClientDetailedInfoRequestedPacket(const QString &computerName, bool rescan, int socketID){
+void ClientService::processClientDetailedInfoRequestedPacket(SOCKETID socketID, const QString &computerName, bool rescan){
 
     //qWarning()<<"processClientDetailedInfoRequestedPacket(...)";
 
@@ -595,22 +596,9 @@ void ClientService::scanFinished(bool ok, const QString &message){
 
 }
 
-void ClientService::processSetupUSBSDPacket(const QString &computerName, const QString &users, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort){
+void ClientService::processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName){
 
 #ifdef Q_OS_WIN
-
-    if(!computerName.isEmpty()){
-        if(computerName != m_localComputerName){
-            return;
-        }
-    }
-
-    QStringList localUsers = usersOnLocalComputer();
-//    if(!users.isEmpty()){
-//        if(localUsers.join(",") != users){
-//            return;
-//        }
-//    }
 
     QString str = "Unknown";
     if(usbSTORStatus == quint8(MS::USBSTOR_Disabled)){
@@ -635,7 +623,7 @@ void ClientService::processSetupUSBSDPacket(const QString &computerName, const Q
 
     QString log = QString("USB Storage Device Settings Changed To:%1! Admin:%2").arg(str).arg(adminName);
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, localUsers.join(","), quint8(MS::LOG_AdminSetupUSBSD), log);
+        bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminSetupUSBSD), log);
         if(!ok){
             qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -653,23 +641,10 @@ void ClientService::processSetupUSBSDPacket(const QString &computerName, const Q
 
 }
 
-void ClientService::processSetupProgramesPacket(const QString &computerName, const QString &users, bool enable, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort){
-    qWarning()<<"ClientService::processSetupProgramesPacket(...) " <<" computerName:"<<computerName<<" users:"<<users;
+void ClientService::processSetupProgramesPacket(bool enable, bool temporarilyAllowed, const QString &adminName){
+    qWarning()<<"ClientService::processSetupProgramesPacket(...) " ;
 
 #ifdef Q_OS_WIN
-
-    if(!computerName.isEmpty()){
-        if(computerName != m_localComputerName){
-            return;
-        }
-    }
-
-    QStringList localUsers = usersOnLocalComputer();
-//    if(!users.isEmpty()){
-//        if(localUsers.join(",") != users){
-//            return;
-//        }
-//    }
 
     if(!enable){
         disableProgrames();
@@ -694,7 +669,7 @@ void ClientService::processSetupProgramesPacket(const QString &computerName, con
     QString log = QString("Programes %1! Admin:%2").arg(ret).arg(adminName);
     bool sent = false;
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, localUsers.join(","), quint8(MS::LOG_AdminSetupProgrames), log);
+        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminSetupProgrames), log);
         if(!sent){
             qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -710,28 +685,11 @@ void ClientService::processSetupProgramesPacket(const QString &computerName, con
 
 }
 
-void ClientService::processShowAdminPacket(const QString &computerName, const QString &users, bool show){
+void ClientService::processShowAdminPacket(bool show){
 
 #ifdef Q_OS_WIN
-
-    if(!computerName.isEmpty()){
-        if(computerName != m_localComputerName){
-            return;
-        }
-    }
-
-//    QStringList localUsers = wm->localCreatedUsers();
-//    if(!users.isEmpty()){
-//        if(localUsers.join(",") != users){
-//            return;
-//        }
-//    }
-
     m_wm->showAdministratorAccountInLogonUI(show);
-
-
 #endif
-
 
 }
 
@@ -767,7 +725,7 @@ void ClientService::processModifyAdminGroupUserPacket(const QString &computerNam
     QString log = QString("User '%1' %2 Administrators Group! Admin:%3").arg(userName).arg(ret).arg(adminName);
     bool sent = false;
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_AdminSetupOSAdministrators), log);
+        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminSetupOSAdministrators), log);
         if(!sent){
             qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -811,7 +769,7 @@ void ClientService::processRenameComputerPacketReceived(const QString &newComput
 
     bool sent = false;
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_AdminSetupOSAdministrators), log);
+        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminSetupOSAdministrators), log);
         if(!sent){
             qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -857,7 +815,7 @@ void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &admin
 
     bool sent = false;
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_AdminSetupOSAdministrators), log);
+        sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminSetupOSAdministrators), log);
         if(!sent){
             qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -881,7 +839,7 @@ void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &admin
 
 }
 
-void ClientService::processAdminRequestConnectionToClientPacket(int adminSocketID, const QString &computerName, const QString &users){
+void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminName){
     qDebug()<<"--ClientService::processAdminRequestConnectionToClientPacket(...)";
 
 
@@ -891,18 +849,18 @@ void ClientService::processAdminRequestConnectionToClientPacket(int adminSocketI
     bool result =false;
     QString message = "";
 
-    if(m_localComputerName == computerName ){
+//    if(m_localComputerName == computerName ){
         message = "";
         result = true;
-    }else{
-        message = QString("The computer names do not match!<br>Expected Value:%1").arg(m_localComputerName);
-        result = false;
-        QString address;
-        m_rtp->getAddressInfoFromSocket(adminSocketID, &address, 0);
-        if(NetworkUtilities::isLocalAddress(address)){
-            result = true;
-        }
-    }
+//    }else{
+//        message = QString("The computer names do not match!<br>Expected Value:%1").arg(m_localComputerName);
+//        result = false;
+//        QString address;
+//        m_rtp->getAddressInfoFromSocket(adminSocketID, &address, 0);
+//        if(NetworkUtilities::isLocalAddress(address)){
+//            result = true;
+//        }
+//    }
 
 //    QString usersInfo = usersOnLocalComputer().join(",");
 //    if( !users.trimmed().isEmpty() && (!usersInfo.contains(users, Qt::CaseInsensitive)) ){
@@ -923,19 +881,22 @@ void ClientService::processAdminRequestConnectionToClientPacket(int adminSocketI
 
     if(ok && result){
         m_socketConnectedToAdmin = adminSocketID;
+        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin);
+
         m_rtp->getAddressInfoFromSocket(m_socketConnectedToAdmin, &m_adminAddress, &m_adminPort);
-        qWarning()<<QString("Admin connected form %1:%2 via %3!").arg(m_adminAddress).arg(m_adminPort).arg(m_rtp->isUDTSocket(m_socketConnectedToAdmin)?"UDT":"TCP");
+        qWarning()<<QString("Admin %1 connected form %2:%3 via %4!").arg(adminName+"@"+adminComputerName).arg(m_adminAddress).arg(m_adminPort).arg(m_rtp->socketProtocolString(m_socketConnectedToAdmin));
 
         uploadClientSummaryInfo(m_socketConnectedToAdmin);
 
     }else{
         m_rtp->closeSocket(adminSocketID);
+        clientPacketsParser->setSocketConnectedToAdmin(INVALID_SOCK_ID);
         return;
     }
 
 #else
     clientPacketsParser->sendClientResponseAdminConnectionResultPacket(adminSocketID, true, "It's NOT M$ Windows!");
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminSocketID, "m_localWorkgroupName", "ip/mac", "usersInfo", "osInfo", true, true, "storedAdminGroupUsers", false);
+    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminSocketID, QByteArray());
 
     //m_udtProtocol->closeSocket(adminSocketID);
 #endif
@@ -1047,108 +1008,109 @@ void ClientService::processAdminSearchClientPacket(const QString &adminAddress, 
 
 }
 
-void ClientService::processServerAnnouncementPacket(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, bool mustRead){
-    //qDebug()<<"--ClientService::processServerAnnouncementPacket(..) "<<" workgroupName:"<<workgroupName<<" computerName:"<<computerName<<" announcement:"<<announcement;
+//void ClientService::processServerAnnouncementPacket(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead){
+//    //qDebug()<<"--ClientService::processServerAnnouncementPacket(..) "<<" workgroupName:"<<workgroupName<<" computerName:"<<computerName<<" announcement:"<<announcement;
 
-#ifdef Q_OS_WIN
+//#ifdef Q_OS_WIN
 
-    if(!workgroupName.isEmpty()){
-        if(workgroupName.toLower() != m_joinInfo){
-            return;
-        }
-    }
+//    if(!workgroupName.isEmpty()){
+//        if(workgroupName.toLower() != m_joinInfo){
+//            return;
+//        }
+//    }
     
-    if(!computerName.trimmed().isEmpty()){
-        if(!m_localComputerName.contains(computerName, Qt::CaseInsensitive)){
-            return;
-        }
-    }
-    clientPacketsParser->sendAnnouncement(adminName, announcementID, announcement);
+//    if(!computerName.trimmed().isEmpty()){
+//        if(!m_localComputerName.contains(computerName, Qt::CaseInsensitive)){
+//            return;
+//        }
+//    }
+//    clientPacketsParser->sendAnnouncement(adminName, announcementID, announcement);
     
-#endif
-    
-    
-}
-
-void ClientService::processAdminRequestRemoteAssistancePacket(const QString &computerName, const QString &adminName, const QString &adminAddress, quint16 adminPort){
-
-    //    return;
-    
-#ifdef Q_OS_WIN
-
-    if(!computerName.isEmpty()){
-        if(computerName != m_localComputerName){
-            return;
-        }
-    }
+//#endif
     
     
-    clientPacketsParser->requestRemoteAssistance(adminAddress, adminPort, adminName);
+//}
+
+
+//void ClientService::processAdminRequestRemoteAssistancePacket(const QString &computerName, const QString &adminName, const QString &adminAddress, quint16 adminPort){
+
+//    //    return;
+    
+//#ifdef Q_OS_WIN
+
+//    if(!computerName.isEmpty()){
+//        if(computerName != m_localComputerName){
+//            return;
+//        }
+//    }
+    
+    
+//    clientPacketsParser->requestRemoteAssistance(adminAddress, adminPort, adminName);
 
     
-    //    QString exeDirPath = QCoreApplication::applicationDirPath();
+//    //    QString exeDirPath = QCoreApplication::applicationDirPath();
 
 
-    //    bool ok = wm->runAs("administrator", getWinAdminPassword(), "psexec.exe", QString("-i tvnserver.exe -controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
+//    //    bool ok = wm->runAs("administrator", getWinAdminPassword(), "psexec.exe", QString("-i tvnserver.exe -controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
      
-    //        bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlapp -connect %1").arg(adminAddress), false, exeDirPath, true);
-    //bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
+//    //        bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlapp -connect %1").arg(adminAddress), false, exeDirPath, true);
+//    //bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
 
-    //        clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
+//    //        clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
      
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Trying to start VNC service...");
-    //    //bool ok = wm->runAs("administrator", getWinAdminPassword(), "net.exe", QString("start tvnserver"), false, exeDirPath, true);
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Trying to start VNC service...");
+//    //    //bool ok = wm->runAs("administrator", getWinAdminPassword(), "net.exe", QString("start tvnserver"), false, exeDirPath, true);
 
 
-    //    bool ok = wm->runAs("administrator", getWinAdminPassword(), "net.exe", QString("start tvnserver"), false, exeDirPath, true);
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
+//    //    bool ok = wm->runAs("administrator", getWinAdminPassword(), "net.exe", QString("start tvnserver"), false, exeDirPath, true);
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
     
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Connecting to VNC client...");
-    //    ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
-    //    //bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Connecting to VNC client...");
+//    //    ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
+//    //    //bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlservice -connect %1").arg(adminAddress), false, exeDirPath, true);
 
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
 
 
-    //    QString exeDirPath = QCoreApplication::applicationDirPath();
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Trying to start VNC service...");
-    //    bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-run"), false, exeDirPath, true);
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
+//    //    QString exeDirPath = QCoreApplication::applicationDirPath();
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Trying to start VNC service...");
+//    //    bool ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-run"), false, exeDirPath, true);
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
     
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Connecting to VNC client...");
-    //    ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlapp -connect %1").arg(adminAddress), false, exeDirPath, true);
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Connecting to VNC client...");
+//    //    ok = wm->runAs("administrator", getWinAdminPassword(), "tvnserver.exe", QString("-controlapp -connect %1").arg(adminAddress), false, exeDirPath, true);
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, ok?"OK":"Failed");
     
     
     
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Trying to start VNC service...");
-    //    QProcess process;
-    //    QString cmd = QString("net.exe start tvnserver");
-    //    process.start(cmd);
-    //    process.waitForStarted(10000);
-    //    //process.terminate();
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Trying to start VNC service...");
+//    //    QProcess process;
+//    //    QString cmd = QString("net.exe start tvnserver");
+//    //    process.start(cmd);
+//    //    process.waitForStarted(10000);
+//    //    //process.terminate();
     
-    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Connecting to VNC client...");
-    //    cmd = QString("tvnserver.exe -controlservice -connect %1").arg(adminAddress);
-    //    //QString cmd = QString("tvnserver.exe -controlservice -disconnectall");
-    //    QProcess process2;
-    //    process2.start(cmd);
-    //    process2.waitForStarted(10000);
-    //    //process2.terminate();
+//    //    clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(QHostAddress(adminAddress), adminPort, localComputerName, "Connecting to VNC client...");
+//    //    cmd = QString("tvnserver.exe -controlservice -connect %1").arg(adminAddress);
+//    //    //QString cmd = QString("tvnserver.exe -controlservice -disconnectall");
+//    //    QProcess process2;
+//    //    process2.start(cmd);
+//    //    process2.waitForStarted(10000);
+//    //    //process2.terminate();
 
-    QString log = QString("Remote Assistance! Admin:%1").arg(adminName);
-    if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_AdminRequestRemoteAssistance), log);
-        if(!sent){
-            qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
-        }
-    }
+//    QString log = QString("Remote Assistance! Admin:%1").arg(adminName);
+//    if(INVALID_SOCK_ID != m_socketConnectedToServer){
+//        bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminRequestRemoteAssistance), log);
+//        if(!sent){
+//            qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
+//        }
+//    }
 
-#endif
+//#endif
     
     
-}
+//}
 
 void ClientService::processAdminRequestUpdateMSUserPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort){
 
@@ -1164,7 +1126,7 @@ void ClientService::processAdminRequestUpdateMSUserPasswordPacket(const QString 
 
     QString log = QString("Update Password! Admin:%1").arg(adminName);
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_AdminInformUserNewPassword), log);
+        bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminInformUserNewPassword), log);
         if(!sent){
             qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -1333,21 +1295,24 @@ void ClientService::consoleProcessOutputRead(const QString &output){
     clientPacketsParser->sendRemoteConsoleCMDResultFromClientPacket(m_socketConnectedToAdmin, output);
 }
 
-void ClientService::processLocalUserOnlineStatusChanged(int socketID, const QString &userName, bool online){
+//void ClientService::processLocalUserOnlineStatusChanged(SOCKETID userSocketID, const QString &userName, bool online){
 
-//    if(online){
-//        m_localUserSocketsHash.insert(socketID, userName);
-//        qWarning()<<tr("Local user '%1' online!").arg(userName);
-//    }else{
-//        m_localUserSocketsHash.remove(socketID);
-//        qWarning()<<tr("Local user '%1' offline!").arg(userName);
+//    if(INVALID_SOCK_ID != m_socketConnectedToAdmin){
+//        clientPacketsParser->sendLocalUserOnlineStatusChangedPacket(m_socketConnectedToAdmin, userName, online);
 //    }
 
-//    clientPacketsParser->localUserOffline(socketID);
+//}
 
-}
+void ClientService::processAdminRequestTemperaturesPacket(SOCKETID socketID, bool cpu, bool harddisk){
 
-void ClientService::processAdminRequestTemperaturesPacket(int socketID, bool cpu, bool harddisk){
+    if((!cpu) && (!harddisk)){
+        if(m_hardwareMonitor){
+            delete m_hardwareMonitor;
+            m_hardwareMonitor = 0;
+        }
+        return;
+    }
+
 
     if(!m_hardwareMonitor){
         m_hardwareMonitor = new HardwareMonitor(this);
@@ -1368,19 +1333,15 @@ void ClientService::processAdminRequestTemperaturesPacket(int socketID, bool cpu
 
 }
 
-void ClientService::processAdminRequestScreenshotPacket(int socketID, bool fullScreen){
-
-    QByteArray ba =  WinUtilities::ConvertHBITMAPToJpeg(WinUtilities::GetScreenshotBmp());
-    clientPacketsParser->sendClientResponseScreenshotPacket(socketID, ba);
-
-}
+//void ClientService::processAdminRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen){
+//    clientPacketsParser->requestScreenshot(socketID, userName);
+//}
 
 QStringList ClientService::usersOnLocalComputer(){
 
 #ifdef Q_OS_WIN
 
     QStringList users = m_wm->localUsers();
-    m_wm->getAllUsersLoggedOn(&users);
     users.removeAll("system$");
     users.removeAll("administrator");
     users.removeAll("guest");
@@ -1398,20 +1359,14 @@ QStringList ClientService::usersOnLocalComputer(){
 
 }
 
-void ClientService::uploadClientSummaryInfo(int socketID){
-    qDebug()<<"--ClientService::uploadClientSummaryInfo(...) socketID:"<<socketID;
-
-    if(INVALID_SOCK_ID == socketID){
-        return;
-    }
+QByteArray ClientService::getClientSummaryInfo(){
 
 #ifdef Q_OS_WIN
 
-    //WindowsManagement wm;
-    //QString computerName = localComputerName;
-
     QStringList users = usersOnLocalComputer();
     QString usersInfo = users.join(",");
+    QStringList onlineUsers;
+    WinUtilities::getAllUsersLoggedOn(&onlineUsers);
 
     QList<QHostAddress> ips = NetworkUtilities::validIPAddresses();
     QString networkInfo = "";
@@ -1457,11 +1412,48 @@ void ClientService::uploadClientSummaryInfo(int socketID){
     bool programesEnabled = isProgramesEnabled();
     QString adminGroupUsers = administrators().join(",");
 
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(socketID, m_joinInfo, networkInfo, usersInfo, osInfo, quint8(usbSTORStatus), programesEnabled, adminGroupUsers, m_isJoinedToDomain);
+
+    QJsonObject obj;
+    obj["computerName"] = m_localComputerName;
+    obj["workgroupName"] = m_joinInfo;
+    obj["networkInfo"] = networkInfo;
+    obj["usersInfo"] = usersInfo;
+    obj["osInfo"] = osInfo;
+    obj["usbSTORStatus"] = usbSTORStatus;
+    obj["programesEnabled"] = programesEnabled;
+    obj["admins"] = adminGroupUsers;
+    obj["isJoinedToDomain"] = m_isJoinedToDomain;
+    obj["clientVersion"] = APP_VERSION;
+    obj["onlineUsers"] = onlineUsers.join(",");
+
 
     m_wm->freeMemory();
 
+    QJsonDocument doc(obj);
+    return doc.toJson();
+
 #endif
+
+    return QByteArray();
+
+}
+
+void ClientService::uploadClientSummaryInfo(SOCKETID socketID){
+    qDebug()<<"--ClientService::uploadClientSummaryInfo(...) socketID:"<<socketID;
+
+    if(INVALID_SOCK_ID == socketID){
+        return;
+    }
+
+#ifdef Q_OS_WIN
+
+    QByteArray info = getClientSummaryInfo();
+    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(socketID, info);
+
+
+#endif
+
+
 
 
 }
@@ -1472,55 +1464,8 @@ void ClientService::uploadClientSummaryInfo(const QString &adminAddress, quint16
 
 #ifdef Q_OS_WIN
 
-    //WindowsManagement wm;
-    //QString computerName = m_localComputerName;
-
-    QStringList users = usersOnLocalComputer();
-    QString usersInfo = users.join(",");
-
-
-    QList<QHostAddress> ips = NetworkUtilities::validIPAddresses();
-    QString networkInfo = "";
-    QStringList networkInfoList;
-    foreach(QHostAddress ip, ips){
-        //networkInfo += ip.toString() + "/" + NetworkUtilities::hardwareAddress(ip) + ",";
-        networkInfoList.append(ip.toString() + "/" + NetworkUtilities::hardwareAddress(ip));
-    }
-    networkInfo = networkInfoList.join(",");
-
-    QString osInfo = "";
-    switch(QSysInfo::windowsVersion()){
-    case QSysInfo::WV_2000:
-        osInfo = "WIN_2000";
-        break;
-    case QSysInfo::WV_XP:
-        osInfo = "WIN_XP";
-        break;
-    case QSysInfo::WV_2003:
-        osInfo = "WIN_2003";
-        break;
-    case QSysInfo::WV_VISTA:
-        osInfo = "WIN_VISTA";
-        break;
-    case QSysInfo::WV_WINDOWS7:
-        osInfo = "WIN_7";
-        break;
-    default:
-        osInfo = "WIN";
-        break;
-    }
-
-
-    //bool usbsdEnabled = isUSBSDEnabled();
-    MS::USBSTORStatus usbSTORStatus =  readUSBStorageDeviceSettings();
-
-    bool programesEnabled = isProgramesEnabled();
-    QString adminGroupUsers = administrators().join(",");
-
-
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminAddress, adminPort, m_joinInfo, networkInfo, usersInfo, osInfo, quint8(usbSTORStatus), programesEnabled, adminGroupUsers, m_isJoinedToDomain);
-
-    m_wm->freeMemory();
+    QByteArray info = getClientSummaryInfo();
+    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminAddress, adminPort, info);
 
 #endif
 
@@ -1549,7 +1494,7 @@ bool ClientService::updateAdministratorPassword(const QString &newPassword){
     if(!m_wm->updateUserPassword("administrator", administratorPassword, true)){
         QString error = m_wm->lastError();
         if(INVALID_SOCK_ID != m_socketConnectedToServer){
-            bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersInfo, quint8(MS::LOG_UpdateMSUserPassword), error);
+            bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_UpdateMSUserPassword), error);
             if(!sent){
                 qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
             }
@@ -1559,7 +1504,7 @@ bool ClientService::updateAdministratorPassword(const QString &newPassword){
 
 
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersInfo, quint8(MS::LOG_UpdateMSUserPassword), QString("Administrator's password updated to '%1'!").arg(administratorPassword));
+        bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_UpdateMSUserPassword), QString("Administrator's password updated to '%1'!").arg(administratorPassword));
         if(!sent){
             qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -1787,7 +1732,7 @@ bool ClientService::checkUsersAccount(){
     }
 
     if(logs.size() && (INVALID_SOCK_ID != m_socketConnectedToServer) ){
-        bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, users.join(","), quint8(MS::LOG_CheckMSUsersAccount), logs.join(" | "));
+        bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_CheckMSUsersAccount), logs.join(" | "));
         if(ok){
             logs.clear();
         }
@@ -2108,7 +2053,7 @@ void ClientService::peerDisconnected(const QHostAddress &peerAddress, quint16 pe
 
 }
 
-void ClientService::peerDisconnected(int socketID){
+void ClientService::peerDisconnected(SOCKETID socketID){
     qWarning()<<"Peer Disconnected! Socket ID:"<<socketID;
 
     if(socketID == m_socketConnectedToServer){
@@ -2132,18 +2077,22 @@ void ClientService::peerDisconnected(int socketID){
     }else if(socketID == m_socketConnectedToAdmin){
         qWarning()<<"Admin Offline!";
         m_socketConnectedToAdmin = INVALID_SOCK_ID;
+        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin);
         m_adminAddress = "";
         m_adminPort = 0;
 
 //        closeFileTXWithAdmin();
     }else{
-        clientPacketsParser->localUserOffline(socketID);
+        QString userName = clientPacketsParser->userNameOfSocket(socketID);
+        if(!userName.isEmpty() && m_socketConnectedToAdmin){
+            clientPacketsParser->sendLocalUserOnlineStatusChangedPacket(m_socketConnectedToAdmin, userName, false);
+        }
+        clientPacketsParser->changeLocalUserOnlineStatus(socketID, false, "");
     }
 
     QList<int> requests = fileTXRequestHash.keys(socketID);
     foreach (int request, requests) {
         fileTXRequestHash.remove(request);
-
     }
 
     QList<QByteArray> files = fileTXSocketHash.values(socketID);
@@ -2160,7 +2109,7 @@ void ClientService::peerDisconnected(int socketID){
 }
 
 ///////////////////////////////////////////////////////
-void ClientService::fileSystemInfoRequested(int socketID, const QString &parentDirPath){
+void ClientService::fileSystemInfoRequested(SOCKETID socketID, const QString &parentDirPath){
 
     QByteArray data;
     QString errorMessage;
@@ -2186,7 +2135,7 @@ void ClientService::startFileManager(){
 
 }
 
-void ClientService::processAdminRequestUploadFilePacket(int socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir){
+void ClientService::processAdminRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir){
 
     startFileManager();
 
@@ -2227,7 +2176,7 @@ void ClientService::processAdminRequestUploadFilePacket(int socketID, const QByt
 
 }
 
-void ClientService::processAdminRequestDownloadFilePacket(int socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir){
+void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir){
 
     startFileManager();
 
@@ -2268,7 +2217,7 @@ void ClientService::processAdminRequestDownloadFilePacket(int socketID, const QS
 
 }
 
-void ClientService::processFileDataRequestPacket(int socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
+void ClientService::processFileDataRequestPacket(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
 
     Q_ASSERT(m_fileManager);
 
@@ -2293,7 +2242,7 @@ void ClientService::processFileDataRequestPacket(int socketID, const QByteArray 
 
 }
 
-void ClientService::processFileDataReceivedPacket(int socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1){
+void ClientService::processFileDataReceivedPacket(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1){
 
     Q_ASSERT(m_fileManager);
     m_fileManager->writePiece(fileMD5, pieceIndex, data, sha1);
@@ -2304,7 +2253,7 @@ void ClientService::processFileDataReceivedPacket(int socketID, const QByteArray
 
 }
 
-void ClientService::processFileTXStatusChangedPacket(int socketID, const QByteArray &fileMD5, quint8 status){
+void ClientService::processFileTXStatusChangedPacket(SOCKETID socketID, const QByteArray &fileMD5, quint8 status){
 
     //MS::FileTXStatus status = MS::FileTXStatus(status);
     switch(status){
@@ -2335,7 +2284,7 @@ void ClientService::processFileTXStatusChangedPacket(int socketID, const QByteAr
         break;
     case quint8(MS::File_TX_Aborted):
     {
-        QList<int> sockets = fileTXSocketHash.keys(fileMD5);
+        QList<SOCKETID> sockets = fileTXSocketHash.keys(fileMD5);
         if(sockets.contains(socketID) && sockets.size() <= 1){
             m_fileManager->closeFile(fileMD5);
         }
@@ -2343,7 +2292,7 @@ void ClientService::processFileTXStatusChangedPacket(int socketID, const QByteAr
         break;
     case quint8(MS::File_TX_Done):
     {
-        QList<int> sockets = fileTXSocketHash.keys(fileMD5);
+        QList<SOCKETID> sockets = fileTXSocketHash.keys(fileMD5);
         if(sockets.contains(socketID) && sockets.size() <= 1){
             m_fileManager->closeFile(fileMD5);
         }
@@ -2356,7 +2305,7 @@ void ClientService::processFileTXStatusChangedPacket(int socketID, const QByteAr
 
 }
 
-void ClientService::processFileTXErrorFromPeer(int socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString){
+void ClientService::processFileTXErrorFromPeer(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString){
     qDebug()<<"--ClientService::processFileTXErrorFromPeer(...) " <<" socketID:"<<socketID;
     qCritical()<<errorString;
 
@@ -2365,7 +2314,7 @@ void ClientService::processFileTXErrorFromPeer(int socketID, const QByteArray &f
 void ClientService::fileDataRead(int requestID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM){
     qDebug()<<"--ClientService::fileDataRead(...) "<<" pieceIndex:"<<pieceIndex<<" size:"<<data.size();
 
-    int socketID = fileTXRequestHash.take(requestID);
+    SOCKETID socketID = fileTXRequestHash.take(requestID);
     clientPacketsParser->sendFileData(socketID, fileMD5, pieceIndex, &data, &dataSHA1SUM);
 
 }
@@ -2374,7 +2323,7 @@ void ClientService::fileTXError(int requestID, const QByteArray &fileMD5, quint8
     qCritical()<<errorString;
 
     if(requestID){
-        int socketID = fileTXRequestHash.take(requestID);
+        SOCKETID socketID = fileTXRequestHash.take(requestID);
         clientPacketsParser->fileTXError(socketID, fileMD5, errorCode, errorString);
     }else{
         //TODO:
@@ -2386,7 +2335,7 @@ void ClientService::fileTXError(int requestID, const QByteArray &fileMD5, quint8
 void ClientService::pieceVerified(const QByteArray &fileMD5, int pieceIndex, bool verified, int verificationProgress){
     qDebug()<<"--ClientService::pieceVerified(...) "<<" pieceIndex:"<<pieceIndex<<" verified:"<<verified<< "verificationProgress:"<<verificationProgress;
 
-    QList<int> sockets = fileTXSocketHash.keys(fileMD5);
+    QList<SOCKETID> sockets = fileTXSocketHash.keys(fileMD5);
     if(sockets.isEmpty()){
         //TODO:
         //m_fileManager->closeFile(fileMD5);
@@ -2396,7 +2345,7 @@ void ClientService::pieceVerified(const QByteArray &fileMD5, int pieceIndex, boo
 
         if(verificationProgress == 100){
             qWarning()<<"Done!";
-            foreach (int socketID, sockets) {
+            foreach (SOCKETID socketID, sockets) {
                 clientPacketsParser->fileTXStatusChanged(socketID, fileMD5, quint8(MS::File_TX_Done));
             }
         }else{
@@ -2526,7 +2475,7 @@ void ClientService::update(){
         qWarning()<<m_wm->lastError();
         //logMessage(wm->lastError(), QtServiceBase::Error);
         if(INVALID_SOCK_ID != m_socketConnectedToServer){
-            bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, usersOnLocalComputer().join(","), quint8(MS::LOG_ClientUpdate), m_wm->lastError());
+            bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_ClientUpdate), m_wm->lastError());
             if(!sent){
                 qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
             }

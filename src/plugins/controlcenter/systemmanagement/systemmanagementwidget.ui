@@ -38,6 +38,9 @@
       <string>Target</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditComputerName"/>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="labelComputerName">
         <property name="text">
@@ -45,31 +48,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEditComputerName">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="labelUsers">
-        <property name="text">
-         <string>&amp;Users:</string>
-        </property>
-        <property name="buddy">
-         <cstring>lineEditUsers</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLineEdit" name="lineEditUsers">
-        <property name="readOnly">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="10">
+      <item row="0" column="9">
        <widget class="QToolButton" name="toolButtonVerify">
         <property name="toolTip">
          <string>Verify Client Info</string>
@@ -97,29 +76,20 @@
        </widget>
       </item>
       <item row="0" column="5">
-       <widget class="QLineEdit" name="lineEditIPAddress"/>
-      </item>
-      <item row="0" column="6">
-       <widget class="QLabel" name="labelMACAddress">
+       <widget class="QLineEdit" name="lineEditIPAddress">
         <property name="text">
-         <string>&amp;MAC Address:</string>
-        </property>
-        <property name="buddy">
-         <cstring>lineEditMACAddress</cstring>
+         <string/>
         </property>
        </widget>
       </item>
       <item row="0" column="7">
-       <widget class="QLineEdit" name="lineEditMACAddress"/>
-      </item>
-      <item row="0" column="8">
        <widget class="QLabel" name="labelProtocol">
         <property name="text">
          <string>Protocol:</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="9">
+      <item row="0" column="8">
        <widget class="QComboBox" name="comboBoxProtocol"/>
       </item>
      </layout>
@@ -131,7 +101,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabSystemInfo">
       <attribute name="title">
@@ -695,9 +665,6 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="text">
-                 <string/>
-                </property>
                </widget>
               </item>
               <item>
@@ -714,9 +681,6 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
-                </property>
-                <property name="text">
-                 <string/>
                 </property>
                </widget>
               </item>
@@ -1297,7 +1261,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButtonRefresh">
+          <widget class="QPushButton" name="pushButtonRefreshScreenshot">
            <property name="text">
             <string>Refresh</string>
            </property>
@@ -1315,6 +1279,9 @@
          </property>
          <property name="text">
           <string>Screenshot</string>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -1354,9 +1321,7 @@
  </customwidgets>
  <tabstops>
   <tabstop>lineEditComputerName</tabstop>
-  <tabstop>lineEditUsers</tabstop>
   <tabstop>lineEditIPAddress</tabstop>
-  <tabstop>lineEditMACAddress</tabstop>
   <tabstop>toolButtonVerify</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>toolButtonRequestSystemInfo</tabstop>

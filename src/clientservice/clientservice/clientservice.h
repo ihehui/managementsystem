@@ -58,22 +58,22 @@ private slots:
 
     void processServerRequestClientInfoPacket(const QString &groupName, const QString &computerName, const QString &userName/*, const QString &address*/);
 
-    void processClientDetailedInfoRequestedPacket(const QString &computerName, bool rescan, int socketID);
+    void processClientDetailedInfoRequestedPacket(SOCKETID socketID, const QString &computerName, bool rescan);
     void scanFinished(bool ok, const QString &message);
 
-    void processSetupUSBSDPacket(const QString &computerName, const QString &users, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort);
-    void processSetupProgramesPacket(const QString &computerName, const QString &users, bool enable, bool temporarilyAllowed, const QString &adminName, const QString &adminAddress, quint16 adminPort);
-    void processShowAdminPacket(const QString &computerName, const QString &users, bool show);
+    void processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
+    void processSetupProgramesPacket(bool enable, bool temporarilyAllowed, const QString &adminName);
+    void processShowAdminPacket(bool show);
     void processModifyAdminGroupUserPacket(const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
     void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 
-    void processAdminRequestConnectionToClientPacket(int adminSocketID, const QString &computerName, const QString &users);
+    void processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminName);
     void processAdminSearchClientPacket(const QString &adminAddress, quint16 adminPort, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName);
     
     
-    void processServerAnnouncementPacket(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, bool mustRead);    
-    void processAdminRequestRemoteAssistancePacket(const QString &computerName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
+//    void processServerAnnouncementPacket(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead);
+//    void processAdminRequestRemoteAssistancePacket(const QString &computerName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processAdminRequestUpdateMSUserPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processAdminRequestInformUserNewPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 
@@ -83,16 +83,17 @@ private slots:
     void consoleProcessStateChanged(bool running, const QString &message);
     void consoleProcessOutputRead(const QString &output);
 
-    void processLocalUserOnlineStatusChanged(int socketID, const QString &userName, bool online);
+//    void processLocalUserOnlineStatusChanged(SOCKETID userSocketID, const QString &userName, bool online);
 
 
 
-    void processAdminRequestTemperaturesPacket(int socketID, bool cpu = true, bool harddisk = false);
-    void processAdminRequestScreenshotPacket(int socketID, bool fullScreen = true);
+    void processAdminRequestTemperaturesPacket(SOCKETID socketID, bool cpu = true, bool harddisk = false);
+//    void processAdminRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen = true);
 
 
     QStringList usersOnLocalComputer();
-    void uploadClientSummaryInfo(int socketID);
+    QByteArray getClientSummaryInfo();
+    void uploadClientSummaryInfo(SOCKETID socketID);
     void uploadClientSummaryInfo(const QString &adminAddress, quint16 adminPort);
 
 //    void uploadClientDetailedInfoToServer();
@@ -129,18 +130,18 @@ private slots:
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
     void signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort);
     void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
-    void peerDisconnected(int socketID);
+    void peerDisconnected(SOCKETID socketID);
 
 ///////////////////
-    void fileSystemInfoRequested(int socketID, const QString &parentDirPath);
+    void fileSystemInfoRequested(SOCKETID socketID, const QString &parentDirPath);
     //File TX
     void startFileManager();
-    void processAdminRequestUploadFilePacket(int socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
-    void processAdminRequestDownloadFilePacket(int socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
-    void processFileDataRequestPacket(int socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
-    void processFileDataReceivedPacket(int socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
-    void processFileTXStatusChangedPacket(int socketID, const QByteArray &fileMD5, quint8 status);
-    void processFileTXErrorFromPeer(int socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
+    void processAdminRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
+    void processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
+    void processFileDataRequestPacket(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
+    void processFileDataReceivedPacket(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
+    void processFileTXStatusChangedPacket(SOCKETID socketID, const QByteArray &fileMD5, quint8 status);
+    void processFileTXErrorFromPeer(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
 
     void fileDataRead(int requestID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM);
     void fileTXError(int requestID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
@@ -169,9 +170,9 @@ private:
     RTP *m_rtp;
 
 //    UDTProtocol *m_udtProtocol;
-    int m_socketConnectedToServer;
-    int m_socketConnectedToAdmin;
-    int peerSocketThatRequiresDetailedInfo;
+    SOCKETID m_socketConnectedToServer;
+    SOCKETID m_socketConnectedToAdmin;
+    SOCKETID peerSocketThatRequiresDetailedInfo;
 
 
 //    UDTProtocolForFileTransmission *m_udtProtocolForFileTransmission;
@@ -219,7 +220,7 @@ private:
 
     FileManager *m_fileManager;
     QHash<int/*File TX Request ID*/, int/*Socket ID*/> fileTXRequestHash;
-    QMultiHash<int/*Socket ID*/, QByteArray/*File MD5*/> fileTXSocketHash;
+    QMultiHash<SOCKETID/*Socket ID*/, QByteArray/*File MD5*/> fileTXSocketHash;
 
     QStringList logs;
 

@@ -21,7 +21,7 @@ public slots:
 
 
 private:
-    void processReceivedData(quint32 peerID, QByteArray &data);
+    void processReceivedData(quint32 peerID, QByteArray data);
 
     void convertDataToPacket(quint32 peerID, QByteArray *data);
 
