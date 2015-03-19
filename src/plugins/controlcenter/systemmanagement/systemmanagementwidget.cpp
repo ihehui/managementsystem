@@ -130,11 +130,10 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
     //ui.tabSystemInfo->setEnabled(false);
     ui.toolButtonRequestSystemInfo->setEnabled(false);
-    ui.toolButtonRescanSystemInfo->setEnabled(false);
     ui.toolButtonSaveAs->setEnabled(false);
 
     QHeaderView *view = ui.tableWidgetSoftware->horizontalHeader();
-    view->resizeSection(0, 200);
+    view->resizeSection(0, 300);
     view->setVisible(true);
 
 
@@ -314,7 +313,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     connect(controlCenterPacketsParser, SIGNAL(signalClientMessagePacketReceived(const QString &, const QString &, quint8)), this, SLOT(clientMessageReceived(const QString &, const QString &, quint8)));
     connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(SOCKETID, const QByteArray &)), this, SLOT(clientResponseClientSummaryInfoPacketReceived(SOCKETID, const QByteArray &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QString &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QByteArray &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QByteArray &)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientResponseRemoteConsoleStatusPacketReceived(const QString &, bool, const QString &, quint8)), this, SLOT(clientResponseRemoteConsoleStatusPacketReceived(const QString &, bool, const QString &, quint8)));
     connect(controlCenterPacketsParser, SIGNAL(signalRemoteConsoleCMDResultFromClientPacketReceived(const QString &, const QString &)), this, SLOT(remoteConsoleCMDResultFromClientPacketReceived(const QString &, const QString &)));
@@ -795,46 +794,22 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
     ui.computerNameLineEdit->setText(m_peerComputerName);
     ui.workgroupLineEdit->setText(record.value("Workgroup").toString());
 
-    QStringList storageInfo = record.value("Storage").toString().split("|");
-    foreach (QString info, storageInfo) {
-        ui.logicalDrivesComboBox->addItem(info);
-    }
-
-    ui.comboBoxSystemUsers->addItem(record.value("Users").toString());
-
     ui.osGroupBox->setEnabled(true);
 
 
     ui.cpuLineEdit->setText(record.value("CPU").toString());
     ui.motherboardLineEdit->setText(record.value("MotherboardName").toString());
-    ui.dmiUUIDLineEdit->setText(record.value("DMIUUID").toString());
-    ui.chipsetLineEdit->setText(record.value("Chipset").toString());
     ui.memoryLineEdit->setText(record.value("Memory").toString());
     ui.videoCardLineEdit->setText(record.value("Video").toString());
     ui.monitorLineEdit->setText(record.value("Monitor").toString());
     ui.audioLineEdit->setText(record.value("Audio").toString());
-
-    QStringList nic1Info = record.value("NIC1").toString().split("|");
-    if(nic1Info.size() == 3){
-        ui.adapter1NameLineEdit->setText(nic1Info.at(0));
-        ui.adapter1HDAddressLineEdit->setText(nic1Info.at(1));
-        ui.adapter1IPAddressLineEdit->setText(nic1Info.at(2));
-    }
-
-
-    QStringList nic2Info = record.value("NIC2").toString().split("|");
-    if(nic2Info.size() == 3){
-        ui.adapter2NameLineEdit->setText(nic2Info.at(0));
-        ui.adapter2HDAddressLineEdit->setText(nic2Info.at(1));
-        ui.adapter2IPAddressLineEdit->setText(nic2Info.at(2));
-    }
-
+    ui.lineEditNetworkAdapter->setText(record.value("NetworkAdapter").toString());
 
     ui.devicesInfoGroupBox->setEnabled(true);
 
 
     queryModel->clear();
-    queryString = QString("SELECT SoftwareName, SoftwareVersion, Size, InstallationDate, Publisher FROM installedsoftware WHERE ComputerName = '%1' ").arg(m_peerComputerName);
+    queryString = QString("SELECT SoftwareName, SoftwareVersion, InstallationDate, Publisher FROM installedsoftware WHERE ComputerName = '%1' ").arg(m_peerComputerName);
     queryModel->setQuery(QSqlQuery(queryString, db));
     while (queryModel->canFetchMore()){
         queryModel->fetchMore();
@@ -843,7 +818,7 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
     ui.tableWidgetSoftware->setRowCount(rows);
     for(int i=0; i<rows; i++){
         QSqlRecord record = queryModel->record(i);
-        for(int j=0; j<5; j++){
+        for(int j=0; j<4; j++){
             ui.tableWidgetSoftware->setItem(i, j, new QTableWidgetItem(record.value(j).toString()));
         }
     }
@@ -872,37 +847,10 @@ void SystemManagementWidget::on_toolButtonRequestSystemInfo_clicked(){
     QTimer::singleShot(60000, this, SLOT(requestClientInfoTimeout()));
 
     ui.toolButtonRequestSystemInfo->setEnabled(false);
-    ui.toolButtonRescanSystemInfo->setEnabled(false);
     ui.toolButtonSaveAs->setEnabled(false);
 
     ui.osGroupBox->setEnabled(false);
     ui.devicesInfoGroupBox->setEnabled(false);
-
-}
-
-void SystemManagementWidget::on_toolButtonRescanSystemInfo_clicked(){
-
-//    if(!verifyPrivilege()){
-//        return;
-//    }
-
-
-    bool ok = controlCenterPacketsParser->sendRequestClientDetailedInfoPacket(m_peerSocket, m_peerComputerName, true);
-    if(!ok){
-        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
-        return;
-    }
-
-    QTimer::singleShot(60000, this, SLOT(requestClientInfoTimeout()));
-
-
-    ui.toolButtonRequestSystemInfo->setEnabled(false);
-    ui.toolButtonRescanSystemInfo->setEnabled(false);
-    ui.toolButtonSaveAs->setEnabled(false);
-
-    ui.osGroupBox->setEnabled(false);
-    ui.devicesInfoGroupBox->setEnabled(false);
-
 
 }
 
@@ -1079,7 +1027,6 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         ui.groupBoxRemoteConsole->setEnabled(true);
 
         ui.toolButtonRequestSystemInfo->setEnabled(true);
-        ui.toolButtonRescanSystemInfo->setEnabled(true);
 
         ui.groupBoxTemperatures->setEnabled(true);
 
@@ -1097,7 +1044,6 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         ui.groupBoxRemoteConsole->setEnabled(false);
 
         ui.toolButtonRequestSystemInfo->setEnabled(false);
-        ui.toolButtonRescanSystemInfo->setEnabled(false);
 
         ui.groupBoxTemperatures->setEnabled(false);
 
@@ -1246,7 +1192,6 @@ void SystemManagementWidget::clientResponseClientSummaryInfoPacketReceived(SOCKE
 
     //ui.tabSystemInfo->setEnabled(true);
     ui.toolButtonRequestSystemInfo->setEnabled(true);
-    ui.toolButtonRescanSystemInfo->setEnabled(true);
     //ui.toolButtonSaveAs->setEnabled(false);
 
     ui.tabRemoteManagement->setEnabled(true);
@@ -1261,164 +1206,104 @@ void SystemManagementWidget::clientResponseClientSummaryInfoPacketReceived(SOCKE
 }
 
 
-void SystemManagementWidget::clientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo){
+void SystemManagementWidget::clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo){
 
-    //qWarning()<<"Client Info from "<< computerName;
-    //qWarning()<<clientInfo;
 
     if(this->m_peerComputerName != computerName){
         return;
     }
 
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(clientInfo, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+    QJsonObject object = doc.object();
+    QJsonObject obj = object["System"].toObject();
+    if(!obj.isEmpty()){
+        updateSystemInfo(obj);
+    }
+
+    QJsonArray array = object["Software"].toArray();
+    if(!array.isEmpty()){
+        updateSoftwareInfo(array);
+    }
+
+
+}
+
+void SystemManagementWidget::updateSystemInfo(const QJsonObject &obj){
+
     resetSystemInfo();
 
-    QDir::setCurrent(QDir::tempPath());
-    QString clientInfoFilePath = QString("./%1.ini").arg(computerName);
-
-    QFile file(clientInfoFilePath);
-    if(!file.open(QIODevice::WriteOnly | QFile::Truncate | QIODevice::Text)){
-        QMessageBox::critical(this, QString(tr("Error")), QString(tr("Can not write client info file '")+clientInfoFilePath+tr("'!")));
-        return;
-    }
-    QTextStream out(&file);
-    out.setCodec("UTF-8");
-    out << clientInfo;
-    file.flush();
-    file.close();
-
-    QSettings systemInfo(clientInfoFilePath, QSettings::IniFormat, this);
-    systemInfo.setIniCodec("UTF-8");
-
-    if(!QFile(clientInfoFilePath).exists()){
-        QMessageBox::critical(this, QString(tr("Error")), QString(tr("Client Info File '")+clientInfoFilePath+tr("' Missing!")));
-
-        //slotResetStatusBar(false);
-        //statusBar()->showMessage(tr("Error! Client Info File '%1' missing!").arg(clientInfoFilePath));
-        return;
-    }
-
-
-    systemInfo.beginGroup("DevicesInfo");
-
-    QString cpu = systemInfo.value("CPU").toString();
-    QString memory = systemInfo.value("Memory").toString();
-    QString motherboardName = systemInfo.value("MotherboardName").toString();
-    QString dmiUUID = systemInfo.value("DMIUUID").toString();
-    QString chipset = systemInfo.value("Chipset").toString();
-    QString video = systemInfo.value("Video").toString();
-    QString monitor = systemInfo.value("Monitor").toString();
-    QString audio = systemInfo.value("Audio").toString();
-    QString partitionsTotalSize = systemInfo.value("PartitionsTotalSize").toString();
-
-    QString adapter1Name = systemInfo.value("Adapter1Name").toString();
-    QString adapter1HDAddress = systemInfo.value("Adapter1HDAddress").toString();
-    QString adapter1IPAddress = systemInfo.value("Adapter1IPAddress").toString();
-    //network1Info<<adapter1Name<<adapter1HDAddress<<adapter1IPAddress;
-
-    QString adapter2Name = systemInfo.value("Adapter2Name").toString();
-    QString adapter2HDAddress = systemInfo.value("Adapter2HDAddress").toString();
-    QString adapter2IPAddress = systemInfo.value("Adapter2IPAddress").toString();
-    //network2Info<<adapter2Name<<adapter2HDAddress<<adapter2IPAddress;
-
-    systemInfo.endGroup();
-
-    ui.cpuLineEdit->setText(cpu);
-    ui.memoryLineEdit->setText(memory);
-    ui.motherboardLineEdit->setText(motherboardName);
-    ui.dmiUUIDLineEdit->setText(dmiUUID);
-    ui.chipsetLineEdit->setText(chipset);
-    ui.videoCardLineEdit->setText(video);
-    ui.monitorLineEdit->setText(monitor);
-    ui.audioLineEdit->setText(audio);
-
-    ui.adapter1NameLineEdit->setText(adapter1Name);
-    ui.adapter1HDAddressLineEdit->setText(adapter1HDAddress);
-    ui.adapter1IPAddressLineEdit->setText(adapter1IPAddress);
-    ui.adapter2NameLineEdit->setText(adapter2Name);
-    ui.adapter2HDAddressLineEdit->setText(adapter2HDAddress);
-    ui.adapter2IPAddressLineEdit->setText(adapter2IPAddress);
-
-    ui.devicesInfoGroupBox->setEnabled(true);
-
-
-    systemInfo.beginGroup("OSInfo");
-    QString os = systemInfo.value("OS").toString();
-    QString installationDate = systemInfo.value("InstallationDate").toString();
-    QString workgroup = systemInfo.value("Workgroup").toString();
-    //QString computerName = systemInfo.value("ComputerName").toString();
-    QString windowsDir = systemInfo.value("WindowsDir").toString();
-
+    QString os = obj["OS"].toString();
+    QString installationDate = obj["InstallDate"].toString();
+    QString osKey = obj["Key"].toString();
+    QString users = obj["Users"].toString();
+    QString computerName = obj["ComputerName"].toString();
+    QString workgroup = obj["Workgroup"].toString();
 
     ui.osVersionLineEdit->setText(os);
     ui.installationDateLineEdit->setText(installationDate);
+    ui.lineEditOSKey->setText(osKey);
     ui.computerNameLineEdit->setText(computerName);
     ui.workgroupLineEdit->setText(workgroup);
-
-    ui.logicalDrivesComboBox->clear();
-    QStringList drivesInfo;
-    for (int i = 1; i < 10; i++) {
-        QString logicalDrivesKey,driveInfo;
-        logicalDrivesKey = QString("Partition" + QString::number(i));
-        driveInfo = systemInfo.value(logicalDrivesKey).toString();
-        if (driveInfo.isEmpty()) {
-            continue;
-        }
-
-        drivesInfo.append(driveInfo);
-        ui.logicalDrivesComboBox->addItem(driveInfo);
-    }
-    systemInfo.endGroup();
-
-    systemInfo.beginGroup("Users");
-    ui.comboBoxSystemUsers->clear();
-    QStringList usersInfo;
-    for(int j = 0; j < 10; j++){
-        QString userKey, userInfo;
-        userKey = QString("User" + QString::number(j));
-        userInfo = systemInfo.value(userKey).toString();
-        if(userInfo.isEmpty()){
-            continue;
-        }
-        usersInfo.append(userInfo);
-        ui.comboBoxSystemUsers->addItem(userInfo);
-    }
-    systemInfo.endGroup();
-
+    ui.lineEditUsers->setText(users);
     ui.osGroupBox->setEnabled(true);
 
 
-    systemInfo.beginGroup("Other");
-    QString creationTime = systemInfo.value("CreationTime").toString();
-    ui.labelReportCreationTime->setText("Report Creation Time: " + creationTime);
-    //ui.labelReportCreationTime->show();
-    systemInfo.endGroup();
+    QString cpu = obj["Processor"].toString();
+    QString memory = obj.value("PhysicalMemory").toString();
+    QString motherboardName = obj.value("BaseBoard").toString();
+    QString video = obj.value("VideoController").toString();
+    QString monitor = obj.value("Monitor").toString();
+    QString audio = obj.value("SoundDevice").toString();
+    QString diskDrive = obj.value("DiskDrive").toString();
+    QString networkAdapter = obj.value("NetworkAdapter").toString();
 
-    systemInfo.beginGroup("InstalledSoftwareInfo");
-    QStringList infoList;
-    for(int k = 1; k < 400; k++){
-        QString info = systemInfo.value(QString::number(k)).toString();
-        if(info.isEmpty()){break;}
-        infoList.append(info);
-    }
-    int rowCount = infoList.size();
-    ui.tableWidgetSoftware->setRowCount(rowCount);
-    for(int m=0; m<rowCount; m++){
-        QStringList info = infoList.at(m).split(" | ");
-        if(info.size() != 5){break;}
-        for(int n=0; n<5; n++){
-            ui.tableWidgetSoftware->setItem(m, n, new QTableWidgetItem(info.at(n)));
-        }
-    }
-    systemInfo.endGroup();
+
+    ui.cpuLineEdit->setText(cpu);
+    ui.motherboardLineEdit->setText(motherboardName);
+    ui.memoryLineEdit->setText(memory);
+    ui.lineEditDiskDrives->setText(diskDrive);
+    ui.monitorLineEdit->setText(monitor);
+    ui.videoCardLineEdit->setText(video);
+    ui.audioLineEdit->setText(audio);
+    ui.lineEditNetworkAdapter->setText(networkAdapter);
+    ui.devicesInfoGroupBox->setEnabled(true);
+
 
 
     ui.toolButtonRequestSystemInfo->setEnabled(true);
-    ui.toolButtonRescanSystemInfo->setEnabled(true);
     ui.toolButtonSaveAs->setEnabled(true);
 
 
     //slotResetStatusBar(false);
     //statusBar()->showMessage(tr("Done. Press 'Ctrl+S' to upload the data to server!"));
+
+}
+
+void SystemManagementWidget::updateSoftwareInfo(const QJsonArray &array){
+
+    ui.tableWidgetSoftware->clearContents();
+    int softwareCount = array.size();
+    ui.tableWidgetSoftware->setRowCount(softwareCount);
+
+    for(int i=0;i<softwareCount;i++){
+        QJsonArray infoArray = array.at(i).toArray();
+        if(infoArray.size() != 4){continue;}
+//        qDebug()<<infoArray.at(0).toString();
+//        qDebug()<<infoArray.at(1).toString();
+//        qDebug()<<infoArray.at(2).toString();
+//        qDebug()<<infoArray.at(3).toString();
+
+        for(int j=0; j<4; j++){
+            ui.tableWidgetSoftware->setItem(i, j, new QTableWidgetItem(infoArray.at(j).toString()));
+        }
+    }
+
+
 
 }
 
@@ -1568,7 +1453,6 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
 
     //ui.tabSystemInfo->setEnabled(false);
     ui.toolButtonRequestSystemInfo->setEnabled(false);
-    ui.toolButtonRescanSystemInfo->setEnabled(false);
     if(ui.osVersionLineEdit->text().trimmed().isEmpty()){
         ui.toolButtonSaveAs->setEnabled(false);
     }
@@ -1670,29 +1554,21 @@ void SystemManagementWidget::resetSystemInfo(){
 
     ui.osVersionLineEdit->clear();
     ui.installationDateLineEdit->clear();
+    ui.lineEditOSKey->clear();
     ui.computerNameLineEdit->clear();
     ui.workgroupLineEdit->clear();
-    ui.logicalDrivesComboBox->clear();
-    ui.comboBoxSystemUsers->clear();
-
+    ui.lineEditUsers->clear();
     ui.osGroupBox->setEnabled(false);
 
 
     ui.cpuLineEdit->clear();
-    ui.memoryLineEdit->clear();
     ui.motherboardLineEdit->clear();
-    ui.dmiUUIDLineEdit->clear();
-    ui.chipsetLineEdit->clear();
-    ui.videoCardLineEdit->clear();
+    ui.memoryLineEdit->clear();
+    ui.lineEditDiskDrives->clear();
     ui.monitorLineEdit->clear();
+    ui.videoCardLineEdit->clear();
     ui.audioLineEdit->clear();
-
-    ui.adapter1NameLineEdit->clear();
-    ui.adapter1HDAddressLineEdit->clear();
-    ui.adapter1IPAddressLineEdit->clear();
-    ui.adapter2NameLineEdit->clear();
-    ui.adapter2HDAddressLineEdit->clear();
-    ui.adapter2IPAddressLineEdit->clear();
+    ui.lineEditNetworkAdapter->clear();
 
     ui.devicesInfoGroupBox->setEnabled(false);
 

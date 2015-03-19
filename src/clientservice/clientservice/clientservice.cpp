@@ -178,6 +178,7 @@ bool ClientService::setDeskWallpaper(const QString &wallpaperPath){
 
 }
 
+
 bool ClientService::startMainService(){
     qDebug()<<"----ClientService::startMainService()";
 
@@ -518,73 +519,56 @@ void ClientService::processClientDetailedInfoRequestedPacket(SOCKETID socketID, 
 
 #ifdef Q_OS_WIN
 
-    if(!computerName.isEmpty()){
-        if(computerName != m_localComputerName){
-            return;
-        }
-    }
+//    if(!computerName.isEmpty()){
+//        if(computerName != m_localComputerName){
+//            return;
+//        }
+//    }
 
     peerSocketThatRequiresDetailedInfo = socketID;
 
     if(SystemInfo::isRunning()){
-        //TODO
-        //clientPacketsParser->sendClientMessagePacket(QHostAddress(peerAddress), peerPort, localComputerName, "The Scanner is already running!");
         return;
     }
 
     if(!systemInfo){
         systemInfo = new SystemInfo(this);
-        connect(systemInfo, SIGNAL(signalScanFinished(bool, const QString&)), this, SLOT(scanFinished(bool, const QString&)));
+        connect(systemInfo, SIGNAL(signalSystemInfoResultReady(const QByteArray&)), this, SLOT(systemInfoResultReady(const QByteArray&)));
+        connect(systemInfo, SIGNAL(finished()), this, SLOT(systemInfoThreadFinished()));
     }
 
-    systemInfo->slotScanSystem(rescan);
-
+    systemInfo->start();
+    //systemInfo->getSystemInfo();
 
 #endif
 
 }
 
-void ClientService::scanFinished(bool ok, const QString &message){
+void ClientService::systemInfoResultReady(const QByteArray &data){
 
-    qDebug()<<"ClientService::scanFinished(...)";
+    qDebug()<<"ClientService::systemInfoResultReady(...)";
+    qDebug()<<"system info:"<<data;
 
 #if defined(Q_OS_WIN32)
 
-    if(!ok){
-        //TODO
-        //clientPacketsParser->sendClientMessagePacket(QHostAddress(m_adminAddress), m_adminPort, localComputerName, message);
-        return;
-    }else{
-        //clientPacketsParser->sendClientMessagePacket(QHostAddress(m_adminAddress), m_adminPort, m_computerName, "Scan Finished!");
-    }
-
-
-    QString systemInfoFile = systemInfo->systemInfoFilePath();
-    if (!QFile(systemInfoFile).exists()) {
-        //TODO
-        //clientPacketsParser->sendClientMessagePacket(QHostAddress(m_adminAddress), m_adminPort, localComputerName, "System info file does not exist!");
-        qCritical()<<"ERROR! Can not find system info file!";
+    if(data.isEmpty()){
+        QString message = "Error! Can not get system info!";
+        clientPacketsParser->sendClientMessagePacket(peerSocketThatRequiresDetailedInfo, message, MS::MSG_Critical);
         return;
     }
-
 
     //TODO:
-    bool ret = clientPacketsParser->sendClientResponseClientDetailedInfoPacket(peerSocketThatRequiresDetailedInfo, systemInfoFile);
+    bool ret = clientPacketsParser->sendClientResponseClientDetailedInfoPacket(peerSocketThatRequiresDetailedInfo, data);
     if(!ret){
         qCritical()<<tr("ERROR! Can not upload system info to peer! %3").arg(m_rtp->lastErrorString());
     }
 
     if(m_socketConnectedToServer != INVALID_SOCK_ID && peerSocketThatRequiresDetailedInfo != m_socketConnectedToServer){
-        bool ret = clientPacketsParser->sendClientResponseClientDetailedInfoPacket(m_socketConnectedToServer, systemInfoFile);
+        bool ret = clientPacketsParser->sendClientResponseClientDetailedInfoPacket(m_socketConnectedToServer, data);
         if(!ret){
             qCritical()<<tr("ERROR! Can not upload system info to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
     }
-
-    systemInfo->stopProcess();
-    systemInfo->disconnect();
-    delete systemInfo;
-    systemInfo = 0;
 
 
     m_wm->freeMemory();
@@ -594,6 +578,14 @@ void ClientService::scanFinished(bool ok, const QString &message){
 
 
 
+}
+
+
+void ClientService::systemInfoThreadFinished(){
+    Q_ASSERT(systemInfo);
+//    systemInfo->exit();
+    delete systemInfo;
+    systemInfo = 0;
 }
 
 void ClientService::processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName){
@@ -1149,7 +1141,7 @@ void ClientService::processAdminRequestInformUserNewPasswordPacket(const QString
     }
     
     //WindowsManagement wm;
-    QStringList users = m_wm->localUsers();
+    QStringList users = WinUtilities::localUsers();
     users.removeAll("system$");
     users.removeAll("administrator");
     users.removeAll("guest");
@@ -1341,7 +1333,7 @@ QStringList ClientService::usersOnLocalComputer(){
 
 #ifdef Q_OS_WIN
 
-    QStringList users = m_wm->localUsers();
+    QStringList users = WinUtilities::localUsers();
     users.removeAll("system$");
     users.removeAll("administrator");
     users.removeAll("guest");
@@ -1570,7 +1562,7 @@ bool ClientService::checkUsersAccount(){
 
 #ifdef Q_OS_WIN32
     //WindowsManagement wm;
-    QStringList users = m_wm->localUsers();
+    QStringList users = WinUtilities::localUsers();
     if(users.contains(m_localComputerName, Qt::CaseInsensitive)){
         qWarning()<<QString("Computer name  '%1' is the same as user name!").arg(m_localComputerName);
         
@@ -2524,10 +2516,6 @@ void ClientService::stop()
         //QTimer::singleShot(1000, clientPacketsParser, SLOT(aboutToQuit()));
     }
 
-
-    if(systemInfo){
-        systemInfo->stopProcess();
-    }
 
     if(m_udpServer){
         m_udpServer->close();

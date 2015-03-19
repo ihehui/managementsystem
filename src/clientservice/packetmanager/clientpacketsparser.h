@@ -271,16 +271,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientResponseClientDetailedInfoPacket(SOCKETID socketID, const QString &systemInfoFilePath){
-
-        QFile file(systemInfoFilePath);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-            //TODO
-            //sendClientMessagePacket(peerAddress, peerPort, localComputerName, "Can not read system info file!");
-            return false;
-        }
-        QTextStream in(&file);
-        QString info = in.readAll();
+    bool sendClientResponseClientDetailedInfoPacket(SOCKETID socketID, const QByteArray &data){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -289,7 +280,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_7);
-        out << m_localComputerName << info;
+        out << m_localComputerName << data;
         packet->setPacketData(ba);
 
         ba.clear();

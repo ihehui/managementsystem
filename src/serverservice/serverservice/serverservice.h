@@ -69,7 +69,7 @@ private slots:
     void updateOrSaveClientSummaryInfo(SOCKETID socketID, const QByteArray &clientSummaryInfo);
     bool updateOrSaveClientInfoToDatabase(ClientInfo *info);
     void updateOrSaveAllClientsInfoToDatabase();
-    void clientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
+    void clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
 
     void getRecordsInDatabase();
 

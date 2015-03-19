@@ -837,7 +837,7 @@ signals:
 
 
 
-    void signalClientResponseClientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
+    void signalClientResponseClientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
     void signalClientResponseUSBInfoPacketReceived(SOCKETID socketID, const QString &computerName, const QString &usbInfo);
     void signalClientResponseProgramesInfoPacketReceived(SOCKETID socketID, const QString &computerName, const QString &usbInfo);
 

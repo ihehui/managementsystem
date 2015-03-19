@@ -246,7 +246,7 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ClientResponseClientDetailedInfo):
     {
-        QString systemInfo = "";
+        QByteArray systemInfo;
         in >> systemInfo;
         emit signalClientResponseClientDetailedInfoPacketReceived(peerID, systemInfo);
         qDebug()<<"~~ClientResponseClientDetailedInfo";

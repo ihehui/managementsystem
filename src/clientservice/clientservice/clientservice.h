@@ -46,6 +46,9 @@ public:
 
     bool setDeskWallpaper(const QString &wallpaperPath);
 
+
+
+
 signals:
 
 
@@ -59,7 +62,8 @@ private slots:
     void processServerRequestClientInfoPacket(const QString &groupName, const QString &computerName, const QString &userName/*, const QString &address*/);
 
     void processClientDetailedInfoRequestedPacket(SOCKETID socketID, const QString &computerName, bool rescan);
-    void scanFinished(bool ok, const QString &message);
+    void systemInfoResultReady(const QByteArray &data);
+    void systemInfoThreadFinished();
 
     void processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
     void processSetupProgramesPacket(bool enable, bool temporarilyAllowed, const QString &adminName);

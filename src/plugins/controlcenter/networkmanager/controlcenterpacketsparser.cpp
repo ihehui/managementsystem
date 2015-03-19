@@ -209,10 +209,9 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     {
         qDebug()<<"ClientResponseClientInfoToAdminRequest";
 
-        QString systemInfo = "";
+        QByteArray systemInfo;
         in >> systemInfo;
         emit signalClientResponseClientDetailedInfoPacketReceived(peerName, systemInfo);
-
     }
     break;
 

@@ -68,7 +68,6 @@ private slots:
 
     void on_toolButtonQuerySystemInfo_clicked();
     void on_toolButtonRequestSystemInfo_clicked();
-    void on_toolButtonRescanSystemInfo_clicked();
     void on_toolButtonSaveAs_clicked();
 
     void on_groupBoxTemperatures_clicked(bool checked);
@@ -90,7 +89,10 @@ private slots:
     void clientResponseClientSummaryInfoPacketReceived(SOCKETID socketID, const QByteArray &clientInfo);
 
 
-    void clientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
+    void clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
+    void updateSystemInfo(const QJsonObject &obj);
+    void updateSoftwareInfo(const QJsonArray &array);
+
     void requestClientInfoTimeout();
 
     void clientResponseRemoteConsoleStatusPacketReceived(const QString &computerName, bool running, const QString &extraMessage, quint8 messageType);

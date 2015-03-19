@@ -296,7 +296,7 @@ signals:
     //void signalClientOfflinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
 
     void signalClientResponseClientSummaryInfoPacketReceived(SOCKETID socketID, const QByteArray &clientSummaryInfo);
-    void signalClientResponseClientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo);
+    void signalClientResponseClientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
 
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);

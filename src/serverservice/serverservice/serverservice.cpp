@@ -160,7 +160,7 @@ bool ServerService::startMainService(){
 
     connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(SOCKETID, const QByteArray &)), this, SLOT(updateOrSaveClientSummaryInfo(SOCKETID , const QByteArray &)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QString &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QString &)));
+    connect(serverPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QByteArray &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QByteArray &)));
 
 //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
@@ -535,7 +535,7 @@ void ServerService::updateOrSaveAllClientsInfoToDatabase(){
 
 }
 
-void ServerService::clientDetailedInfoPacketReceived(const QString &computerName, const QString &clientInfo){
+void ServerService::clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo){
 
     qWarning()<<"Client detailed info has been received From "<< computerName;
     //    qWarning()<<"-----clientDetailedInfoPacketReceived";

@@ -1,12 +1,13 @@
 #ifndef SYSINFODLG_H
 #define SYSINFODLG_H
 
-#include <QObject>
+#include <QThread>
 #include <QProcess>
 
+namespace HEHUI {
 
 
-class SystemInfo: public QObject {
+class SystemInfo: public QThread {
     Q_OBJECT
 
 public:
@@ -14,36 +15,30 @@ public:
     SystemInfo(QObject *parent = 0);
     ~SystemInfo();
 
-    static bool isRunning(){return running;}
+    static bool isRunning();
 
-    QString systemInfoFilePath() const{return m_systemInfoFilePath;}
-
+protected:
+    void run();
 
 signals:
-    void signalScanFinished(bool ok, const QString &message);
-
+    void signalSystemInfoResultReady(const QByteArray &data);
 
 public slots:
-    void slotScanSystem(bool rescan = false);
-    void stopProcess();
+    void getSystemInfo();
+    void getInstalledSoftwareInfo();
 
-
-private slots:
-    void slotScannerExit( int exitCode, QProcess::ExitStatus exitStatus);
-
+private:
+    void getInstalledSoftwareInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView);
 
 
 private:
 
     static bool running;
 
-    QProcess *process;
-
-    QString everestDirPath;
-    QString m_systemInfoFilePath;
-
 
 };
+
+} //namespace HEHUI
 
 #endif // SYSINFODLG_H
 
