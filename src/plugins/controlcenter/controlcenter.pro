@@ -41,13 +41,9 @@ HEADERS += \
     controlcenterplugin.h \
     constants.h \
     networkmanager/resourcesmanagerinstance.h \
-    filemanagement/filemanagement.h
-FORMS += taskmanagement/taskinfoviewwidget.ui \
-    taskmanagement/taskmanagement.ui \
-    announcement/announcement.ui \
-    systemmanagement/systemmanagementwidget.ui \
-    controlcenter.ui \
-    filemanagement/filemanagement.ui
+    filemanagement/filemanagement.h \
+    serviceinfomodel/serviceinfomodel.h
+
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
     taskmanagement/taskinfoviewwidget.cpp \
@@ -58,7 +54,17 @@ SOURCES += \
     controlcenter.cpp \
     controlcenterplugin.cpp \
     networkmanager/resourcesmanagerinstance.cpp \
-    filemanagement/filemanagement.cpp
+    filemanagement/filemanagement.cpp \
+    serviceinfomodel/serviceinfomodel.cpp
+
+
+FORMS += taskmanagement/taskinfoviewwidget.ui \
+    taskmanagement/taskmanagement.ui \
+    announcement/announcement.ui \
+    systemmanagement/systemmanagementwidget.ui \
+    controlcenter.ui \
+    filemanagement/filemanagement.ui
+
 RESOURCES += controlcenter.qrc
 
 

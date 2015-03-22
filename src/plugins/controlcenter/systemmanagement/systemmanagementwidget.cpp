@@ -36,7 +36,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     ui.lineEditComputerName->setText(m_peerComputerName.toUpper());
 
 
-    ui.lineEditIPAddress->setText("200.200.200.105");
+    ui.lineEditIPAddress->setText("200.200.200.17");
 
 
     if(m_peerComputerName.toLower() == QHostInfo::localHostName().toLower()){
@@ -136,6 +136,11 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     view->resizeSection(0, 300);
     view->setVisible(true);
 
+    view = ui.tableViewServices->horizontalHeader();
+    view->resizeSection(1, 200);
+    view->resizeSection(3, 200);
+    view->setVisible(true);
+
 
     ui.tabRemoteManagement->setEnabled(false);
 
@@ -157,7 +162,8 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
 
     //No editing possible.
-    ui.tableWidgetSoftware->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    //ui.tableWidgetSoftware->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    //ui.tableWidgetServices->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 //    m_fileManager = 0;
 
@@ -175,6 +181,15 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
     m_updateTemperaturesTimer = 0;
 
+    m_serviceInfoModel = new ServiceInfoModel(this);
+
+    m_proxyModel = new ServiceInfoSortFilterProxyModel(this);
+    m_proxyModel->setSourceModel(m_serviceInfoModel);
+    m_proxyModel->setDynamicSortFilter(true);
+
+    ui.tableViewServices->setModel(m_proxyModel);
+    m_serviceInfoModel->setJsonData(QJsonArray());
+
 }
 
 SystemManagementWidget::~SystemManagementWidget()
@@ -186,6 +201,12 @@ SystemManagementWidget::~SystemManagementWidget()
         m_updateTemperaturesTimer->stop();
         delete m_updateTemperaturesTimer;
     }
+
+
+    if(m_serviceInfoModel){
+        delete m_serviceInfoModel;
+    }
+    m_serviceInfoModel = 0;
 
 }
 
@@ -1225,15 +1246,19 @@ void SystemManagementWidget::clientDetailedInfoPacketReceived(const QString &com
         updateSystemInfo(obj);
     }
 
-    QJsonArray array = object["Software"].toArray();
-    if(!array.isEmpty()){
-        updateSoftwareInfo(array);
+    QJsonArray softwareArray = object["Software"].toArray();
+    if(!softwareArray.isEmpty()){
+        updateSoftwareInfo(softwareArray);
     }
 
-
+    QJsonArray serviceArray = object["Service"].toArray();
+    if(!serviceArray.isEmpty()){
+        updateServicesInfo(serviceArray);
+    }
 }
 
 void SystemManagementWidget::updateSystemInfo(const QJsonObject &obj){
+    qDebug()<<"--SystemManagementWidget::updateSystemInfo(...)";
 
     resetSystemInfo();
 
@@ -1285,6 +1310,7 @@ void SystemManagementWidget::updateSystemInfo(const QJsonObject &obj){
 }
 
 void SystemManagementWidget::updateSoftwareInfo(const QJsonArray &array){
+    qDebug()<<"--SystemManagementWidget::updateSoftwareInfo(...)";
 
     ui.tableWidgetSoftware->clearContents();
     int softwareCount = array.size();
@@ -1304,6 +1330,47 @@ void SystemManagementWidget::updateSoftwareInfo(const QJsonArray &array){
     }
 
 
+
+}
+
+
+void SystemManagementWidget::updateServicesInfo(const QJsonArray &array){
+    qDebug()<<"--SystemManagementWidget::updateServicesInfo(...)";
+
+
+//    for(int i=0;i<array.size();i++){
+//        QJsonArray infoArray = array.at(i).toArray();
+//        if(infoArray.size() != 9){continue;}
+
+//        qDebug()<<i<<":"<<infoArray.at(0).toString();
+//        qDebug()<<i<<":"<<infoArray.at(1).toString();
+
+//        ServiceInfo *info = new ServiceInfo();
+//        info->serviceName = infoArray.at(0).toString();
+//        info->displayName = infoArray.at(1).toString();
+//        info->processID = infoArray.at(2).toDouble();
+//        info->description = infoArray.at(3).toString();
+//        info->startType = infoArray.at(4).toDouble();
+//        info->account = infoArray.at(5).toString();
+//        info->dependencies = infoArray.at(6).toString();
+//        info->serviceType = infoArray.at(7).toDouble();
+//        info->binaryPath = infoArray.at(8).toString();
+
+//        m_servicesList.append(info);
+
+////        for(int j=0; j<9; j++){
+
+////            ui.tableWidgetServices->setItem(i, j, new QTableWidgetItem(infoArray.at(j).toString()) );
+////        }
+//    }
+
+//    if(!m_serviceInfoModel){
+//        m_serviceInfoModel = new ServiceInfoModel(this);
+//        ui.tableViewServices->setModel(m_serviceInfoModel);
+//    }
+
+//    m_proxyModel->cleanFilters();
+    m_serviceInfoModel->setJsonData(array);
 
 }
 

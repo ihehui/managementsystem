@@ -7,11 +7,13 @@
 #include <QSqlQueryModel>
 
 #include "ui_systemmanagementwidget.h"
-#include "../../sharedms/rtp.h"
 
 #include "networkmanager/controlcenterpacketsparser.h"
+#include "../serviceinfomodel/serviceinfomodel.h"
+
 
 #include "../../sharedms/clientinfo.h"
+#include "../../sharedms/rtp.h"
 
 
 
@@ -92,6 +94,7 @@ private slots:
     void clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
     void updateSystemInfo(const QJsonObject &obj);
     void updateSoftwareInfo(const QJsonArray &array);
+    void updateServicesInfo(const QJsonArray &array);
 
     void requestClientInfoTimeout();
 
@@ -179,6 +182,9 @@ private:
     FileManagement *m_fileManagementWidget;
 
     QTimer *m_updateTemperaturesTimer;
+
+    ServiceInfoSortFilterProxyModel *m_proxyModel;
+    ServiceInfoModel *m_serviceInfoModel;
 
 
 

@@ -26,6 +26,7 @@ signals:
 public slots:
     void getSystemInfo();
     void getInstalledSoftwareInfo();
+    void getServicesInfo();
 
 private:
     void getInstalledSoftwareInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView);

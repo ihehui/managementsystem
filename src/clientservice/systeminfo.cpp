@@ -41,8 +41,10 @@ bool SystemInfo::isRunning(){
 
 
 void SystemInfo::run(){
-    getSystemInfo();
-    getInstalledSoftwareInfo();
+//    getSystemInfo();
+//    getInstalledSoftwareInfo();
+    getServicesInfo();
+
     exit();
  }
 
@@ -85,7 +87,7 @@ void SystemInfo::getSystemInfo(){
     QJsonObject object;
     object["System"] = obj;
     QJsonDocument doc(object);
-    emit signalSystemInfoResultReady(doc.toJson());
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact));
 
 }
 
@@ -113,7 +115,7 @@ void SystemInfo::getInstalledSoftwareInfo(){
     QJsonObject object;
     object["Software"] = infoArray;
     QJsonDocument doc(object);
-    emit signalSystemInfoResultReady(doc.toJson());
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact));
 
 }
 
@@ -146,10 +148,20 @@ void SystemInfo::getInstalledSoftwareInfo(QJsonArray *infoArray, const QStringLi
 
     }
 
-    QJsonDocument doc(*infoArray);
-    qDebug()<<"------:"<<doc.toJson();
+}
+
+void SystemInfo::getServicesInfo(){
+
+    QJsonArray infoArray;
+    HEHUI::WinUtilities::serviceGetAllServicesInfo(&infoArray);
+
+    QJsonObject object;
+    object["Service"] = infoArray;
+    QJsonDocument doc(object);
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact));
 
 }
+
 
 
 

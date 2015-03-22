@@ -546,8 +546,8 @@ void ClientService::processClientDetailedInfoRequestedPacket(SOCKETID socketID, 
 
 void ClientService::systemInfoResultReady(const QByteArray &data){
 
-    qDebug()<<"ClientService::systemInfoResultReady(...)";
-    qDebug()<<"system info:"<<data;
+    qDebug()<<"ClientService::systemInfoResultReady(...)"<<" size:"<<data.size();
+    //qDebug()<<"system info:"<<data;
 
 #if defined(Q_OS_WIN32)
 
@@ -1422,7 +1422,7 @@ QByteArray ClientService::getClientSummaryInfo(){
     m_wm->freeMemory();
 
     QJsonDocument doc(obj);
-    return doc.toJson();
+    return doc.toJson(QJsonDocument::Compact);
 
 #endif
 
