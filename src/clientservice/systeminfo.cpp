@@ -114,14 +114,14 @@ QByteArray SystemInfo::getOSInfo(){
 }
 
 void SystemInfo::getHardwareInfo(SOCKETID socketID){
+    qDebug()<<"--SystemInfo::getHardwareInfo(...)";
 
     QJsonObject obj;
-    obj["ComputerName"] = QHostInfo::localHostName();
+    obj["ComputerName"] = QHostInfo::localHostName().toLower();
 
 #ifdef Q_OS_WIN32
     HardwareMonitor hwm;
 
-    hwm.getOSInfo(&obj);
     hwm.getBaseBoardInfo(&obj);
     hwm.getProcessorInfo(&obj);
     hwm.getPhysicalMemoryInfo(&obj);
@@ -132,17 +132,17 @@ void SystemInfo::getHardwareInfo(SOCKETID socketID){
     hwm.getNetworkAdapterInfo(&obj);
 
 
-    QStringList users = WinUtilities::localCreatedUsers();
-    WinUtilities::getAllUsersLoggedOn(&users);
-    users.removeDuplicates();
-    obj["Users"] = users.join(";");
-
-    bool isJoinedToDomain = false;
-    QString joinInfo = WinUtilities::getJoinInformation(&isJoinedToDomain);
-    if(isJoinedToDomain){
-        WinUtilities::getComputerNameInfo(&joinInfo, 0, 0);
+    bool ok = false, readable = true, writeable = true;
+    MS::USBSTORStatus status = MS::USBSTOR_ReadWrite;
+    ok = WinUtilities::readUSBStorageDeviceSettings(&readable, &writeable);
+    if(readable && writeable){
+        status = MS::USBSTOR_ReadWrite;
+    }else if(!readable){
+        status = MS::USBSTOR_Disabled;
+    }else{
+        status = MS::USBSTOR_ReadOnly;
     }
-    obj["Workgroup"] = joinInfo;
+    obj["USBSD"] = QString::number(quint8(status));
 
 #else
 

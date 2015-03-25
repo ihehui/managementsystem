@@ -56,7 +56,9 @@ private slots:
     void on_toolButtonRenameComputer_clicked();
     void changeWorkgroup();
 
-    void on_pushButtonUSBSD_clicked();
+    void on_toolButtonSetupUSB_clicked();
+
+
     void on_pushButtonPrograms_clicked();
     void on_pushButtonShowAdmin_clicked();
     void on_pushButtonRemoteAssistance_clicked();
@@ -70,7 +72,7 @@ private slots:
     void on_pushButtonOtherEXE_clicked();
 
     void on_toolButtonQuerySystemInfo_clicked();
-    void on_toolButtonRequestSystemInfo_clicked();
+    void on_toolButtonRequestHardwareInfo_clicked();
     void on_toolButtonSaveAs_clicked();
 
     void on_groupBoxTemperatures_clicked(bool checked);

@@ -128,7 +128,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
 
     //ui.tabSystemInfo->setEnabled(false);
-    ui.toolButtonRequestSystemInfo->setEnabled(false);
+    ui.toolButtonRequestHardwareInfo->setEnabled(false);
     ui.toolButtonSaveAs->setEnabled(false);
 
     QHeaderView *view = ui.tableWidgetSoftware->horizontalHeader();
@@ -602,14 +602,40 @@ void SystemManagementWidget::changeWorkgroup(){
 
 }
 
-void SystemManagementWidget::on_pushButtonUSBSD_clicked(){
+void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
 
     //    if(!verifyPrivilege()){
     //        return;
     //    }
 
 
-    MS::USBSTORStatus usbSTORStatus = m_clientInfo.getUsbSDStatus();
+    if(!ui.checkBoxUSBSDReadable->isEnabled()){
+        ui.checkBoxUSBSDReadable->setEnabled(true);
+        ui.checkBoxUSBSDWriteable->setEnabled(true);
+        ui.toolButtonSetupUSB->setText(tr("Apply"));
+        return ;
+    }
+
+
+    MS::USBSTORStatus usbSTORStatus;
+    bool readable = ui.checkBoxUSBSDReadable->isChecked();
+    bool writeable = ui.checkBoxUSBSDWriteable->isChecked();
+    if(readable && writeable){
+        usbSTORStatus = MS::USBSTOR_ReadWrite;
+    }else if(!readable){
+        usbSTORStatus = MS::USBSTOR_Disabled;
+    }else{
+        usbSTORStatus = MS::USBSTOR_ReadOnly;
+    }
+
+    if(usbSTORStatus == m_clientInfo.getUsbSDStatus()){
+        ui.checkBoxUSBSDReadable->setEnabled(false);
+        ui.checkBoxUSBSDWriteable->setEnabled(false);
+        ui.toolButtonSetupUSB->setText(tr("Modify"));
+        return;
+    }
+
+
 
     QString text = tr("Do you really want to <font color = 'red'><b>%1</b></font> the USB SD on the computer?").arg((usbSTORStatus == MS::USBSTOR_ReadWrite)?tr("disable"):tr("enable"));
     int ret = QMessageBox::question(this, tr("Question"), text,
@@ -618,11 +644,6 @@ void SystemManagementWidget::on_pushButtonUSBSD_clicked(){
     if(ret == QMessageBox::No){
         return;
     }
-
-    //    QHostAddress address = QHostAddress(peerAddress);
-    //    if(localComputer){
-    //        address = QHostAddress(QHostAddress::LocalHost);
-    //    }
 
     bool m_temporarilyAllowed = true;
     if(!usbSTORStatus){
@@ -894,24 +915,24 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
 
 }
 
-void SystemManagementWidget::on_toolButtonRequestSystemInfo_clicked(){
+void SystemManagementWidget::on_toolButtonRequestHardwareInfo_clicked(){
 
     //    if(!verifyPrivilege()){
     //        return;
     //    }
 
-    bool ok = controlCenterPacketsParser->sendRequestClientInfoPacket(m_peerSocket, m_peerComputerName, false);
+    bool ok = controlCenterPacketsParser->sendRequestClientInfoPacket(m_peerSocket, m_peerComputerName, quint8(MS::SYSINFO_HARDWARE));
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
         return;
     }
 
-    QTimer::singleShot(60000, this, SLOT(requestClientInfoTimeout()));
+    //QTimer::singleShot(60000, this, SLOT(requestClientInfoTimeout()));
 
-    ui.toolButtonRequestSystemInfo->setEnabled(false);
+    ui.toolButtonRequestHardwareInfo->setEnabled(false);
     ui.toolButtonSaveAs->setEnabled(false);
 
-    ui.osGroupBox->setEnabled(false);
+    //ui.osGroupBox->setEnabled(false);
     ui.devicesInfoGroupBox->setEnabled(false);
 
 }
@@ -1096,7 +1117,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         ui.groupBoxOtherSettings->setEnabled(true);
         ui.groupBoxRemoteConsole->setEnabled(true);
 
-        ui.toolButtonRequestSystemInfo->setEnabled(true);
+        ui.toolButtonRequestHardwareInfo->setEnabled(true);
 
         ui.groupBoxTemperatures->setEnabled(true);
 
@@ -1111,7 +1132,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         ui.groupBoxOtherSettings->setEnabled(false);
         ui.groupBoxRemoteConsole->setEnabled(false);
 
-        ui.toolButtonRequestSystemInfo->setEnabled(false);
+        ui.toolButtonRequestHardwareInfo->setEnabled(false);
 
         ui.groupBoxTemperatures->setEnabled(false);
 
@@ -1192,8 +1213,8 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &computerNam
         m_clientInfo.setJsonData(data);
         updateOSInfo();
     case quint8(MS::SYSINFO_HARDWARE):
-            m_clientInfo.setJsonData(data);
-            updateHardwareInfo();
+        m_clientInfo.setJsonData(data);
+        updateHardwareInfo();
         break;
 
     case quint8(MS::SYSINFO_SOFTWARE):
@@ -1206,25 +1227,25 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &computerNam
         break;
     }
 
-//    QJsonObject osObj = object["OS"].toObject();
-//    if(!osObj.isEmpty()){
-//        updateOSInfo(osObj);
-//    }
+    //    QJsonObject osObj = object["OS"].toObject();
+    //    if(!osObj.isEmpty()){
+    //        updateOSInfo(osObj);
+    //    }
 
-//    QJsonObject obj = object["Hardware"].toObject();
-//    if(!obj.isEmpty()){
-//        updateSystemInfo(obj);
-//    }
+    //    QJsonObject obj = object["Hardware"].toObject();
+    //    if(!obj.isEmpty()){
+    //        updateSystemInfo(obj);
+    //    }
 
-//    QJsonArray softwareArray = object["Software"].toArray();
-//    if(!softwareArray.isEmpty()){
-//        updateSoftwareInfo(softwareArray);
-//    }
+    //    QJsonArray softwareArray = object["Software"].toArray();
+    //    if(!softwareArray.isEmpty()){
+    //        updateSoftwareInfo(softwareArray);
+    //    }
 
-//    QJsonArray serviceArray = object["Service"].toArray();
-//    if(!serviceArray.isEmpty()){
-//        updateServicesInfo(serviceArray);
-//    }
+    //    QJsonArray serviceArray = object["Service"].toArray();
+    //    if(!serviceArray.isEmpty()){
+    //        updateServicesInfo(serviceArray);
+    //    }
 
 }
 
@@ -1273,6 +1294,29 @@ void SystemManagementWidget::updateHardwareInfo(){
     ui.lineEditNetworkAdapter->setText(m_clientInfo.getNetwork());
     ui.devicesInfoGroupBox->setEnabled(true);
 
+    MS::USBSTORStatus status = MS::USBSTOR_Unknown;
+    status = m_clientInfo.getUsbSDStatus();
+    switch (status) {
+    case MS::USBSTOR_ReadWrite:
+        ui.checkBoxUSBSDReadable->setChecked(true);
+        ui.checkBoxUSBSDWriteable->setChecked(true);
+        break;
+    case MS::USBSTOR_Disabled:
+        ui.checkBoxUSBSDReadable->setChecked(false);
+        ui.checkBoxUSBSDWriteable->setChecked(false);
+        break;
+    case MS::USBSTOR_ReadOnly:
+        ui.checkBoxUSBSDReadable->setChecked(true);
+        ui.checkBoxUSBSDWriteable->setChecked(false);
+        break;
+    default:
+        break;
+    }
+
+    ui.checkBoxUSBSDReadable->setEnabled(false);
+    ui.checkBoxUSBSDWriteable->setEnabled(false);
+
+    ui.toolButtonRequestHardwareInfo->setEnabled(true);
 }
 
 
@@ -1314,9 +1358,9 @@ void SystemManagementWidget::changServiceConfig(const QString &serviceName, bool
 
 void SystemManagementWidget::requestClientInfoTimeout(){
 
-    if(!ui.toolButtonRequestSystemInfo->isEnabled()){
+    if(!ui.toolButtonRequestHardwareInfo->isEnabled()){
         QMessageBox::critical(this, tr("Error"), tr("Timeout! No response from client!"));
-        ui.toolButtonRequestSystemInfo->setEnabled(true);
+        ui.toolButtonRequestHardwareInfo->setEnabled(true);
     }
 
 }
@@ -1466,7 +1510,7 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
     m_peerSocket = INVALID_SOCK_ID;
 
     //ui.tabSystemInfo->setEnabled(false);
-    ui.toolButtonRequestSystemInfo->setEnabled(false);
+    ui.toolButtonRequestHardwareInfo->setEnabled(false);
     if(ui.osVersionLineEdit->text().trimmed().isEmpty()){
         ui.toolButtonSaveAs->setEnabled(false);
     }

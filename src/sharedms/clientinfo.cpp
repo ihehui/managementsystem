@@ -166,6 +166,7 @@ void ClientInfo::setJsonData(const QByteArray &data){
         audio = hwObj.value("SoundDevice").toString();
         storage = hwObj.value("DiskDrive").toString();
         network = hwObj.value("NetworkAdapter").toString();
+        usbSDStatus = MS::USBSTORStatus(hwObj.value("USBSD").toString().toUShort());
     }
 
 }

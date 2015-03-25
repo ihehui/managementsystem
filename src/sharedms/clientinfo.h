@@ -373,6 +373,7 @@ private:
     QString installationDate;
     QString osKey;
     QString workgroup;
+    bool m_isJoinedToDomain;
     QString users;
     QString administrators;
     QString ipInfo;
@@ -387,12 +388,11 @@ private:
     QString audio;
     QString storage;
     QString network;
-
-
-    bool m_isJoinedToDomain;
-
-
     MS::USBSTORStatus usbSDStatus;
+
+
+
+
     bool programsEnabled;
     QDateTime lastOnlineTime;
 

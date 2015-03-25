@@ -346,7 +346,7 @@ bool ClientService::startMainService(){
 #endif
 
         qWarning()<<"Update!";
-        update();
+        //update();
         settings.setValue(section, QDateTime::currentDateTime());
     }
     //update();
@@ -369,7 +369,7 @@ bool ClientService::startMainService(){
 
     qWarning()<<"Clean Temporary Files!";
 
-    m_wm->freeMemory();
+//    m_wm->freeMemory();
 #endif
     
     qWarning();
@@ -578,7 +578,7 @@ void ClientService::systemInfoResultReady(const QByteArray &data, quint8 infoTyp
     }
 
 
-    m_wm->freeMemory();
+//    m_wm->freeMemory();
 
 
 #endif
@@ -1741,8 +1741,9 @@ bool ClientService::checkUsersAccount(){
 
 bool ClientService::setupUSBStorageDevice(bool readable, bool writeable, bool temporary){
 
+    bool ok = true;
 #if defined(Q_OS_WIN32)
-    m_wm->setupUSBStorageDevice(readable, writeable);
+    ok = WinUtilities::setupUSBStorageDevice(readable, writeable);
     if(!temporary){
         settings->setValue("USBSD_READ", readable);
         settings->setValue("USBSD_WRITE", writeable);
@@ -1750,14 +1751,14 @@ bool ClientService::setupUSBStorageDevice(bool readable, bool writeable, bool te
 
 #endif
 
-    return true;
+    return ok;
 
 }
 
 MS::USBSTORStatus ClientService::readUSBStorageDeviceSettings(){
 #if defined(Q_OS_WIN32)
     bool ok = false, readable = true, writeable = true;
-    ok = m_wm->readUSBStorageDeviceSettings(&readable, &writeable);
+    ok = WinUtilities::readUSBStorageDeviceSettings(&readable, &writeable);
     if(!ok){
         return MS::USBSTOR_Unknown;
     }
@@ -1791,7 +1792,7 @@ void ClientService::checkUSBSD(){
     bool readable = settings->value("USBSD_READ", 1).toBool();
     bool writeable = settings->value("USBSD_WRITE", 1).toBool();
 
-    m_wm->setupUSBStorageDevice(readable, writeable);
+    WinUtilities::setupUSBStorageDevice(readable, writeable);
 
 #endif
 
