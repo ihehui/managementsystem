@@ -202,8 +202,8 @@ namespace HEHUI {
             ServerOnline,
             ServerOffline, //12
 
-            ClientDetailedInfoRequested,
-            ClientResponseClientDetailedInfo,
+            ClientInfoRequested,
+            ClientInfo,
 
             AdminOnline,
             AdminOffline,
@@ -212,9 +212,6 @@ namespace HEHUI {
             ClientResponseRemoteConsoleStatus,
             RemoteConsoleCMDFromAdmin,
             RemoteConsoleCMDResultFromClient,
-
-            ServerRequestClientSummaryInfo,
-            ClientResponseClientSummaryInfo,
 
             ClientRequestSoftwareVersion,
             ServerResponseSoftwareVersion,
@@ -265,7 +262,12 @@ namespace HEHUI {
             ResponseTemperatures,
 
             RequestScreenshot,
-            ResponseScreenshot
+            ResponseScreenshot,
+
+            RequestShutdown,
+
+            RequestChangeServiceConfig,
+            ServiceConfigChanged
 
             
 
@@ -313,6 +315,9 @@ namespace HEHUI {
         enum ClientMessageType{MSG_Information = 0, MSG_Warning, MSG_Critical};
         
         enum USBSTORStatus{USBSTOR_Disabled = 0, USBSTOR_ReadWrite, USBSTOR_ReadOnly, USBSTOR_Unknown};
+
+        enum SystemInfoType{SYSINFO_UNKNOWN = 0, SYSINFO_OS, SYSINFO_HARDWARE, SYSINFO_SOFTWARE, SYSINFO_SERVICES};
+
 
     } // namespace MS
 

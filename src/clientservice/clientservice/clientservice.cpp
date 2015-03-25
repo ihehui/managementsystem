@@ -76,7 +76,6 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 
     process = 0;
 
-    systemInfo = 0;
 
     m_adminAddress = "";
     m_adminPort = 0;
@@ -100,6 +99,12 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 //    delete wm;
 //    wm = 0;
 //#endif
+
+
+    m_myInfo = 0;
+//    m_myInfo = new ClientInfo(m_localComputerName, this);
+
+    systemInfo = 0;
 
 
 }
@@ -140,18 +145,31 @@ ClientService::~ClientService(){
     delete settings;
     settings = 0;
 
-    delete systemInfo;
-    systemInfo = 0;
+
 
 #if defined(Q_OS_WIN32)
     delete m_wm;
     m_wm = 0;
 #endif
 
-    delete lookForServerTimer;
-    lookForServerTimer = 0;
+    if(lookForServerTimer){
+        lookForServerTimer->stop();
+        delete lookForServerTimer;
+        lookForServerTimer = 0;
+    }
 
     mainServiceStarted = false;
+
+    if(m_myInfo){
+        delete m_myInfo;
+        m_myInfo = 0;
+    }
+
+    if(systemInfo){
+        delete systemInfo;
+        systemInfo = 0;
+    }
+
 
 }
 
@@ -186,6 +204,9 @@ bool ClientService::startMainService(){
         qWarning()<<"Main service has already started!";
         return true;
     }
+
+
+
 
     QString errorMessage = "";
 //    m_udpServer = resourcesManager->startIPMCServer(QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16(IP_MULTICAST_GROUP_PORT), &errorMessage);
@@ -229,7 +250,6 @@ bool ClientService::startMainService(){
 
     connect(clientPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString& ,quint16, quint16, const QString&, const QString&, int)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalUpdateClientSoftwarePacketReceived()), this, SLOT(update()), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalServerRequestClientSummaryInfoPacketReceived(const QString &,const QString &,const QString &)), this, SLOT(processServerRequestClientInfoPacket(const QString &,const QString &,const QString &)), Qt::QueuedConnection);
 
     connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(quint8, bool, const QString & )), this, SLOT(processSetupUSBSDPacket(quint8, bool, const QString &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalSetupProgramesPacketReceived( bool, bool, const QString &)), this, SLOT(processSetupProgramesPacket(bool, bool, const QString &)), Qt::QueuedConnection);
@@ -244,7 +264,7 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalAdminRequestUpdateMSUserPasswordPacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestUpdateMSUserPasswordPacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminRequestInformUserNewPasswordPacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestInformUserNewPasswordPacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalClientDetailedInfoRequestedPacketReceived(SOCKETID, const QString &, bool)), this, SLOT(processClientDetailedInfoRequestedPacket(SOCKETID, const QString &, bool)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalClientInfoRequestedPacketReceived(SOCKETID, const QString &, quint8)), this, SLOT(processClientInfoRequestedPacket(SOCKETID, const QString &, quint8)), Qt::QueuedConnection);
 
     connect(clientPacketsParser, SIGNAL(signalAdminRequestRemoteConsolePacketReceived(const QString &, const QString &, const QString &, bool, const QString &, quint16)), this, SLOT(processAdminRequestRemoteConsolePacket(const QString &, const QString &, const QString &, bool, const QString &, quint16)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalRemoteConsoleCMDFromServerPacketReceived(const QString &, const QString &, const QString &, quint16)), this, SLOT(processRemoteConsoleCMDFromServerPacket(const QString &, const QString &, const QString &, quint16)), Qt::QueuedConnection);
@@ -255,6 +275,11 @@ bool ClientService::startMainService(){
 
     connect(clientPacketsParser, SIGNAL(signalAdminRequestTemperatures(SOCKETID, bool, bool)), this, SLOT(processAdminRequestTemperaturesPacket(SOCKETID, bool, bool)), Qt::QueuedConnection);
 //    connect(clientPacketsParser, SIGNAL(signalAdminRequestScreenshot(SOCKETID, const QString &, bool)), this, SLOT(processAdminRequestScreenshotPacket(SOCKETID, const QString &, bool)), Qt::QueuedConnection);
+
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestShutdownPacketReceived(SOCKETID,bool,bool,quint32, const QString&)), this, SLOT(processAdminRequestRequestShutdownPacket(SOCKETID,bool,bool,quint32, const QString&)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID,QString,bool,ulong)), this, SLOT(processAdminRequestChangeServiceConfigPacket(SOCKETID,QString,bool,ulong)), Qt::QueuedConnection);
+
+
 
 
     ////////////////////
@@ -457,65 +482,15 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverUDTL
     QSettings settings(QCoreApplication::applicationDirPath()+"/.settings", QSettings::IniFormat, this);
     QDateTime time = settings.value(section, QDateTime()).toDateTime();
     if(time.isNull() || (time.addDays(7) < QDateTime::currentDateTime())){
-        processClientDetailedInfoRequestedPacket(m_socketConnectedToServer, "", true);
+        processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_OS);
         settings.setValue(section, QDateTime::currentDateTime());
     }
 
 
 }
 
-void ClientService::processServerRequestClientInfoPacket(const QString &groupName, const QString &computerName, const QString &userName/*, const QString &address*/){
+void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QString &computerName, quint8 infoType){
 
-
-#ifdef Q_OS_WIN
-
-    //WindowsManagement wm;
-
-    if(!groupName.isEmpty()){
-        if(groupName.toLower() != m_joinInfo){
-            return;
-        }
-    }
-
-    if(!computerName.isEmpty()){
-        if(computerName != m_localComputerName){
-            return;
-        }
-    }
-
-    if(!userName.isEmpty()){
-        QString usersInfo = usersOnLocalComputer().join(",");
-        if(!usersInfo.contains(userName, Qt::CaseInsensitive)){
-            return;
-        }
-    }
-
-    //    if(!address.isEmpty()){
-    //        QList<QHostAddress> ips = NetworkUtilities::ipAddresses();
-    //        foreach(QHostAddress ip, ips){
-    //            if(!ip.toString().contains(address, Qt::CaseInsensitive) && !NetworkUtilities::hardwareAddress(ip).contains(address, Qt::CaseInsensitive)){
-    //                return;
-    //            }
-    //        }
-
-    //    }
-
-
-    uploadClientSummaryInfo(m_socketConnectedToServer);
-
-
-#else
-    //return false;
-#endif
-
-
-
-
-}
-
-void ClientService::processClientDetailedInfoRequestedPacket(SOCKETID socketID, const QString &computerName, bool rescan){
-
-    //qWarning()<<"processClientDetailedInfoRequestedPacket(...)";
 
 #ifdef Q_OS_WIN
 
@@ -527,44 +502,76 @@ void ClientService::processClientDetailedInfoRequestedPacket(SOCKETID socketID, 
 
     peerSocketThatRequiresDetailedInfo = socketID;
 
-    if(SystemInfo::isRunning()){
-        return;
-    }
+//    if(SystemInfo::isRunning()){
+//        return;
+//    }
+
 
     if(!systemInfo){
         systemInfo = new SystemInfo(this);
-        connect(systemInfo, SIGNAL(signalSystemInfoResultReady(const QByteArray&)), this, SLOT(systemInfoResultReady(const QByteArray&)));
-        connect(systemInfo, SIGNAL(finished()), this, SLOT(systemInfoThreadFinished()));
+        connect(systemInfo, SIGNAL(signalSystemInfoResultReady(const QByteArray&, quint8, SOCKETID)), this, SLOT(systemInfoResultReady(const QByteArray&, quint8, SOCKETID)));
+//        connect(systemInfo, SIGNAL(finished()), this, SLOT(systemInfoThreadFinished()));
     }
 
-    systemInfo->start();
-    //systemInfo->getSystemInfo();
+    //QtConcurrent::run(QThreadPool::globalInstance(), &SystemInfo::getInstalledSoftwareInfo, socketID);
+
+    //systemInfo->start();
+    //systemInfo->getOSInfo(socketID);
+//    systemInfo->getHardwareInfo(socketID);
+//    systemInfo->getInstalledSoftwareInfo(socketID);
+
+
+    switch (infoType) {
+    case quint8(MS::SYSINFO_OS):
+        systemInfoResultReady(systemInfo->getOSInfo(), infoType, socketID);
+    case quint8(MS::SYSINFO_HARDWARE):
+        systemInfo->getHardwareInfo(socketID);
+        break;
+    case quint8(MS::SYSINFO_SOFTWARE):
+        systemInfo->getServicesInfo(socketID);
+        break;
+    case quint8(MS::SYSINFO_SERVICES):
+        systemInfo->getServicesInfo(socketID);
+        break;
+    default:
+        qCritical()<<"ERROR! Unknown info type:"<<infoType;
+        break;
+    }
+
+
 
 #endif
 
 }
 
-void ClientService::systemInfoResultReady(const QByteArray &data){
+void ClientService::systemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID){
 
     qDebug()<<"ClientService::systemInfoResultReady(...)"<<" size:"<<data.size();
     //qDebug()<<"system info:"<<data;
 
 #if defined(Q_OS_WIN32)
 
+   if(INVALID_SOCK_ID == socketID){
+       m_myInfo->setJsonData(data);
+       return;
+   }
+
+
+
     if(data.isEmpty()){
         QString message = "Error! Can not get system info!";
-        clientPacketsParser->sendClientMessagePacket(peerSocketThatRequiresDetailedInfo, message, MS::MSG_Critical);
+        clientPacketsParser->sendClientMessagePacket(socketID, message, MS::MSG_Critical);
         return;
     }
 
     //TODO:
-    bool ret = clientPacketsParser->sendClientResponseClientDetailedInfoPacket(peerSocketThatRequiresDetailedInfo, data);
+    bool ret = clientPacketsParser->sendClientInfoPacket(socketID, data, infoType);
     if(!ret){
         qCritical()<<tr("ERROR! Can not upload system info to peer! %3").arg(m_rtp->lastErrorString());
     }
 
-    if(m_socketConnectedToServer != INVALID_SOCK_ID && peerSocketThatRequiresDetailedInfo != m_socketConnectedToServer){
-        bool ret = clientPacketsParser->sendClientResponseClientDetailedInfoPacket(m_socketConnectedToServer, data);
+    if(m_socketConnectedToServer != INVALID_SOCK_ID && socketID != m_socketConnectedToServer){
+        bool ret = clientPacketsParser->sendClientInfoPacket(m_socketConnectedToServer, data, infoType);
         if(!ret){
             qCritical()<<tr("ERROR! Can not upload system info to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
         }
@@ -781,28 +788,43 @@ void ClientService::processRenameComputerPacketReceived(const QString &newComput
 
 }
 
-void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
+void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool isDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
 #ifdef Q_OS_WIN32
 
     bool ok = false;
-    if(join){
-        ok = m_wm->joinDomain(domainOrWorkgroupName, QString(domainAdminName)+"@"+domainOrWorkgroupName, QString(domainAdminPassword));
-    }else{
+
+    if(m_isJoinedToDomain){
         ok = m_wm->unjoinDomain(QString(domainAdminName)+"@"+m_joinInfo, QString(domainAdminPassword));
         if(ok){
             ok = m_wm->joinWorkgroup(domainOrWorkgroupName);
         }
+    }else{
+        if(isDomain){
+            ok = m_wm->joinDomain(domainOrWorkgroupName, QString(domainAdminName)+"@"+domainOrWorkgroupName, QString(domainAdminPassword));
+        }else{
+            ok = m_wm->joinWorkgroup(domainOrWorkgroupName);
+        }
     }
+
+
+//    if(isDomain){
+//        ok = m_wm->joinDomain(domainOrWorkgroupName, QString(domainAdminName)+"@"+domainOrWorkgroupName, QString(domainAdminPassword));
+//    }else{
+//        ok = m_wm->unjoinDomain(QString(domainAdminName)+"@"+m_joinInfo, QString(domainAdminPassword));
+//        if(ok){
+//            ok = m_wm->joinWorkgroup(domainOrWorkgroupName);
+//        }
+//    }
     QString errorString = m_wm->lastError();
 
     QString log;
     if(ok){
-        m_isJoinedToDomain = join;
+        m_isJoinedToDomain = isDomain;
         m_joinInfo = domainOrWorkgroupName;
-        log = QString("Computer '%1' is successfully joined to %2 '%3'! Restart the computer to apply all changes! Admin:%4.").arg(m_localComputerName).arg(join?"domain":"workgroup").arg(domainOrWorkgroupName).arg(adminName);
+        log = QString("Computer '%1' is successfully joined to %2 '%3'! Restart the computer to apply all changes! Admin:%4.").arg(m_localComputerName).arg(isDomain?"domain":"workgroup").arg(domainOrWorkgroupName).arg(adminName);
     }else{
-        log = QString("Failed to join computer '%1' to %2 '%3'! Admin:%4. %5").arg(m_localComputerName).arg(join?"domain":"workgroup").arg(domainOrWorkgroupName).arg(adminName).arg(errorString);
+        log = QString("Failed to join computer '%1' to %2 '%3'! Admin:%4. %5").arg(m_localComputerName).arg(isDomain?"domain":"workgroup").arg(domainOrWorkgroupName).arg(adminName).arg(errorString);
     }
 
     bool sent = false;
@@ -1329,6 +1351,46 @@ void ClientService::processAdminRequestTemperaturesPacket(SOCKETID socketID, boo
 //    clientPacketsParser->requestScreenshot(socketID, userName);
 //}
 
+
+void ClientService::processAdminRequestRequestShutdownPacket(SOCKETID adminSocketID, bool reboot, bool force, quint32 waitTime, const QString &message){
+
+if(reboot){
+        WinUtilities::Reboot(force);
+    }else{
+        WinUtilities::Shutdown(force);
+    }
+
+}
+
+void ClientService::processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType){
+    unsigned long errorCode = 0;
+    if(startService){
+        WinUtilities::serviceStart(serviceName, &errorCode);
+    }else{
+        WinUtilities::serviceStop(serviceName, &errorCode);
+    }
+    if(errorCode != 0){
+        QString message = QString("Error! Failed to %1 service '%2'. Error code: %3").arg(startService?tr("start"):tr("stop")).arg(serviceName).arg(errorCode);
+        clientPacketsParser->sendClientMessagePacket(socketID, message, MS::MSG_Critical);
+    }
+
+    errorCode = 0;
+    if(startupType != 0xFFFFFFFF){
+        WinUtilities::serviceChangeStartType(serviceName, startupType, &errorCode);
+    }
+    if(errorCode != 0){
+        QString message = QString("Error! Failed to change service startup type. Error code: %1").arg(errorCode);
+        clientPacketsParser->sendClientMessagePacket(socketID, message, MS::MSG_Critical);
+    }
+
+
+    WinUtilities::ServiceInfo info;
+    if(WinUtilities::serviceQueryInfo(serviceName, &info)){
+        clientPacketsParser->sendClientResponseServiceConfigChangedPacket(socketID, serviceName, info.processID, info.startType);
+    }
+
+}
+
 QStringList ClientService::usersOnLocalComputer(){
 
 #ifdef Q_OS_WIN
@@ -1351,84 +1413,6 @@ QStringList ClientService::usersOnLocalComputer(){
 
 }
 
-QByteArray ClientService::getClientSummaryInfo(){
-
-#ifdef Q_OS_WIN
-
-    QStringList users = usersOnLocalComputer();
-    QString usersInfo = users.join(",");
-    QStringList onlineUsers;
-    WinUtilities::getAllUsersLoggedOn(&onlineUsers);
-
-    QList<QHostAddress> ips = NetworkUtilities::validIPAddresses();
-    QString networkInfo = "";
-    QStringList networkInfoList;
-    foreach(QHostAddress ip, ips){
-        //networkInfo += ip.toString() + "/" + NetworkUtilities::hardwareAddress(ip) + ",";
-        networkInfoList.append(ip.toString() + "/" + NetworkUtilities::hardwareAddress(ip));
-    }
-    networkInfo = networkInfoList.join(",");
-
-    QString osInfo = "";
-    switch(QSysInfo::windowsVersion()){
-    case QSysInfo::WV_2000:
-        osInfo = "WIN_2000";
-        break;
-    case QSysInfo::WV_XP:
-        osInfo = "WIN_XP";
-        break;
-    case QSysInfo::WV_2003:
-        osInfo = "WIN_2003";
-        break;
-    case QSysInfo::WV_VISTA:
-        osInfo = "WIN_VISTA";
-        break;
-    case QSysInfo::WV_WINDOWS7:
-        osInfo = "WIN_7";
-        break;
-    case QSysInfo::WV_WINDOWS8:
-        osInfo = "WIN_8";
-        break;
-    case QSysInfo::WV_WINDOWS8_1:
-        osInfo = "WIN_8.1";
-        break;
-    default:
-        osInfo = "WIN";
-        break;
-    }
-
-
-    //bool usbsdEnabled = isUSBSDEnabled();
-    MS::USBSTORStatus usbSTORStatus =  readUSBStorageDeviceSettings();
-
-    bool programesEnabled = isProgramesEnabled();
-    QString adminGroupUsers = administrators().join(",");
-
-
-    QJsonObject obj;
-    obj["computerName"] = m_localComputerName;
-    obj["workgroupName"] = m_joinInfo;
-    obj["networkInfo"] = networkInfo;
-    obj["usersInfo"] = usersInfo;
-    obj["osInfo"] = osInfo;
-    obj["usbSTORStatus"] = usbSTORStatus;
-    obj["programesEnabled"] = programesEnabled;
-    obj["admins"] = adminGroupUsers;
-    obj["isJoinedToDomain"] = m_isJoinedToDomain;
-    obj["clientVersion"] = APP_VERSION;
-    obj["onlineUsers"] = onlineUsers.join(",");
-
-
-    m_wm->freeMemory();
-
-    QJsonDocument doc(obj);
-    return doc.toJson(QJsonDocument::Compact);
-
-#endif
-
-    return QByteArray();
-
-}
 
 void ClientService::uploadClientSummaryInfo(SOCKETID socketID){
     qDebug()<<"--ClientService::uploadClientSummaryInfo(...) socketID:"<<socketID;
@@ -1439,9 +1423,10 @@ void ClientService::uploadClientSummaryInfo(SOCKETID socketID){
 
 #ifdef Q_OS_WIN
 
-    QByteArray info = getClientSummaryInfo();
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(socketID, info);
+    //QByteArray info = getClientSummaryInfo();
 
+    QByteArray info = m_myInfo->getJsonData();
+    clientPacketsParser->sendClientInfoPacket(socketID, info, MS::SYSINFO_OS);
 
 #endif
 
@@ -1456,8 +1441,9 @@ void ClientService::uploadClientSummaryInfo(const QString &adminAddress, quint16
 
 #ifdef Q_OS_WIN
 
-    QByteArray info = getClientSummaryInfo();
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminAddress, adminPort, info);
+    //QByteArray info = getClientSummaryInfo();
+    QByteArray info = m_myInfo->getJsonData();
+    clientPacketsParser->sendClientInfoPacket(adminAddress, adminPort, info, MS::SYSINFO_OS);
 
 #endif
 
@@ -1888,7 +1874,7 @@ QStringList ClientService::administrators(){
 #if defined(Q_OS_WIN32)
     //adminGroupUsers = settings->value("Administrators").toStringList();
 
-    adminGroupUsers = m_wm->getMembersOfLocalGroup("administrators");
+    adminGroupUsers = WinUtilities::getMembersOfLocalGroup("administrators");
     if(!adminGroupUsers.isEmpty()){
         foreach (QString admin, adminGroupUsers) {
             if(admin.contains("administrator", Qt::CaseInsensitive) || admin.contains("domain admins", Qt::CaseInsensitive)){
@@ -2489,13 +2475,16 @@ void ClientService::update(){
 
 void ClientService::start()
 {
-    //qWarning()<<"----ClientService::start()";
+    qWarning()<<"----ClientService::start()";
 
     resourcesManager = ClientResourcesManager::instance();
     clientPacketsParser = 0;
     mainServiceStarted = false;
 
     settings = new QSettings("HKEY_LOCAL_MACHINE\\SECURITY\\System", QSettings::NativeFormat, this);
+
+    m_myInfo = new ClientInfo(m_localComputerName, this);
+    m_myInfo->setJsonData(SystemInfo::getOSInfo());
 
     QTimer::singleShot(1000, this, SLOT(startMainService()));
     //startMainService();

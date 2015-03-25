@@ -9,6 +9,8 @@
 #include <QTimer>
 
 #include "../../sharedms/global_shared.h"
+#include "../../sharedms/clientinfo.h"
+
 #include "packetmanager/clientpacketsparser.h"
 #include "../clientresourcesmanager.h"
 #include "process.h"
@@ -59,10 +61,8 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void processServerRequestClientInfoPacket(const QString &groupName, const QString &computerName, const QString &userName/*, const QString &address*/);
-
-    void processClientDetailedInfoRequestedPacket(SOCKETID socketID, const QString &computerName, bool rescan);
-    void systemInfoResultReady(const QByteArray &data);
+    void processClientInfoRequestedPacket(SOCKETID socketID, const QString &computerName, quint8 infoType);
+    void systemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID);
     void systemInfoThreadFinished();
 
     void processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
@@ -70,7 +70,7 @@ private slots:
     void processShowAdminPacket(bool show);
     void processModifyAdminGroupUserPacket(const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
-    void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
+    void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool joinDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 
     void processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminName);
     void processAdminSearchClientPacket(const QString &adminAddress, quint16 adminPort, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName);
@@ -89,14 +89,16 @@ private slots:
 
 //    void processLocalUserOnlineStatusChanged(SOCKETID userSocketID, const QString &userName, bool online);
 
-
-
     void processAdminRequestTemperaturesPacket(SOCKETID socketID, bool cpu = true, bool harddisk = false);
 //    void processAdminRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen = true);
 
+    void processAdminRequestRequestShutdownPacket(SOCKETID adminSocketID, bool reboot, bool force, quint32 waitTime, const QString &message);
+    void processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
+
+
+
 
     QStringList usersOnLocalComputer();
-    QByteArray getClientSummaryInfo();
     void uploadClientSummaryInfo(SOCKETID socketID);
     void uploadClientSummaryInfo(const QString &adminAddress, quint16 adminPort);
 
@@ -206,7 +208,6 @@ private:
 
     Process *process;
 
-    SystemInfo *systemInfo;
 
     QString m_adminAddress;
     quint16 m_adminPort;
@@ -227,6 +228,9 @@ private:
     QMultiHash<SOCKETID/*Socket ID*/, QByteArray/*File MD5*/> fileTXSocketHash;
 
     QStringList logs;
+
+    ClientInfo *m_myInfo;
+    SystemInfo *systemInfo;
 
 
 };

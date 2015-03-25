@@ -5,10 +5,12 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
-
+#include <QNetworkInterface>
+#include <QNetworkAddressEntry>
+#include <QHostAddress>
 
 #include "./systeminfo.h"
-
+#include "../sharedms/global_shared.h"
 
 #ifdef Q_OS_WIN32
 #include "HHSharedWindowsManagement/hhardwaremonitor.h"
@@ -23,7 +25,7 @@ namespace HEHUI {
 bool SystemInfo::running = false;
 
 SystemInfo::SystemInfo(QObject *parent) :
-    QThread(parent)
+    QObject(parent)
 {
     running = true;
 
@@ -40,15 +42,78 @@ bool SystemInfo::isRunning(){
 }
 
 
-void SystemInfo::run(){
-//    getSystemInfo();
-//    getInstalledSoftwareInfo();
-    getServicesInfo();
+//void SystemInfo::run(){
+////    getOSInfo();
+////    getHardwareInfo();
+////    getInstalledSoftwareInfo();
+////    getServicesInfo();
 
-    exit();
- }
+////    exit();
+//}
 
-void SystemInfo::getSystemInfo(){
+
+//void SystemInfo::getSystemInfo(){
+//    getOSInfo();
+//    getHardwareInfo();
+
+//}
+
+QByteArray SystemInfo::getOSInfo(){
+
+    QJsonObject obj;
+    obj["ComputerName"] = QHostInfo::localHostName().toLower();
+
+#ifdef Q_OS_WIN32
+    HardwareMonitor hwm;
+
+    hwm.getOSInfo(&obj);
+
+    QStringList users = WinUtilities::localCreatedUsers();
+    WinUtilities::getAllUsersLoggedOn(&users);
+    users.removeDuplicates();
+    obj["Users"] = users.join(";");
+
+    QStringList admins = WinUtilities::getMembersOfLocalGroup("Administrators");
+    obj["Admins"] = admins.join(";");
+
+
+    bool isJoinedToDomain = false;
+    QString joinInfo = WinUtilities::getJoinInformation(&isJoinedToDomain);
+    if(isJoinedToDomain){
+        WinUtilities::getComputerNameInfo(&joinInfo, 0, 0);
+    }
+    obj["Workgroup"] = joinInfo;
+    obj["JoinedToDomain"] = QString::number(isJoinedToDomain?1:0);
+
+#else
+
+
+#endif
+
+    QStringList ipAddresses;
+    foreach (QNetworkInterface nic, QNetworkInterface::allInterfaces()) {
+        foreach (QNetworkAddressEntry entry, nic.addressEntries()) {
+            qDebug()<<"entry.ip():"<<entry.ip().toString();
+            QHostAddress broadcastAddress = entry.broadcast();
+            if (broadcastAddress != QHostAddress::Null && entry.ip() != QHostAddress::LocalHost) {
+                ipAddresses << entry.ip().toString() << "/" << nic.hardwareAddress();
+            }
+        }
+    }
+
+    obj["IPInfo"] = ipAddresses.join(";");
+
+
+
+    QJsonObject object;
+    object["OS"] = obj;
+    QJsonDocument doc(object);
+    //emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), socketID);
+
+    return doc.toJson(QJsonDocument::Compact);
+}
+
+void SystemInfo::getHardwareInfo(SOCKETID socketID){
 
     QJsonObject obj;
     obj["ComputerName"] = QHostInfo::localHostName();
@@ -85,13 +150,13 @@ void SystemInfo::getSystemInfo(){
 #endif
 
     QJsonObject object;
-    object["System"] = obj;
+    object["Hardware"] = obj;
     QJsonDocument doc(object);
-    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact));
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact),  MS::SYSINFO_HARDWARE, socketID);
 
 }
 
-void SystemInfo::getInstalledSoftwareInfo(){
+void SystemInfo::getInstalledSoftwareInfo(SOCKETID socketID){
 
     QString rootKey = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 
@@ -115,7 +180,7 @@ void SystemInfo::getInstalledSoftwareInfo(){
     QJsonObject object;
     object["Software"] = infoArray;
     QJsonDocument doc(object);
-    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact));
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_SOFTWARE, socketID);
 
 }
 
@@ -150,7 +215,7 @@ void SystemInfo::getInstalledSoftwareInfo(QJsonArray *infoArray, const QStringLi
 
 }
 
-void SystemInfo::getServicesInfo(){
+void SystemInfo::getServicesInfo(SOCKETID socketID){
 
     QJsonArray infoArray;
     HEHUI::WinUtilities::serviceGetAllServicesInfo(&infoArray);
@@ -158,7 +223,7 @@ void SystemInfo::getServicesInfo(){
     QJsonObject object;
     object["Service"] = infoArray;
     QJsonDocument doc(object);
-    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact));
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_SERVICES, socketID);
 
 }
 

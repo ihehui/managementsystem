@@ -29,6 +29,9 @@
 
 
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+
 
 #include "serviceinfomodel.h"
 
@@ -51,10 +54,23 @@ ServiceInfoModel::~ServiceInfoModel() {
 
 }
 
-void ServiceInfoModel::setJsonData(const QJsonArray &array){
+void ServiceInfoModel::setJsonData(const QByteArray &data){
+    clearServicesList();
+
+    if(data.isEmpty()){return;}
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+    QJsonObject object = doc.object();
+    if(object.isEmpty()){return;}
+
     beginResetModel();
 
-    clearServicesList();
+    QJsonArray array = object["Service"].toArray();
 
     for(int i=0;i<array.size();i++){
         QJsonArray infoArray = array.at(i).toArray();
@@ -78,15 +94,38 @@ void ServiceInfoModel::setJsonData(const QJsonArray &array){
     endResetModel();
 }
 
-void ServiceInfoModel::addServiceInfo(){
-    
+WinUtilities::ServiceInfo * ServiceInfoModel::getServiceInfo(const QString &serviceName){
+    ServiceInfo *sinfo = 0;
+    foreach (ServiceInfo *info, servicesList) {
+        if(info->serviceName == serviceName){
+            sinfo = info;
+            break;
+        }
+    }
+    if(!sinfo){
+        qCritical()<<QString("ERROR! Service '%1' Not Found!").arg(serviceName);
+    }
+
+    return sinfo;
+}
+
+bool ServiceInfoModel::updateServiceInfo(const QString &serviceName, quint64 processID, quint64 startupType){
+
+    ServiceInfo *sinfo = getServiceInfo(serviceName);
+    if(!sinfo){
+        qCritical()<<QString("ERROR! Service '%1' Not Found!").arg(serviceName);
+        return false;
+    }
+
     beginResetModel();
 
+    sinfo->processID = processID;
+    sinfo->startType = startupType;
 
-    
-    //this->clientsList = clientsList;
     endResetModel();
-    
+
+    return true;
+
 }
 
 int ServiceInfoModel::rowCount ( const QModelIndex & parent) const {
@@ -179,7 +218,7 @@ QVariant ServiceInfoModel::headerData ( int section, Qt::Orientation orientation
             return QString(tr("Description"));
             break;
         case 4:
-            return QString(tr("Start Type"));
+            return QString(tr("Startup Type"));
             break;
         case 5:
             return QString(tr("Account"));
@@ -259,12 +298,17 @@ QString ServiceInfoModel::getServiceTypeString(unsigned long serviceType) const{
 
 void ServiceInfoModel::clearServicesList(){
 
+    beginResetModel();
+
     foreach (ServiceInfo *info, servicesList) {
         delete info;
         info = 0;
     }
 
     servicesList.clear();
+
+    endResetModel();
+
 }
 
 

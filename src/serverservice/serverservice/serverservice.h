@@ -66,10 +66,13 @@ private slots:
     void saveClientLog(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
 
     void sendServerOnlinePacket();
-    void updateOrSaveClientSummaryInfo(SOCKETID socketID, const QByteArray &clientSummaryInfo);
     bool updateOrSaveClientInfoToDatabase(ClientInfo *info);
     void updateOrSaveAllClientsInfoToDatabase();
-    void clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
+
+    void clientInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
+    void processOSInfo(ClientInfo *info, const QByteArray &osData);
+    void processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData);
+    void processSoftwareInfo(ClientInfo *info, const QByteArray &data);
 
     void getRecordsInDatabase();
 

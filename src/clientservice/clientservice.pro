@@ -5,6 +5,7 @@ CONFIG += qt \
 QT += core \
     network \
     sql
+
 QT -= gui
 
 # include config file

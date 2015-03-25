@@ -2,12 +2,13 @@
 #define SYSINFODLG_H
 
 #include <QThread>
-#include <QProcess>
+
 
 namespace HEHUI {
 
+typedef unsigned int SOCKETID;
 
-class SystemInfo: public QThread {
+class SystemInfo: public QObject {
     Q_OBJECT
 
 public:
@@ -17,16 +18,21 @@ public:
 
     static bool isRunning();
 
+
+
 protected:
-    void run();
+//    void run();
 
 signals:
-    void signalSystemInfoResultReady(const QByteArray &data);
+    void signalSystemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID);
 
 public slots:
-    void getSystemInfo();
-    void getInstalledSoftwareInfo();
-    void getServicesInfo();
+//    void getSystemInfo();
+    static QByteArray getOSInfo();
+    void getHardwareInfo(SOCKETID socketID);
+
+    void getInstalledSoftwareInfo(SOCKETID socketID);
+    void getServicesInfo(SOCKETID socketID);
 
 private:
     void getInstalledSoftwareInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView);

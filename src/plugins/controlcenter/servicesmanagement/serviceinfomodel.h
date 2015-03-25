@@ -49,9 +49,11 @@ public:
     ServiceInfoModel(QObject *parent = 0);
     virtual ~ServiceInfoModel();
 
-    void setJsonData(const QJsonArray &array);
+    void setJsonData(const QByteArray &data);
 
-    void addServiceInfo();
+    typedef WinUtilities::ServiceInfo ServiceInfo;
+    ServiceInfo * getServiceInfo(const QString &serviceName);
+    bool updateServiceInfo(const QString &serviceName, quint64 processID, quint64 startupType);
 
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
     int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
@@ -66,11 +68,11 @@ private:
     void clearServicesList();
 
 private:
-    typedef WinUtilities::ServiceInfo ServiceInfo;
     QList<ServiceInfo *> servicesList;
 
 
 };
+
 
 class ServiceInfoSortFilterProxyModel : public QSortFilterProxyModel{
     Q_OBJECT

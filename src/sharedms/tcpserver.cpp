@@ -28,7 +28,7 @@ void TCPServer::processData(SOCKETID socketID, QByteArray *data){
 
 
     QDataStream in(data, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_7);
+    in.setVersion(QDataStream::Qt_4_8);
     QVariant v;
     in >> v;
     if (v.canConvert<Packet>()){

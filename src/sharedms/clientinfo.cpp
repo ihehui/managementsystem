@@ -7,6 +7,9 @@
 
 
 #include <QHostAddress>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 #include "clientinfo.h"
 
@@ -28,27 +31,22 @@ ClientInfo::ClientInfo(const QString &computerName, QObject *parent)
     clientVersion = "";
 
     summaryInfoSavedTODatabase = false;
-    updateSummaryInfoStatement = "";
+    updateOSInfoStatement = "";
 
 
 
     installationDate = "";
-    windowsDir = "";
     osKey = "";
     cpu = "";
     memory = "";
     motherboardName = "";
-    dmiUUID = "";
-    chipset = "";
     video = "";
     monitor = "";
     audio = "";
     storage = "";
-    nic1Info = "";
-    nic2Info = "";
     m_isJoinedToDomain = false;
 
-    updateDetailedInfoStatement = "";
+    updateHardwareInfoStatement = "";
     detailedInfoSavedTODatabase = false;
 
     //installedSoftwaresInfo.clear();
@@ -83,33 +81,29 @@ ClientInfo & ClientInfo::operator = (const ClientInfo &clientInfo){
     programsEnabled = clientInfo.getProgramsEnabled();
     administrators = clientInfo.getAdministrators();
     lastOnlineTime = clientInfo.getLastOnlineTime();
+    ipInfo = clientInfo.getIPInfo();
     clientVersion = clientInfo.getClientVersion();
 
-    updateSummaryInfoStatement = clientInfo.getUpdateSummaryInfoStatement();
+    updateOSInfoStatement = clientInfo.getUpdateOSInfoStatement();
     summaryInfoSavedTODatabase = clientInfo.getSummaryInfoSavedTODatabase();
 
 
     installationDate = clientInfo.getInstallationDate();
-    windowsDir = clientInfo.getWindowsDir();
     osKey = clientInfo.getOsKey();
 
     cpu = clientInfo.getCpu();
     memory = clientInfo.getMemory();
     motherboardName = clientInfo.getMotherboardName();
-    dmiUUID = clientInfo.getDmiUUID();
-    chipset = clientInfo.getChipset();
+
     video = clientInfo.getVideo();
     monitor = clientInfo.getMonitor();
     audio = clientInfo.getAudio();
     storage = clientInfo.getStorage();
 
-    nic1Info = clientInfo.getNic1Info();
-    nic2Info = clientInfo.getNic2Info();
-
     m_isJoinedToDomain = clientInfo.isJoinedToDomain();
 
 
-    updateDetailedInfoStatement = clientInfo.getUpdateDetailedInfoStatement();
+    updateHardwareInfoStatement = clientInfo.getUpdateHardwareInfoStatement();
     detailedInfoSavedTODatabase = clientInfo.getDetailedInfoSavedTODatabase();
 
 
@@ -135,6 +129,77 @@ ClientInfo & ClientInfo::operator = (const ClientInfo &clientInfo){
 
 bool ClientInfo::isValid(){
     return computerName.trimmed().size();
+
+}
+
+void ClientInfo::setJsonData(const QByteArray &data){
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+    QJsonObject object = doc.object();
+
+    QJsonObject osObj = object["OS"].toObject();
+    if(!osObj.isEmpty()){
+        computerName = osObj["ComputerName"].toString();
+        os = osObj["OS"].toString();
+        installationDate = osObj["InstallDate"].toString();
+        osKey = osObj["Key"].toString();
+        workgroup = osObj["Workgroup"].toString();
+        m_isJoinedToDomain = osObj["JoinedToDomain"].toBool();
+        users = osObj["Users"].toString();
+        administrators = osObj["Admins"].toString();
+        ipInfo = osObj["IPInfo"].toString();
+        clientVersion = osObj["Version"].toString();
+    }
+
+    QJsonObject hwObj = object["Hardware"].toObject();
+    if(!hwObj.isEmpty()){
+        cpu = hwObj["Processor"].toString();
+        memory = hwObj.value("PhysicalMemory").toString();
+        motherboardName = hwObj.value("BaseBoard").toString();
+        video = hwObj.value("VideoController").toString();
+        monitor = hwObj.value("Monitor").toString();
+        audio = hwObj.value("SoundDevice").toString();
+        storage = hwObj.value("DiskDrive").toString();
+        network = hwObj.value("NetworkAdapter").toString();
+    }
+
+}
+
+QByteArray ClientInfo::getJsonData() const{
+
+    QJsonObject osObj;
+    osObj["ComputerName"] = computerName;
+    osObj["OS"] = os;
+    osObj["InstallDate"] = installationDate;
+    osObj["Key"] = osKey;
+    osObj["Workgroup"] = workgroup;
+    osObj["JoinedToDomain"] = m_isJoinedToDomain?"1":"0";
+    osObj["Users"] = users;
+    osObj["Admins"] = administrators;
+    osObj["IPInfo"] = ipInfo;
+    osObj["Version"] = clientVersion;
+
+    QJsonObject hwObj;
+    hwObj["Processor"] = cpu;
+    hwObj["PhysicalMemory"] = memory;
+    hwObj["BaseBoard"] = motherboardName;
+    hwObj["VideoController"] =video;
+    hwObj["Monitor"] = monitor;
+    hwObj["SoundDevice"] = audio;
+    hwObj["DiskDrive"] = storage;
+    hwObj["NetworkAdapter"] = network;
+
+    QJsonObject object;
+    object["OS"] = osObj;
+    object["Hardware"] = hwObj;
+
+    QJsonDocument doc(object);
+    return doc.toJson(QJsonDocument::Compact);
 
 }
 

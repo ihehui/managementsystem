@@ -108,7 +108,7 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     
     QByteArray packetData = packet->getPacketData();
     QDataStream in(&packetData, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_6);
+    in.setVersion(QDataStream::Qt_4_8);
 
     QString peerID = "";
     in >> peerID;
@@ -235,20 +235,13 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     //        break;
     //    case quint8(MS::ServerRequestClientInfo):
     //        break;
-    case quint8(MS::ClientResponseClientSummaryInfo):
-    {
-        QByteArray clientSummaryInfo;
-        in >> clientSummaryInfo;
-        emit signalClientResponseClientSummaryInfoPacketReceived(socketID, clientSummaryInfo);
-        qDebug()<<"~~ClientResponseClientInfo";
-    }
-    break;
 
-    case quint8(MS::ClientResponseClientDetailedInfo):
+    case quint8(MS::ClientInfo):
     {
         QByteArray systemInfo;
-        in >> systemInfo;
-        emit signalClientResponseClientDetailedInfoPacketReceived(peerID, systemInfo);
+        quint8 infoType = 0;
+        in >> systemInfo >> infoType;
+        emit signalClientInfoPacketReceived(peerID, systemInfo, infoType);
         qDebug()<<"~~ClientResponseClientDetailedInfo";
 
     }

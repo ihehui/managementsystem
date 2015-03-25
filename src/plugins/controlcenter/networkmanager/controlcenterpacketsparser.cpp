@@ -115,7 +115,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     QByteArray packetData = packet->getPacketData();
     QDataStream in(&packetData, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_6);
+    in.setVersion(QDataStream::Qt_4_8);
 
     QString peerName = "";
     in >> peerName;
@@ -205,13 +205,14 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ClientOffline--"<<" peerAddress:"<<peerAddress.toString()<<"   peerName:"<<peerName;;
     }
     break;
-    case quint8(MS::ClientResponseClientDetailedInfo):
+    case quint8(MS::ClientInfo):
     {
-        qDebug()<<"ClientResponseClientInfoToAdminRequest";
+        qDebug()<<"ClientInfo";
 
         QByteArray systemInfo;
-        in >> systemInfo;
-        emit signalClientResponseClientDetailedInfoPacketReceived(peerName, systemInfo);
+        quint8 infoType = 0;
+        in >> systemInfo >> infoType;
+        emit signalClientInfoPacketReceived(peerName, systemInfo, infoType);
     }
     break;
 
@@ -270,14 +271,6 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~RemoteConsoleCMDResultFromClient";
     }
     break;
-    //    case quint8(MS::ServerRequestClientInfo):
-    //        {
-    //            QString groupName, computerName;
-    //            QChar separtor;
-    //            in >> groupName >> separtor >> computerName;
-    //            emit signalServerRequestClientSummaryInfoPacketReceived(groupName, computerName);
-    //        }
-    //        break;
     case quint8(MS::ServerResponseSoftwareVersion):
     {
         QString softwareName, version;
@@ -287,14 +280,6 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
-    case quint8(MS::ClientResponseClientSummaryInfo):
-    {
-        QByteArray info;
-        in >> info;
-        emit signalClientResponseClientSummaryInfoPacketReceived(socketID, info);
-        //qWarning()<<"~~ClientResponseClientSummaryInfo";
-    }
-    break;
     case quint8(MS::ClientResponseAdminConnectionResult):
     {
         QString message = "";
@@ -311,6 +296,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
         quint8 clientMessageType = quint8(MS::MSG_Information);
         in >> message >> clientMessageType;
         emit signalClientMessagePacketReceived(peerName, message, clientMessageType);
+        qDebug()<<"~~ClientMessage";
     }
     break;
 
@@ -369,6 +355,18 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     }
     break;
+    case quint8(MS::ServiceConfigChanged):
+    {
+        QString serviceName = "";
+        quint64 processID = 0, startupType = 0xFFFFFFFF ;
+
+        in >> serviceName >> processID >> startupType ;
+
+        emit signalServiceConfigChangedPacketReceived(peerName, serviceName, processID, startupType);
+
+    }
+    break;
+
 
 ///////////////////////////////////////////////
     case quint8(MS::ResponseFileSystemInfo):

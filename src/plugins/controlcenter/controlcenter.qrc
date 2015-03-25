@@ -1,6 +1,11 @@
 <RCC>
   <qresource prefix="/icon">
     <file>resources/images/filter.png</file>
+    <file>resources/images/computername.png</file>
+    <file>resources/images/system_lock_screen.png</file>
+    <file>resources/images/system_restart.png</file>
+    <file>resources/images/system_shutdown.png</file>
+    <file>resources/images/workgroup.png</file>
     <file>resources/images/rescan.png</file>
     <file>resources/images/querydatabase.png</file>
     <file>resources/images/informnewpassword.png</file>

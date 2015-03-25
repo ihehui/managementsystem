@@ -30,28 +30,11 @@ public:
 
 public:
     bool isValid();
+    void setJsonData(const QByteArray &data);
+    QByteArray getJsonData() const;
 
 
 
-    QString getNic1Info() const
-    {
-        return nic1Info;
-    }
-
-    QString getNic2Info() const
-    {
-        return nic2Info;
-    }
-
-    void setNic1Info(QString nic1Info)
-    {
-        this->nic1Info = nic1Info;
-    }
-
-    void setNic2Info(QString nic2Info)
-    {
-        this->nic2Info = nic2Info;
-    }
 
     void setIsJoinedToDomain(bool joined){
         this->m_isJoinedToDomain = joined;
@@ -79,11 +62,6 @@ public:
     QString getAudio() const
     {
         return this->audio;
-    }
-
-    QString getChipset() const
-    {
-        return this->chipset;
     }
 
     QString getClientUDTListeningAddress() const
@@ -114,11 +92,6 @@ public:
     bool getDetailedInfoSavedTODatabase() const
     {
         return this->detailedInfoSavedTODatabase;
-    }
-
-    QString getDmiUUID() const
-    {
-        return this->dmiUUID;
     }
 
     QString getInstallationDate() const
@@ -181,14 +154,14 @@ public:
         return summaryInfoSavedTODatabase;
     }
 
-    QString getUpdateDetailedInfoStatement() const
+    QString getUpdateHardwareInfoStatement() const
     {
-        return updateDetailedInfoStatement;
+        return updateHardwareInfoStatement;
     }
 
-    QString getUpdateSummaryInfoStatement() const
+    QString getUpdateOSInfoStatement() const
     {
-        return updateSummaryInfoStatement;
+        return updateOSInfoStatement;
     }
 
     MS::USBSTORStatus getUsbSDStatus() const
@@ -206,10 +179,6 @@ public:
         return video;
     }
 
-    QString getWindowsDir() const
-    {
-        return windowsDir;
-    }
 
     QString getWorkgroup() const
     {
@@ -226,10 +195,6 @@ public:
         this->audio = audio;
     }
 
-    void setChipset(QString chipset)
-    {
-        this->chipset = chipset;
-    }
 
     void setClientUDTListeningAddress(QString clientUDTListeningAddress)
     {
@@ -256,14 +221,9 @@ public:
         this->cpu = cpu;
     }
 
-    void setDetailedInfoSavedTODatabase(bool detailedInfoSavedTODatabase)
+    void setHardwareInfoSavedTODatabase(bool detailedInfoSavedTODatabase)
     {
         this->detailedInfoSavedTODatabase = detailedInfoSavedTODatabase;
-    }
-
-    void setDmiUUID(QString dmiUUID)
-    {
-        this->dmiUUID = dmiUUID;
     }
 
     void setInstallationDate(QString installationDate)
@@ -321,19 +281,19 @@ public:
         this->programsEnabled = programsEnabled;
     }
 
-    void setSummaryInfoSavedTODatabase(bool summaryInfoSavedTODatabase)
+    void setOSInfoSavedTODatabase(bool summaryInfoSavedTODatabase)
     {
         this->summaryInfoSavedTODatabase = summaryInfoSavedTODatabase;
     }
 
-    void setUpdateDetailedInfoStatement(QString updateDetailedInfoStatement)
+    void setUpdateHardwareInfoStatement(QString updateDetailedInfoStatement)
     {
-        this->updateDetailedInfoStatement = updateDetailedInfoStatement;
+        this->updateHardwareInfoStatement = updateDetailedInfoStatement;
     }
 
-    void setUpdateSummaryInfoStatement(QString updateSummaryInfoStatement)
+    void setUpdateOSInfoStatement(QString updateSummaryInfoStatement)
     {
-        this->updateSummaryInfoStatement = updateSummaryInfoStatement;
+        this->updateOSInfoStatement = updateSummaryInfoStatement;
     }
 
     void setUsbSDStatus(quint8 usbSDStatus)
@@ -349,11 +309,6 @@ public:
     void setVideo(QString video)
     {
         this->video = video;
-    }
-
-    void setWindowsDir(QString windowsDir)
-    {
-        this->windowsDir = windowsDir;
     }
 
     void setWorkgroup(QString workgroup)
@@ -388,6 +343,13 @@ public:
         this->installedSoftwaresInfoSavedTODatabase = saved;
     }
 
+    void setUpdateAlarmsInfoStatement(const QString &statement){
+        this->updateAlarmsInfoStatement = statement;
+    }
+    QString getUpdateAlarmsInfoStatement()const {
+        return updateAlarmsInfoStatement;
+    }
+
 
     QString getOnlineUsers() const{
         return onlineUsers;
@@ -396,47 +358,51 @@ public:
         this->onlineUsers = users;
     }
 
+
+    void setIPInfo(const QString &ipInfo){
+        this->ipInfo = ipInfo;
+    }
+    QString getIPInfo() const {
+        return this->ipInfo;
+    }
+
 private:
 
     QString computerName;
-    QString workgroup;
-    QString network;
-    QString users;
     QString os;
-    MS::USBSTORStatus usbSDStatus;
-    bool programsEnabled;
+    QString installationDate;
+    QString osKey;
+    QString workgroup;
+    QString users;
     QString administrators;
-    QDateTime lastOnlineTime;
+    QString ipInfo;
     QString clientVersion;
 
-    QString updateSummaryInfoStatement;
-    bool summaryInfoSavedTODatabase;
-
-
-    ///////////////////////////////////////////
-    QString installationDate;
-    QString windowsDir;
-    QString osKey;
 
     QString cpu;
     QString memory;
     QString motherboardName;
-    QString dmiUUID;
-    QString chipset;
     QString video;
     QString monitor;
     QString audio;
     QString storage;
+    QString network;
 
-    QString nic1Info;
-    QString nic2Info;
 
     bool m_isJoinedToDomain;
 
 
-    QString updateDetailedInfoStatement;
-    bool detailedInfoSavedTODatabase;
+    MS::USBSTORStatus usbSDStatus;
+    bool programsEnabled;
+    QDateTime lastOnlineTime;
 
+    QString updateOSInfoStatement;
+    bool summaryInfoSavedTODatabase;
+
+
+    ///////////////////////////////////////////
+    QString updateHardwareInfoStatement;
+    bool detailedInfoSavedTODatabase;
 
     /////////////////////////////////////////////////
 
@@ -447,7 +413,8 @@ private:
 
     /////////////////////////////////////////////////
 
-
+    QString updateAlarmsInfoStatement;
+    //bool alarmsInfoSavedTODatabase;
 
 
     QDateTime lastHeartbeatTime;

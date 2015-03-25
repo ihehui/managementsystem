@@ -99,7 +99,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     QByteArray packetData = packet->getPacketData();
     QDataStream in(&packetData, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_6);
+    in.setVersion(QDataStream::Qt_4_8);
 
     QString peerName = "";
     in >> peerName;
@@ -159,21 +159,21 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ServerOffline"<<" peerAddress:"<<peerAddress.toString()<<" servername:"<<peerName <<" peerPort:"<<peerPort;
     }
     break;
-    case quint8(MS::ClientDetailedInfoRequested):
+    case quint8(MS::ClientInfoRequested):
     {
-        quint16 peerRUDPListeningPort = 0;
         QString computerName = "";
-        bool rescan = false;
-        in >> peerRUDPListeningPort >> computerName >> rescan;
+        quint8 infoType = 0;
+        in >> computerName >> infoType;
 
         if(!computerName.isEmpty()){
             if(computerName.toLower() != m_localComputerName){
+                qCritical()<<"ERROR! Computer Name Not Match!";
                 return;
             }
         }
 
-        emit signalClientDetailedInfoRequestedPacketReceived(socketID, computerName, rescan);
-        qDebug()<<"~~ClientDetailedInfoRequested";
+        emit signalClientInfoRequestedPacketReceived(socketID, computerName, infoType);
+        qDebug()<<"~~ClientInfoRequested";
     }
     break;
     case quint8(MS::AdminRequestRemoteConsole):
@@ -214,21 +214,6 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     break;
     //    case quint8(MS::RemoteConsoleCMDResultFromClient):
     //        break;
-    case quint8(MS::ServerRequestClientSummaryInfo):
-    {
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
-        QString groupName = "", computerName = "", userName = "";
-        in >> groupName >> computerName >> userName;
-
-        if(computerName.toLower() != m_localComputerName){
-            return;
-        }
-
-        emit signalServerRequestClientSummaryInfoPacketReceived(groupName, computerName, userName);
-        qDebug()<<"~~ServerRequestClientInfo";
-    }
-    break;
     //    case quint8(MS::ClientResponseClientInfo):
     //        break;
     //    case quint8(MS::ClientRequestSoftwareVersion):
@@ -482,7 +467,6 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     }
     break;
-
     case quint8(MS::ResponseScreenshot):
     {
         //From local user
@@ -493,6 +477,34 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ResponseScreenshot";
     }
     break;
+
+    case quint8(MS::RequestShutdown):
+    {
+        quint8  reboot = 0, force = 1;
+        quint32 waitTime = 0;
+        QString message = "";
+
+        in >> reboot >> force >> waitTime >> message ;
+
+        signalAdminRequestShutdownPacketReceived(socketID, reboot, force, waitTime, message);
+        qDebug()<<"~~RequestShutdown";
+    }
+    break;
+
+    case quint8(MS::RequestChangeServiceConfig):
+    {
+        QString serviceName = "";
+        quint8  startService = 0;
+        quint64 startType = 0xFFFFFFFF;
+
+        in >> serviceName >> startService >> startType ;
+
+        signalAdminRequestChangeServiceConfigPacketReceived(socketID, serviceName, startService, startType);
+        qDebug()<<"~~RequestChangeServiceConfig";
+    }
+    break;
+
+
 
 ////////////////////////////////////////////
     case quint8(MS::RequestFileSystemInfo):

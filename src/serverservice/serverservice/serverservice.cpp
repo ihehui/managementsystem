@@ -159,8 +159,7 @@ bool ServerService::startMainService(){
     //connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
 
     connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(SOCKETID, const QByteArray &)), this, SLOT(updateOrSaveClientSummaryInfo(SOCKETID , const QByteArray &)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientResponseClientDetailedInfoPacketReceived(const QString &, const QByteArray &)), this, SLOT(clientDetailedInfoPacketReceived(const QString &, const QByteArray &)));
+    connect(serverPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
 
 //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
@@ -243,140 +242,6 @@ void ServerService::sendServerOnlinePacket(){
 
 }
 
-void ServerService::updateOrSaveClientSummaryInfo(SOCKETID socketID, const QByteArray &clientSummaryInfo){
-    //    qWarning()<<"ServerService::updateOrSaveClientSummaryInfo(...)";
-
-
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(clientSummaryInfo, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
-        return;
-    }
-    QJsonObject obj = doc.object();
-
-    QString computerName = obj["computerName"].toString();
-    QString workgroupName = obj["workgroupName"].toString();
-    QString networkInfo = obj["networkInfo"].toString();
-    QString usersInfo = obj["usersInfo"].toString();
-    QString osInfo = obj["osInfo"].toString();
-    quint8 usbSTORStatus = obj["usbSTORStatus"].toInt();
-    bool programesEnabled = obj["programesEnabled"].toBool();
-    QString admins = obj["admins"].toString();
-    bool isJoinedToDomain = obj["isJoinedToDomain"].toBool();
-    QString clientVersion = obj["clientVersion"].toString();
-
-
-
-
-    //qWarning()<<"Computer Name:"<<computerName;
-    //qWarning()<<"isRecordExistInDB:"<<isRecordExistInDB(computerName);
-
-
-    QString statement = "";
-    ClientInfo *info = 0;
-    if(clientInfoHash.contains(computerName)){
-        info = clientInfoHash.value(computerName);
-        //qWarning()<<QString("Client Info of '%1' Exists In:  Memory:YES  DB:%2").arg(computerName).arg(isRecordExistInDB(computerName)?"YES":"NO")<<"\n";
-    }else{
-        info = new ClientInfo(computerName, this);
-        clientInfoHash.insert(computerName, info);
-        //qWarning()<<QString("Client Info of '%1' Exists In:  Memory:NO  DB:%2").arg(computerName).arg(isRecordExistInDB(computerName)?"YES":"NO")<<"\n";
-    }
-    //qWarning();
-    //qWarning()<<QString("Total Online Clients:%1").arg(clientSocketsHash.size());
-
-
-    if(isRecordExistInDB(computerName)){
-        qDebug()<<"Client Info Exists!";
-        //info = clientInfoHash.value(computerName);
-        statement = "UPDATE summaryinfo SET LastOnlineTime = NULL ";
-        if(workgroupName != info->getWorkgroup()){
-            statement += QString(", Workgroup = '%1' ").arg(workgroupName);
-            //info->setWorkgroup(workgroupName);
-        }
-        if(networkInfo != info->getNetwork()){
-            statement += QString(", Network = '%1' ").arg(networkInfo);
-            //info->setNetwork(networkInfo);
-        }
-        if(usersInfo != info->getUsers()){
-            QString tempUsersInfo = usersInfo;
-            tempUsersInfo.replace("\\", "\\\\");
-            statement += QString(", Users = '%1' ").arg(tempUsersInfo);
-            //info->setUsers(usersInfo);
-        }
-        if(osInfo != info->getOs()){
-            statement += QString(", OS = '%1' ").arg(osInfo);
-            //info->setOs(osInfo);
-        }
-        //if(usbsdEnabled != info->getUsbSDEnabled()){
-        statement += QString(", USBSD = %1 ").arg(usbSTORStatus);
-        //info->setUsbSDEnabled(usbsdEnabled);
-        //}
-        //if(programesEnabled != info->getProgramsEnabled()){
-        statement += QString(", Programes = %1 ").arg(QVariant(programesEnabled).toUInt());
-        //info->setProgramsEnabled(programesEnabled);
-        //}
-        statement += QString(", JoinedToDomain = %1 ").arg(QVariant(isJoinedToDomain).toUInt());
-
-        if(admins != info->getAdministrators()){
-            QString tempAdmins = admins;
-            tempAdmins.replace("\\", "\\\\");
-            statement += QString(", Administrators = '%1' ").arg(tempAdmins);
-            //info->setAdministrators(admins);
-        }
-        if(clientVersion != info->getClientVersion()){
-            statement += QString(", ClientVersion = '%1' ").arg(clientVersion);
-            //info->setClientVersion(clientVersion);
-        }
-
-        statement += QString("WHERE ComputerName = '%1'").arg(computerName);
-        //qWarning()<<"Update Client Info For Computer "<<computerName << " "<<networkInfo;
-        //qWarning()<<statement;
-
-    }else{
-        qDebug()<<"Client Summary Info Not Exists!";
-
-        statement = "START TRANSACTION;";
-        statement += QString("INSERT INTO summaryinfo (ComputerName, Workgroup, Network, Users, OS, USBSD, Programes, JoinedToDomain, Administrators, ClientVersion) "
-                             "VALUES ('%1', '%2', '%3', '%4', '%5', %6, %7, %8, '%9', '%10'); ")
-                .arg(computerName).arg(workgroupName).arg(networkInfo).arg(usersInfo).arg(osInfo)
-                .arg(usbSTORStatus).arg(QVariant(programesEnabled).toUInt())
-                .arg(QVariant(isJoinedToDomain).toUInt()).arg(admins).arg(clientVersion);
-
-        statement += QString("INSERT INTO detailedinfo (ComputerName) "
-                             "VALUES ('%1'); ").arg(computerName);
-
-        statement += "COMMIT;";
-    }
-
-
-    info->setSummaryInfoSavedTODatabase(false);
-    info->setUpdateSummaryInfoStatement(statement);
-
-    if(onlineAdminsCount > 0){
-        if(updateOrSaveClientInfoToDatabase(info)){
-            info->setWorkgroup(workgroupName);
-            info->setNetwork(networkInfo);
-            info->setUsers(usersInfo);
-            info->setOs(osInfo);
-            info->setUsbSDStatus(usbSTORStatus);
-            info->setProgramsEnabled(programesEnabled);
-            info->setAdministrators(admins);
-            info->setIsJoinedToDomain(isJoinedToDomain);
-            info->setClientVersion(clientVersion);
-
-            info->setLastHeartbeatTime(QDateTime::currentDateTime());
-
-        }
-    } 
-
-    qWarning();
-    qWarning()<<QString(" '%1' Exists In:  Memory:%2  DB:%3 Version:%4").arg(computerName).arg(clientInfoHash.contains(computerName)?"YES":"NO").arg(isRecordExistInDB(computerName)?"YES":"NO").arg(clientVersion);
-
-
-}
-
 bool ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info){
     //    qWarning()<<"ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info)";
 
@@ -392,10 +257,10 @@ bool ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info){
 
     //    if(isRecordExistInDB(info->getComputerName())){
     if(!info->getSummaryInfoSavedTODatabase()){
-        summaryStatement = info->getUpdateSummaryInfoStatement();
+        summaryStatement = info->getUpdateOSInfoStatement();
     }
     if(!info->getDetailedInfoSavedTODatabase()){
-        detailedStatement = info->getUpdateDetailedInfoStatement();
+        detailedStatement = info->getUpdateHardwareInfoStatement();
         //qWarning()<<"detailedStatement:"<<detailedStatement;
     }
     if(!info->isInstalledSoftwaresInfoSavedTODatabase()){
@@ -450,8 +315,8 @@ bool ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info){
         }
 //        qWarning()<<" Summary Statement For "<<computerName<<": "<<summaryStatement;
 
-        info->setSummaryInfoSavedTODatabase(true);
-        info->setUpdateSummaryInfoStatement("");
+        info->setOSInfoSavedTODatabase(true);
+        info->setUpdateOSInfoStatement("");
         qWarning()<<"Client summary info from "<<computerName<<" has been saved!";
 
         query->clear();
@@ -476,8 +341,8 @@ bool ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info){
         }
 //        qWarning()<<" Detailed Statement For "<<computerName<<": "<<detailedStatement;
 
-        info->setDetailedInfoSavedTODatabase(true);
-        info->setUpdateDetailedInfoStatement("");
+        info->setHardwareInfoSavedTODatabase(true);
+        info->setUpdateHardwareInfoStatement("");
         qWarning()<<"Client detailed info from "<<computerName<<" has been saved!";
 
         query->clear();
@@ -531,11 +396,9 @@ void ServerService::updateOrSaveAllClientsInfoToDatabase(){
         updateOrSaveClientInfoToDatabase(info);
     }
 
-
-
 }
 
-void ServerService::clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo){
+void ServerService::clientInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo, quint8 infoType){
 
     qWarning()<<"Client detailed info has been received From "<< computerName;
     //    qWarning()<<"-----clientDetailedInfoPacketReceived";
@@ -545,93 +408,6 @@ void ServerService::clientDetailedInfoPacketReceived(const QString &computerName
         return;
     }
 
-    QDir::setCurrent(QDir::tempPath());
-    QString clientInfoFilePath = QString("./%1.ini").arg(computerName);
-
-    QFile file(clientInfoFilePath);
-    if(!file.open(QIODevice::WriteOnly | QFile::Truncate | QIODevice::Text)){
-        qCritical()<<QString(tr("Can not write client detailed info file '")+clientInfoFilePath+tr("'!"));
-        return;
-    }
-    QTextStream out(&file);
-    out.setCodec("UTF-8");
-    out << clientInfo;
-    file.flush();
-    file.close();
-
-    QSettings systemInfo(clientInfoFilePath, QSettings::IniFormat, this);
-    systemInfo.setIniCodec("UTF-8");
-
-    if(!QFile(clientInfoFilePath).exists()){
-        qCritical()<<QString(tr("Client Info File '")+clientInfoFilePath+tr("' Missing!"));
-        return;
-    }
-
-
-    systemInfo.beginGroup("DevicesInfo");
-
-    QString cpu = systemInfo.value("CPU").toString();
-    QString memory = systemInfo.value("Memory").toString();
-    QString motherboardName = systemInfo.value("MotherboardName").toString();
-    QString dmiUUID = systemInfo.value("DMIUUID").toString();
-    QString chipset = systemInfo.value("Chipset").toString();
-    QString video = systemInfo.value("Video").toString();
-    QString monitor = systemInfo.value("Monitor").toString();
-    QString audio = systemInfo.value("Audio").toString();
-    audio.replace("'", "\\'");
-
-    QStringList storages;
-    QString storagesInfo = "";
-    for (int i = 1; i < 6; i++) {
-        //QString diskKey,diskInfo;
-        QString diskKey = QString("Disk" + QString::number(i));
-        QString diskInfo = systemInfo.value(diskKey).toString();
-        if (diskInfo.isEmpty()) {
-            break;
-        }
-        storages.append(diskInfo);
-    }
-    storagesInfo = storages.join(" | ");
-    //qWarning()<<"storagesInfo:"<<storagesInfo;
-
-
-    QString adapter1Name = systemInfo.value("Adapter1Name").toString();
-    QString adapter1HDAddress = systemInfo.value("Adapter1HDAddress").toString();
-    QString adapter1IPAddress = systemInfo.value("Adapter1IPAddress").toString();
-    QString nic1Info = adapter1Name + "|" + adapter1HDAddress + "|" + adapter1IPAddress;
-
-    QString adapter2Name = systemInfo.value("Adapter2Name").toString();
-    QString adapter2HDAddress = systemInfo.value("Adapter2HDAddress").toString();
-    QString adapter2IPAddress = systemInfo.value("Adapter2IPAddress").toString();
-    QString nic2Info = adapter2Name + "|" + adapter2HDAddress + "|" + adapter2IPAddress;
-
-    systemInfo.endGroup();
-
-
-
-    systemInfo.beginGroup("OSInfo");
-    QString installationDate = systemInfo.value("InstallationDate").toString();
-    QString windowsDir = systemInfo.value("WindowsDir").toString();
-    QString osKey = systemInfo.value("Key").toString();
-
-    systemInfo.endGroup();
-
-
-
-    systemInfo.beginGroup("InstalledSoftwareInfo");
-    QStringList softwares;
-    for(int k = 1; k < 400; k++){
-        QString info = systemInfo.value(QString::number(k)).toString();
-        if(info.isEmpty()){break;}
-        softwares << info;
-    }
-    systemInfo.endGroup();
-
-
-
-
-
-    QString statement = "";
     ClientInfo *info = 0;
     if(clientInfoHash.contains(computerName)){
         info = clientInfoHash.value(computerName);
@@ -640,100 +416,275 @@ void ServerService::clientDetailedInfoPacketReceived(const QString &computerName
         clientInfoHash.insert(computerName, info);
     }
 
+    switch (infoType) {
+    case quint8(MS::SYSINFO_OS):
+        processOSInfo(info, clientInfo);
+          break;
+    case quint8(MS::SYSINFO_HARDWARE):
+        processHardwareInfo(info, clientInfo);
+        break;
+
+    case quint8(MS::SYSINFO_SOFTWARE):
+        processSoftwareInfo(info, clientInfo);
+        break;
+//    case quint8(MS::SYSINFO_SERVICES):
+//        updateServicesInfo(object);
+//        break;
+    default:
+        break;
+    }
+
+
+}
+
+void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
+    if(!info){
+        return;
+    }
+
+    QString osInfo = info->getOs();
+    QString installationDate = info->getInstallationDate();
+    QString osKey = info->getOsKey();
+    QString workgroupName = info->getWorkgroup();
+    bool isJoinedToDomain = info->isJoinedToDomain();
+    QString usersInfo = info->getUsers();
+    QString admins = info->getAdministrators();
+    QString ipInfo = info->getIPInfo();
+    QString clientVersion = info->getClientVersion();
+
+    info->setJsonData(osData);
+    QString computerName = info->getComputerName();
+
+    QString statement;
+    if(isRecordExistInDB(computerName)){
+        qDebug()<<"Client Info Exists!";
+        //info = clientInfoHash.value(computerName);
+        statement = "UPDATE os SET LastOnlineTime = NULL ";
+
+        QString newOSInfo = info->getOs();
+        if(osInfo != newOSInfo){
+            statement += QString(", OS = '%1' ").arg(newOSInfo);
+        }
+
+        QString newinstallationDate = info->getNetwork();
+        if(installationDate != newinstallationDate){
+            statement += QString(", InstallationDate = '%1' ").arg(newinstallationDate);
+        }
+
+        QString newOSKey = info->getOsKey();
+        if(osKey != newOSKey){
+            statement += QString(", OSKey = '%1' ").arg(newOSKey);
+        }
+
+        QString newworkgroupName = info->getWorkgroup();
+        if(workgroupName != newworkgroupName){
+            statement += QString(", Workgroup = '%1' ").arg(newworkgroupName);
+        }
+
+        bool newJoinedToDomain = info->isJoinedToDomain();
+        if(isJoinedToDomain != newJoinedToDomain){
+            statement += QString(", JoinedToDomain = %1 ").arg(newJoinedToDomain?1:0);
+        }
+
+        QString newUsers = info->getUsers();
+        if(usersInfo != newUsers){
+            QString tempUsersInfo = newUsers;
+            tempUsersInfo.replace("\\", "\\\\");
+            statement += QString(", Users = '%1' ").arg(tempUsersInfo);
+        }
+
+        QString newadmins = info->getAdministrators();
+        if(admins != newadmins){
+            QString tempAdminsInfo = newadmins;
+            tempAdminsInfo.replace("\\", "\\\\");
+            statement += QString(", Administrators = '%1' ").arg(tempAdminsInfo);
+        }
+
+        QString newipInfo = info->getIPInfo();
+        if(ipInfo != newipInfo){
+            statement += QString(", IP = '%1' ").arg(newipInfo);
+        }
+
+        QString newclientVersion = info->getClientVersion();
+        if(clientVersion != newclientVersion){
+            statement += QString(", ClientVersion = '%1' ").arg(newclientVersion);
+        }
+
+        statement += QString("WHERE ComputerName = '%1'").arg(computerName);
+        //qWarning()<<"Update Client Info For Computer "<<computerName << " "<<networkInfo;
+        //qWarning()<<statement;
+
+    }else{
+        qDebug()<<"Client OS Info Not Exists!";
+
+        statement = "START TRANSACTION;";
+        statement += QString("INSERT INTO os (ComputerName, OS, InstallationDate, OSKey, Workgroup, JoinedToDomain, Users, Administrators, IP, ClientVersion) "
+                             "VALUES ('%1', '%2', '%3', '%4', '%5', %6, '%7', '%8', '%9', '%10' ); ")
+                .arg(computerName).arg(osInfo).arg(installationDate).arg(osKey).arg(workgroupName)
+                .arg(QVariant(isJoinedToDomain).toUInt()).arg(usersInfo).arg(admins).arg(ipInfo).arg(clientVersion);
+
+        statement += QString("INSERT INTO hardware (ComputerName) "
+                             "VALUES ('%1'); ").arg(computerName);
+
+        statement += "COMMIT;";
+    }
+
+
+    info->setOSInfoSavedTODatabase(false);
+    info->setUpdateOSInfoStatement(statement);
+
+    if(onlineAdminsCount > 0){
+        if(updateOrSaveClientInfoToDatabase(info)){
+            info->setLastHeartbeatTime(QDateTime::currentDateTime());
+        }
+    }
+
+    qWarning();
+    qWarning()<<QString(" '%1' Exists In:  Memory:%2  DB:%3 Version:%4").arg(computerName).arg(clientInfoHash.contains(computerName)?"YES":"NO").arg(isRecordExistInDB(computerName)?"YES":"NO").arg(clientVersion);
+
+
+
+}
+
+void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData){
+
+    if(!info){
+        return;
+    }
+
+    QString cpu = info->getCpu();
+    QString memory = info->getMemory();
+    QString motherboardName = info->getMotherboardName();
+    QString video = info->getVideo();
+    QString monitor = info->getMonitor();
+    QString audio = info->getAudio();
+    QString storage = info->getStorage();
+    QString network = info->getNetwork();
+
+    info->setJsonData(hardwareData);
+
+    QStringList changes;
+
+    QString statement;
     //    if(isRecordExistInDB(computerName)){
-    statement = "UPDATE detailedinfo SET UpdateTime = NULL ";
-    if(installationDate != info->getInstallationDate()){
-        statement += QString(", InstallationDate = '%1' ").arg(installationDate);
+    statement = "UPDATE hardware SET UpdateTime = NULL ";
+
+    QString newCPU = info->getCpu();
+    if(cpu != newCPU){
+        statement += QString(", CPU = '%1' ").arg(newCPU);
+        if(!cpu.isEmpty()){
+            changes.append(QString("CPU Changed from '%1' to '%2'").arg(cpu).arg(newCPU));
+        }
     }
-    if(windowsDir != info->getWindowsDir()){
-        statement += QString(", WindowsDir = '%1' ").arg(windowsDir);
+
+    QString newMemory = info->getMemory();
+    if(memory != newMemory){
+        statement += QString(", Memory = '%1' ").arg(newMemory);
+        if(!memory.isEmpty()){
+            changes.append(QString("Memory Changed from '%1' to '%2'").arg(memory).arg(newCPU));
+        }
     }
-    if(osKey != info->getOsKey()){
-        statement += QString(", OSKey = '%1' ").arg(osKey);
+
+    QString newMotherboardName = info->getMotherboardName();
+    if(motherboardName != newMotherboardName){
+        statement += QString(", Motherboard = '%1' ").arg(newMotherboardName);
+        if(!motherboardName.isEmpty()){
+            changes.append(QString("Motherboard Changed from '%1' to '%2'").arg(motherboardName).arg(newMotherboardName));
+        }
     }
-    if(cpu != info->getCpu()){
-        statement += QString(", CPU = '%1' ").arg(cpu);
+
+    QString newVideo = info->getVideo();
+    if(video != newVideo){
+        statement += QString(", Video = '%1' ").arg(newVideo);
+        if(!video.isEmpty()){
+            changes.append(QString("Video Changed from '%1' to '%2'").arg(video).arg(newVideo));
+        }
     }
-    if(memory != info->getMemory()){
-        statement += QString(", Memory = '%1' ").arg(memory);
+
+    QString newMonitor = info->getMonitor();
+    if(monitor != newMonitor){
+        statement += QString(", Monitor = '%1' ").arg(newMonitor);
+        if(!monitor.isEmpty()){
+            changes.append(QString("Monitor Changed from '%1' to '%2'").arg(monitor).arg(newMonitor));
+        }
     }
-    if(motherboardName != info->getMotherboardName()){
-        statement += QString(", MotherboardName = '%1' ").arg(motherboardName);
+
+    QString newAudio = info->getAudio();
+    if(audio != newAudio){
+        statement += QString(", Audio = '%1' ").arg(newAudio);
+        if(!audio.isEmpty()){
+            changes.append(QString("Audio Changed from '%1' to '%2'").arg(audio).arg(newAudio));
+        }
     }
-    if(dmiUUID != info->getDmiUUID()){
-        statement += QString(", DMIUUID = '%1' ").arg(dmiUUID);
+
+    QString newStorage = info->getStorage();
+    if(storage != newStorage){
+        statement += QString(", Storage = '%1' ").arg(newStorage);
+        if(!storage.isEmpty()){
+            changes.append(QString("Storage Changed from '%1' to '%2'").arg(storage).arg(newStorage));
+        }
     }
-    if(chipset != info->getChipset()){
-        statement += QString(", Chipset = '%1' ").arg(chipset);
-    }
-    if(video != info->getVideo()){
-        statement += QString(", Video = '%1' ").arg(video);
-    }
-    if(monitor != info->getMonitor()){
-        statement += QString(", Monitor = '%1' ").arg(monitor);
-    }
-    if(audio != info->getAudio()){
-        statement += QString(", Audio = '%1' ").arg(audio);
-    }
-    if(storagesInfo != info->getStorage()){
-        statement += QString(", Storage = '%1' ").arg(storagesInfo);
-    }
-    if(nic1Info != info->getNic1Info()){
-        statement += QString(", NIC1 = '%1' ").arg(nic1Info);
-    }
-    if(nic2Info != info->getNic2Info()){
-        statement += QString(", NIC2 = '%1' ").arg(nic2Info);
+
+    QString newNIC = info->getNetwork();
+    if(network != newNIC){
+        statement += QString(", NIC = '%1' ").arg(newNIC);
+        if(!network.isEmpty()){
+            changes.append(QString("NIC Changed from '%1' to '%2'").arg(network).arg(newNIC));
+        }
     }
 
 
+    QString computerName = info->getComputerName();
 
     statement += QString("WHERE ComputerName = '%1'").arg(computerName);
-    //qWarning()<<"Update Client Info For Computer "<<computerName << " "<<networkInfo;
-    //qWarning()<<statement;
 
-    //    }else{
-    //        qDebug()<<"Client Detailed Info Not Exists!";
-
-    //        //statement = "START TRANSACTION;";
-    //        statement += QString("INSERT INTO detailedinfo(ComputerName, InstallationDate, WindowsDir, OSKey, CPU, DMIUUID, MotherboardName, Chipset, Memory, Storage, Video, Audio, NIC1, NIC2, Monitor, UpdateTime, Remark) "
-    //                             "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', '%8', '%9', '%10', '%11', '%12', '%13', '%14', '%15', NULL, NULL); ")
-    //                .arg(computerName).arg(installationDate).arg(windowsDir).arg(osKey).arg(cpu)
-    //                .arg(dmiUUID).arg(motherboardName).arg(chipset).arg(memory).arg(storagesInfo).arg(video).arg(audio).arg(nic1Info).arg(nic2Info).arg(monitor);
-
-    //        //statement += QString("INSERT INTO detailedinfo (ComputerName) "
-    //        //                    "VALUES ('%1'); ").arg(computerName);
-
-    //        //statement += "COMMIT;";
+    info->setHardwareInfoSavedTODatabase(false);
+    info->setUpdateHardwareInfoStatement(statement);
 
 
-    //    }
+    if(changes.isEmpty()){return;}
+
+    QString alarmStatement ;
+    foreach (QString change, changes) {
+        alarmStatement += QString("INSERT INTO alarm(ComputerName, Type, Message) VALUES('%1', %2, '%3' ); ").arg(computerName).arg(1).arg(change);
+    }
+    info->setUpdateAlarmsInfoStatement(alarmStatement);
 
 
-    info->setDetailedInfoSavedTODatabase(false);
-    info->setUpdateDetailedInfoStatement(statement);
+    qCritical()<<"!!!!!!!!!!!!!Hardware Changed!!!!!!!!!!!!!"<<changes.join("\n");
+    qCritical()<<"Computer:"<<info->getComputerName();
+    qCritical()<<changes.join("\n");
 
 
 
+}
 
-//    QStringList installedSoftwaresInfo = info->getInstalledSoftwaresInfo();
-//    bool changed = false;
-//    if(softwares.size() == installedSoftwaresInfo.size()){
-//        foreach (QString info, softwares) {
-//            if(!installedSoftwaresInfo.contains(info)){
-//                changed = true;
-//                break;
-//            }
-//        }
-//    }else{
-//        changed = true;
+void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data){
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+    QJsonObject object = doc.object();
+    if(object.isEmpty()){return;}
+
+    QJsonArray array = object["Software"].toArray();
+//    if(array.isEmpty()){
+//        return;
 //    }
 
-    if(softwares.size() != info->getinstalledSoftwaresCount()){
-        QString updateInstalledSoftwaresInfoStatement = QString("START TRANSACTION; delete from installedsoftware where ComputerName = '%1'; ").arg(computerName);
-        foreach (QString info, softwares) {
-            QStringList values = info.split(" | ");
-            if(values.size() != 5){continue;}
-            updateInstalledSoftwaresInfoStatement += QString(" insert into installedsoftware(ComputerName, SoftwareName, SoftwareVersion, Size, InstallationDate, Publisher) values('%1', '%2', '%3', '%4', '%5', '%6'); ").arg(computerName).arg(values.at(0)).arg(values.at(1)).arg(values.at(2)).arg(values.at(3)).arg(values.at(4));
+    int softwareCount = array.size();
+
+    if(softwareCount != info->getinstalledSoftwaresCount()){
+        QString updateInstalledSoftwaresInfoStatement = QString("START TRANSACTION; delete from installedsoftware where ComputerName = '%1'; ").arg(info->getComputerName());
+
+        for(int i=0;i<softwareCount;i++){
+            QJsonArray infoArray = array.at(i).toArray();
+            if(infoArray.size() != 4){continue;}
+
+            updateInstalledSoftwaresInfoStatement += QString(" insert into installedsoftware(ComputerName, SoftwareName, SoftwareVersion, Size, InstallationDate, Publisher) values('%1', '%2', '%3', '%4', '%5'); ").arg(info->getComputerName()).arg(infoArray.at(0).toString()).arg(infoArray.at(1).toString()).arg(infoArray.at(2).toString()).arg(infoArray.at(3).toString());
         }
         updateInstalledSoftwaresInfoStatement += "COMMIT;";
 
@@ -742,38 +693,6 @@ void ServerService::clientDetailedInfoPacketReceived(const QString &computerName
         //qWarning()<<"------0------updateInstalledSoftwaresInfoStatement:"<<updateInstalledSoftwaresInfoStatement;
 
     }
-
-
-
-
-    if(onlineAdminsCount > 0){
-        if(updateOrSaveClientInfoToDatabase(info)){
-            info->setInstallationDate(installationDate);
-            info->setWindowsDir(windowsDir);
-            info->setOsKey(osKey);
-
-            info->setCpu(cpu);
-            info->setMemory(memory);
-            info->setMotherboardName(motherboardName);
-            info->setDmiUUID(dmiUUID);
-            info->setChipset(chipset);
-            info->setVideo(video);
-            info->setMonitor(monitor);
-            info->setAudio(audio);
-            info->setStorage(storagesInfo);
-
-            info->setNic1Info(nic1Info);
-            info->setNic2Info(nic2Info);
-
-//            info->setInstalledSoftwaresInfo(softwares);
-            info->setInstalledSoftwaresCount(softwares.size());
-        }
-    }
-
-
-
-
-
 
 
 }
@@ -1116,15 +1035,13 @@ void ServerService::processCommand(int code)
         serverPacketsParser->sendUpdateClientSoftwarePacket();
         break;
     case 1:
-        serverPacketsParser->sendServerRequestClientSummaryInfoPacket("", "", "", "255.255.255.255");
+        serverPacketsParser->sendRequestClientInfoPacket();
         break;
     case 2:
         updateOrSaveAllClientsInfoToDatabase();
         break;
     case 3:
-        serverPacketsParser->sendRequestClientDetailedInfoPacket();
-    case 4:
-        serverPacketsParser->sendRequestClientDetailedInfoPacket("255.255.255.255", IP_MULTICAST_GROUP_PORT, "", false);
+        serverPacketsParser->sendRequestClientInfoPacket("255.255.255.255", IP_MULTICAST_GROUP_PORT, "", false);
         break;
     default:
         qWarning()<<QString("Unknown Command Code '%1'!").arg(code);

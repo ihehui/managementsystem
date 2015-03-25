@@ -1029,7 +1029,7 @@ void ControlCenter::startNetwork(){
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
     connect(controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseClientSummaryInfoPacketReceived(SOCKETID, const QByteArray &)), this, SLOT(updateOrSaveClientInfo(SOCKETID, const QByteArray &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)), Qt::QueuedConnection);
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
 
     if(localSystemManagementWidget){
@@ -1086,36 +1086,9 @@ void ControlCenter::serverFound(const QString &serverAddress, quint16 serverUDTL
 
 }
 
-void ControlCenter::updateOrSaveClientInfo(SOCKETID socketID, const QByteArray &clientInfo){
-
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(clientInfo, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
-        return;
-    }
-
-    QJsonObject obj = doc.object();
-    QString computerName = obj["computerName"].toString();
-    QString workgroupName = obj["workgroupName"].toString();
-    QString networkInfo = obj["networkInfo"].toString();
-    QString usersInfo = obj["usersInfo"].toString();
-    QString osInfo = obj["osInfo"].toString();
-    quint8 usbSTORStatus = obj["usbSTORStatus"].toInt();
-    bool programesEnabled = obj["programesEnabled"].toBool();
-    QString admins = obj["admins"].toString();
-    bool isJoinedToDomain = obj["isJoinedToDomain"].toBool();
-    QString clientVersion = obj["clientVersion"].toString();
-
-
-    qDebug()<<"updateOrSaveClientInfo(...) "<<computerName<<" "<<workgroupName<<" "<<networkInfo<<" "<<usersInfo;
+void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QByteArray &clientInfo, quint8 infoType){
+    qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...) "<< " computerName:"<<computerName;
     
-    if(computerName.trimmed().isEmpty()){
-        qCritical()<<"Invalid Computer Name!";
-        return;
-    }
-
-
     ClientInfo *info = 0;
     if(clientInfoHash.contains(computerName)){
         info = clientInfoHash.value(computerName);
@@ -1125,17 +1098,21 @@ void ControlCenter::updateOrSaveClientInfo(SOCKETID socketID, const QByteArray &
         clientInfoHash.insert(computerName, info);                      
     }
 
+    switch (infoType) {
+    case quint8(MS::SYSINFO_OS):
+    case quint8(MS::SYSINFO_HARDWARE):
+        info->setJsonData(clientInfo);
+        break;
 
-    info->setWorkgroup(workgroupName);
-    info->setNetwork(networkInfo);
-    info->setUsers(usersInfo);
-    info->setOs(osInfo);
-    info->setUsbSDStatus(usbSTORStatus);
-    info->setProgramsEnabled(programesEnabled);
-    info->setAdministrators(admins);
-    info->setClientVersion(clientVersion);
-    info->setLastOnlineTime(QDateTime::currentDateTime());
-    info->setIsJoinedToDomain(isJoinedToDomain);
+//    case quint8(MS::SYSINFO_SOFTWARE):
+//        processSoftwareInfo(info, clientInfo);
+//        break;
+//    case quint8(MS::SYSINFO_SERVICES):
+//        updateServicesInfo(object);
+//        break;
+    default:
+        break;
+    }
 
     clientInfoModel->addClientInfo(info);
     

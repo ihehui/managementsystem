@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ServicesManagement</class>
+ <widget class="QWidget" name="ServicesManagement">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>637</width>
+    <height>463</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Services Management</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTableView" name="tableViewServices">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
+     <attribute name="horizontalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionStartService">
+   <property name="text">
+    <string>Start Service</string>
+   </property>
+   <property name="toolTip">
+    <string>Start Service</string>
+   </property>
+  </action>
+  <action name="actionStopService">
+   <property name="text">
+    <string>Stop Service</string>
+   </property>
+   <property name="toolTip">
+    <string>Stop Service</string>
+   </property>
+  </action>
+  <action name="actionAutoStart">
+   <property name="text">
+    <string>Auto</string>
+   </property>
+   <property name="toolTip">
+    <string>Auto Start Service</string>
+   </property>
+  </action>
+  <action name="actionManuallyStart">
+   <property name="text">
+    <string>Manually Start</string>
+   </property>
+   <property name="toolTip">
+    <string>Manually Start Service</string>
+   </property>
+  </action>
+  <action name="actionDisableService">
+   <property name="text">
+    <string>Disabled</string>
+   </property>
+   <property name="toolTip">
+    <string>Disable Service</string>
+   </property>
+  </action>
+  <action name="actionExport">
+   <property name="text">
+    <string>Export</string>
+   </property>
+  </action>
+  <action name="actionPrint">
+   <property name="text">
+    <string>Print</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="text">
+    <string>Refresh</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

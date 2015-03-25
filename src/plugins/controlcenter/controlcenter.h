@@ -13,7 +13,7 @@
 #include "networkmanager/controlcenterpacketsparser.h"
 #include "networkmanager/resourcesmanagerinstance.h"
 
-#include"clientinfomodel/clientinfomodel.h"
+#include "../clientinfomodel/clientinfomodel.h"
 
 #include "../../sharedms/clientinfo.h"
 #include "../../sharedms/rtp.h"
@@ -86,7 +86,7 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void updateOrSaveClientInfo(SOCKETID socketID, const QByteArray &clientInfo);
+    void updateOrSaveClientInfo(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
     
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 

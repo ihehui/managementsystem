@@ -9,7 +9,6 @@
 #include "ui_systemmanagementwidget.h"
 
 #include "networkmanager/controlcenterpacketsparser.h"
-#include "../serviceinfomodel/serviceinfomodel.h"
 
 
 #include "../../sharedms/clientinfo.h"
@@ -51,6 +50,12 @@ protected:
 
 private slots:
     void on_toolButtonVerify_clicked();
+
+    void shutdownSystem();
+
+    void on_toolButtonRenameComputer_clicked();
+    void changeWorkgroup();
+
     void on_pushButtonUSBSD_clicked();
     void on_pushButtonPrograms_clicked();
     void on_pushButtonShowAdmin_clicked();
@@ -58,10 +63,6 @@ private slots:
 
     void on_actionAddAdmin_triggered();
     void on_actionDeleteAdmin_triggered();
-
-    void getNewComputerName();
-    void on_pushButtonRenameComputer_clicked();
-    void on_pushButtonDomain_clicked();
 
     void on_pushButtonMMC_clicked();
     void on_pushButtonCMD_clicked();
@@ -81,6 +82,7 @@ private slots:
     void on_pushButtonRefreshScreenshot_clicked();
 
 
+
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online);
     void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool result, const QString &message);
 
@@ -88,13 +90,13 @@ private slots:
 
     void clientMessageReceived(const QString &computerName, const QString &message, quint8 clientMessageType);
 
-    void clientResponseClientSummaryInfoPacketReceived(SOCKETID socketID, const QByteArray &clientInfo);
+    void requestClientInfo(quint8 infoType);
+    void clientInfoPacketReceived(const QString &computerName, const QByteArray &data, quint8 infoType);
+    void updateOSInfo();
+    void updateHardwareInfo();
+    void updateSoftwareInfo(const QJsonObject &object);
 
-
-    void clientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
-    void updateSystemInfo(const QJsonObject &obj);
-    void updateSoftwareInfo(const QJsonArray &array);
-    void updateServicesInfo(const QJsonArray &array);
+    void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);
 
     void requestClientInfoTimeout();
 
@@ -108,6 +110,8 @@ private slots:
 
     void updateTemperatures(const QString &cpuTemperature, const QString &harddiskTemperature);
     void updateScreenshot(const QString &userName, const QByteArray &screenshot);
+
+    void serviceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType);
 
     void peerDisconnected(SOCKETID socketID);
     void peerDisconnected(bool normalClose);
@@ -183,8 +187,9 @@ private:
 
     QTimer *m_updateTemperaturesTimer;
 
-    ServiceInfoSortFilterProxyModel *m_proxyModel;
-    ServiceInfoModel *m_serviceInfoModel;
+
+    QMenu *m_shutdownMenu;
+    QMenu *m_joinWorkgroupMenu;
 
 
 

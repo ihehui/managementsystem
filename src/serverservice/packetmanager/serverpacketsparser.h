@@ -70,7 +70,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_serverName << localUDTListeningAddress << localUDTListeningPort << m_localTCPServerListeningPort << QString(APP_VERSION) << serverInstanceID;
         packet->setPacketData(ba);
 
@@ -95,7 +95,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_serverName << localUDTListeningAddress << localUDTListeningPort;
         packet->setPacketData(ba);
 
@@ -119,7 +119,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_serverName << localUDTListeningAddress << localUDTListeningPort;
         packet->setPacketData(ba);
 
@@ -135,66 +135,17 @@ public slots:
     }
 
 
-    bool sendServerRequestClientSummaryInfoPacket(const QString &groupName, const QString &computerName, const QString &userName, const QString &clientAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT)){
-        qDebug()<<"----sendServerRequestClientInfoPacket(...)";
-
-        QHostAddress targetAddress = QHostAddress(clientAddress);
-        Packet *packet = PacketHandlerBase::getPacket();
-        packet->setTransmissionProtocol(TP_UDP);
-
-        packet->setPacketType(quint8(MS::ServerRequestClientSummaryInfo));
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
-        out << m_serverName << groupName << computerName << userName;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
-    }
-
-    bool sendServerRequestClientSummaryInfoPacket(SOCKETID socketID, const QString &groupName, const QString &computerName, const QString &userName){
-        qDebug()<<"----sendServerRequestClientInfoPacket(...)";
-
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
-        packet->setTransmissionProtocol(TP_UDT);
-
-        packet->setPacketType(quint8(MS::ServerRequestClientSummaryInfo));
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
-        out << m_serverName << groupName << computerName << userName;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
-    }
-
-    bool sendRequestClientDetailedInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &computerName = "", bool rescan = true){
+    bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &computerName = "", quint8 infoType = 0){
 
         QHostAddress targetAddress = QHostAddress(peerAddress);
         Packet *packet = PacketHandlerBase::getPacket();
         packet->setTransmissionProtocol(TP_UDP);
 
-        packet->setPacketType(quint8(MS::ClientDetailedInfoRequested));
+        packet->setPacketType(quint8(MS::ClientInfoRequested));
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
-        out << m_serverName << localUDTListeningPort << computerName << rescan;
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_serverName << computerName << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -208,16 +159,16 @@ public slots:
         return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
     }
 
-    bool sendRequestClientDetailedInfoPacket(SOCKETID socketID, const QString &computerName = "", bool rescan = true){
+    bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &computerName = "", quint8 infoType = 0){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setTransmissionProtocol(TP_UDT);
 
-        packet->setPacketType(quint8(MS::ClientDetailedInfoRequested));
+        packet->setPacketType(quint8(MS::ClientInfoRequested));
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
-        out << m_serverName << localUDTListeningPort << computerName << rescan;
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_serverName << computerName << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -241,7 +192,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_serverName << softwareName << version;
         packet->setPacketData(ba);
 
@@ -265,7 +216,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_serverName;
         packet->setPacketData(ba);
 
@@ -295,9 +246,7 @@ signals:
     //void signalClientOnlinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
     //void signalClientOfflinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
 
-    void signalClientResponseClientSummaryInfoPacketReceived(SOCKETID socketID, const QByteArray &clientSummaryInfo);
-    void signalClientResponseClientDetailedInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo);
-
+    void signalClientInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
 

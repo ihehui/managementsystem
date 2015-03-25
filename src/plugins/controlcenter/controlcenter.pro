@@ -27,7 +27,8 @@ UI_DIR = ./ui
 
 INCLUDEPATH += $$UI_DIR \
                $$PWD \
-               filemanagement
+               filemanagement \
+               servicesmanagement
 
 # Input
 HEADERS += \
@@ -35,27 +36,29 @@ HEADERS += \
     taskmanagement/taskinfoviewwidget.h \
     taskmanagement/taskmanagement.h \
     announcement/announcement.h \
-    clientinfomodel/clientinfomodel.h \
     systemmanagement/systemmanagementwidget.h \
     controlcenter.h \
     controlcenterplugin.h \
     constants.h \
     networkmanager/resourcesmanagerinstance.h \
     filemanagement/filemanagement.h \
-    serviceinfomodel/serviceinfomodel.h
+    servicesmanagement/servicesmanagement.h \
+    servicesmanagement/serviceinfomodel.h \
+    clientinfomodel/clientinfomodel.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
     taskmanagement/taskinfoviewwidget.cpp \
     taskmanagement/taskmanagement.cpp \
     announcement/announcement.cpp \
-    clientinfomodel/clientinfomodel.cpp \
     systemmanagement/systemmanagementwidget.cpp \
     controlcenter.cpp \
     controlcenterplugin.cpp \
     networkmanager/resourcesmanagerinstance.cpp \
     filemanagement/filemanagement.cpp \
-    serviceinfomodel/serviceinfomodel.cpp
+    servicesmanagement/servicesmanagement.cpp \
+    servicesmanagement/serviceinfomodel.cpp \
+    clientinfomodel/clientinfomodel.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -63,7 +66,8 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     announcement/announcement.ui \
     systemmanagement/systemmanagementwidget.ui \
     controlcenter.ui \
-    filemanagement/filemanagement.ui
+    filemanagement/filemanagement.ui \
+    servicesmanagement/servicesmanagement.ui
 
 RESOURCES += controlcenter.qrc
 
