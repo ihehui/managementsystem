@@ -33,6 +33,7 @@ protected:
 private slots:
     void on_toolButtonPrevious_clicked();
     void on_toolButtonNext_clicked();
+    void on_pushButtonReply_clicked();
 
 
 private:
@@ -42,6 +43,8 @@ private:
     
     int curAnnouncementIndex;
     int totalCount;
+
+    quint32 m_curMessageID;
 
   
 

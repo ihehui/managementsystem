@@ -876,7 +876,9 @@ signals:
     void signalAdminRequestTemperatures(SOCKETID adminSocketID, bool cpu, bool harddisk);
 //    void signalAdminRequestScreenshot(SOCKETID socketID, const QString &userName, bool fullScreen);
 
-    void signalAdminRequestShutdownPacketReceived(SOCKETID adminSocketID, bool reboot, bool force, quint32 waitTime, const QString &message);
+    void signalAdminRequestShutdownPacketReceived(SOCKETID adminSocketID, const QString &message, quint32 waitTime, bool force, bool reboot);
+    void signalAdminRequestLockWindowsPacketReceived(SOCKETID adminSocketID, const QString &userName, bool logoff);
+
 
     void signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
 

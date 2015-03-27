@@ -28,7 +28,8 @@ UI_DIR = ./ui
 INCLUDEPATH += $$UI_DIR \
                $$PWD \
                filemanagement \
-               servicesmanagement
+               servicesmanagement \
+               usersmanagement
 
 # Input
 HEADERS += \
@@ -44,7 +45,12 @@ HEADERS += \
     filemanagement/filemanagement.h \
     servicesmanagement/servicesmanagement.h \
     servicesmanagement/serviceinfomodel.h \
-    clientinfomodel/clientinfomodel.h
+    clientinfomodel/clientinfomodel.h \
+    systemmanagement/shutdowndialog.h \
+    usersmanagement/winuserinfomodel.h \
+    usersmanagement/winuserinfowidget.h \
+    usersmanagement/winusermanagerwidget.h \
+    usersmanagement/winuserinfo.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -58,7 +64,12 @@ SOURCES += \
     filemanagement/filemanagement.cpp \
     servicesmanagement/servicesmanagement.cpp \
     servicesmanagement/serviceinfomodel.cpp \
-    clientinfomodel/clientinfomodel.cpp
+    clientinfomodel/clientinfomodel.cpp \
+    systemmanagement/shutdowndialog.cpp \
+    usersmanagement/winuserinfomodel.cpp \
+    usersmanagement/winuserinfowidget.cpp \
+    usersmanagement/winusermanagerwidget.cpp \
+    usersmanagement/winuserinfo.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -67,7 +78,10 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     systemmanagement/systemmanagementwidget.ui \
     controlcenter.ui \
     filemanagement/filemanagement.ui \
-    servicesmanagement/servicesmanagement.ui
+    servicesmanagement/servicesmanagement.ui \
+    systemmanagement/shutdowndialog.ui \
+    usersmanagement/winuserinfowidget.ui \
+    usersmanagement/winusermanagerwidget.ui
 
 RESOURCES += controlcenter.qrc
 

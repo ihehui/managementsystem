@@ -34,6 +34,9 @@ public slots:
     void getInstalledSoftwareInfo(SOCKETID socketID);
     void getServicesInfo(SOCKETID socketID);
 
+    void getUsersInfo(SOCKETID socketID);
+
+
 private:
     void getInstalledSoftwareInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView);
 

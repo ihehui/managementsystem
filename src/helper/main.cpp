@@ -7,7 +7,7 @@
 #include "helper.h"
 
 #include "HHSharedCore/hlogdebug.h"
-
+#include "HHSharedWindowsManagement/WinUtilities"
 
 
 
@@ -30,11 +30,21 @@ int main(int argc, char *argv[])
     qDebug()<<"--Library Paths:"<<a.libraryPaths ();
 
 
+    QStringList arguments;
     for(int i = 0; i < argc; i++){
-        if(QString(argv[i]).toLower() == "-log"){
-            qInstallMessageHandler(logDebug);
-            qAddPostRoutine(closeDebugLog);
-        }
+        arguments.append(QString(argv[i]));
+    }
+    if(arguments.contains("-lock")){
+        QMessageBox::critical(0, QObject::tr("Error"), QObject::tr("LOCK!"));
+
+        HEHUI::WinUtilities::LockWindows();
+        return 0;
+    }
+    if(arguments.contains("-logoff")){
+        QMessageBox::critical(0, QObject::tr("Error"), QObject::tr("LOGOFF!"));
+
+        HEHUI::WinUtilities::Logoff(true);
+        return 0;
     }
 
 

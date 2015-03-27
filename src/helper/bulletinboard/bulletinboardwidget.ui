@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>448</width>
-    <height>270</height>
+    <width>423</width>
+    <height>348</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,30 +20,66 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Announcement</string>
+   <string>Message</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../bulletinboard.qrc">
+   <iconset resource="../resources.qrc">
     <normaloff>:/icon/resources/images/announcement.png</normaloff>:/icon/resources/images/announcement.png</iconset>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QTextBrowser" name="textBrowser">
-     <property name="toolTip">
-      <string>Announcement</string>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
      </property>
-     <property name="statusTip">
-      <string>Announcement</string>
-     </property>
-     <property name="lineWrapMode">
-      <enum>QTextEdit::NoWrap</enum>
-     </property>
-     <property name="openExternalLinks">
-      <bool>true</bool>
-     </property>
+     <widget class="QGroupBox" name="groupBoxMessage">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>5</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>Message</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QTextBrowser" name="textBrowser">
+         <property name="toolTip">
+          <string>Announcement</string>
+         </property>
+         <property name="statusTip">
+          <string>Announcement</string>
+         </property>
+         <property name="lineWrapMode">
+          <enum>QTextEdit::NoWrap</enum>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QGroupBox" name="groupBoxReply">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>Reply</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QTextEdit" name="textEditReply"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QToolButton" name="toolButtonPrevious">
@@ -60,7 +96,7 @@
         <string>&amp;Previous</string>
        </property>
        <property name="icon">
-        <iconset resource="../bulletinboard.qrc">
+        <iconset resource="../resources.qrc">
          <normaloff>:/icon/resources/images/previous.png</normaloff>:/icon/resources/images/previous.png</iconset>
        </property>
        <property name="autoRaise">
@@ -90,7 +126,7 @@
         <string>&amp;Next</string>
        </property>
        <property name="icon">
-        <iconset resource="../bulletinboard.qrc">
+        <iconset resource="../resources.qrc">
          <normaloff>:/icon/resources/images/next.png</normaloff>:/icon/resources/images/next.png</iconset>
        </property>
        <property name="autoRaise">
@@ -100,6 +136,29 @@
      </item>
      <item>
       <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonReply">
+       <property name="text">
+        <string>Reply</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -140,7 +199,7 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="../bulletinboard.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
  <connections>
   <connection>

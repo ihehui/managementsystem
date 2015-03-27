@@ -276,7 +276,10 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalAdminRequestTemperatures(SOCKETID, bool, bool)), this, SLOT(processAdminRequestTemperaturesPacket(SOCKETID, bool, bool)), Qt::QueuedConnection);
 //    connect(clientPacketsParser, SIGNAL(signalAdminRequestScreenshot(SOCKETID, const QString &, bool)), this, SLOT(processAdminRequestScreenshotPacket(SOCKETID, const QString &, bool)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestShutdownPacketReceived(SOCKETID,bool,bool,quint32, const QString&)), this, SLOT(processAdminRequestRequestShutdownPacket(SOCKETID,bool,bool,quint32, const QString&)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestShutdownPacketReceived(SOCKETID,const QString&,quint32,bool,bool)), this, SLOT(processAdminRequestShutdownPacket(SOCKETID,const QString&,quint32,bool,bool)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestLockWindowsPacketReceived(SOCKETID,const QString&,bool)), this, SLOT(processAdminRequestLockWindowsPacket(SOCKETID,const QString&,bool)), Qt::QueuedConnection);
+
+
     connect(clientPacketsParser, SIGNAL(signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID,QString,bool,ulong)), this, SLOT(processAdminRequestChangeServiceConfigPacket(SOCKETID,QString,bool,ulong)), Qt::QueuedConnection);
 
 
@@ -533,6 +536,9 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
     case quint8(MS::SYSINFO_SERVICES):
         systemInfo->getServicesInfo(socketID);
         break;
+    case quint8(MS::SYSINFO_USERS):
+        systemInfo->getUsersInfo(socketID);
+        break;
     default:
         qCritical()<<"ERROR! Unknown info type:"<<infoType;
         break;
@@ -600,27 +606,32 @@ void ClientService::processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporari
 #ifdef Q_OS_WIN
 
     QString str = "Unknown";
+    bool ok = false;
     if(usbSTORStatus == quint8(MS::USBSTOR_Disabled)){
-        setupUSBStorageDevice(false, false, temporarilyAllowed);
+        ok = setupUSBStorageDevice(false, false, temporarilyAllowed);
         str = "Disabled";
     }else if(usbSTORStatus == quint8(MS::USBSTOR_ReadOnly)){
-        setupUSBStorageDevice(true, false, temporarilyAllowed);
+        ok = setupUSBStorageDevice(true, false, temporarilyAllowed);
         str = "Read-Only";
     }else{
-        setupUSBStorageDevice(true, true, temporarilyAllowed);
+        ok = setupUSBStorageDevice(true, true, temporarilyAllowed);
         str = "Read-Write";
     }
 
-    uploadClientSummaryInfo(m_socketConnectedToServer);
-    uploadClientSummaryInfo(m_socketConnectedToAdmin);
+//    uploadClientSummaryInfo(m_socketConnectedToServer);
+//    uploadClientSummaryInfo(m_socketConnectedToAdmin);
 
-    if(temporarilyAllowed){
-        str = "Enabled(Provisional Licence)";
-    }else{
-        str = "Enabled(Perpetual License)";
-    }
+//    if(temporarilyAllowed){
+//        str = "Enabled(Provisional Licence)";
+//    }else{
+//        str = "Enabled(Perpetual License)";
+//    }
 
     QString log = QString("USB Storage Device Settings Changed To:%1! Admin:%2").arg(str).arg(adminName);
+    if(!ok){
+        log = QString("Failed to change USB Storage Device settings to:%1!").arg(str);
+    }
+
     if(INVALID_SOCK_ID != m_socketConnectedToServer){
         bool ok = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminSetupUSBSD), log);
         if(!ok){
@@ -1352,14 +1363,16 @@ void ClientService::processAdminRequestTemperaturesPacket(SOCKETID socketID, boo
 //}
 
 
-void ClientService::processAdminRequestRequestShutdownPacket(SOCKETID adminSocketID, bool reboot, bool force, quint32 waitTime, const QString &message){
+void ClientService::processAdminRequestShutdownPacket(SOCKETID adminSocketID, const QString &message, quint32 waitTime, bool force, bool reboot){
+    WinUtilities::Shutdown("", message, waitTime, force, reboot);
+}
 
-if(reboot){
-        WinUtilities::Reboot(force);
+void ClientService::processAdminRequestLockWindowsPacket(SOCKETID adminSocketID, const QString &userName, bool logoff){
+    if(logoff){
+        WinUtilities::runAs(userName, "", "", "logoff.exe");
     }else{
-        WinUtilities::Shutdown(force);
+        WinUtilities::runAs(userName, "", "", "rundll32.Exe", "user32.dll LockWorkStation", true);
     }
-
 }
 
 void ClientService::processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType){
@@ -1466,11 +1479,12 @@ bool ClientService::updateAdministratorPassword(const QString &newPassword){
         setWinAdminPassword(administratorPassword);
     }
 
-    QStringList users = usersOnLocalComputer();
-    QString usersInfo = users.join(",");
+//    QStringList users = usersOnLocalComputer();
+//    QString usersInfo = users.join(",");
 
-    if(!m_wm->updateUserPassword("administrator", administratorPassword, true)){
-        QString error = m_wm->lastError();
+    unsigned long errorCode = 0;
+    if(!WinUtilities::updateUserPassword("administrator", administratorPassword, &errorCode, true)){
+        QString error = WinUtilities::WinSysErrorMsg(errorCode);
         if(INVALID_SOCK_ID != m_socketConnectedToServer){
             bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_UpdateMSUserPassword), error);
             if(!sent){
@@ -1563,7 +1577,7 @@ bool ClientService::checkUsersAccount(){
     users.removeAll("homegroupuser$");
     users.removeAll("support_388945a0");
     foreach (QString user, users) {
-        if(m_wm->getUserAccountState(user) != WindowsManagement::UAS_Enabled){
+        if(WinUtilities::getUserAccountState(user) != WindowsManagement::UAS_Enabled){
             users.removeAll(user);
         }
     }
@@ -1640,7 +1654,7 @@ bool ClientService::checkUsersAccount(){
             QString loc = query.value(2).toString().trimmed().toLower();
             //qWarning()<<"old:"<<userPasswordsHash.value(userName);
             //qWarning()<<"new:"<<pswd;
-            if(!m_wm->updateUserPassword(userName, pswd)){
+            if(!WinUtilities::updateUserPassword(userName, pswd)){
                 logs.append(m_wm->lastError());
                 qCritical()<<QString("Can not update password! User:%1, %2").arg(userName).arg(m_wm->lastError());
                 
@@ -1697,7 +1711,7 @@ bool ClientService::checkUsersAccount(){
             //}
 
             if(lastLogonTime.isValid() && lastLogonTime.date().year() > 2010 && lastLogonTime.addDays(90) < markerTime){
-                m_wm->setupUserAccountState(userName, false);
+                WinUtilities::setupUserAccountState(userName, false);
                 QString msg = tr("User '%1' Disabled! Last Logon Time: %2").arg(userName).arg(lastLogonTime.toString("yyyy-MM-dd hh:mm:ss"));
                 logs.append(msg);
                 logMessage(msg, QtServiceBase::Warning);
@@ -1725,7 +1739,7 @@ bool ClientService::checkUsersAccount(){
     
     if(needReboot){
         QString comment = "Someone's password has been updated! Please save your work! If there are any problems, please contact the IT support technicians! TEL.: 8333/8337 ";
-        m_wm->runAs("administrator", "", getWinAdminPassword(), "shutdown.exe", QString("-r -t 600 -c \"%1\"").arg(comment), false);
+        WinUtilities::runAs("administrator", "", getWinAdminPassword(), "shutdown.exe", QString("-r -t 600 -c \"%1\"").arg(comment), false);
     }
     
     return true;
@@ -2449,7 +2463,7 @@ void ClientService::update(){
     //      wm->createHiddenAdmiAccount();
     // QString parameters = QCoreApplication::applicationDirPath() + " " + QFileInfo(QCoreApplication::applicationFilePath()).fileName();// + " " + wm.getExeFileVersion(QCoreApplication::applicationFilePath());
     QString parameters = "-quiet";
-    bool result = m_wm->runAs("administrator", "", administratorPassword, msUpdateExeFilename, parameters);
+    bool result = WinUtilities::runAs("administrator", "", administratorPassword, msUpdateExeFilename, parameters);
     if(!result){
         qWarning()<<m_wm->lastError();
         //logMessage(wm->lastError(), QtServiceBase::Error);

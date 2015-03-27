@@ -584,7 +584,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRequestShutdownPacket(SOCKETID socketID, bool reboot = true, bool force = true, quint32 waitTime = 0, QString message = ""){
+    bool sendRequestShutdownPacket(SOCKETID socketID, QString message = "", quint32 waitTime = 0, bool force = true, bool reboot = true){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -593,7 +593,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << (reboot?quint8(1):quint8(0)) << (force?quint8(1):quint8(0)) <<waitTime << message;
+        out << m_localID << message << waitTime << (force?quint8(1):quint8(0)) << (reboot?quint8(1):quint8(0)) ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -606,6 +606,30 @@ public slots:
 
         return m_rtp->sendReliableData(socketID, &ba);
     }
+
+    bool sendRequestLockWindowsPacket(SOCKETID socketID, QString userName, bool logoff = true){
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::RequestLockWindows));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << userName << (logoff?quint8(1):quint8(0)) ;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
 
     bool sendRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, quint64 startupType){
 

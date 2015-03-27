@@ -92,7 +92,9 @@ private slots:
     void processAdminRequestTemperaturesPacket(SOCKETID socketID, bool cpu = true, bool harddisk = false);
 //    void processAdminRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen = true);
 
-    void processAdminRequestRequestShutdownPacket(SOCKETID adminSocketID, bool reboot, bool force, quint32 waitTime, const QString &message);
+    void processAdminRequestShutdownPacket(SOCKETID adminSocketID, const QString &message, quint32 waitTime, bool force, bool reboot);
+    void processAdminRequestLockWindowsPacket(SOCKETID adminSocketID, const QString &userName, bool logoff);
+
     void processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
 
 

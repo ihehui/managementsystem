@@ -51,7 +51,7 @@ protected:
 private slots:
     void on_toolButtonVerify_clicked();
 
-    void shutdownSystem();
+    void on_toolButtonShutdown_clicked();
 
     void on_toolButtonRenameComputer_clicked();
     void changeWorkgroup();
@@ -99,6 +99,8 @@ private slots:
     void updateSoftwareInfo(const QJsonObject &object);
 
     void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);
+
+    void requestLockWindows(const QString &userName, bool logoff);
 
     void requestClientInfoTimeout();
 
@@ -190,7 +192,7 @@ private:
     QTimer *m_updateTemperaturesTimer;
 
 
-    QMenu *m_shutdownMenu;
+//    QMenu *m_shutdownMenu;
     QMenu *m_joinWorkgroupMenu;
 
 

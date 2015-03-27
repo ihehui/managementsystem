@@ -227,7 +227,18 @@ void SystemInfo::getServicesInfo(SOCKETID socketID){
 
 }
 
+void SystemInfo::getUsersInfo(SOCKETID socketID){
+    qDebug()<<"--SystemInfo::getUsersInfo(...)";
 
+    QJsonArray infoArray;
+    HEHUI::WinUtilities::getAllUsersInfo(&infoArray);
+
+    QJsonObject object;
+    object["Users"] = infoArray;
+    QJsonDocument doc(object);
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_USERS, socketID);
+
+}
 
 
 

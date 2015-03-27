@@ -153,9 +153,8 @@ QVariant ServiceInfoModel::data ( const QModelIndex & index, int role) const{
         return QVariant();
     }
 
-
+    ServiceInfo *info = static_cast<ServiceInfo *> (servicesList.at(row));
     if(role == Qt::DisplayRole || role == Qt::EditRole){
-        ServiceInfo *info = static_cast<ServiceInfo *> (servicesList.at(row));
         switch (index.column()) {
         case 0:
             return info->serviceName;
@@ -192,6 +191,9 @@ QVariant ServiceInfoModel::data ( const QModelIndex & index, int role) const{
             return QVariant();
             break;
         }
+    }
+    if(role == Qt::UserRole){
+        return info->serviceName;
     }
 
     return QVariant();

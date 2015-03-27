@@ -9,15 +9,18 @@
 #include <QTime>
 #include <QSettings>
 
+#include "constants.h"
+#include "shutdowndialog.h"
+
+
 #ifdef Q_OS_WIN32
 #include "HHSharedWindowsManagement/hwindowsmanagement.h"
 #include "HHSharedWindowsManagement/WinUtilities"
 //#include "../../sharedms/global_shared.h"
 #endif
 
-#include "constants.h"
-
 #include "HHSharedGUI/hdatabaseconnecter.h"
+
 
 
 namespace HEHUI {
@@ -177,13 +180,13 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
 
 
-    m_shutdownMenu = new QMenu(this);
-    m_shutdownMenu->addAction(ui.actionReboot);
-    m_shutdownMenu->addAction(ui.actionShutdown);
-    ui.toolButtonShutdown->setMenu(m_shutdownMenu);
-    ui.toolButtonShutdown->setDefaultAction(ui.actionReboot);
-    connect(ui.actionReboot, SIGNAL(triggered()), this, SLOT(shutdownSystem()));
-    connect(ui.actionShutdown, SIGNAL(triggered()), this, SLOT(shutdownSystem()));
+//    m_shutdownMenu = new QMenu(this);
+//    m_shutdownMenu->addAction(ui.actionReboot);
+//    m_shutdownMenu->addAction(ui.actionShutdown);
+//    ui.toolButtonShutdown->setMenu(m_shutdownMenu);
+//    ui.toolButtonShutdown->setDefaultAction(ui.actionReboot);
+//    connect(ui.actionReboot, SIGNAL(triggered()), this, SLOT(shutdownSystem()));
+//    connect(ui.actionShutdown, SIGNAL(triggered()), this, SLOT(shutdownSystem()));
 
 
     m_joinWorkgroupMenu = new QMenu(this);
@@ -197,6 +200,11 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     connect(ui.tabServices, SIGNAL(signalGetServicesInfo(quint8)), this, SLOT(requestClientInfo(quint8)));
     connect(ui.tabServices, SIGNAL(signalChangServiceConfig(const QString &, bool, quint64)), this, SLOT(changServiceConfig(const QString &, bool, quint64)));
     ui.tabServices->setEnabled(false);
+
+    connect(ui.tabUsers, SIGNAL(signalGetUsersInfo(quint8)), this, SLOT(requestClientInfo(quint8)));
+    connect(ui.tabUsers, SIGNAL(signalLockWindows(const QString &, bool)), this, SLOT(requestLockWindows(const QString &, bool)));
+
+    ui.tabUsers->setEnabled(false);
 
 
 }
@@ -418,38 +426,50 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
 
 }
 
-void SystemManagementWidget::shutdownSystem(){
+void SystemManagementWidget::on_toolButtonShutdown_clicked(){
     //    if(!verifyPrivilege()){
     //        return;
     //    }
 
-    QAction *action = qobject_cast<QAction*>(sender());
-    if(!action){return;}
 
-    bool reboot = true;
-    QString text;
-    if(action == ui.actionReboot){
-        text = tr("reboot");
-        reboot = true;
-    }else{
-        text = tr("shutdown");
-        reboot = false;
-    }
-    text = tr("Do you really want to <b><font color = 'red'>%1</font></b> the computer? ").arg(text);
-
-
-    int ret = QMessageBox::question(this, tr("Question"), text, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-    if(ret == QMessageBox::No){
+    ShutdownDialog dlg(this);
+    if(dlg.exec() != QDialog::Accepted){
         return;
     }
 
-    bool ok = controlCenterPacketsParser->sendRequestShutdownPacket(m_peerSocket, reboot, true);
+    bool ok = controlCenterPacketsParser->sendRequestShutdownPacket(m_peerSocket, dlg.message(), dlg.timeout(), dlg.forceAppsClosed(), dlg.rebootAfterShutdown());
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
     }
 
-    ui.toolButtonShutdown->setEnabled(false);
+//    QAction *action = qobject_cast<QAction*>(sender());
+//    if(!action){return;}
+
+//    bool reboot = true;
+//    QString text;
+//    if(action == ui.actionReboot){
+//        text = tr("reboot");
+//        reboot = true;
+//    }else{
+//        text = tr("shutdown");
+//        reboot = false;
+//    }
+//    text = tr("Do you really want to <b><font color = 'red'>%1</font></b> the computer? ").arg(text);
+
+
+//    int ret = QMessageBox::question(this, tr("Question"), text, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+//    if(ret == QMessageBox::No){
+//        return;
+//    }
+
+//    bool ok = controlCenterPacketsParser->sendRequestShutdownPacket(m_peerSocket, reboot, true, 10, "Shutdown.............");
+//    if(!ok){
+//        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+//        return;
+//    }
+
+//    ui.toolButtonShutdown->setEnabled(false);
 
 }
 
@@ -618,14 +638,18 @@ void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
 
 
     MS::USBSTORStatus usbSTORStatus;
+    QString str = "";
     bool readable = ui.checkBoxUSBSDReadable->isChecked();
     bool writeable = ui.checkBoxUSBSDWriteable->isChecked();
     if(readable && writeable){
         usbSTORStatus = MS::USBSTOR_ReadWrite;
+        str = tr("Read-Write");
     }else if(!readable){
         usbSTORStatus = MS::USBSTOR_Disabled;
+        str = tr("Disabled");
     }else{
         usbSTORStatus = MS::USBSTOR_ReadOnly;
+        str = tr("Read-Only");
     }
 
     if(usbSTORStatus == m_clientInfo.getUsbSDStatus()){
@@ -636,8 +660,7 @@ void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
     }
 
 
-
-    QString text = tr("Do you really want to <font color = 'red'><b>%1</b></font> the USB SD on the computer?").arg((usbSTORStatus == MS::USBSTOR_ReadWrite)?tr("disable"):tr("enable"));
+    QString text = QString("Do you really want to change USB Storage Device settings to <font color = 'red'><b>'%1'</b></font> ?").arg(str);
     int ret = QMessageBox::question(this, tr("Question"), text,
                                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No
                                     );
@@ -645,17 +668,17 @@ void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
         return;
     }
 
-    bool m_temporarilyAllowed = true;
-    if(!usbSTORStatus){
-        m_temporarilyAllowed = temporarilyAllowed();
-    }
+    bool m_temporarilyAllowed = false;
+//    if(!usbSTORStatus){
+//        m_temporarilyAllowed = temporarilyAllowed();
+//    }
 
     bool ok = controlCenterPacketsParser->sendSetupUSBSDPacket(m_peerSocket, usbSTORStatus, m_temporarilyAllowed, m_adminName);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
     }
-    ui.pushButtonUSBSD->setEnabled(false);
+    //ui.pushButtonUSBSD->setEnabled(false);
 
 }
 
@@ -1109,6 +1132,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         ui.lineEditComputerName->setReadOnly(true);
 
         ui.tabSystemInfo->setEnabled(true);
+        ui.tabUsers->setEnabled(true);
         ui.tabServices->setEnabled(true);
 
 
@@ -1212,6 +1236,8 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &computerNam
     case quint8(MS::SYSINFO_OS):
         m_clientInfo.setJsonData(data);
         updateOSInfo();
+        break;
+
     case quint8(MS::SYSINFO_HARDWARE):
         m_clientInfo.setJsonData(data);
         updateHardwareInfo();
@@ -1220,9 +1246,15 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &computerNam
     case quint8(MS::SYSINFO_SOFTWARE):
         updateSoftwareInfo(object);
         break;
+
     case quint8(MS::SYSINFO_SERVICES):
         ui.tabServices->setData(data);
         break;
+
+    case quint8(MS::SYSINFO_USERS):
+        ui.tabUsers->setData(data);
+        break;
+
     default:
         break;
     }
@@ -1353,6 +1385,12 @@ void SystemManagementWidget::changServiceConfig(const QString &serviceName, bool
     }
 }
 
+void SystemManagementWidget::requestLockWindows(const QString &userName, bool logoff){
+    bool ok = controlCenterPacketsParser->sendRequestLockWindowsPacket(m_peerSocket, userName, logoff);
+    if(!ok){
+        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+    }
+}
 
 
 
@@ -1447,6 +1485,10 @@ void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString
         }
     }else{
         m_onlineUsers.removeAll(userName);
+    }
+
+    if(ui.tabUsers->isActive()){
+        requestClientInfo(MS::SYSINFO_USERS);
     }
 
     ui.pushButtonRefreshScreenshot->setEnabled(!m_onlineUsers.isEmpty());
@@ -1598,7 +1640,7 @@ void SystemManagementWidget::runProgrameAsAdmin(const QString &exeFilePath, cons
         return;
     }
     WindowsManagement wm;
-    bool ok = wm.runAs("administrator", ".", QString(WIN_ADMIN_PASSWORD), exeFilePath, parameters, show);
+    bool ok = WinUtilities::runAs("administrator", ".", QString(WIN_ADMIN_PASSWORD), exeFilePath, parameters, show);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), wm.lastError());
         return;

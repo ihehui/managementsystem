@@ -272,7 +272,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         in >> usbSTORStatus >> temporarilyAllowed >> adminName;
 
         emit signalSetupUSBSDPacketReceived(usbSTORStatus, temporarilyAllowed, adminName);
-        qDebug()<<"~~SetupUSBSD";
+        qDebug()<<"~~AdminRequestSetupUSBSD";
     }
     break;
     case quint8(MS::AdminRequestSetupProgrames):
@@ -480,14 +480,26 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::RequestShutdown):
     {
-        quint8  reboot = 0, force = 1;
-        quint32 waitTime = 0;
         QString message = "";
+        quint32 waitTime = 0;
+        quint8 force = 1, reboot = 0 ;
 
-        in >> reboot >> force >> waitTime >> message ;
+        in >> message >> waitTime >> force >> reboot ;
 
-        signalAdminRequestShutdownPacketReceived(socketID, reboot, force, waitTime, message);
+        signalAdminRequestShutdownPacketReceived(socketID, message, waitTime, force, reboot );
         qDebug()<<"~~RequestShutdown";
+    }
+    break;
+
+    case quint8(MS::RequestLockWindows):
+    {
+        QString userName = "";
+        quint8 logoff = 0 ;
+
+        in >> userName >> logoff ;
+
+        signalAdminRequestLockWindowsPacketReceived(socketID, userName, logoff );
+        qDebug()<<"~~RequestLockWindows";
     }
     break;
 

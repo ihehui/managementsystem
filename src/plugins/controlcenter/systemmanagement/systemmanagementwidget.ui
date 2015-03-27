@@ -101,7 +101,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tabSystemInfo">
       <attribute name="title">
@@ -375,7 +375,7 @@
             </property>
             <property name="icon">
              <iconset resource="../controlcenter.qrc">
-              <normaloff>:/icon/resources/images/system_restart.png</normaloff>:/icon/resources/images/system_restart.png</iconset>
+              <normaloff>:/icon/resources/images/system_shutdown.png</normaloff>:/icon/resources/images/system_shutdown.png</iconset>
             </property>
             <property name="autoRaise">
              <bool>true</bool>
@@ -647,6 +647,19 @@
           </item>
          </layout>
         </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -935,7 +948,7 @@
        </layout>
       </widget>
      </widget>
-     <widget class="QWidget" name="tabUsers">
+     <widget class="HEHUI::WinUserManagerWidget" name="tabUsers">
       <attribute name="title">
        <string>Users</string>
       </attribute>
@@ -1155,6 +1168,12 @@
    <class>HEHUI::ServicesManagement</class>
    <extends>QWidget</extends>
    <header location="global">servicesmanagement.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HEHUI::WinUserManagerWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">winusermanagerwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
