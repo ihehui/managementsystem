@@ -26,6 +26,7 @@ public:
 signals:
     void signalCloseWidget();
     void signalChangesSaved();
+    void signalCreateOrModifyWinUser(const QByteArray &userdata);
 
 
 private slots:
@@ -50,11 +51,6 @@ private:
 
     WinUserInfo m_winUser;
 
-    QString m_accountName;
-    QString m_fullName;
-    QString m_comment;
-
-    QString m_sid;
 
 
 };

@@ -59,13 +59,6 @@ private slots:
     void on_toolButtonSetupUSB_clicked();
 
 
-    void on_pushButtonPrograms_clicked();
-    void on_pushButtonShowAdmin_clicked();
-    void on_pushButtonRemoteAssistance_clicked();
-
-    void on_actionAddAdmin_triggered();
-    void on_actionDeleteAdmin_triggered();
-
     void on_pushButtonMMC_clicked();
     void on_pushButtonCMD_clicked();
     void on_pushButtonRegedit_clicked();
@@ -96,9 +89,11 @@ private slots:
     void clientInfoPacketReceived(const QString &computerName, const QByteArray &data, quint8 infoType);
     void updateOSInfo();
     void updateHardwareInfo();
-    void updateSoftwareInfo(const QJsonObject &object);
 
     void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);
+
+    void requestCreateOrModifyWinUser(const QByteArray &userData);
+    void requestDeleteUser(const QString &userName);
 
     void requestLockWindows(const QString &userName, bool logoff);
 

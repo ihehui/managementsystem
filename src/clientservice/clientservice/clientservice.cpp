@@ -278,6 +278,8 @@ bool ClientService::startMainService(){
 
     connect(clientPacketsParser, SIGNAL(signalAdminRequestShutdownPacketReceived(SOCKETID,const QString&,quint32,bool,bool)), this, SLOT(processAdminRequestShutdownPacket(SOCKETID,const QString&,quint32,bool,bool)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminRequestLockWindowsPacketReceived(SOCKETID,const QString&,bool)), this, SLOT(processAdminRequestLockWindowsPacket(SOCKETID,const QString&,bool)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestCreateOrModifyWinUserPacketReceived(SOCKETID,const QByteArray&)), this, SLOT(processAdminRequestCreateOrModifyWinUserPacket(SOCKETID,const QByteArray&)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestDeleteUserPacketReceived(SOCKETID,const QString&)), this, SLOT(processAdminRequestDeleteUserPacket(SOCKETID,const QString&)), Qt::QueuedConnection);
 
 
     connect(clientPacketsParser, SIGNAL(signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID,QString,bool,ulong)), this, SLOT(processAdminRequestChangeServiceConfigPacket(SOCKETID,QString,bool,ulong)), Qt::QueuedConnection);
@@ -518,11 +520,6 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
 
     //QtConcurrent::run(QThreadPool::globalInstance(), &SystemInfo::getInstalledSoftwareInfo, socketID);
 
-    //systemInfo->start();
-    //systemInfo->getOSInfo(socketID);
-//    systemInfo->getHardwareInfo(socketID);
-//    systemInfo->getInstalledSoftwareInfo(socketID);
-
 
     switch (infoType) {
     case quint8(MS::SYSINFO_OS):
@@ -531,7 +528,7 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
         systemInfo->getHardwareInfo(socketID);
         break;
     case quint8(MS::SYSINFO_SOFTWARE):
-        systemInfo->getServicesInfo(socketID);
+        systemInfo->getInstalledSoftwaresInfo(socketID);
         break;
     case quint8(MS::SYSINFO_SERVICES):
         systemInfo->getServicesInfo(socketID);
@@ -1375,6 +1372,47 @@ void ClientService::processAdminRequestLockWindowsPacket(SOCKETID adminSocketID,
     }
 }
 
+void ClientService::processAdminRequestCreateOrModifyWinUserPacket(SOCKETID adminSocketID, const QByteArray &userData){
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(userData, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        QString message = QString("Error! Failed to create or modify user. %1").arg(error.errorString());
+        clientPacketsParser->sendClientMessagePacket(adminSocketID, message, MS::MSG_Critical);
+        return;
+    }
+    QJsonObject object = doc.object();
+    if(object.isEmpty()){
+        QString message = QString("Error! Failed to create or modify user. Invalid user JSON data.");
+        clientPacketsParser->sendClientMessagePacket(adminSocketID, message, MS::MSG_Critical);
+        qCritical()<<message;
+        return;
+    }
+
+    unsigned long errorCode = 0;
+    bool ok = WinUtilities::createOrModifyUser(&object, &errorCode);
+    if(!ok){
+        QString message = QString("Error! User creation or modification failed. ");
+        clientPacketsParser->sendClientMessagePacket(adminSocketID, message, MS::MSG_Critical);
+        qCritical()<<message;
+    }
+
+    systemInfo->getUsersInfo(adminSocketID);
+
+
+}
+
+void ClientService::processAdminRequestDeleteUserPacket(SOCKETID adminSocketID, const QString &userName){
+    unsigned long errorCode = 0;
+    bool ok = WinUtilities::deleteLocalUser(userName, &errorCode);
+    if(!ok){
+        QString message = QString("Error! Failed to delete user '%1'. Error code: %2").arg(userName).arg(errorCode);
+        clientPacketsParser->sendClientMessagePacket(adminSocketID, message, MS::MSG_Critical);
+    }
+
+}
+
 void ClientService::processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType){
     unsigned long errorCode = 0;
     if(startService){
@@ -1674,14 +1712,14 @@ bool ClientService::checkUsersAccount(){
                 //                    logs.append(wm->lastError());
                 //                }
                 if(m_wm->isAdmin(userName) && (!storedAdminGroupUsers.contains(userName, Qt::CaseInsensitive))){
-                    m_wm->addUserToLocalGroup(userName, "Users");
-                    m_wm->addUserToLocalGroup(userName, "Power Users");
+                    WinUtilities::addUserToLocalGroup(userName, "Users");
+                    WinUtilities::addUserToLocalGroup(userName, "Power Users");
                     //wm->deleteUserFromLocalGroup(userName, "Administrators");
 
                     if(m_wm->userNeedInit(userName) && (!lastLogonTime.isValid())){
-                        m_wm->addUserToLocalGroup(userName, "Administrators");
+                        WinUtilities::addUserToLocalGroup(userName, "Administrators");
                     }else{
-                        m_wm->deleteUserFromLocalGroup(userName, "Administrators");
+                        WinUtilities::deleteUserFromLocalGroup(userName, "Administrators");
                     }
                 }
 
@@ -1695,7 +1733,7 @@ bool ClientService::checkUsersAccount(){
 
                 //wm->setupUserAccountState(userName, false);
                 //qWarning()<<"User Disabled:"<<userName;
-                m_wm->deleteUserFromLocalGroup(userName, "Administrators");
+                WinUtilities::deleteUserFromLocalGroup(userName, "Administrators");
                 logs.append(tr("Unknown Account '%1'").arg(userName));
                 //logMessage(log, QtServiceBase::Information);
             }
@@ -1916,11 +1954,11 @@ void ClientService::modifyAdminGroupUser(const QString &userName, bool addToAdmi
         adminGroupUsers.removeAll(userName);
         adminGroupUsers.append(userName);
         settings->setValue("Administrators", adminGroupUsers);
-        m_wm->addUserToLocalGroup(userName, "Administrators");
+        WinUtilities::addUserToLocalGroup(userName, "Administrators");
     }else{
         adminGroupUsers.removeAll(userName);
         settings->setValue("Administrators", adminGroupUsers);
-        m_wm->deleteUserFromLocalGroup(userName, "Administrators");
+        WinUtilities::deleteUserFromLocalGroup(userName, "Administrators");
     }
 
 

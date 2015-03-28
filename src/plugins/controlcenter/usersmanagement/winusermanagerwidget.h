@@ -60,6 +60,7 @@ protected:
 
 signals:
     void signalGetUsersInfo(quint8 infoType = MS::SYSINFO_USERS);
+    void signalCreateOrModifyWinUser(const QByteArray &userdata);
     void signalDeleteUser(const QString &userName);
     void signalLockWindows(const QString &userName, bool logoff);
 
@@ -87,13 +88,13 @@ private slots:
     void slotPrintQueryResult();
 
     void slotViewWinUserInfo(const QModelIndex &index);
-    void slotCreateADUser(WinUserInfo *adUser);
-    void slotDeleteADUser();
+    void slotCreateUser(WinUserInfo *adUser);
+    void slotDeleteUser();
     void slotRefresh();
 
-    void showADUserInfoWidget(WinUserInfo *adUser, bool creareNewUser = false);
+    void showUserInfoWidget(WinUserInfo *adUser, bool creareNewUser = false);
 
-    void slotResetADUserPassword();
+    void slotResetUserPassword();
 
 
     void slotShowCustomContextMenu(const QPoint & pos);

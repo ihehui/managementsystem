@@ -63,8 +63,8 @@ void WinUserInfoModel::setJsonData(const QByteArray &data){
 
         info->fullName = infoArray.at(index++).toString();
 
-        info->lastLogonTime_t = infoArray.at(index++).toString().toUInt();
-        info->lastLogoffTime_t = infoArray.at(index++).toString().toUInt();
+        info->lastLogonTime_t = infoArray.at(index++).toString().toDouble();
+        info->lastLogoffTime_t = infoArray.at(index++).toString().toDouble();
 
         info->sid = infoArray.at(index++).toString();
         info->profile = infoArray.at(index++).toString();

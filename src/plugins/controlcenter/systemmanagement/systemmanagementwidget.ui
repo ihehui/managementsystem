@@ -101,7 +101,10 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>2</number>
+     </property>
+     <property name="movable">
+      <bool>true</bool>
      </property>
      <widget class="QWidget" name="tabSystemInfo">
       <attribute name="title">
@@ -819,134 +822,10 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabSoftware">
+     <widget class="HEHUI::SoftwareMamagement" name="tabSoftware">
       <attribute name="title">
        <string>Software</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <item>
-        <widget class="QTableWidget" name="tableWidgetSoftware">
-         <property name="editTriggers">
-          <set>QAbstractItemView::NoEditTriggers</set>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
-         </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <property name="sortingEnabled">
-          <bool>true</bool>
-         </property>
-         <attribute name="horizontalHeaderVisible">
-          <bool>false</bool>
-         </attribute>
-         <attribute name="horizontalHeaderStretchLastSection">
-          <bool>true</bool>
-         </attribute>
-         <column>
-          <property name="text">
-           <string>Name</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Version</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Date</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Publisher</string>
-          </property>
-         </column>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabPermission">
-      <attribute name="title">
-       <string>Permission</string>
-      </attribute>
-      <attribute name="toolTip">
-       <string>Permission Management</string>
-      </attribute>
-      <widget class="QGroupBox" name="groupBoxOtherSettings">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>20</y>
-         <width>832</width>
-         <height>55</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Other Settings</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="1">
-         <widget class="QPushButton" name="pushButtonPrograms">
-          <property name="text">
-           <string>Programs</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="pushButtonShowAdmin">
-          <property name="text">
-           <string>Show Admin</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QPushButton" name="pushButtonUSBSD">
-          <property name="text">
-           <string>USB SD</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QPushButton" name="pushButtonAdminsManagement">
-          <property name="text">
-           <string>Administrators</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QPushButton" name="pushButtonRemoteAssistance">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="toolTip">
-           <string>Remote Assistance via VNC</string>
-          </property>
-          <property name="statusTip">
-           <string>Remote Assistance via VNC</string>
-          </property>
-          <property name="text">
-           <string>Remote Assistance</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5">
-         <widget class="QPushButton" name="pushButtonDomain">
-          <property name="toolTip">
-           <string>Join or unjoin a domain</string>
-          </property>
-          <property name="statusTip">
-           <string>Join or unjoin a domain</string>
-          </property>
-          <property name="text">
-           <string>Join A Domain</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
      </widget>
      <widget class="HEHUI::WinUserManagerWidget" name="tabUsers">
       <attribute name="title">
@@ -1174,6 +1053,12 @@
    <class>HEHUI::WinUserManagerWidget</class>
    <extends>QWidget</extends>
    <header location="global">winusermanagerwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HEHUI::SoftwareMamagement</class>
+   <extends>QWidget</extends>
+   <header location="global">softwaremamagement.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

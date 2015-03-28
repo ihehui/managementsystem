@@ -192,7 +192,7 @@ void WinUserManagerWidget::on_actionProperties_triggered(){
 }
 
 void WinUserManagerWidget::on_actionCreateNewAccount_triggered(){
-    slotCreateADUser(0);
+    slotCreateUser(0);
 }
 
 void WinUserManagerWidget::on_actionDeleteAccount_triggered(){
@@ -203,7 +203,7 @@ void WinUserManagerWidget::on_actionDeleteAccount_triggered(){
     }
 
     getSelectedUser(index);
-    slotDeleteADUser();
+    slotDeleteUser();
 }
 
 void WinUserManagerWidget::on_actionLogoff_triggered(){
@@ -242,15 +242,15 @@ void WinUserManagerWidget::slotViewWinUserInfo(const QModelIndex &index){
     }
 
     getSelectedUser(index);
-    showADUserInfoWidget(m_selectedWinUser);
+    showUserInfoWidget(m_selectedWinUser);
 
 }
 
-void WinUserManagerWidget::slotCreateADUser(WinUserInfo *adUser){
-    showADUserInfoWidget(adUser, true);
+void WinUserManagerWidget::slotCreateUser(WinUserInfo *adUser){
+    showUserInfoWidget(adUser, true);
 }
 
-void WinUserManagerWidget::slotDeleteADUser(){
+void WinUserManagerWidget::slotDeleteUser(){
 
     if(!m_selectedWinUser){
         return;
@@ -271,13 +271,12 @@ void WinUserManagerWidget::slotDeleteADUser(){
         return;
     }
 
-//    if(!m_adsi->AD_DeleteObject(sAMAccountName, "user")){
-//        QMessageBox::critical(this, tr("Error"), QString("Failed to delete user '%1'! \r\n %2").arg(sAMAccountName).arg(m_adsi->AD_GetLastErrorString()) );
-//    }else{
-//        QMessageBox::information(this, tr("OK"), QString("User '%1' has been deleted!").arg(sAMAccountName) );
-//    }
+    if(m_selectedWinUser->loggedon){
+        emit signalLockWindows(m_selectedWinUser->userName, true);
+    }
+    emit signalDeleteUser(sAMAccountName);
 
-    slotRefresh();
+    QTimer::singleShot(3000, this, SLOT(slotRefresh()));
 
 }
 
@@ -285,7 +284,7 @@ void WinUserManagerWidget::slotRefresh(){
     emit signalGetUsersInfo();
 }
 
-void WinUserManagerWidget::showADUserInfoWidget(WinUserInfo *adUser, bool creareNewUser){
+void WinUserManagerWidget::showUserInfoWidget(WinUserInfo *adUser, bool creareNewUser){
     qDebug()<<"--WinUserManagerWidget::showADUserInfoWidget(...)";
 
     if(!verifyPrivilege()){
@@ -299,22 +298,24 @@ void WinUserManagerWidget::showADUserInfoWidget(WinUserInfo *adUser, bool creare
     WinUserInfoWidget wgt(adUser, &dlg);
     connect(&wgt, SIGNAL(signalChangesSaved()), this, SLOT(slotRefresh()));
     connect(&wgt, SIGNAL(signalCloseWidget()), &dlg, SLOT(accept()));
+    connect(&wgt, SIGNAL(signalCreateOrModifyWinUser(const QByteArray&)), this, SIGNAL(signalCreateOrModifyWinUser(const QByteArray&)));
+
     connect(activityTimer, SIGNAL(timeout()), &dlg, SLOT(accept()));
 
     vbl.addWidget(&wgt);
     dlg.setLayout(&vbl);
     dlg.updateGeometry();
     if(creareNewUser){
-        dlg.setWindowTitle(tr("Create New AD User"));
+        dlg.setWindowTitle(tr("Create New User"));
     }else{
-        dlg.setWindowTitle(tr("AD User Info"));
+        dlg.setWindowTitle(tr("User Info"));
     }
     dlg.exec();
 
 }
 
 
-void WinUserManagerWidget::slotResetADUserPassword(){
+void WinUserManagerWidget::slotResetUserPassword(){
 
     QString sAMAccountName = m_selectedWinUser->userName;
     if(sAMAccountName.isEmpty()){
@@ -386,6 +387,8 @@ void WinUserManagerWidget::slotShowCustomContextMenu(const QPoint & pos){
         menu.exec(tableView->viewport()->mapToGlobal(pos));
         return;
     }
+
+
 
     menu.addSeparator();
     menu.addAction(ui.actionExport);

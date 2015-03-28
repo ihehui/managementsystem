@@ -8,9 +8,9 @@ WinUserInfo::WinUserInfo(QObject *parent)
 {
 
     accountDisabled = false;
-    cannotChangePassword = false;
+    cannotChangePassword = true;
     accountLocked = false;
-    passwordNeverExpires = false;
+    passwordNeverExpires = true;
 
     lastLogonTime_t = 0;
     lastLogoffTime_t = 0;

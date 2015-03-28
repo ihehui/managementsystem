@@ -94,6 +94,8 @@ private slots:
 
     void processAdminRequestShutdownPacket(SOCKETID adminSocketID, const QString &message, quint32 waitTime, bool force, bool reboot);
     void processAdminRequestLockWindowsPacket(SOCKETID adminSocketID, const QString &userName, bool logoff);
+    void processAdminRequestCreateOrModifyWinUserPacket(SOCKETID adminSocketID, const QByteArray &userData);
+    void processAdminRequestDeleteUserPacket(SOCKETID adminSocketID, const QString &userName);
 
     void processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
 

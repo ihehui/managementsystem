@@ -30,8 +30,8 @@ public:
 
     QString fullName;
 
-    unsigned int lastLogonTime_t;
-    unsigned int lastLogoffTime_t;
+    unsigned long lastLogonTime_t;
+    unsigned long lastLogoffTime_t;
 
     QString sid;
     QString profile;

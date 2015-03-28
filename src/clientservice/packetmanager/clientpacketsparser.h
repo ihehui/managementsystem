@@ -878,6 +878,8 @@ signals:
 
     void signalAdminRequestShutdownPacketReceived(SOCKETID adminSocketID, const QString &message, quint32 waitTime, bool force, bool reboot);
     void signalAdminRequestLockWindowsPacketReceived(SOCKETID adminSocketID, const QString &userName, bool logoff);
+    void signalAdminRequestCreateOrModifyWinUserPacketReceived(SOCKETID adminSocketID, const QByteArray &userData);
+    void signalAdminRequestDeleteUserPacketReceived(SOCKETID adminSocketID, const QString &userName);
 
 
     void signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);

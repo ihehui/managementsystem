@@ -503,6 +503,26 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::RequestCreateOrModifyWinUser):
+    {
+        QByteArray userData;
+        in >> userData ;
+
+        signalAdminRequestCreateOrModifyWinUserPacketReceived(socketID, userData );
+        qDebug()<<"~~RequestCreateOrModifyWinUser";
+    }
+    break;
+
+    case quint8(MS::RequestDeleteUser):
+    {
+        QString userName = "";
+        in >> userName ;
+
+        signalAdminRequestDeleteUserPacketReceived(socketID, userName );
+        qDebug()<<"~~RequestDeleteUser";
+    }
+    break;
+
     case quint8(MS::RequestChangeServiceConfig):
     {
         QString serviceName = "";

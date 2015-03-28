@@ -156,7 +156,7 @@ void SystemInfo::getHardwareInfo(SOCKETID socketID){
 
 }
 
-void SystemInfo::getInstalledSoftwareInfo(SOCKETID socketID){
+void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID){
 
     QString rootKey = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 
@@ -174,8 +174,8 @@ void SystemInfo::getInstalledSoftwareInfo(SOCKETID socketID){
     }
 
     QJsonArray infoArray;
-    getInstalledSoftwareInfo(&infoArray, keys32, false);
-    getInstalledSoftwareInfo(&infoArray, keys64, true);
+    getInstalledSoftwaresInfo(&infoArray, keys32, false);
+    getInstalledSoftwaresInfo(&infoArray, keys64, true);
 
     QJsonObject object;
     object["Software"] = infoArray;
@@ -184,7 +184,7 @@ void SystemInfo::getInstalledSoftwareInfo(SOCKETID socketID){
 
 }
 
-void SystemInfo::getInstalledSoftwareInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView){
+void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView){
 
     if(!infoArray){return;}
     if(keys.isEmpty()){return;}

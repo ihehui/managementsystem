@@ -25,11 +25,12 @@ include(../../sharedms/sharedms.pri)
 # ##
 UI_DIR = ./ui
 
-INCLUDEPATH += $$UI_DIR \
-               $$PWD \
-               filemanagement \
-               servicesmanagement \
-               usersmanagement
+INCLUDEPATH +=  $$UI_DIR \
+                $$PWD \
+                filemanagement \
+                servicesmanagement \
+                usersmanagement \
+                softwaremanagement
 
 # Input
 HEADERS += \
@@ -50,7 +51,8 @@ HEADERS += \
     usersmanagement/winuserinfomodel.h \
     usersmanagement/winuserinfowidget.h \
     usersmanagement/winusermanagerwidget.h \
-    usersmanagement/winuserinfo.h
+    usersmanagement/winuserinfo.h \
+    softwaremanagement/softwaremamagement.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -69,7 +71,8 @@ SOURCES += \
     usersmanagement/winuserinfomodel.cpp \
     usersmanagement/winuserinfowidget.cpp \
     usersmanagement/winusermanagerwidget.cpp \
-    usersmanagement/winuserinfo.cpp
+    usersmanagement/winuserinfo.cpp \
+    softwaremanagement/softwaremamagement.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -81,7 +84,8 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     servicesmanagement/servicesmanagement.ui \
     systemmanagement/shutdowndialog.ui \
     usersmanagement/winuserinfowidget.ui \
-    usersmanagement/winusermanagerwidget.ui
+    usersmanagement/winusermanagerwidget.ui \
+    softwaremanagement/softwaremamagement.ui
 
 RESOURCES += controlcenter.qrc
 
@@ -89,5 +93,5 @@ RESOURCES += controlcenter.qrc
 
 # define some usefull values
 QMAKE_TARGET_PRODUCT = "Control Center"
-QMAKE_TARGET_DESCRIPTION = "Crossplatform Control Center For Sitoy Based On Qt"
+QMAKE_TARGET_DESCRIPTION = "Control Center"
 DEFINES *= "APP_NAME=\"\\\"$${QMAKE_TARGET_PRODUCT}\\\"\""

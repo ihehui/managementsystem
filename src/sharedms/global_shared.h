@@ -267,6 +267,9 @@ namespace HEHUI {
             RequestShutdown,
             RequestLockWindows,
 
+            RequestCreateOrModifyWinUser,
+            RequestDeleteUser,
+
             RequestChangeServiceConfig,
             ServiceConfigChanged
 
