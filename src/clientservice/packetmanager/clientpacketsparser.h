@@ -588,29 +588,29 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientResponseScreenshotPacket(SOCKETID socketID, const QString &userName, const QByteArray &screenshot){
-        qWarning()<<"----sendClientResponseScreenshotPacket(...):";
+//    bool sendClientResponseScreenshotPacket(SOCKETID socketID, const QString &userName, const QByteArray &screenshot){
+//        qWarning()<<"----sendClientResponseScreenshotPacket(...):";
 
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
+//        Packet *packet = PacketHandlerBase::getPacket(socketID);
 
-        packet->setPacketType(quint8(MS::ResponseScreenshot));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << userName << screenshot;
-        packet->setPacketData(ba);
+//        packet->setPacketType(quint8(MS::ResponseScreenshot));
+//        packet->setTransmissionProtocol(TP_UDT);
+//        QByteArray ba;
+//        QDataStream out(&ba, QIODevice::WriteOnly);
+//        out.setVersion(QDataStream::Qt_4_8);
+//        out << m_localComputerName << userName << screenshot;
+//        packet->setPacketData(ba);
 
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
+//        ba.clear();
+//        out.device()->seek(0);
+//        QVariant v;
+//        v.setValue(*packet);
+//        out << v;
 
-        PacketHandlerBase::recylePacket(packet);
+//        PacketHandlerBase::recylePacket(packet);
 
-        return m_rtp->sendReliableData(socketID, &ba);
-    }
+//        return m_rtp->sendReliableData(socketID, &ba);
+//    }
 
     bool sendClientResponseServiceConfigChangedPacket(SOCKETID socketID, const QString &serviceName, quint64 processID, quint64 startupType){
         qWarning()<<"----sendClientResponseServiceConfigChangedPacket(...):";

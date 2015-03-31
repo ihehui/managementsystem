@@ -358,13 +358,31 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::DesktopInfo):
+    {
+        int desktopWidth = 0, desktopHeight = 0, blockWidth = 0, blockHeight = 0;
+        in >> desktopWidth >> desktopHeight >> blockWidth >> blockHeight;
+
+        emit signalDesktopInfoPacketReceived(peerName, desktopWidth, desktopHeight, blockWidth, blockHeight);
+
+    }
+    break;
     case quint8(MS::ResponseScreenshot):
     {
-        QString userName = "";
-        QByteArray screenshot;
-        in >> userName >> screenshot ;
+        QList<QPoint> locations;
+        QList<QByteArray> images;
 
-        emit signalScreenshotPacketReceived(userName, screenshot);
+        while (!in.atEnd()) {
+            int x = 0, y = 0;
+            QByteArray image;
+
+            in >> x >> y >> image;
+
+            locations.append(QPoint(x, y));
+            images.append(image);
+        }
+
+        emit signalScreenshotPacketReceived(peerName, locations, images);
 
     }
     break;

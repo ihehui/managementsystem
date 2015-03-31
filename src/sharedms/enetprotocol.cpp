@@ -36,7 +36,7 @@ inline void ENETProtocol::convertDataToPacket(quint32 peerID, QByteArray *data){
     getPeerAddressInfo(peerID, &ip, &port);
 
     QDataStream in(data, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_7);
+    in.setVersion(QDataStream::Qt_4_8);
     QVariant v;
     in >> v;
     if (v.canConvert<Packet>()){

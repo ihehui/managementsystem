@@ -43,7 +43,7 @@ private slots:
     void newPasswordRetreved();
 
     void adminRequestScreenshotPacketReceived(SOCKETID socketID);
-
+    void screenshot();
     
 //    void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
 //    void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
@@ -69,9 +69,21 @@ private:
     quint16 localUDTListeningPort;
     RTP *m_rtp;
     SOCKETID m_socketConnectedToLocalServer;
-//    UDTSOCKET m_socketConnectedToAdmin;
+    SOCKETID m_socketConnectedToAdmin;
 
     QTimer *m_connectToLocalServerTimer;
+
+    QTimer *m_screenshotTimer;
+    QScreen *screen;
+    int m_blockWidth;
+    int m_blockHeight;
+    QSize m_blockSize;
+    QList<QPoint> m_locations;
+    QList<QImage> m_images;
+    QList<QByteArray> m_imagesHash;
+
+
+
 
 
 };

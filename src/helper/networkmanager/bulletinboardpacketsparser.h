@@ -69,7 +69,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_localID << m_userName << (online?quint8(1):quint8(0));
         packet->setPacketData(ba);
 
@@ -109,7 +109,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_localID << m_userName << m_localComputerName << accept;
         packet->setPacketData(ba);
 
@@ -132,7 +132,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_localID << m_userName << m_localComputerName;
         packet->setPacketData(ba);
 
@@ -157,7 +157,7 @@ public slots:
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
+        out.setVersion(QDataStream::Qt_4_8);
         out << m_localID << originalMessageID << replyMessage;
         packet->setPacketData(ba);
 
@@ -172,8 +172,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendUserResponseScreenshotPacket(SOCKETID socketID, const QByteArray &screenshot){
-        qWarning()<<"----sendClientResponseScreenshotPacket(...):";
+    bool sendUserScreenshotPacket(SOCKETID socketID, QList<QPoint> locations, QList<QByteArray> images){
+        qWarning()<<"----sendUserScreenshotPacket(...):";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -181,8 +181,14 @@ public slots:
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_7);
-        out << m_localID << screenshot;
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID ;
+
+        for(int i=0; i<locations.size(); i++){
+            QPoint point = locations.at(i);
+           out <<  point.x() << point.y() << images.at(i);
+        }
+
         packet->setPacketData(ba);
 
         ba.clear();
@@ -195,6 +201,32 @@ public slots:
 
         return m_rtp->sendReliableData(socketID, &ba);
     }
+
+    bool sendUserDesktopInfoPacket(SOCKETID socketID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
+        qWarning()<<"----sendUserDesktopInfoPacket(...):";
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::DesktopInfo));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << desktopWidth << desktopHeight << blockWidth << blockHeight;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
+
 
 
     /////////////////////////////////////////////////////

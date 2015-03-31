@@ -479,16 +479,16 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
-    case quint8(MS::ResponseScreenshot):
-    {
-        //From local user
-        QByteArray screenshot;
-        in >> screenshot ;
+//    case quint8(MS::ResponseScreenshot):
+//    {
+//        //From local user
+//        QByteArray screenshot;
+//        in >> screenshot ;
 
-        sendClientResponseScreenshotPacket(m_socketConnectedToAdmin, userNameOfSocket(socketID), screenshot);
-        qDebug()<<"~~ResponseScreenshot";
-    }
-    break;
+//        sendClientResponseScreenshotPacket(m_socketConnectedToAdmin, userNameOfSocket(socketID), screenshot);
+//        qDebug()<<"~~ResponseScreenshot";
+//    }
+//    break;
 
     case quint8(MS::RequestShutdown):
     {

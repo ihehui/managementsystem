@@ -264,6 +264,7 @@ namespace HEHUI {
 
             RequestScreenshot,
             ResponseScreenshot,
+            DesktopInfo,
 
             RequestShutdown,
             RequestLockWindows,

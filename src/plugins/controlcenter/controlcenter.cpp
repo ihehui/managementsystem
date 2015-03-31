@@ -194,7 +194,7 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
 
 //    m_serverInstanceID = 0;
 
-
+    m_remoteDesktopMonitor = 0;
     
 }
 
@@ -1061,6 +1061,10 @@ void ControlCenter::startNetwork(){
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)), Qt::QueuedConnection);
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
 
+    connect(controlCenterPacketsParser, SIGNAL(signalDesktopInfoPacketReceived(const QString &, int, int, int, int)), this, SLOT(processDesktopInfo(const QString &, int, int, int, int)));
+    connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, QList<QPoint>, QList<QByteArray>)), this, SLOT(processScreenshot(const QString &, QList<QPoint>, QList<QByteArray>)));
+
+
     if(localSystemManagementWidget){
         localSystemManagementWidget->setRTP(m_rtp);
         localSystemManagementWidget->setControlCenterPacketsParser(controlCenterPacketsParser);
@@ -1185,6 +1189,27 @@ void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
 //        clientSocketsHash.remove(socketID);
 //    }
 
+}
+
+void ControlCenter::processDesktopInfo(const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
+
+    if(!m_remoteDesktopMonitor){
+        m_remoteDesktopMonitor = new RemoteDesktopMonitor(this);
+        ui.tabWidget->addTab(m_remoteDesktopMonitor, tr("Remote Desktop"));
+    }
+
+    m_remoteDesktopMonitor->setDesktopInfo(userID, desktopWidth, desktopHeight, blockWidth, blockHeight);
+
+
+}
+
+void ControlCenter::processScreenshot(const QString &userID, QList<QPoint> locations, QList<QByteArray> images){
+    if(!m_remoteDesktopMonitor){
+        qCritical()<<QString("ERROR! Remote Desktop Monitor Not Initialized.");
+        return;
+    }
+
+    m_remoteDesktopMonitor->updateScreenshot(userID, locations, images);
 }
 
 void ControlCenter::peerConnected(const QHostAddress &peerAddress, quint16 peerPort){

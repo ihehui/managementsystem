@@ -353,7 +353,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, quint32 , const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, quint32 , const QString &)));
-    connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, const QByteArray &)), this, SLOT(updateScreenshot(const QString &, const QByteArray &)));
+
     connect(controlCenterPacketsParser, SIGNAL(signalServiceConfigChangedPacketReceived(QString,QString,quint64,quint64)), this, SLOT(serviceConfigChangedPacketReceived(QString,QString,quint64,quint64)));
 
 
@@ -1421,17 +1421,6 @@ void SystemManagementWidget::replyMessageReceived(const QString &computerName, c
     }
 
     QMessageBox::information(this, tr("Message"), QString("Message received from '%1':\r\n%2").arg(userName).arg(replyMessage));
-
-}
-
-void SystemManagementWidget::updateScreenshot(const QString &userName, const QByteArray &screenshot){
-    qDebug()<<"--SystemManagementWidget::updateScreenshot(...)";
-
-    QImage image;
-    image.loadFromData(screenshot);
-    //pixmap.save(QString("%1.jpg").arg(QDateTime::currentDateTime().toTime_t()));
-    //qDebug()<<"pixmap.isNull():"<<pixmap.isNull()<<"  screenshot.size():"<<screenshot.size();
-    ui.labelScreenshot->setPixmap(QPixmap::fromImage(image));
 
 }
 

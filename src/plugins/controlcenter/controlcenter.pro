@@ -8,7 +8,8 @@ QT += core \
     gui \
     widgets \
     sql \
-    network
+    network \
+    printsupport
 
 # include config file
 include( ../../config.pri )
@@ -53,7 +54,8 @@ HEADERS += \
     usersmanagement/winusermanagerwidget.h \
     usersmanagement/winuserinfo.h \
     softwaremanagement/softwaremamagement.h \
-    remotedesktop/remotedesktopmonitor.h
+    remotedesktop/remotedesktopmonitor.h \
+    remotedesktop/remotedesktopviewer.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -74,7 +76,8 @@ SOURCES += \
     usersmanagement/winusermanagerwidget.cpp \
     usersmanagement/winuserinfo.cpp \
     softwaremanagement/softwaremamagement.cpp \
-    remotedesktop/remotedesktopmonitor.cpp
+    remotedesktop/remotedesktopmonitor.cpp \
+    remotedesktop/remotedesktopviewer.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \

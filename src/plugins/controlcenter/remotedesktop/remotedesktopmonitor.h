@@ -3,9 +3,16 @@
 
 #include <QWidget>
 
+#include "remotedesktopviewer.h"
+
 namespace Ui {
 class RemoteDesktopMonitor;
 }
+
+
+namespace HEHUI {
+
+
 
 class RemoteDesktopMonitor : public QWidget
 {
@@ -15,8 +22,21 @@ public:
     explicit RemoteDesktopMonitor(QWidget *parent = 0);
     ~RemoteDesktopMonitor();
 
+    void setDesktopInfo(const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
+    void updateScreenshot(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
+
+private slots:
+    void handleCloseWindowRequest();
+    void handleWindowClosed();
+
 private:
     Ui::RemoteDesktopMonitor *ui;
+
+    QHash<QString/*ID*/, RemoteDesktopViewer *> m_remoteDesktopHash;
+
+
 };
+
+} //namespace HEHUI
 
 #endif // REMOTEDESKTOPMONITOR_H

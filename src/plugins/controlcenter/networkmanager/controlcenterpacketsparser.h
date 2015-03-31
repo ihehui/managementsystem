@@ -976,7 +976,9 @@ signals:
     void signalTemperaturesPacketReceived(const QString &cpuTemperature, const QString &harddiskTemperature);
 
     void signalUserReplyMessagePacketReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
-    void signalScreenshotPacketReceived(const QString &userName, const QByteArray &screenshot);
+
+    void signalDesktopInfoPacketReceived(const QString &userID, int desktopWidth, int desktopHeight,int  blockWidth, int blockHeight);
+    void signalScreenshotPacketReceived(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
 
     void signalServiceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType);
 

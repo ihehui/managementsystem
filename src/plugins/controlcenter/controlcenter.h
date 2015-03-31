@@ -21,7 +21,7 @@
 
 
 #include "systemmanagement/systemmanagementwidget.h"
-
+#include "../remotedesktop/remotedesktopmonitor.h"
 
 
 #include "HHSharedCore/huser.h"
@@ -90,6 +90,10 @@ private slots:
     void updateOrSaveClientInfo(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
     
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
+
+    void processDesktopInfo(const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
+    void processScreenshot(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
+
 
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
     void signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort);
@@ -163,7 +167,7 @@ private:
     quint16 m_localRTPListeningPort;
     SOCKETID m_socketConnectedToServer;
 
-
+    RemoteDesktopMonitor *m_remoteDesktopMonitor;
 //    QHash<int/*Socket ID*/, QHostAddress/*IP*/> clientSocketsHash;
 
     

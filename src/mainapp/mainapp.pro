@@ -4,7 +4,8 @@ TEMPLATE = app
 QT += core \
     gui \
     widgets \
-    sql
+    sql \
+    printsupport
 
 # include config file
 include( ../config.pri )

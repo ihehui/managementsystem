@@ -49,7 +49,7 @@
 #include "HHSharedGUI/himageresourcebase.h"
 
 #ifdef Q_OS_WIN32
-    #include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedWindowsManagement/WinUtilities"
 #endif
 
 
@@ -63,26 +63,26 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
 {
 
 
-     m_localID = m_userName + "@" + computerName;
-     qDebug()<<"----------computerName:"<<computerName;
+    m_localID = m_userName + "@" + computerName;
+    qDebug()<<"----------computerName:"<<computerName;
 
 
     m_rtp = m_resourcesManager->getRTP();
     Q_ASSERT(m_rtp);
 
-//    m_udtProtocol = m_rtp->getUDTProtocol();
-//    Q_ASSERT(m_udtProtocol);
-//    m_udtProtocol->startWaitingForIOInOneThread(1000);
-//    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
-//   connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)));
+    //    m_udtProtocol = m_rtp->getUDTProtocol();
+    //    Q_ASSERT(m_udtProtocol);
+    //    m_udtProtocol->startWaitingForIOInOneThread(1000);
+    //    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
+    //   connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)));
 
-   m_tcpServer = m_rtp->getTCPServer();
-   Q_ASSERT(m_tcpServer);
-   connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    m_tcpServer = m_rtp->getTCPServer();
+    Q_ASSERT(m_tcpServer);
+    connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
-   m_enetProtocol = m_rtp->getENETProtocol();
-   Q_ASSERT(m_enetProtocol);
-   connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    m_enetProtocol = m_rtp->getENETProtocol();
+    Q_ASSERT(m_enetProtocol);
+    connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
 
 
@@ -125,14 +125,14 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
     switch(packetType){
 
     case quint8(MS::LocalServiceServerDeclare):
-    {        
+    {
         //QString localComputerName = "";
         //in >> localComputerName;
 
         emit signalLocalServiceServerDeclarePacketReceived(peerID);
         
     }
-    break;
+        break;
 
     case quint8(MS::AdminRequestRemoteAssistance):
     {
@@ -146,10 +146,10 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~AdminRequestRemoteAssistance";
         
     }
-    break;
+        break;
 
     case quint8(MS::InformUserNewPassword):
-    {        
+    {
         QString adminAddress = "", adminName = "",  oldPassword = "",  newPassword = "";
         quint16 adminPort = 0;
         in >> adminAddress >> adminPort >> adminName >> oldPassword >> newPassword;
@@ -158,10 +158,10 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~InformUserNewPassword";
 
     }
-    break;
-    
+        break;
+
     case quint8(MS::Announcement):
-    {        
+    {
         QString adminName = "", announcement = "";
         quint32 announcementID = 0;
         quint8 confirmationRequired = 0;
@@ -171,40 +171,40 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~Announcement"<<" Admin:"<<adminName<<" Msg:"<<announcement;
 
     }
-    break;
+        break;
 
     case quint8(MS::RequestScreenshot):
     {
-//        quint8 fullScreen = 1;
-//        in >> fullScreen;
+        //        quint8 fullScreen = 1;
+        //        in >> fullScreen;
 
         emit signalAdminRequestScreenshotPacketReceived(socketID);
 
-//        QImage image = ImageResourceBase::screenshot();
-//        if(image.isNull()){
-//            return;
-//        }
+        //        QImage image = ImageResourceBase::screenshot();
+        //        if(image.isNull()){
+        //            return;
+        //        }
 
-//        QByteArray byteArray;
-//        QBuffer buffer(&byteArray);
-//        buffer.open(QIODevice::WriteOnly);
-//        image.save(&buffer, "jpg");
-//        buffer.close();
+        //        QByteArray byteArray;
+        //        QBuffer buffer(&byteArray);
+        //        buffer.open(QIODevice::WriteOnly);
+        //        image.save(&buffer, "jpg");
+        //        buffer.close();
 
-//        sendUserResponseScreenshotPacket(socketID, byteArray);
+        //        sendUserResponseScreenshotPacket(socketID, byteArray);
 
         qDebug()<<"~~RequestScreenshot";
 
     }
-    break;
+        break;
 
 
     default:
         qWarning()<<"BulletinBoardPacketsParser! Unknown Packet Type:"<<packetType;
-                //<<" Serial Number:"<<packetSerialNumber
-                //<<" From:"<<packet->getPeerHostAddress().toString()
-               //<<":"<<packet->getPeerHostPort()
-              //<<" Local Port:"<<localRUDPListeningPort;
+        //<<" Serial Number:"<<packetSerialNumber
+        //<<" From:"<<packet->getPeerHostAddress().toString()
+        //<<":"<<packet->getPeerHostPort()
+        //<<" Local Port:"<<localRUDPListeningPort;
 
         break;
 

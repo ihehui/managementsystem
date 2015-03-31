@@ -9,7 +9,7 @@
 #include "helper.h"
 
 #ifdef Q_OS_WIN32
-    #include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedWindowsManagement/WinUtilities"
 #endif
 
 
@@ -20,17 +20,12 @@ Helper::Helper(QObject *parent) :
     QObject(parent)
 {
     
-
-
     WinUtilities::getLogonInfoOfCurrentUser(&m_userName, &m_logonDomain);
     m_logonDomain = m_logonDomain.toLower();
-     m_localComputerName = QHostInfo::localHostName().toLower();
-     if(!m_logonDomain.isEmpty() && (m_localComputerName != m_logonDomain)){
-         m_userName = m_logonDomain + "\\" + m_userName;
-     }
-
-
-
+    m_localComputerName = QHostInfo::localHostName().toLower();
+    if(!m_logonDomain.isEmpty() && (m_localComputerName != m_logonDomain)){
+        m_userName = m_logonDomain + "\\" + m_userName;
+    }
 
 
     //m_networkReady = false;
@@ -45,16 +40,19 @@ Helper::Helper(QObject *parent) :
     localUDTListeningPort = UDT_LISTENING_PORT + 20;
     m_rtp = 0;
     m_socketConnectedToLocalServer = INVALID_SOCK_ID;
-//    m_socketConnectedToAdmin = INVALID_SOCK_ID;
+    m_socketConnectedToAdmin = INVALID_SOCK_ID;
 
 
     m_connectToLocalServerTimer = new QTimer(this);
     connect(m_connectToLocalServerTimer, SIGNAL(timeout()), this, SLOT(connectToLocalServer()));
     m_connectToLocalServerTimer->start(60000);
 
-    QTimer::singleShot(5000, this, SLOT(startNetwork()));
-//    startNetwork();
 
+    m_screenshotTimer = 0;
+    screen = 0;
+
+    QTimer::singleShot(5000, this, SLOT(startNetwork()));
+    //    startNetwork();
 
 
     
@@ -68,6 +66,12 @@ Helper::~Helper(){
         m_connectToLocalServerTimer->stop();
         delete m_connectToLocalServerTimer;
         m_connectToLocalServerTimer = 0;
+    }
+
+    if(m_screenshotTimer){
+        m_screenshotTimer->stop();
+        delete m_screenshotTimer;
+        m_screenshotTimer = 0;
     }
 
     if(m_rtp){
@@ -99,7 +103,7 @@ Helper::~Helper(){
 
     //m_udtProtocol->closeUDTProtocol();
 
-//    resourcesManager->cleanInstance();
+    //    resourcesManager->cleanInstance();
     delete resourcesManager;
     resourcesManager = 0;
 
@@ -121,15 +125,15 @@ void Helper::startNetwork(){
         }
 
         //        m_udtProtocol = m_rtp->getUDTProtocol();
-////        if(!m_udtProtocol){
-////            QString error = tr("Can not start UDT listening on port %1! %2").arg(localUDTListeningPort).arg(errorMessage);
-////            qCritical()<< error;
-////            return;
-////        }
-//        localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
-////        connect(m_udtProtocol, SIGNAL(disconnected(int)), this, SLOT(peerDisconnected(int)));
-//        m_udtProtocol->startWaitingForIOInOneThread(1000);
-//        //m_udtProtocol->startWaitingForIOInSeparateThread(1, 500);
+        ////        if(!m_udtProtocol){
+        ////            QString error = tr("Can not start UDT listening on port %1! %2").arg(localUDTListeningPort).arg(errorMessage);
+        ////            qCritical()<< error;
+        ////            return;
+        ////        }
+        //        localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
+        ////        connect(m_udtProtocol, SIGNAL(disconnected(int)), this, SLOT(peerDisconnected(int)));
+        //        m_udtProtocol->startWaitingForIOInOneThread(1000);
+        //        //m_udtProtocol->startWaitingForIOInSeparateThread(1, 500);
 
     }
 
@@ -211,19 +215,95 @@ void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID){
     }
 
     QPixmap pixmap = screen->grabWindow(0);
-    QImage image = pixmap.toImage();
-    if(image.isNull()){
+    QImage screenImage = pixmap.toImage();
+    if(screenImage.isNull()){
         qCritical()<<"ERROR! Invalid image.";
         return;
     }
 
-    QByteArray byteArray;
-    QBuffer buffer(&byteArray);
-    buffer.open(QIODevice::WriteOnly);
-    image.save(&buffer, "jpg");
-    buffer.close();
+    if(!m_screenshotTimer){
+        m_screenshotTimer = new QTimer(this);
+        connect(m_screenshotTimer, SIGNAL(timeout()), this, SLOT(screenshot()));
+    }
 
-    bulletinBoardPacketsParser->sendUserResponseScreenshotPacket(socketID, byteArray);
+    int imageWidth = screenImage.width();
+    int imageHeight = screenImage.height();
+    int columnCount = 4;
+    int rowCount = 2;
+
+
+    m_blockWidth = imageWidth/columnCount;
+    m_blockHeight = imageHeight/rowCount;
+    m_blockSize = QSize(m_blockWidth, m_blockHeight);
+
+    if(!bulletinBoardPacketsParser->sendUserDesktopInfoPacket(m_socketConnectedToAdmin, imageWidth, imageHeight, m_blockWidth, m_blockHeight)){
+        qCritical()<<"ERROR! Can not send data to peer.";
+        return;
+    }
+
+    for(int i=0;i<columnCount;i++){
+        for(int j=0;j<rowCount;j++){
+            QPoint point(i*m_blockWidth, j*m_blockHeight);
+            m_locations.append(point);
+            m_images.append(QImage());
+            m_imagesHash.append(QByteArray());
+            //            QImage image = screenImage.copy(QRect(point, m_blockSize));
+            //            m_images.append(image);
+
+            //            QByteArray byteArray;
+            //            QBuffer buffer(&byteArray);
+            //            buffer.open(QIODevice::WriteOnly);
+            //            image.save(&buffer, "jpg");
+            //            buffer.close();
+            //            m_imagesHash.append(QCryptographicHash::hash(byteArray, QCryptographicHash::Md5));
+
+        }
+    }
+
+    m_screenshotTimer->start(200);
+
+}
+
+void Helper::screenshot(){
+
+    if (!screen){
+        qCritical()<<"ERROR! No primary screen.";
+        return;
+    }
+
+    QPixmap pixmap = screen->grabWindow(0);
+    QImage screenImage = pixmap.toImage();
+    if(screenImage.isNull()){
+        qCritical()<<"ERROR! Invalid image.";
+        return;
+    }
+
+
+    QList<QPoint> locations;
+    QList<QByteArray> images;
+
+    for(int i=0;i<m_locations.size();i++){
+        QPoint point = m_locations.at(i);
+        QImage image = screenImage.copy(QRect(point, m_blockSize));
+
+        QByteArray byteArray;
+        QBuffer buffer(&byteArray);
+        buffer.open(QIODevice::WriteOnly);
+        image.save(&buffer, "jpg");
+        buffer.close();
+        QByteArray hash = QCryptographicHash::hash(byteArray, QCryptographicHash::Md5);
+
+        if(m_imagesHash.at(i) != hash){
+            locations.append(point);
+            images.append(byteArray);
+            m_images[i] = image;
+            m_imagesHash[i] = hash;
+        }
+
+    }
+
+    bulletinBoardPacketsParser->sendUserScreenshotPacket(m_socketConnectedToAdmin, locations, images);
+
 
 }
 
