@@ -488,7 +488,7 @@ public slots:
     }
 
 
-    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, const QString &groupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead = true){
+    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, const QString &computerName, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
         qDebug()<<"--sendAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" computerName:"<<computerName;
         Packet *packet = PacketHandlerBase::getPacket();
         QHostAddress targetAddress = QHostAddress(peerAddress);
@@ -496,12 +496,12 @@ public slots:
             targetAddress = ipmcGroupAddress;
         }
         
-        packet->setPacketType(quint8(MS::ServerAnnouncement));
+        packet->setPacketType(quint8(MS::Announcement));
         packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << groupName << computerName << announcementID << announcement << adminName << userName << (mustRead?quint8(1):quint8(0));
+        out << m_localID << computerName << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -515,16 +515,16 @@ public slots:
         return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
     }
 
-    bool sendAnnouncementPacket(SOCKETID socketID, const QString &groupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, bool mustRead = true){
+    bool sendAnnouncementPacket(SOCKETID socketID, const QString &computerName, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
-        packet->setPacketType(quint8(MS::ServerAnnouncement));
+        packet->setPacketType(quint8(MS::Announcement));
         packet->setTransmissionProtocol(TP_RUDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << groupName << computerName << announcementID << announcement << adminName << (mustRead?quint8(1):quint8(0));
+        out << m_localID << computerName << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -974,6 +974,8 @@ signals:
 
 
     void signalTemperaturesPacketReceived(const QString &cpuTemperature, const QString &harddiskTemperature);
+
+    void signalUserReplyMessagePacketReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
     void signalScreenshotPacketReceived(const QString &userName, const QByteArray &screenshot);
 
     void signalServiceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType);

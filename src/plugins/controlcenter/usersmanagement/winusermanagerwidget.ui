@@ -107,6 +107,11 @@
     <string>Lock Desktop</string>
    </property>
   </action>
+  <action name="actionSendMessage">
+   <property name="text">
+    <string>Send Message</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>tableViewUsers</tabstop>

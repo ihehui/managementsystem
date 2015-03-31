@@ -36,11 +36,13 @@ private slots:
 
     void adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName);
     void AdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword );
-    void serverAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement);
-    
+    void serverAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement, bool confirmationRequired, int validityPeriod);
+    void sendReplyMessage(quint32 originalMessageID, const QString &replyMessage);
+
+
     void newPasswordRetreved();
 
-    void adminRequestScreenshotPacketReceived(SOCKETID adminSocketID);
+    void adminRequestScreenshotPacketReceived(SOCKETID socketID);
 
     
 //    void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
@@ -52,6 +54,10 @@ private slots:
 private:
 
     //bool m_networkReady;
+
+    QString m_userName;
+    QString m_logonDomain;
+    QString m_localComputerName;
 
     ResourcesManagerInstance *resourcesManager;
     BulletinBoardPacketsParser *bulletinBoardPacketsParser;

@@ -95,6 +95,8 @@ private slots:
     void requestCreateOrModifyWinUser(const QByteArray &userData);
     void requestDeleteUser(const QString &userName);
 
+    void requestSendMessageToUser(const QString &userName);
+    //void sendMessageToUser(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod);
     void requestLockWindows(const QString &userName, bool logoff);
 
     void requestClientInfoTimeout();
@@ -108,6 +110,7 @@ private slots:
     void userResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
 
     void updateTemperatures(const QString &cpuTemperature, const QString &harddiskTemperature);
+    void replyMessageReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
     void updateScreenshot(const QString &userName, const QByteArray &screenshot);
 
     void serviceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType);

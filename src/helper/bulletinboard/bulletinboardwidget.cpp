@@ -10,11 +10,10 @@
 namespace HEHUI {
 
 
-BulletinBoardWidget::BulletinBoardWidget(const QString &adminName, quint32 announcementID, const QString &serverAnnouncement, QWidget *parent)
-    : QWidget(parent)
+BulletinBoardWidget::BulletinBoardWidget(const QString &userName, QWidget *parent)
+    : QWidget(parent), m_userName(userName)
 {
     ui.setupUi(this);
-
 
     setWindowFlags(Qt::WindowStaysOnTopHint);
 
@@ -35,16 +34,12 @@ BulletinBoardWidget::BulletinBoardWidget(const QString &adminName, quint32 annou
     //qWarning()<<"fsw:"<<frameSize().width()<<" fsh:"<<frameSize().height();
 
 
+    ui.groupBoxReply->setVisible(false);
 
     curAnnouncementIndex = -1;
     totalCount = 0;
 
     m_curMessageID = 0;
-
-     ui.groupBoxReply->setVisible(false);
-
-    showServerAnnouncement(adminName, announcementID, serverAnnouncement);
-    
 
 
 }
@@ -84,8 +79,9 @@ void BulletinBoardWidget::showServerAnnouncement(const QString &adminName, quint
     //    ui.labelCount->setText(QString("%1 %2").arg(QString::number(count)).arg(count>1?tr("Messages"):tr("Message")));
 
     
-    QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Announcement sent by %1. Received at %2 --</span></p> ").arg(adminName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-    QString msg = serverAnnouncement + remark;
+    //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Message sent by %1. Received at %2 --</span></p> ").arg(adminName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(adminName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    QString msg = remark + serverAnnouncement;
     
     ui.textBrowser->setText(msg);
     ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
@@ -113,9 +109,7 @@ void BulletinBoardWidget::on_toolButtonPrevious_clicked(){
     m_curMessageID = keys.at(curAnnouncementIndex);
     ui.textBrowser->setText(announcements.value(m_curMessageID));
     ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
-    
-    
-    
+
 }
 
 void BulletinBoardWidget::on_toolButtonNext_clicked(){
@@ -131,14 +125,23 @@ void BulletinBoardWidget::on_toolButtonNext_clicked(){
     ui.textBrowser->setText(announcements.value(m_curMessageID));
     ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
     
-    
-    
-    
 }
 
 void BulletinBoardWidget::on_pushButtonReply_clicked(){
     if(!ui.groupBoxReply->isVisible()){
         ui.groupBoxReply->setVisible(true);
+        return;
+    }else{
+        QString reply = ui.textEditReply->toPlainText();
+        emit sendReplyMessage(m_curMessageID, reply);
+
+        //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Reply message sent at %1 --</span></p> ").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+        QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+        QString msg = announcements.value(m_curMessageID) + reply + remark;
+        announcements[m_curMessageID] = msg;
+        ui.textBrowser->setText(msg);
+        ui.textEditReply->clear();
+
     }
 
 

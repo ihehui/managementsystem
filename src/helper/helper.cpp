@@ -4,8 +4,13 @@
 #include <QMessageBox>
 #include <QScreen>
 #include <QBuffer>
+#include <QHostInfo>
 
 #include "helper.h"
+
+#ifdef Q_OS_WIN32
+    #include "HHSharedWindowsManagement/WinUtilities"
+#endif
 
 
 namespace HEHUI {
@@ -15,6 +20,19 @@ Helper::Helper(QObject *parent) :
     QObject(parent)
 {
     
+
+
+    WinUtilities::getLogonInfoOfCurrentUser(&m_userName, &m_logonDomain);
+    m_logonDomain = m_logonDomain.toLower();
+     m_localComputerName = QHostInfo::localHostName().toLower();
+     if(!m_logonDomain.isEmpty() && (m_localComputerName != m_logonDomain)){
+         m_userName = m_logonDomain + "\\" + m_userName;
+     }
+
+
+
+
+
     //m_networkReady = false;
 
     resourcesManager = ResourcesManagerInstance::instance();
@@ -54,6 +72,7 @@ Helper::~Helper(){
 
     if(m_rtp){
         m_rtp->closeSocket(m_socketConnectedToLocalServer);
+        m_rtp->stopServers();
     }
 
     if(remoteAssistance){
@@ -115,25 +134,17 @@ void Helper::startNetwork(){
     }
 
     if(!bulletinBoardPacketsParser){
-        bulletinBoardPacketsParser = new BulletinBoardPacketsParser(resourcesManager, this);
+        bulletinBoardPacketsParser = new BulletinBoardPacketsParser(resourcesManager, m_userName, m_localComputerName, this);
 
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), this, SLOT(adminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), Qt::QueuedConnection);
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), this, SLOT(AdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
-        connect(bulletinBoardPacketsParser, SIGNAL(signalAnnouncementPacketReceived(const QString&, quint32, const QString&)), this, SLOT(serverAnnouncementPacketReceived(const QString&, quint32, const QString&)), Qt::QueuedConnection);
+        connect(bulletinBoardPacketsParser, SIGNAL(signalAnnouncementPacketReceived(const QString&, quint32, const QString&, bool, int)), this, SLOT(serverAnnouncementPacketReceived(const QString&, quint32, const QString&, bool, int)), Qt::QueuedConnection);
 
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestScreenshotPacketReceived(SOCKETID)), this, SLOT(adminRequestScreenshotPacketReceived(SOCKETID)), Qt::QueuedConnection);
 
     }
 
-//    if(!m_connectToLocalServerTimer){
-//        m_connectToLocalServerTimer = new QTimer(this);
-//        connect(m_connectToLocalServerTimer, SIGNAL(timeout()), this, SLOT(connectToLocalServer()));
-//    }
-//    m_connectToLocalServerTimer->start(1000);
-
     connectToLocalServer();
-
-    //m_networkReady = true;
 
 }
 
@@ -169,19 +180,21 @@ void Helper::AdminInformUserNewPasswordPacketReceived(const QString &adminAddres
     
 }
 
-void Helper::serverAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement){
-
-    qWarning()<<"BulletinBoardPlugin::serverAnnouncementPacketReceived(...)";
+void Helper::serverAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement, bool confirmationRequired, int validityPeriod){
+    qWarning()<<"Helper::serverAnnouncementPacketReceived(...)";
     
     if(!bulletinBoardWidget){
-        bulletinBoardWidget = new BulletinBoardWidget(adminName, announcementID, announcement);
-    }else{
-        bulletinBoardWidget->showServerAnnouncement(adminName, announcementID, announcement);
+        bulletinBoardWidget = new BulletinBoardWidget(m_userName);
+        connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(quint32, const QString &)), this, SLOT(sendReplyMessage(quint32, const QString &)));
     }
-    
-    bulletinBoardWidget->show();
-    bulletinBoardWidget->raise();
 
+    bulletinBoardWidget->showServerAnnouncement(adminName, announcementID, announcement);
+    bulletinBoardWidget->showNormal();
+    bulletinBoardWidget->raise();
+}
+
+void Helper::sendReplyMessage(quint32 originalMessageID, const QString &replyMessage){
+    bulletinBoardPacketsParser->sendUserReplyMessagePacket(m_socketConnectedToLocalServer, originalMessageID, replyMessage);
 }
 
 void Helper::newPasswordRetreved(){
@@ -189,7 +202,7 @@ void Helper::newPasswordRetreved(){
     bulletinBoardPacketsParser->sendNewPasswordRetrevedByUserPacket(m_socketConnectedToLocalServer);
 }
 
-void Helper::adminRequestScreenshotPacketReceived(SOCKETID adminSocketID){
+void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID){
 
     QScreen *screen = QApplication::primaryScreen();
     if (!screen){
@@ -210,7 +223,7 @@ void Helper::adminRequestScreenshotPacketReceived(SOCKETID adminSocketID){
     image.save(&buffer, "jpg");
     buffer.close();
 
-    bulletinBoardPacketsParser->sendUserResponseScreenshotPacket(adminSocketID, byteArray);
+    bulletinBoardPacketsParser->sendUserResponseScreenshotPacket(socketID, byteArray);
 
 }
 
@@ -234,7 +247,6 @@ void Helper::peerDisconnected(SOCKETID socketID){
     //m_rtp->closeSocket(socketID);
     m_socketConnectedToLocalServer = INVALID_SOCK_ID;
 
-    //QTimer::singleShot(60000, this, SLOT(connectToLocalServer()));
 
     if(m_connectToLocalServerTimer){
         m_connectToLocalServerTimer->start();

@@ -345,6 +345,19 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     }
     break;
+
+    case quint8(MS::ReplyMessage):
+    {
+        QString userName = "";
+        quint32 originalMessageID;
+        QString replyMessage;
+        in >> userName >> originalMessageID >> replyMessage ;
+
+        emit signalUserReplyMessagePacketReceived(peerName, userName, originalMessageID, replyMessage);
+
+    }
+    break;
+
     case quint8(MS::ResponseScreenshot):
     {
         QString userName = "";
@@ -355,6 +368,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     }
     break;
+
     case quint8(MS::ServiceConfigChanged):
     {
         QString serviceName = "";

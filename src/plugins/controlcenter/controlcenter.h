@@ -77,7 +77,8 @@ private slots:
     void slotUpdateUserLogonPassword();
     void slotInformUserNewLogonPassword();
     void slotSendAnnouncement();
-    
+    void slotSendAnnouncement(quint32 messageID, const QString &message, bool confirmationRequired,  int validityPeriod);
+
 
 
     void slotShowCustomContextMenu(const QPoint & pos);

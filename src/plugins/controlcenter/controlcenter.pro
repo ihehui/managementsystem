@@ -52,7 +52,8 @@ HEADERS += \
     usersmanagement/winuserinfowidget.h \
     usersmanagement/winusermanagerwidget.h \
     usersmanagement/winuserinfo.h \
-    softwaremanagement/softwaremamagement.h
+    softwaremanagement/softwaremamagement.h \
+    remotedesktop/remotedesktopmonitor.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -72,7 +73,8 @@ SOURCES += \
     usersmanagement/winuserinfowidget.cpp \
     usersmanagement/winusermanagerwidget.cpp \
     usersmanagement/winuserinfo.cpp \
-    softwaremanagement/softwaremamagement.cpp
+    softwaremanagement/softwaremamagement.cpp \
+    remotedesktop/remotedesktopmonitor.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -85,7 +87,8 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     systemmanagement/shutdowndialog.ui \
     usersmanagement/winuserinfowidget.ui \
     usersmanagement/winusermanagerwidget.ui \
-    softwaremanagement/softwaremamagement.ui
+    softwaremanagement/softwaremamagement.ui \
+    remotedesktop/remotedesktopmonitor.ui
 
 RESOURCES += controlcenter.qrc
 

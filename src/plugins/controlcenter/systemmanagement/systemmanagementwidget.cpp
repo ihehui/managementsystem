@@ -11,6 +11,7 @@
 
 #include "constants.h"
 #include "shutdowndialog.h"
+#include "../announcement/announcement.h"
 
 
 #ifdef Q_OS_WIN32
@@ -191,6 +192,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     connect(ui.tabUsers, SIGNAL(signalCreateOrModifyWinUser(const QByteArray &)), this, SLOT(requestCreateOrModifyWinUser(const QByteArray &)));
     connect(ui.tabUsers, SIGNAL(signalDeleteUser(const QString &)), this, SLOT(requestDeleteUser(const QString &)));
     connect(ui.tabUsers, SIGNAL(signalLockWindows(const QString &, bool)), this, SLOT(requestLockWindows(const QString &, bool)));
+    connect(ui.tabUsers, SIGNAL(signalSendMessageToUser(QString)), this, SLOT(requestSendMessageToUser(const QString &)));
     ui.tabUsers->setEnabled(false);
 
     connect(ui.tabServices, SIGNAL(signalGetServicesInfo(quint8)), this, SLOT(requestClientInfo(quint8)));
@@ -349,6 +351,8 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     
 
     connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &)));
+
+    connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, quint32 , const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, quint32 , const QString &)));
     connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, const QByteArray &)), this, SLOT(updateScreenshot(const QString &, const QByteArray &)));
     connect(controlCenterPacketsParser, SIGNAL(signalServiceConfigChangedPacketReceived(QString,QString,quint64,quint64)), this, SLOT(serviceConfigChangedPacketReceived(QString,QString,quint64,quint64)));
 
@@ -820,7 +824,6 @@ void SystemManagementWidget::on_toolButtonRequestHardwareInfo_clicked(){
         return;
     }
 
-    //QTimer::singleShot(60000, this, SLOT(requestClientInfoTimeout()));
 
     ui.toolButtonRequestHardwareInfo->setEnabled(false);
     ui.toolButtonSaveAs->setEnabled(false);
@@ -914,13 +917,6 @@ void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
 
         ui.toolButtonSendCommand->setEnabled(false);
     }
-
-
-    
-
-    //QTimer::singleShot(10000, this, SLOT(requestRemoteConsoleTimeout()));
-
-
 
 
 }
@@ -1247,6 +1243,48 @@ void SystemManagementWidget::requestDeleteUser(const QString &userName){
     }
 }
 
+
+void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
+
+    QDialog dlg(this);
+    QVBoxLayout layout(&dlg);
+    layout.setContentsMargins(1, 1, 1, 1);
+    layout.setSizeConstraint(QLayout::SetFixedSize);
+
+    Announcement wgt(&dlg);
+    //connect(&wgt, SIGNAL(signalSendMessage(quint32, const QString &, bool, int)), this, SLOT(sendMessageToUser(quint32, const QString &, bool, int)));
+    connect(&wgt, SIGNAL(signalCloseWidget()), &dlg, SLOT(accept()));
+
+    layout.addWidget(&wgt);
+    dlg.setLayout(&layout);
+    dlg.updateGeometry();
+    dlg.setWindowTitle(tr("Announcement"));
+
+    if(dlg.exec() != QDialog::Accepted){
+        return;
+    }
+
+    quint32 messageID;
+    QString message;
+    bool confirmationRequired;
+    int validityPeriod;
+    wgt.getMessageInfo(&messageID, &message, &confirmationRequired, &validityPeriod);
+
+    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(m_peerSocket, m_peerComputerName, userName, m_adminName, messageID, message, confirmationRequired, validityPeriod);
+    if(!ok){
+        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+    }
+
+}
+
+//void SystemManagementWidget::sendMessageToUser(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod){
+
+//    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(m_peerSocket, m_peerComputerName, userName, m_adminName, messageID, message, confirmationRequired, validityPeriod);
+//    if(!ok){
+//        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+//    }
+//}
+
 void SystemManagementWidget::requestLockWindows(const QString &userName, bool logoff){
     bool ok = controlCenterPacketsParser->sendRequestLockWindowsPacket(m_peerSocket, userName, logoff);
     if(!ok){
@@ -1377,6 +1415,15 @@ void SystemManagementWidget::updateTemperatures(const QString &cpuTemperature, c
     ui.labelHarddiskTemperature->setText(temperatures.join(" "));
 }
 
+void SystemManagementWidget::replyMessageReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage){
+    if(computerName != this->m_peerComputerName){
+        return;
+    }
+
+    QMessageBox::information(this, tr("Message"), QString("Message received from '%1':\r\n%2").arg(userName).arg(replyMessage));
+
+}
+
 void SystemManagementWidget::updateScreenshot(const QString &userName, const QByteArray &screenshot){
     qDebug()<<"--SystemManagementWidget::updateScreenshot(...)";
 
@@ -1435,15 +1482,6 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
     }else{
         QMessageBox::warning(this, tr("Warning"), QString("Warning! Peer %1 Closed!").arg(m_peerIPAddress.toString()));
     }
-
-
-
-    //    foreach (QByteArray fileMD5, filesList) {
-    //        m_fileManager->closeFile(fileMD5);
-    //    }
-    //    fileTXRequestList.clear();
-    //    filesList.clear();
-
 
 }
 

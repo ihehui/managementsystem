@@ -228,34 +228,33 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ServerResponseSoftwareVersion";
     }
     break;
-    case quint8(MS::ServerAnnouncement):
+    case quint8(MS::Announcement):
     {
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
-        QString groupName = "", computerName = "", announcement = "", adminName = "", userName = "";
+        QString computerName = "", userName = "", adminName = "", announcement = "";
         quint32 announcementID = 0;
-        quint8 mustRead = 1;
-        in >> groupName >> computerName >> announcementID >> announcement >> adminName >> userName >> mustRead ;
+        quint8 confirmationRequired = 1;
+        int validityPeriod = 60;
+        in >> computerName >> userName >> adminName >> announcementID >> announcement >> confirmationRequired >> validityPeriod;
 
 
         if(userName.trimmed().isEmpty()){
             foreach (SOCKETID sID, localUserSockets()) {
-                sendServerAnnouncementPacket(sID, adminName, announcementID, announcement);
+                sendServerAnnouncementPacket(sID, adminName, announcementID, announcement, confirmationRequired, validityPeriod);
             }
         }else{
             SOCKETID sID = socketIDOfUser(userName);
-            if(INVALID_SOCK_ID == sID){return;}
-            sendServerAnnouncementPacket(sID, adminName, announcementID, announcement);
+            if(INVALID_SOCK_ID == sID){
+                qCritical()<<QString("ERROR! No online user named '%1'.").arg(userName);
+                return;
+            }
+            sendServerAnnouncementPacket(sID, adminName, announcementID, announcement, confirmationRequired, validityPeriod);
         }
 
 
         //emit signalServerAnnouncementPacketReceived(groupName, computerName, announcementID, announcement, adminName, userName, (mustRead == quint8(0))?false:true);
 
-        qDebug()<<"~~ServerAnnouncement"<<"groupName:"<<groupName<<"computerName:"<<computerName<<" announcement:"<<announcement<<" userName:"<<userName<<" mustRead:"<<mustRead;
-        
-
-
-        //            qWarning()<<"~~ServerAnnouncement";
+        qDebug()<<"~~Announcement"<<"computerName:"<<computerName<<" announcement:"<<announcement<<" userName:"<<userName<<" mustRead:"<<confirmationRequired;
+        //qDebug()<<"~~Announcement";
 
     }
     break;
@@ -467,6 +466,19 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     }
     break;
+
+    case quint8(MS::ReplyMessage):
+    {
+        //From local user
+        quint32 originalMessageID;
+        QString replyMessage;
+        in >> originalMessageID >> replyMessage ;
+
+        sendUserReplyMessagePacket(m_socketConnectedToAdmin, userNameOfSocket(socketID), originalMessageID, replyMessage);
+        qDebug()<<"~~ReplyMessage";
+    }
+    break;
+
     case quint8(MS::ResponseScreenshot):
     {
         //From local user

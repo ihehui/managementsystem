@@ -17,25 +17,25 @@ class Announcement : public QWidget
     Q_OBJECT
 
 public:
-    Announcement(QTableView *tableView, const QString &adminName, ControlCenterPacketsParser *controlCenterPacketsParser, QWidget *parent = 0);
+    Announcement(QWidget *parent = 0);
     ~Announcement();
+
+    void getMessageInfo(quint32 *messageID, QString *message, bool *confirmationRequired, int *validityPeriod);
     
-    
+signals:
+    //void signalSendMessage(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod);
+    void signalCloseWidget();
+
 private slots:
     void on_pushButtonSend_clicked();
     
-    void on_comboBoxTargetType_currentIndexChanged ( int index );
 
     
     
 private:
     Ui::AnnouncementClass ui;
     
-    QTableView *m_tableView;
-    QString m_adminName;
-    ControlCenterPacketsParser *m_controlCenterPacketsParser;
-    
-    
+
     
 };
 

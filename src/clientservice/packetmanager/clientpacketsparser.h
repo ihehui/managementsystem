@@ -488,17 +488,17 @@ public slots:
 
 //    }
     
-    bool sendServerAnnouncementPacket(SOCKETID userSocketID, const QString &adminName, quint32 announcementID, const QString &serverAnnouncement){
+    bool sendServerAnnouncementPacket(SOCKETID userSocketID, const QString &adminName, quint32 announcementID, const QString &serverAnnouncement, quint8 confirmationRequired, int validityPeriod){
         qDebug()<<"--sendServerAnnouncementPacket(...)"<<" userSocketID:"<<userSocketID<<" adminName:"<<adminName<<" serverAnnouncement:"<<serverAnnouncement;
         
         Packet *packet = PacketHandlerBase::getPacket(userSocketID);
         
-        packet->setPacketType(quint8(MS::ServerAnnouncement));
+        packet->setPacketType(quint8(MS::Announcement));
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << adminName << announcementID << serverAnnouncement ;
+        out << m_localComputerName << adminName << announcementID << serverAnnouncement << confirmationRequired << validityPeriod;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -562,6 +562,30 @@ public slots:
         PacketHandlerBase::recylePacket(packet);
 
         return m_rtp->sendReliableData(userSocketID, &ba);
+    }
+
+    bool sendUserReplyMessagePacket(SOCKETID socketID, const QString &userName, quint32 originalMessageID, const QString &replyMessage){
+        qWarning()<<"----sendUserReplyMessagePacket(...):";
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::ReplyMessage));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localComputerName << userName << originalMessageID << replyMessage;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendClientResponseScreenshotPacket(SOCKETID socketID, const QString &userName, const QByteArray &screenshot){

@@ -930,26 +930,55 @@ void ControlCenter::slotInformUserNewLogonPassword(){
 
 void ControlCenter::slotSendAnnouncement(){
 
-    if(m_adminName != "hehui"){
-        QMessageBox::critical(this, tr("Error"), tr("You dont have the access permissions!"));
-        return;
-    }
+//    if(m_adminName != "hehui"){
+//        QMessageBox::critical(this, tr("Error"), tr("You dont have the access permissions!"));
+//        return;
+//    }
 
-    
     QDialog dlg(this);
-    QVBoxLayout layout;
-    Announcement announcement(ui.tableViewClientList, m_adminName, controlCenterPacketsParser, &dlg);
-    layout.addWidget(&announcement);
+    QVBoxLayout layout(&dlg);
+    layout.setContentsMargins(1, 1, 1, 1);
     layout.setSizeConstraint(QLayout::SetFixedSize);
-    layout.setContentsMargins(3,3,3,3);
-    
+
+    Announcement wgt(&dlg);
+    connect(&wgt, SIGNAL(signalSendMessage(quint32, const QString &, bool, int)), this, SLOT(slotSendAnnouncement(quint32, const QString &, bool, int)));
+    connect(&wgt, SIGNAL(signalCloseWidget()), &dlg, SLOT(accept()));
+
+    layout.addWidget(&wgt);
     dlg.setLayout(&layout);
-    dlg.setWindowTitle("Announcement");
+    dlg.updateGeometry();
+    dlg.setWindowTitle(tr("Announcement"));
+
     dlg.exec();
 
     
-    
 } 
+
+void ControlCenter::slotSendAnnouncement(quint32 messageID, const QString &message, bool confirmationRequired,  int validityPeriod){
+
+    QModelIndexList selectedIndexes = ui.tableViewClientList->selectionModel()->selectedRows();
+
+    int selectedIndexesCount = selectedIndexes.count();
+
+
+    for (int j = 0; j < selectedIndexesCount; j++) {
+        QModelIndex index = selectedIndexes.at(j);
+        int row = index.row();
+
+        QString computerName = index.sibling(row,0).data().toString();
+        QStringList networkInfoList = index.sibling(row,2).data().toString().split(",");
+        foreach (QString info, networkInfoList) {
+            if(info.trimmed().isEmpty()){continue;}
+            controlCenterPacketsParser->sendAnnouncementPacket(info.split("/").at(0), IP_MULTICAST_GROUP_PORT, computerName, "", m_adminName, messageID, message, confirmationRequired, validityPeriod);
+        }
+
+
+        qApp->processEvents();
+
+    }
+
+}
+
 
 void ControlCenter::slotShowCustomContextMenu(const QPoint & pos){
 

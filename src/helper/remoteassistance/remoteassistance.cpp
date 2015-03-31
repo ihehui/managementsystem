@@ -18,15 +18,13 @@ RemoteAssistance::RemoteAssistance(const QString &adminAddress, quint16 adminPor
 
     setWindowFlags(Qt::WindowStaysOnTopHint);
 
+    m_adminAddress = "";
+    m_adminPort = 0;
+    timer = 0;
 
     requestRemoteAssistance(adminAddress, adminPort, adminName);
 
-    //        updateTimeInfo();
 
-    //        timer = new QTimer(this);
-    //        timer->setInterval(1000);
-    //        connect(timer, SIGNAL(timeout()), this, SLOT(updateTimeInfo()));
-    //        timer->start();
 
 }
 

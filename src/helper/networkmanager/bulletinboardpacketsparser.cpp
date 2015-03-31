@@ -57,9 +57,14 @@
 namespace HEHUI {
 
 
-BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance *resourcesManager, QObject *parent)
-    :QObject(parent), m_resourcesManager(resourcesManager)
+BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance *resourcesManager, const QString &userName, const QString &computerName, QObject *parent)
+    :QObject(parent), m_resourcesManager(resourcesManager), m_userName(userName), m_localComputerName(computerName)
+
 {
+
+
+     m_localID = m_userName + "@" + computerName;
+     qDebug()<<"----------computerName:"<<computerName;
 
 
     m_rtp = m_resourcesManager->getRTP();
@@ -80,17 +85,6 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
    connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
 
-   WinUtilities::getLogonInfoOfCurrentUser(&m_userName, &m_domain);
-   m_domain = m_domain.toLower();
-    //m_userName = Utilities::currentUserNameOfOS();
-    m_localComputerName = QHostInfo::localHostName().toLower();
-    //m_localID = m_localComputerName + "/BulletinBoard";
-    m_localID = m_userName + "@" + m_localComputerName;
-    if(!m_domain.isEmpty() && (m_localComputerName != m_domain)){
-        m_userName = m_domain + "\\" + m_userName;
-        m_localID = m_domain + "\\" + m_localID;
-    }
-    qDebug()<<"----------m_localComputerName:"<<m_localComputerName <<"  m_domain"<<m_domain;
 
     //    emit signalAnnouncementPacketReceived("ADMIN", "TEST!");
     
@@ -166,13 +160,15 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
     
-    case quint8(MS::ServerAnnouncement):
+    case quint8(MS::Announcement):
     {        
-        QString adminName = "", serverAnnouncement = "";
+        QString adminName = "", announcement = "";
         quint32 announcementID = 0;
-        in >> adminName >> announcementID >> serverAnnouncement;
-        emit signalAnnouncementPacketReceived(adminName, announcementID, serverAnnouncement);
-        //qDebug()<<"~~ServerAnnouncement"<<" Admin:"<<adminName<<" Msg:"<<serverAnnouncement<<" SN:"<<packet->getPacketSerialNumber();
+        quint8 confirmationRequired = 0;
+        int validityPeriod = 60;
+        in >> adminName >> announcementID >> announcement >> confirmationRequired >> validityPeriod;
+        emit signalAnnouncementPacketReceived(adminName, announcementID, announcement, confirmationRequired, validityPeriod);
+        qDebug()<<"~~Announcement"<<" Admin:"<<adminName<<" Msg:"<<announcement;
 
     }
     break;

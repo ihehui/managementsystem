@@ -17,13 +17,16 @@ class BulletinBoardWidget : public QWidget
     Q_OBJECT
 
 public:
-    BulletinBoardWidget(const QString &adminName, quint32 announcementID, const QString &serverAnnouncement, QWidget *parent = 0);
+    BulletinBoardWidget(const QString &userName, QWidget *parent = 0);
     ~BulletinBoardWidget();
 
 
     void showServerAnnouncement(const QString &adminName, quint32 announcementID, const QString &serverAnnouncement);
 
  
+signals:
+    void sendReplyMessage(quint32 originalMessageID, const QString &replyMessage);
+
 public slots:
 
 
@@ -38,6 +41,8 @@ private slots:
 
 private:
     Ui::SystemManagementWidgetClass ui;
+
+    QString m_userName;
 
     QHash<quint32/*announcementID*/, QString/*Announcement*/> announcements;
     

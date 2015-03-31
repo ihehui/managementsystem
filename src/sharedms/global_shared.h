@@ -216,7 +216,8 @@ namespace HEHUI {
             ClientRequestSoftwareVersion,
             ServerResponseSoftwareVersion,
 
-            ServerAnnouncement,
+            Announcement,
+            ReplyMessage,
 
             ClientLog,
 

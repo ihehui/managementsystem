@@ -62,6 +62,7 @@ signals:
     void signalGetUsersInfo(quint8 infoType = MS::SYSINFO_USERS);
     void signalCreateOrModifyWinUser(const QByteArray &userdata);
     void signalDeleteUser(const QString &userName);
+    void signalSendMessageToUser(const QString &userName);
     void signalLockWindows(const QString &userName, bool logoff);
 
 
@@ -81,6 +82,7 @@ private slots:
     void on_actionCreateNewAccount_triggered();
     void on_actionDeleteAccount_triggered();
 
+    void on_actionSendMessage_triggered();
     void on_actionLogoff_triggered();
     void on_actionLockDesktop_triggered();
 
