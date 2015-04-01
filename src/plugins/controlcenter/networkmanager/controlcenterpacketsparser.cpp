@@ -110,7 +110,7 @@ ControlCenterPacketsParser::~ControlCenterPacketsParser() {
 
 
 void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
-    qDebug()<<"----ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet)";
+    //qDebug()<<"----ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet)";
 
 
     QByteArray packetData = packet->getPacketData();
@@ -363,12 +363,14 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
         int desktopWidth = 0, desktopHeight = 0, blockWidth = 0, blockHeight = 0;
         in >> desktopWidth >> desktopHeight >> blockWidth >> blockHeight;
 
-        emit signalDesktopInfoPacketReceived(peerName, desktopWidth, desktopHeight, blockWidth, blockHeight);
+        emit signalDesktopInfoPacketReceived(socketID, peerName, desktopWidth, desktopHeight, blockWidth, blockHeight);
 
     }
     break;
     case quint8(MS::ResponseScreenshot):
     {
+        //qDebug()<<"~~ResponseScreenshot";
+
         QList<QPoint> locations;
         QList<QByteArray> images;
 

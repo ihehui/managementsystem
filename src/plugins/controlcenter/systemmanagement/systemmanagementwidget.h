@@ -33,7 +33,7 @@ public:
     
     
 signals:
-    void requestRemoteAssistance();
+    void updateTitle(SystemManagementWidget *wgt);
 
 public slots:
     void setRTP(RTP *rtp);
@@ -74,9 +74,6 @@ private slots:
     void on_toolButtonRunRemoteApplication_clicked();
     void on_toolButtonSendCommand_clicked();
 
-    void on_pushButtonRefreshScreenshot_clicked();
-
-
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online);
     void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool result, const QString &message);
@@ -96,6 +93,8 @@ private slots:
     void requestDeleteUser(const QString &userName);
 
     void requestSendMessageToUser(const QString &userName);
+    void requestMonitorUserDesktop(const QString &userName);
+
     //void sendMessageToUser(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod);
     void requestLockWindows(const QString &userName, bool logoff);
 

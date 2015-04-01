@@ -64,8 +64,8 @@ public slots:
     QList<SOCKETID> localUserSockets();
 
 
-    void requestScreenshot(SOCKETID adminSocketID, const QString &userName);
-    void setSocketConnectedToAdmin(SOCKETID socketID);
+    void requestScreenshot(SOCKETID adminSocketID, const QString &userName, const QString &adminAddress, quint16 adminPort);
+    void setSocketConnectedToAdmin(SOCKETID socketID, const QString &adminName);
 
 
 
@@ -540,7 +540,7 @@ public slots:
     }
 
 
-    bool sendAdminRequestScreenshotPacket(SOCKETID userSocketID){
+    bool sendAdminRequestScreenshotPacket(SOCKETID userSocketID, const QString &adminAddress, quint16 adminPort){
         //qDebug()<<"----sendAdminRequestScreenshotPacket(...):";
 
         Packet *packet = PacketHandlerBase::getPacket(userSocketID);
@@ -550,7 +550,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName ;
+        out << m_localComputerName << m_adminName << adminAddress << adminPort ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -949,6 +949,7 @@ private:
     QHash<SOCKETID /*Socket ID*/, QString /*User Name*/> m_localUserSocketsHash;
 
     SOCKETID m_socketConnectedToAdmin;
+    QString m_adminName;
 
 };
 

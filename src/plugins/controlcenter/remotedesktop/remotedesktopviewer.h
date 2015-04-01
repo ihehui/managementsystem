@@ -15,27 +15,33 @@ class RemoteDesktopViewer : public ImageViewer
     Q_OBJECT
 
 public:
-    RemoteDesktopViewer(QWidget *parent = 0);
+    RemoteDesktopViewer(QWidget *parent = 0, Qt::WindowFlags flag = Qt::Widget);
     ~RemoteDesktopViewer();
 
 
-    void setDesktopInfo(const QString &id, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
+    void setDesktopInfo(quint32 userSocketID, const QString &id, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
     void updatePixmap(QList<QPoint> locations, QList<QByteArray> images);
 
-
+    quint32 userSocketID();
     QString viewerID() const;
+
 
 
 signals:
     //void signalCloseWindow();
-    void toBeDstroyed();
+    //void toBeDstroyed();
 
+public slots:
+    void peerDisconnected();
 
-
+private slots:
+    void save();
+    void showContextMenu(const QPoint &pos);
 
 private:
-
+    quint32 m_userSocketID;
     QString m_id;
+
 
     quint8 m_blockCount;
     QSize m_blockSize;

@@ -191,8 +191,10 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     connect(ui.tabUsers, SIGNAL(signalGetUsersInfo(quint8)), this, SLOT(requestClientInfo(quint8)));
     connect(ui.tabUsers, SIGNAL(signalCreateOrModifyWinUser(const QByteArray &)), this, SLOT(requestCreateOrModifyWinUser(const QByteArray &)));
     connect(ui.tabUsers, SIGNAL(signalDeleteUser(const QString &)), this, SLOT(requestDeleteUser(const QString &)));
-    connect(ui.tabUsers, SIGNAL(signalLockWindows(const QString &, bool)), this, SLOT(requestLockWindows(const QString &, bool)));
     connect(ui.tabUsers, SIGNAL(signalSendMessageToUser(QString)), this, SLOT(requestSendMessageToUser(const QString &)));
+    connect(ui.tabUsers, SIGNAL(signalMonitorUserDesktop(QString)), this, SLOT(requestMonitorUserDesktop(const QString &)));
+    connect(ui.tabUsers, SIGNAL(signalLockWindows(const QString &, bool)), this, SLOT(requestLockWindows(const QString &, bool)));
+
     ui.tabUsers->setEnabled(false);
 
     connect(ui.tabServices, SIGNAL(signalGetServicesInfo(quint8)), this, SLOT(requestClientInfo(quint8)));
@@ -943,22 +945,6 @@ void SystemManagementWidget::on_toolButtonSendCommand_clicked(){
 
 }
 
-void SystemManagementWidget::on_pushButtonRefreshScreenshot_clicked(){
-
-    if(m_onlineUsers.isEmpty()){
-        QMessageBox::critical(this, tr("Error"), tr("No user online!"));
-        return;
-    }
-
-    QString userName = m_onlineUsers.first();
-    bool ok = controlCenterPacketsParser->sendRequestScreenshotPacket(m_peerSocket, userName, true);
-    if(!ok){
-        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
-        return;
-    }
-
-}
-
 
 void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online){
     qDebug()<<"--SystemManagementWidget::processClientOnlineStatusChangedPacket(...)";
@@ -993,6 +979,9 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
 
     if(result == true){
         m_peerComputerName = computerName;
+        setWindowTitle(computerName);
+        emit updateTitle(this);
+
         ui.computerNameLineEdit->setText(computerName);
 
         ui.lineEditComputerName->setText(computerName);
@@ -1244,6 +1233,7 @@ void SystemManagementWidget::requestDeleteUser(const QString &userName){
 }
 
 
+
 void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
 
     QDialog dlg(this);
@@ -1275,6 +1265,13 @@ void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
     }
 
+}
+
+void SystemManagementWidget::requestMonitorUserDesktop(const QString &userName){
+    bool ok = controlCenterPacketsParser->sendRequestScreenshotPacket(m_peerSocket, userName);
+    if(!ok){
+        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+    }
 }
 
 //void SystemManagementWidget::sendMessageToUser(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod){
@@ -1390,8 +1387,6 @@ void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString
     if(ui.tabUsers->isActive()){
         requestClientInfo(MS::SYSINFO_USERS);
     }
-
-    ui.pushButtonRefreshScreenshot->setEnabled(!m_onlineUsers.isEmpty());
 
 }
 

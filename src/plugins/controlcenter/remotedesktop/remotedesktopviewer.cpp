@@ -2,24 +2,37 @@
 
 
 #include <QPainter>
+#include <QDebug>
+#include <QMessageBox>
+#include <QDateTime>
+#include <QDir>
+#include <QApplication>
+
 
 
 namespace HEHUI {
 
-RemoteDesktopViewer::RemoteDesktopViewer(QWidget *parent)
-    :ImageViewer(parent)
+
+RemoteDesktopViewer::RemoteDesktopViewer(QWidget *parent, Qt::WindowFlags flag)
+    :ImageViewer(parent, flag)
 {
 
     setAttribute(Qt::WA_DeleteOnClose);
+
+    m_userSocketID = 0;
+    m_id = "";
+
 
 }
 
 RemoteDesktopViewer::~RemoteDesktopViewer()
 {
-    emit toBeDstroyed();
+    //emit toBeDstroyed();
 }
 
-void RemoteDesktopViewer::setDesktopInfo(const QString &id, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
+void RemoteDesktopViewer::setDesktopInfo(quint32 userSocketID, const QString &id, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
+
+    m_userSocketID = userSocketID;
     m_id = id;
 
     m_blockSize = QSize(blockWidth, blockHeight);
@@ -36,11 +49,19 @@ void RemoteDesktopViewer::setDesktopInfo(const QString &id, int desktopWidth, in
 //    }
 
 
+    m_image = QImage(desktopWidth, desktopHeight, QImage::Format_RGB32);
+    m_image.fill(Qt::lightGray);
+
+//    QPainter painter(&m_image);
+//    //painter.setCompositionMode(QPainter::CompositionMode_HardLight);
+//    painter.fillRect(QRect(0, 0, desktopWidth, desktopHeight), Qt::lightGray);
+//    painter.end();
 
 
 }
 
 void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray> images){
+    //qDebug()<<"--RemoteDesktopViewer::updatePixmap(...)";
 
     QPainter painter(&m_image);
 
@@ -52,19 +73,50 @@ void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray
 
         painter.drawImage(target, image, source);
     }
+    painter.end();
 
     updateAnimationFrame(m_image);
 
+}
+
+quint32 RemoteDesktopViewer::userSocketID(){
+    return m_userSocketID;
 }
 
 QString RemoteDesktopViewer::viewerID() const{
     return m_id;
 }
 
+void RemoteDesktopViewer::peerDisconnected(){
+    qDebug()<<"--RemoteDesktopViewer::peerDisconnected()";
+
+    m_blockSize = QSize(0, 0);
+    m_image = QImage();
+
+    m_userSocketID = 0;
+    setText(tr("Disconnected"));
+}
+
+void RemoteDesktopViewer::save(){
+
+    QString savePath = QApplication::applicationDirPath() + "/snapshot";
+    QDir dir;
+    if(!dir.mkpath(savePath)){
+        QMessageBox::critical(this, tr("Error"), tr("Can not create path:<p>%1</p>").arg(savePath));
+        return;
+    }
+
+    QString fileName = savePath + QString("/%1-%2.jpg").arg(m_id).arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+    if(!m_image.save(fileName)){
+        QMessageBox::critical(this, tr("Error"), tr("Can not save image as:<p>%1</p>").arg(fileName));
+    }
 
 
+}
 
+void RemoteDesktopViewer::showContextMenu(const QPoint &pos){
 
+}
 
 
 

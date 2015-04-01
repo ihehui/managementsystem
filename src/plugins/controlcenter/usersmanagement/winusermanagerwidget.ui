@@ -112,6 +112,11 @@
     <string>Send Message</string>
    </property>
   </action>
+  <action name="actionMonitorDesktop">
+   <property name="text">
+    <string>Monitor Desktop</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>tableViewUsers</tabstop>

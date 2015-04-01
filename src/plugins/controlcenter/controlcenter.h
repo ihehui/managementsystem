@@ -74,6 +74,7 @@ private slots:
 
     void slotRemoteDesktop();
     void slotVNC();
+    void updateTitle(SystemManagementWidget *wgt);
     void slotUpdateUserLogonPassword();
     void slotInformUserNewLogonPassword();
     void slotSendAnnouncement();
@@ -91,8 +92,10 @@ private slots:
     
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 
-    void processDesktopInfo(const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
+    void processDesktopInfo(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
     void processScreenshot(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
+    void closeRemoteDesktopMonitor();
+    void closeUserSocket(quint32 userSocketID);
 
 
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
@@ -154,7 +157,6 @@ private:
 
     QHash<QString/*Computer Name*/, ClientInfo *> clientInfoHash;
     ClientInfoModel *clientInfoModel;
-    //QSortFilterProxyModel *proxyModel;
     ClientInfoSortFilterProxyModel *proxyModel;
     
 

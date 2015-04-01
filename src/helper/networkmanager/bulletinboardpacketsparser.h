@@ -243,7 +243,7 @@ signals:
     void signalAdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword);
     void signalAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement, bool confirmationRequired, int validityPeriod);
 
-    void signalAdminRequestScreenshotPacketReceived(SOCKETID adminSocketID);
+    void signalAdminRequestScreenshotPacketReceived(SOCKETID adminSocketID, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 
 
 private:

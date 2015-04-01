@@ -396,14 +396,16 @@ void ControlCenter::slotInitTabWidget(){
 
 void ControlCenter::slotTabPageChanged(){
 
-    SystemManagementWidget *systemManagementWidget = qobject_cast<SystemManagementWidget *>(ui.tabWidget->currentWidget());
+    QWidget *currentWidget = ui.tabWidget->currentWidget();
+
+    SystemManagementWidget *systemManagementWidget = qobject_cast<SystemManagementWidget *>(currentWidget);
     if(systemManagementWidget){
         if(systemManagementWidget == localSystemManagementWidget){
             ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(false);
         }else{
             ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(true);
         }
-    }else{
+    }else{      
         ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(false);
     }
 
@@ -422,9 +424,9 @@ void ControlCenter::slotNewTab(){
 
 
     SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, 0, this);
-    connect(systemManagementWidget, SIGNAL(requestRemoteAssistance()), this, SLOT(slotVNC()));
+    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTitle(SystemManagementWidget*)));
 
-    ui.tabWidget->addTab(systemManagementWidget, "System Management");
+    ui.tabWidget->addTab(systemManagementWidget, tr("System Management"));
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
     ui.tabWidget->setCurrentWidget(systemManagementWidget);
 
@@ -494,8 +496,8 @@ void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 
 
     SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, info, this);
-    connect(systemManagementWidget, SIGNAL(requestRemoteAssistance()), this, SLOT(slotVNC()));
-    
+    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTitle(SystemManagementWidget*)));
+
     ui.tabWidget->addTab(systemManagementWidget, targetComputerName);
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
     ui.tabWidget->setCurrentWidget(systemManagementWidget);
@@ -876,6 +878,12 @@ void ControlCenter::slotVNC(){
     
 }
 
+void ControlCenter::updateTitle(SystemManagementWidget *wgt){
+    if(!wgt){return;}
+    QString title = wgt->windowTitle();
+    ui.tabWidget->setTabText(ui.tabWidget->indexOf(wgt), title);
+}
+
 void ControlCenter::slotUpdateUserLogonPassword(){
     QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
     return;
@@ -1058,10 +1066,10 @@ void ControlCenter::startNetwork(){
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
     connect(controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)));
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
 
-    connect(controlCenterPacketsParser, SIGNAL(signalDesktopInfoPacketReceived(const QString &, int, int, int, int)), this, SLOT(processDesktopInfo(const QString &, int, int, int, int)));
+    connect(controlCenterPacketsParser, SIGNAL(signalDesktopInfoPacketReceived(quint32, const QString &, int, int, int, int)), this, SLOT(processDesktopInfo(quint32, const QString &, int, int, int, int)));
     connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, QList<QPoint>, QList<QByteArray>)), this, SLOT(processScreenshot(const QString &, QList<QPoint>, QList<QByteArray>)));
 
 
@@ -1191,15 +1199,18 @@ void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
 
 }
 
-void ControlCenter::processDesktopInfo(const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
+void ControlCenter::processDesktopInfo(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
 
     if(!m_remoteDesktopMonitor){
         m_remoteDesktopMonitor = new RemoteDesktopMonitor(this);
-        ui.tabWidget->addTab(m_remoteDesktopMonitor, tr("Remote Desktop"));
+        connect(m_remoteDesktopMonitor, SIGNAL(closeUserSocket(quint32)), this, SLOT(closeUserSocket(quint32)));
+        connect(m_remoteDesktopMonitor, SIGNAL(signalClose()), this, SLOT(closeRemoteDesktopMonitor()));
+
+        ui.tabWidget->insertTab(1, m_remoteDesktopMonitor, tr("Remote Desktop"));
+        ui.tabWidget->setCurrentWidget(m_remoteDesktopMonitor);
     }
 
-    m_remoteDesktopMonitor->setDesktopInfo(userID, desktopWidth, desktopHeight, blockWidth, blockHeight);
-
+    m_remoteDesktopMonitor->setDesktopInfo(userSocketID, userID, desktopWidth, desktopHeight, blockWidth, blockHeight);
 
 }
 
@@ -1210,6 +1221,25 @@ void ControlCenter::processScreenshot(const QString &userID, QList<QPoint> locat
     }
 
     m_remoteDesktopMonitor->updateScreenshot(userID, locations, images);
+}
+
+void ControlCenter::closeRemoteDesktopMonitor(){
+    qDebug()<<"--ControlCenter::closeRemoteDesktopMonitor()";
+
+    if(!m_remoteDesktopMonitor){
+        return;
+    }
+
+    ui.tabWidget->removeTab(ui.tabWidget->indexOf(m_remoteDesktopMonitor));
+
+    delete m_remoteDesktopMonitor;
+    m_remoteDesktopMonitor = 0;
+
+}
+
+void ControlCenter::closeUserSocket(quint32 userSocketID){
+    qDebug()<<"--ControlCenter::closeUserSocket(...) userSocketID:"<<userSocketID;
+    m_rtp->closeSocket(userSocketID);
 }
 
 void ControlCenter::peerConnected(const QHostAddress &peerAddress, quint16 peerPort){
@@ -1258,6 +1288,10 @@ void ControlCenter::peerDisconnected(SOCKETID socketID){
 
 //        clientSocketsHash.remove(socketID);
 //    }
+
+    if(m_remoteDesktopMonitor){
+        m_remoteDesktopMonitor->peerDisconnected(socketID);
+    }
 
 }
 

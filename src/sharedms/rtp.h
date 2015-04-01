@@ -52,6 +52,8 @@ signals:
 //    void connected (int socketID, const QString &peerAddress, quint16 peerPort);
     void disconnected (SOCKETID socketID/*, const QString &peerAddress, quint16 peerPort*/);
 
+public slots:
+
     
 private slots:
     void tcpPeerConnected(SOCKETID socketID, const QString &address, quint16 port);

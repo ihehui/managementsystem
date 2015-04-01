@@ -22,12 +22,25 @@ public:
     explicit RemoteDesktopMonitor(QWidget *parent = 0);
     ~RemoteDesktopMonitor();
 
-    void setDesktopInfo(const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
+    void setDesktopInfo(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
     void updateScreenshot(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
 
+
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
+
+signals:
+    void closeUserSocket(quint32 userSocketID);
+    void signalClose();
+
+public slots:
+    void peerDisconnected(quint32 socketID);
+
+
 private slots:
-    void handleCloseWindowRequest();
-    void handleWindowClosed();
+//    void handleCloseWindowRequest();
 
 private:
     Ui::RemoteDesktopMonitor *ui;

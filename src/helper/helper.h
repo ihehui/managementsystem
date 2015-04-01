@@ -42,7 +42,7 @@ private slots:
 
     void newPasswordRetreved();
 
-    void adminRequestScreenshotPacketReceived(SOCKETID socketID);
+    void adminRequestScreenshotPacketReceived(SOCKETID socketID, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void screenshot();
     
 //    void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);

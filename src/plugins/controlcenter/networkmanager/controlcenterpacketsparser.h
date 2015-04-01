@@ -561,7 +561,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen = true){
+    bool sendRequestScreenshotPacket(SOCKETID socketID, const QString &userName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -570,7 +570,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << userName << (fullScreen?quint8(1):quint8(0));
+        out << m_localID << userName << m_localTCPServerListeningPort;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -977,7 +977,7 @@ signals:
 
     void signalUserReplyMessagePacketReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
 
-    void signalDesktopInfoPacketReceived(const QString &userID, int desktopWidth, int desktopHeight,int  blockWidth, int blockHeight);
+    void signalDesktopInfoPacketReceived(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight,int  blockWidth, int blockHeight);
     void signalScreenshotPacketReceived(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
 
     void signalServiceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType);

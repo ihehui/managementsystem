@@ -144,7 +144,7 @@ void Helper::startNetwork(){
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), this, SLOT(AdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
         connect(bulletinBoardPacketsParser, SIGNAL(signalAnnouncementPacketReceived(const QString&, quint32, const QString&, bool, int)), this, SLOT(serverAnnouncementPacketReceived(const QString&, quint32, const QString&, bool, int)), Qt::QueuedConnection);
 
-        connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestScreenshotPacketReceived(SOCKETID)), this, SLOT(adminRequestScreenshotPacketReceived(SOCKETID)), Qt::QueuedConnection);
+        connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestScreenshotPacketReceived(SOCKETID, const QString&, const QString&, quint16)), this, SLOT(adminRequestScreenshotPacketReceived(SOCKETID, const QString&, const QString&, quint16)), Qt::QueuedConnection);
 
     }
 
@@ -206,9 +206,22 @@ void Helper::newPasswordRetreved(){
     bulletinBoardPacketsParser->sendNewPasswordRetrevedByUserPacket(m_socketConnectedToLocalServer);
 }
 
-void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID){
+void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID, const QString &adminName, const QString &adminAddress, quint16 adminPort){
 
-    QScreen *screen = QApplication::primaryScreen();
+
+    QString errorMessage;
+    if(m_socketConnectedToAdmin != INVALID_SOCK_ID){
+        m_rtp->closeSocket(m_socketConnectedToAdmin);
+    }
+
+    m_socketConnectedToAdmin = m_rtp->connectToHost(QHostAddress(adminAddress), adminPort, 5000, &errorMessage, RTP::TCP);
+    if(m_socketConnectedToAdmin == INVALID_SOCK_ID){
+        qCritical()<<QString("Can not connect to admin host '%1:%2'.<br>%3").arg(adminAddress).arg(adminPort).arg(errorMessage);
+        return;
+    }
+
+
+    screen = QApplication::primaryScreen();
     if (!screen){
         qCritical()<<"ERROR! No primary screen.";
         return;
@@ -228,7 +241,7 @@ void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID){
 
     int imageWidth = screenImage.width();
     int imageHeight = screenImage.height();
-    int columnCount = 4;
+    int columnCount = 2;
     int rowCount = 2;
 
 
@@ -245,7 +258,7 @@ void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID){
         for(int j=0;j<rowCount;j++){
             QPoint point(i*m_blockWidth, j*m_blockHeight);
             m_locations.append(point);
-            m_images.append(QImage());
+            //m_images.append(QImage());
             m_imagesHash.append(QByteArray());
             //            QImage image = screenImage.copy(QRect(point, m_blockSize));
             //            m_images.append(image);
@@ -260,7 +273,7 @@ void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID){
         }
     }
 
-    m_screenshotTimer->start(200);
+    m_screenshotTimer->start(1000);
 
 }
 
@@ -268,6 +281,8 @@ void Helper::screenshot(){
 
     if (!screen){
         qCritical()<<"ERROR! No primary screen.";
+        m_screenshotTimer->stop();
+
         return;
     }
 
@@ -296,7 +311,7 @@ void Helper::screenshot(){
         if(m_imagesHash.at(i) != hash){
             locations.append(point);
             images.append(byteArray);
-            m_images[i] = image;
+            //m_images[i] = image;
             m_imagesHash[i] = hash;
         }
 
@@ -325,12 +340,29 @@ void Helper::peerDisconnected(SOCKETID socketID){
     qDebug()<<"--BulletinBoardObject::peerDisconnected(...) "<<"socketID:"<<socketID;
 
     //m_rtp->closeSocket(socketID);
-    m_socketConnectedToLocalServer = INVALID_SOCK_ID;
+
+    if(socketID == m_socketConnectedToAdmin){
+        m_socketConnectedToAdmin = INVALID_SOCK_ID;
+        if(m_screenshotTimer){
+            m_screenshotTimer->stop();
+        }
+
+        screen = 0;
+        m_blockWidth = 0;
+        m_blockHeight = 0;
+        m_blockSize = QSize(0, 0);
+        m_locations.clear();
+        //m_images.clear();
+        m_imagesHash.clear();
 
 
-    if(m_connectToLocalServerTimer){
-        m_connectToLocalServerTimer->start();
+    }else{
+        m_socketConnectedToLocalServer = INVALID_SOCK_ID;
+        if(m_connectToLocalServerTimer){
+            m_connectToLocalServerTimer->start();
+        }
     }
+
 
 }
 

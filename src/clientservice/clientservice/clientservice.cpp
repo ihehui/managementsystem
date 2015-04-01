@@ -903,7 +903,7 @@ void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSo
 
     if(ok && result){
         m_socketConnectedToAdmin = adminSocketID;
-        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin);
+        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, adminName);
 
         m_rtp->getAddressInfoFromSocket(m_socketConnectedToAdmin, &m_adminAddress, &m_adminPort);
         qWarning()<<QString("Admin %1 connected form %2:%3 via %4!").arg(adminName+"@"+adminComputerName).arg(m_adminAddress).arg(m_adminPort).arg(m_rtp->socketProtocolString(m_socketConnectedToAdmin));
@@ -912,7 +912,7 @@ void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSo
 
     }else{
         m_rtp->closeSocket(adminSocketID);
-        clientPacketsParser->setSocketConnectedToAdmin(INVALID_SOCK_ID);
+        clientPacketsParser->setSocketConnectedToAdmin(INVALID_SOCK_ID, "");
         return;
     }
 
@@ -2108,7 +2108,7 @@ void ClientService::peerDisconnected(SOCKETID socketID){
     }else if(socketID == m_socketConnectedToAdmin){
         qWarning()<<"Admin Offline!";
         m_socketConnectedToAdmin = INVALID_SOCK_ID;
-        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin);
+        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, "");
         m_adminAddress = "";
         m_adminPort = 0;
 

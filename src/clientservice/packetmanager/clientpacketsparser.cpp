@@ -455,12 +455,12 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::RequestScreenshot):
     {
         QString userName = "";
-        quint8 fullScreen = 1;
-        in >> userName >> fullScreen;
+        quint16 adminListeningPort = 0;
+        in >> userName >> adminListeningPort;
 
-        requestScreenshot(socketID, userName);
+        requestScreenshot(socketID, userName, peerAddress.toString(), adminListeningPort);
 
-        //emit signalAdminRequestScreenshot(socketID, userName, fullScreen);s
+        //emit signalAdminRequestScreenshot(socketID, userName, fullScreen);
 
         qDebug()<<"~~RequestScreenshot";
 
@@ -700,7 +700,7 @@ QList<SOCKETID> ClientPacketsParser::localUserSockets(){
     return m_localUserSocketsHash.keys();
 }
 
-void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QString &userName){
+void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QString &userName, const QString &adminAddress, quint16 adminPort){
 
     SOCKETID userSocketID = socketIDOfUser(userName);
     if(INVALID_SOCK_ID == userSocketID){
@@ -708,12 +708,13 @@ void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QStrin
         return;
     }
 
-    sendAdminRequestScreenshotPacket(userSocketID);
+    sendAdminRequestScreenshotPacket(userSocketID, adminAddress, adminPort);
 
 }
 
-void ClientPacketsParser::setSocketConnectedToAdmin(SOCKETID socketID){
+void ClientPacketsParser::setSocketConnectedToAdmin(SOCKETID socketID, const QString &adminName){
     m_socketConnectedToAdmin = socketID;
+    m_adminName = adminName;
 }
 
 

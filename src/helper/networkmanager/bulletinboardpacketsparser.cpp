@@ -175,23 +175,11 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::RequestScreenshot):
     {
-        //        quint8 fullScreen = 1;
-        //        in >> fullScreen;
+        QString adminName,  adminAddress;
+        quint16 adminPort = 0;
+        in >> adminName >> adminAddress >> adminPort;
 
-        emit signalAdminRequestScreenshotPacketReceived(socketID);
-
-        //        QImage image = ImageResourceBase::screenshot();
-        //        if(image.isNull()){
-        //            return;
-        //        }
-
-        //        QByteArray byteArray;
-        //        QBuffer buffer(&byteArray);
-        //        buffer.open(QIODevice::WriteOnly);
-        //        image.save(&buffer, "jpg");
-        //        buffer.close();
-
-        //        sendUserResponseScreenshotPacket(socketID, byteArray);
+        emit signalAdminRequestScreenshotPacketReceived(socketID, adminName, adminAddress, adminPort);
 
         qDebug()<<"~~RequestScreenshot";
 

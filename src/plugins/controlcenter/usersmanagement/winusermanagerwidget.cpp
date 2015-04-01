@@ -210,6 +210,10 @@ void WinUserManagerWidget::on_actionSendMessage_triggered(){
     emit signalSendMessageToUser(m_selectedWinUser->userName);
 }
 
+void WinUserManagerWidget::on_actionMonitorDesktop_triggered(){
+    emit signalMonitorUserDesktop(m_selectedWinUser->userName);
+}
+
 void WinUserManagerWidget::on_actionLogoff_triggered(){
     emit signalLockWindows(m_selectedWinUser->userName, true);
 }
@@ -416,6 +420,7 @@ void WinUserManagerWidget::slotShowCustomContextMenu(const QPoint & pos){
 
     menu.addSeparator();
     menu.addAction(ui.actionSendMessage);
+    menu.addAction(ui.actionMonitorDesktop);
 
     menu.addSeparator();
     menu.addAction(ui.actionLockDesktop);
@@ -462,6 +467,7 @@ void WinUserManagerWidget::getSelectedUser(const QModelIndex &index){
     ui.actionDeleteAccount->setEnabled(enableModify);
 
     ui.actionSendMessage->setEnabled(userLoggedon);
+    ui.actionMonitorDesktop->setEnabled(userLoggedon);
     ui.actionLockDesktop->setEnabled(userLoggedon);
     ui.actionLogoff->setEnabled(userLoggedon);
 
