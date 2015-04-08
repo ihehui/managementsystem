@@ -7,6 +7,8 @@
 #include "HHSharedGUI/ImageViewer"
 
 
+class CAviFile;
+
 namespace HEHUI {
 
 
@@ -36,7 +38,12 @@ public slots:
 
 private slots:
     void save();
+
+    void startRecord();
+    void stopRecord();
+
     void showContextMenu(const QPoint &pos);
+    void startOrStopRecording();
 
 private:
     quint32 m_userSocketID;
@@ -49,6 +56,11 @@ private:
     //QList<QPixmap> pixmaps;
 
     QImage m_image;
+
+    CAviFile *m_aviFile;
+    QString m_aviFileName;
+
+    QAction *m_actionRecord;
 
 
 };
