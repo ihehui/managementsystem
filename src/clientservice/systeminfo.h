@@ -1,7 +1,7 @@
-#ifndef SYSINFODLG_H
-#define SYSINFODLG_H
+#ifndef SYSTEMINFO_H
+#define SYSTEMINFO_H
 
-#include <QThread>
+#include <QObject>
 
 
 namespace HEHUI {
@@ -50,5 +50,5 @@ private:
 
 } //namespace HEHUI
 
-#endif // SYSINFODLG_H
+#endif // SYSTEMINFO_H
 

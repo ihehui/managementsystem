@@ -31,15 +31,20 @@ HEADERS += clientinfo.h \
     sharedmslib.h \
     tcpserver.h \
     rtp.h \
-    enetprotocol.h
-FORMS += 
+    enetprotocol.h \
+    processmonitorrule.h
+
 SOURCES += clientinfo.cpp \
     udtprotocol.cpp \
     resourcesmanager.cpp \
     filemanager.cpp \
     tcpserver.cpp \
     rtp.cpp \
-    enetprotocol.cpp
+    enetprotocol.cpp \
+    processmonitorrule.cpp
+
+FORMS +=
+
 RESOURCES += resources.qrc
 
 DEFINES += SHAREDMSLIB_LIBRARY_EXPORT

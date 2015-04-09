@@ -201,6 +201,11 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     connect(ui.tabServices, SIGNAL(signalChangServiceConfig(const QString &, bool, quint64)), this, SLOT(changServiceConfig(const QString &, bool, quint64)));
     ui.tabServices->setEnabled(false);
 
+    connect(ui.tabProcessMonitor, SIGNAL(signalGetProcessMonitorInfo(quint8)), this, SLOT(requestClientInfo(quint8)));
+    connect(ui.tabProcessMonitor, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
+    ui.tabProcessMonitor->setEnabled(false);
+
+
 
 }
 
@@ -998,6 +1003,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         ui.tabSoftware->setEnabled(true);
         ui.tabUsers->setEnabled(true);
         ui.tabServices->setEnabled(true);
+        ui.tabProcessMonitor->setEnabled(true);
 
         m_fileManagementWidget->setPeerSocket(m_peerSocket);
         ui.tabFileManagement->setEnabled(true);
@@ -1115,6 +1121,12 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &computerNam
         ui.tabUsers->setData(data);
         break;
 
+    case quint8(MS::SYSINFO_PROCESSMONITOR):
+        ui.tabProcessMonitor->setJsonData(data);
+        break;
+
+
+
     default:
         break;
     }
@@ -1216,6 +1228,16 @@ void SystemManagementWidget::changServiceConfig(const QString &serviceName, bool
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
     }
+}
+
+void SystemManagementWidget::changProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName){
+    bool ok = controlCenterPacketsParser->sendRequestChangeProcessMonitorInfoPacket(m_peerSocket, rulesData, QByteArray(), enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, computerName);
+    if(!ok){
+        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+    }
+
+    emit signalSetProcessMonitorInfo(rulesData, QByteArray(), enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, m_peerComputerName);
+
 }
 
 void SystemManagementWidget::requestCreateOrModifyWinUser(const QByteArray &userData){
@@ -1456,6 +1478,8 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
     ui.tabSoftware->setEnabled(false);
     ui.tabUsers->setEnabled(false);
     ui.tabServices->setEnabled(false);
+    ui.tabProcessMonitor->setEnabled(false);
+
 
     m_fileManagementWidget->peerDisconnected(normalClose);
     m_fileManagementWidget->setPeerSocket(INVALID_SOCK_ID);

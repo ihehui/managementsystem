@@ -101,7 +101,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="movable">
       <bool>true</bool>
@@ -827,6 +827,11 @@
        <string>Software</string>
       </attribute>
      </widget>
+     <widget class="HEHUI::ProcessMonitor" name="tabProcessMonitor">
+      <attribute name="title">
+       <string>Process Monitor</string>
+      </attribute>
+     </widget>
      <widget class="HEHUI::WinUserManagerWidget" name="tabUsers">
       <attribute name="title">
        <string>Users</string>
@@ -985,6 +990,12 @@
    <class>HEHUI::SoftwareMamagement</class>
    <extends>QWidget</extends>
    <header location="global">softwaremamagement.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HEHUI::ProcessMonitor</class>
+   <extends>QWidget</extends>
+   <header location="global">processmonitor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

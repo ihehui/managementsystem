@@ -74,6 +74,9 @@ private slots:
     void processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData);
     void processSoftwareInfo(ClientInfo *info, const QByteArray &data);
 
+    void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules);
+
+
     void getRecordsInDatabase();
 
 //    void processHeartbeatPacket(const QString &clientAddress, const QString &computerName);

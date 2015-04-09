@@ -273,7 +273,9 @@ namespace HEHUI {
             RequestDeleteUser,
 
             RequestChangeServiceConfig,
-            ServiceConfigChanged
+            ServiceConfigChanged,
+
+            RequestChangeProcessMonitorInfo,
 
             
 
@@ -320,9 +322,23 @@ namespace HEHUI {
 
         enum ClientMessageType{MSG_Information = 0, MSG_Warning, MSG_Critical};
         
-        enum USBSTORStatus{USBSTOR_Disabled = 0, USBSTOR_ReadWrite, USBSTOR_ReadOnly, USBSTOR_Unknown};
+        enum USBSTORStatus{
+            USBSTOR_Disabled = 0,
+            USBSTOR_ReadWrite,
+            USBSTOR_ReadOnly,
+            USBSTOR_Unknown
+        };
 
-        enum SystemInfoType{SYSINFO_UNKNOWN = 0, SYSINFO_OS, SYSINFO_HARDWARE, SYSINFO_SOFTWARE, SYSINFO_SERVICES, SYSINFO_USERS};
+        enum SystemInfoType{
+            SYSINFO_UNKNOWN = 0,
+            SYSINFO_OS,
+            SYSINFO_HARDWARE,
+            SYSINFO_SOFTWARE,
+            SYSINFO_SERVICES,
+            SYSINFO_USERS,
+            SYSINFO_PROCESSMONITOR
+        };
+
 
 
     } // namespace MS

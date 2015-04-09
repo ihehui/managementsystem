@@ -200,7 +200,7 @@ quint16 RTP::getENETProtocolPort(){
 
 
 SOCKETID RTP::connectToHost( const QHostAddress & hostAddress, quint16 port, int waitMsecs, QString *errorMessage, Protocol protocol){
-    qDebug()<<"-------------------Protocol:"<<protocol;
+
     SOCKETID socketID = INVALID_SOCK_ID;
     QString err;
     bool connected = false;
@@ -278,7 +278,6 @@ SOCKETID RTP::connectToHost( const QHostAddress & hostAddress, quint16 port, int
         //TODO
         if(m_socketInfoHash.contains(socketID)){
             Protocol ptl = m_socketInfoHash.value(socketID);
-            qDebug()<<"--------ptl:"<<ptl<<"  protocol"<<protocol;
             if(ptl != protocol){
                 closeSocket(socketID);
             }

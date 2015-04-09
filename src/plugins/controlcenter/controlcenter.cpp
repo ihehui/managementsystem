@@ -425,6 +425,7 @@ void ControlCenter::slotNewTab(){
 
     SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, 0, this);
     connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTitle(SystemManagementWidget*)));
+    connect(systemManagementWidget, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
 
     ui.tabWidget->addTab(systemManagementWidget, tr("System Management"));
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
@@ -497,6 +498,7 @@ void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 
     SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, info, this);
     connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTitle(SystemManagementWidget*)));
+    connect(systemManagementWidget, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
 
     ui.tabWidget->addTab(systemManagementWidget, targetComputerName);
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
@@ -882,6 +884,20 @@ void ControlCenter::updateTitle(SystemManagementWidget *wgt){
     if(!wgt){return;}
     QString title = wgt->windowTitle();
     ui.tabWidget->setTabText(ui.tabWidget->indexOf(wgt), title);
+}
+
+void ControlCenter::changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName){
+
+    if(INVALID_SOCK_ID == m_socketConnectedToServer){
+        QMessageBox::critical(this, tr("Error"), tr("Server is offline! Can not sync process monitor data to server!"));
+        return;
+    }
+
+    bool ok = controlCenterPacketsParser->sendRequestChangeProcessMonitorInfoPacket(m_socketConnectedToServer, localRulesData, globalRulesData, enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, computerName);
+    if(!ok){
+        QMessageBox::critical(this, tr("Error"), tr("Can not send data to server!<br>%1").arg(m_rtp->lastErrorString()));
+    }
+
 }
 
 void ControlCenter::slotUpdateUserLogonPassword(){

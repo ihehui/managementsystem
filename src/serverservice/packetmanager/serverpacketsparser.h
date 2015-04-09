@@ -252,6 +252,9 @@ signals:
 
     void signalClientLogReceived(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
 
+    void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+
+
     void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &clientName, bool online);
 
     void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online);

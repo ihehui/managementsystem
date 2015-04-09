@@ -272,6 +272,28 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ClientLog";
     }
     break;
+
+    case quint8(MS::RequestChangeProcessMonitorInfo):
+    {
+        QByteArray localRulesData,  globalRulesData;
+        quint8 enableProcMon = 0;
+        quint8 enablePassthrough = 1;
+        quint8 enableLogAllowedProcess = 0;
+        quint8 enableLogBlockedProcess = 1;
+        quint8 useGlobalRules = 1;
+        QString computerName = "";
+
+        in >> localRulesData >> globalRulesData >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>computerName;
+
+        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, localRulesData, globalRulesData, enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, computerName);
+        qDebug()<<"~~RequestChangeProcessMonitorInfo";
+    }
+    break;
+
+
+
+
+
     default:
 //        qWarning()<<"Unknown Packet Type:"<<packetType
 //                 //<<"    Serial Number: "<<packetSerialNumber

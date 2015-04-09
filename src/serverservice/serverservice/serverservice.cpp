@@ -161,6 +161,9 @@ bool ServerService::startMainService(){
     connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
 
+    connect(serverPacketsParser, SIGNAL(signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID, const QByteArray &, bool, bool, bool, bool, bool)), this, SLOT(processRequestChangeProcessMonitorInfoPacket(SOCKETID, const QByteArray &, bool, bool, bool, bool, bool)), Qt::QueuedConnection);
+
+
 //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
@@ -697,6 +700,9 @@ void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data
 
 }
 
+void ServerService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules){
+    //TODO
+}
 
 void ServerService::getRecordsInDatabase(){
 

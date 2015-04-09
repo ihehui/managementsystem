@@ -32,7 +32,8 @@ INCLUDEPATH +=  $$UI_DIR \
                 filemanagement \
                 servicesmanagement \
                 usersmanagement \
-                softwaremanagement
+                softwaremanagement \
+                processmonitor
 
 # Input
 HEADERS += \
@@ -57,7 +58,10 @@ HEADERS += \
     softwaremanagement/softwaremamagement.h \
     remotedesktop/remotedesktopmonitor.h \
     remotedesktop/remotedesktopviewer.h \
-    remotedesktop/AviFile.h
+    remotedesktop/AviFile.h \
+    processmonitor/processmonitor.h \
+    processmonitor/processmonitorrulemodel.h \
+    processmonitor/ruleinfowidget.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -80,7 +84,10 @@ SOURCES += \
     softwaremanagement/softwaremamagement.cpp \
     remotedesktop/remotedesktopmonitor.cpp \
     remotedesktop/remotedesktopviewer.cpp \
-    remotedesktop/avifile.cpp
+    remotedesktop/avifile.cpp \
+    processmonitor/processmonitor.cpp \
+    processmonitor/processmonitorrulemodel.cpp \
+    processmonitor/ruleinfowidget.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -94,7 +101,9 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     usersmanagement/winuserinfowidget.ui \
     usersmanagement/winusermanagerwidget.ui \
     softwaremanagement/softwaremamagement.ui \
-    remotedesktop/remotedesktopmonitor.ui
+    remotedesktop/remotedesktopmonitor.ui \
+    processmonitor/processmonitor.ui \
+    processmonitor/ruleinfowidget.ui
 
 RESOURCES += controlcenter.qrc
 

@@ -498,7 +498,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
         in >> message >> waitTime >> force >> reboot ;
 
-        signalAdminRequestShutdownPacketReceived(socketID, message, waitTime, force, reboot );
+        emit signalAdminRequestShutdownPacketReceived(socketID, message, waitTime, force, reboot );
         qDebug()<<"~~RequestShutdown";
     }
     break;
@@ -510,7 +510,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
         in >> userName >> logoff ;
 
-        signalAdminRequestLockWindowsPacketReceived(socketID, userName, logoff );
+        emit signalAdminRequestLockWindowsPacketReceived(socketID, userName, logoff );
         qDebug()<<"~~RequestLockWindows";
     }
     break;
@@ -520,7 +520,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         QByteArray userData;
         in >> userData ;
 
-        signalAdminRequestCreateOrModifyWinUserPacketReceived(socketID, userData );
+        emit signalAdminRequestCreateOrModifyWinUserPacketReceived(socketID, userData );
         qDebug()<<"~~RequestCreateOrModifyWinUser";
     }
     break;
@@ -530,7 +530,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         QString userName = "";
         in >> userName ;
 
-        signalAdminRequestDeleteUserPacketReceived(socketID, userName );
+        emit signalAdminRequestDeleteUserPacketReceived(socketID, userName );
         qDebug()<<"~~RequestDeleteUser";
     }
     break;
@@ -543,12 +543,31 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
         in >> serviceName >> startService >> startType ;
 
-        signalAdminRequestChangeServiceConfigPacketReceived(socketID, serviceName, startService, startType);
+        emit signalAdminRequestChangeServiceConfigPacketReceived(socketID, serviceName, startService, startType);
         qDebug()<<"~~RequestChangeServiceConfig";
     }
     break;
 
+    case quint8(MS::RequestChangeProcessMonitorInfo):
+    {
+        QByteArray localRulesData,  globalRulesData;
+        quint8 enableProcMon = 0;
+        quint8 enablePassthrough = 1;
+        quint8 enableLogAllowedProcess = 0;
+        quint8 enableLogBlockedProcess = 1;
+        quint8 useGlobalRules = 1;
+        QString computerName = "";
 
+        in >> localRulesData >> globalRulesData >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>computerName;
+
+        if(computerName.toLower() != m_localComputerName){
+            return;
+        }
+
+        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, localRulesData, globalRulesData, enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules);
+        qDebug()<<"~~RequestChangeProcessMonitorInfo";
+    }
+    break;
 
 ////////////////////////////////////////////
     case quint8(MS::RequestFileSystemInfo):

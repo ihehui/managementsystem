@@ -10,7 +10,6 @@
 
 #include "HHSharedNetwork/hnetworkutilities.h"
 #include "HHSharedCore/hutilities.h"
-#include "HHSharedCore/hcryptography.h"
 
 
 
@@ -48,6 +47,8 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 
     //settings = new QSettings("HKEY_LOCAL_MACHINE\\SECURITY\\System", QSettings::NativeFormat, this);
     settings = 0;
+    encryptionKey = QByteArray();
+    cryptography = 0;
 
     m_localComputerName = QHostInfo::localHostName().toLower();
 
@@ -105,6 +106,10 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 //    m_myInfo = new ClientInfo(m_localComputerName, this);
 
     systemInfo = 0;
+
+    m_procMonEnabled = false;
+    m_processMonitor = 0;
+
 
 
 }
@@ -206,8 +211,6 @@ bool ClientService::startMainService(){
     }
 
 
-
-
     QString errorMessage = "";
 //    m_udpServer = resourcesManager->startIPMCServer(QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16(IP_MULTICAST_GROUP_PORT), &errorMessage);
 //    if(!m_udpServer){
@@ -283,6 +286,7 @@ bool ClientService::startMainService(){
 
 
     connect(clientPacketsParser, SIGNAL(signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID,QString,bool,ulong)), this, SLOT(processAdminRequestChangeServiceConfigPacket(SOCKETID,QString,bool,ulong)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID, const QByteArray &, bool, bool, bool, bool, bool)), this, SLOT(processRequestChangeProcessMonitorInfoPacket(SOCKETID, const QByteArray &, bool, bool, bool, bool, bool)), Qt::QueuedConnection);
 
 
 
@@ -1442,6 +1446,141 @@ void ClientService::processAdminRequestChangeServiceConfigPacket(SOCKETID socket
 
 }
 
+void ClientService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules){
+
+    m_procMonEnabled = enableProcMon;
+
+    QStringList strList;
+    strList.append(QString::number(enableProcMon));
+    strList.append(QString::number(enablePassthrough));
+    strList.append(QString::number(enableLogAllowedProcess));
+    strList.append(QString::number(enableLogBlockedProcess));
+    strList.append(QString::number(useGlobalRules));
+    QByteArray infoArray = strList.join(";").toUtf8();
+
+    QByteArray encryptedData;
+    cryptography->teaCrypto(&encryptedData, infoArray, encryptionKey, true);
+    settings->setValue("ProcMon/BasicInfo", encryptedData);
+
+    encryptedData.clear();
+    cryptography->teaCrypto(&encryptedData, localRulesData, encryptionKey, true);
+    settings->setValue("ProcMon/LocalRules", encryptedData);
+
+    if(useGlobalRules){
+        encryptedData.clear();
+        cryptography->teaCrypto(&encryptedData, globalRulesData, encryptionKey, true);
+        settings->setValue("ProcMon/GlobalRules", encryptedData);
+    }
+
+
+    if(m_procMonEnabled){
+        if(!m_processMonitor){
+            m_processMonitor = new ProcessMonitor(this);
+        }
+
+        if(useGlobalRules){
+            m_processMonitor->cleanRules(true);
+            m_processMonitor->setRulesData(globalRulesData);
+        }
+        m_processMonitor->cleanRules(false);
+        m_processMonitor->setRulesData(localRulesData);
+
+        m_processMonitor->setBasicInfo(useGlobalRules, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess);
+
+        if(!m_processMonitor->init()){
+            qCritical()<<QString("ERROR! Failed to init ProcessMonitor. Error code: %1").arg(m_processMonitor->lastErrorCode());
+            //TODO
+        }
+    }else{
+        if(m_processMonitor){
+            delete m_processMonitor;
+            m_processMonitor = 0;
+        }
+    }
+
+
+
+
+}
+
+void ClientService::initProcessMonitorInfo(){
+    QByteArray decryptedData;
+
+    QByteArray basicInfo = settings->value("ProcMon/BasicInfo").toByteArray();
+    if(basicInfo.isEmpty()){
+        return;
+    }
+
+    bool enableProcMon = false;
+    bool enablePassthrough = false;
+    bool enableLogAllowedProcess = false;
+    bool enableLogBlockedProcess = false ;
+    bool useGlobalRules = false;
+    if(cryptography->teaCrypto(&decryptedData, basicInfo, encryptionKey, false)){
+        QStringList strList = QString(decryptedData).split(";");
+        if(strList.size() == 5){
+            int index = 0;
+            enableProcMon = strList.at(index++).toUInt();
+            enablePassthrough = strList.at(index++).toUInt();
+            enableLogAllowedProcess = strList.at(index++).toUInt();
+            enableLogBlockedProcess = strList.at(index++).toUInt();
+            useGlobalRules = strList.at(index++).toUInt();
+        }
+    }else{
+        settings->remove("ProcMon/BasicInfo");
+        //TODO
+        return;
+    }
+
+    m_procMonEnabled = enableProcMon;
+    if(!m_procMonEnabled){
+        return;
+    }
+
+    QByteArray localRules = settings->value("ProcMon/LocalRules").toByteArray();
+    if(!localRules.isEmpty()){
+        decryptedData.clear();
+        if(cryptography->teaCrypto(&decryptedData, localRules, encryptionKey, false)){
+            localRules = decryptedData;
+        }else{
+            settings->remove("ProcMon/LocalRules");
+        }
+    }
+
+    QByteArray globalRules;
+    if(useGlobalRules){
+        globalRules = settings->value("ProcMon/GlobalRules").toByteArray();
+        if(!globalRules.isEmpty()){
+            decryptedData.clear();
+            if(cryptography->teaCrypto(&decryptedData, globalRules, encryptionKey, false)){
+                globalRules = decryptedData;
+            }else{
+                settings->remove("ProcMon/GlobalRules");
+            }
+        }
+    }
+
+
+
+    if(!m_processMonitor){
+        m_processMonitor = new ProcessMonitor(this);
+    }
+
+    if(useGlobalRules){
+        m_processMonitor->setRulesData(globalRules);
+    }
+    m_processMonitor->setRulesData(localRules);
+
+     m_processMonitor->setBasicInfo(useGlobalRules, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess);
+
+    if(!m_processMonitor->init()){
+        qCritical()<<QString("ERROR! Failed to init ProcessMonitor. Error code: %1").arg(m_processMonitor->lastErrorCode());
+        //TODO
+    }
+
+
+}
+
 QStringList ClientService::usersOnLocalComputer(){
 
 #ifdef Q_OS_WIN
@@ -2535,6 +2674,9 @@ void ClientService::start()
     mainServiceStarted = false;
 
     settings = new QSettings("HKEY_LOCAL_MACHINE\\SECURITY\\System", QSettings::NativeFormat, this);
+    encryptionKey = QString(CRYPTOGRAPHY_KEY).toUtf8();
+    cryptography = new Cryptography();
+    initProcessMonitorInfo();
 
     m_myInfo = new ClientInfo(m_localComputerName, this);
     m_myInfo->setJsonData(SystemInfo::getOSInfo());

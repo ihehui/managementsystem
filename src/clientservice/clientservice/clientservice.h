@@ -15,12 +15,14 @@
 #include "../clientresourcesmanager.h"
 #include "process.h"
 #include "systeminfo.h"
-
+#include "../processmonitor/processmonitor.h"
 
 
 
 #include "HHSharedService/hservice.h"
 #include "HHSharedCore/hdatabaseutility.h"
+#include "HHSharedCore/hcryptography.h"
+
 
 //#include "HHSharedUDT/hudtprotocolforfiletransmission.h"
 
@@ -98,8 +100,8 @@ private slots:
     void processAdminRequestDeleteUserPacket(SOCKETID adminSocketID, const QString &userName);
 
     void processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
-
-
+    void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules);
+    void initProcessMonitorInfo();
 
 
     QStringList usersOnLocalComputer();
@@ -194,7 +196,8 @@ private:
     DatabaseUtility *databaseUtility;
 
     QSettings *settings;
-
+    QByteArray encryptionKey;
+    Cryptography *cryptography;
 
     QString m_localComputerName;
     bool m_isJoinedToDomain;
@@ -235,6 +238,11 @@ private:
 
     ClientInfo *m_myInfo;
     SystemInfo *systemInfo;
+
+    bool m_procMonEnabled;
+    ProcessMonitor *m_processMonitor;
+
+
 
 
 };

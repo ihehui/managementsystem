@@ -34,6 +34,8 @@ public:
     
 signals:
     void updateTitle(SystemManagementWidget *wgt);
+    void signalSetProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+
 
 public slots:
     void setRTP(RTP *rtp);
@@ -88,6 +90,9 @@ private slots:
     void updateHardwareInfo();
 
     void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);
+    void changProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+
+
 
     void requestCreateOrModifyWinUser(const QByteArray &userData);
     void requestDeleteUser(const QString &userName);

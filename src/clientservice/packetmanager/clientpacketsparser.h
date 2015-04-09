@@ -907,6 +907,7 @@ signals:
 
 
     void signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
+    void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules);
 
 
 ///////////////////////////

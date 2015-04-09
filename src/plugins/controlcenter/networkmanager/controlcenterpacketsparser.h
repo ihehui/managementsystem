@@ -699,7 +699,28 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
+    bool sendRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, quint8 enableProcMon, quint8 enablePassthrough, quint8 enableLogAllowedProcess, quint8 enableLogBlockedProcess, quint8 useGlobalRules, const QString &computerName ){
 
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::RequestChangeProcessMonitorInfo));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << localRulesData << globalRulesData << enableProcMon << enablePassthrough << enableLogAllowedProcess << enableLogBlockedProcess << useGlobalRules << computerName;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
 
     //////////////////////////////
     bool requestFileSystemInfo(SOCKETID socketID, const QString &parentDirPath){

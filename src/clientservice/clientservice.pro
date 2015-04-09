@@ -4,7 +4,8 @@ CONFIG += qt \
     console
 QT += core \
     network \
-    sql
+    sql \
+    concurrent
 
 QT -= gui
 
@@ -31,7 +32,8 @@ SOURCES += \
     packetmanager/clientpacketsparser.cpp \
     main.cpp \
     clientservice/clientservice.cpp \
-    clientresourcesmanager.cpp
+    clientresourcesmanager.cpp \
+    processmonitor/processmonitor.cpp
 HEADERS += \
     systeminfo.h \
     process.h \
@@ -39,7 +41,9 @@ HEADERS += \
     app_constants.h \
     packetmanager/clientpacketsparser.h \
     clientservice/clientservice.h \
-    clientresourcesmanager.h
+    clientresourcesmanager.h \
+    processmonitor/processmonitor.h
+
 
 
 

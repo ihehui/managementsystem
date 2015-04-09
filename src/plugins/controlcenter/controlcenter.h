@@ -75,12 +75,12 @@ private slots:
     void slotRemoteDesktop();
     void slotVNC();
     void updateTitle(SystemManagementWidget *wgt);
+    void changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+
     void slotUpdateUserLogonPassword();
     void slotInformUserNewLogonPassword();
     void slotSendAnnouncement();
     void slotSendAnnouncement(quint32 messageID, const QString &message, bool confirmationRequired,  int validityPeriod);
-
-
 
     void slotShowCustomContextMenu(const QPoint & pos);
 
