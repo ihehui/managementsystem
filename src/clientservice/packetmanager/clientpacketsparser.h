@@ -49,7 +49,7 @@ namespace HEHUI {
 class ClientPacketsParser : public QObject{
     Q_OBJECT
 public:
-    ClientPacketsParser(ClientResourcesManager *manager, QObject *parent = 0);
+    ClientPacketsParser(const QString &assetNO, ClientResourcesManager *manager, QObject *parent = 0);
     virtual ~ClientPacketsParser();
 
 
@@ -69,12 +69,16 @@ public slots:
 
 
 
-    bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS)){
+    bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = IP_MULTICAST_GROUP_PORT){
         qDebug()<<"----sendClientLookForServerPacket(...) targetAddress:"<<targetAddress;
 
         QHostAddress address = QHostAddress(targetAddress);
         if(address.isNull()){
             address = QHostAddress(QString(IP_MULTICAST_GROUP_ADDRESS));
+        }
+        quint16 port = targetPort;
+        if(!port){
+            port = IP_MULTICAST_GROUP_PORT;
         }
         
         Packet *packet = PacketHandlerBase::getPacket();
@@ -84,7 +88,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << m_udpServer->localPort() << QString(APP_VERSION);
+        out << m_assetNO << m_udpServer->localPort() << QString(APP_VERSION);
         packet->setPacketData(ba);
 
         ba.clear();
@@ -95,21 +99,21 @@ public slots:
 
         PacketHandlerBase::recylePacket(packet);
 
-        return m_udpServer->sendDatagram(ba, address, IP_MULTICAST_GROUP_PORT);
+        return m_udpServer->sendDatagram(ba, address, port );
 
     }
 
-    bool sendClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online){
+    bool sendClientOnlineStatusChangedPacket(SOCKETID socketID, bool online){
         qDebug()<<"----sendClientOnlineStatusChangedPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
-        packet->setPacketType(online?quint8(MS::ClientOnline):quint8(MS::ClientOffline));
+        packet->setPacketType(quint8(MS::ClientOnlineStatusChanged));
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << clientName;
+        out << m_assetNO << quint8(online);
         packet->setPacketData(ba);
 
         ba.clear();
@@ -134,7 +138,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << (running?quint8(1):quint8(0)) << extraMessage << messageType;
+        out << m_assetNO << (running?quint8(1):quint8(0)) << extraMessage << messageType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -160,7 +164,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << result;
+        out << m_assetNO << result;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -184,7 +188,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << softwareName;
+        out << m_assetNO << softwareName;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -208,7 +212,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << logType << log << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+        out << m_assetNO << logType << log << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
         packet->setPacketData(ba);
 
         ba.clear();
@@ -231,7 +235,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << data << infoType;
+        out << m_assetNO << data << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -255,7 +259,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << data << infoType;
+        out << m_assetNO << data << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -269,7 +273,7 @@ public slots:
         return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
-    bool sendClientResponseAdminConnectionResultPacket(SOCKETID socketID, bool result, const QString &message){
+    bool sendClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool result, const QString &message){
         //qWarning()<<"----sendClientResponseAdminConnectionResultPacket(...):"<<adminAddress.toString()<<" "<<adminPort;
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -279,7 +283,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << result << message;
+        out << m_assetNO << computerName << quint8(result) << message;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -302,7 +306,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << message <<clientMessageType;
+        out << m_assetNO << message <<clientMessageType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -326,7 +330,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << info;
+        out << m_assetNO << info;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -340,29 +344,6 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientResponseProgramesInfoPacket(SOCKETID socketID, const QString &info){
-        //qWarning()<<"----ClientResponseProgramesInfo(...):"<<adminAddress.toString()<<" "<<adminPort;
-
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
-
-        packet->setPacketType(quint8(MS::ClientResponseProgramesInfo));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << info;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
-    }
 
     bool sendLocalUserOnlineStatusChangedPacket(SOCKETID adminSocketID, const QString &userName, bool online){
         qDebug()<<"--sendLocalUserOnlineStatusChangedPacket(...)"<<" userSocketID:"<<adminSocketID<<" adminName:"<<userName<<" online:"<<online;
@@ -374,7 +355,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << userName << (online?quint8(1):quint8(0)) ;
+        out << m_assetNO << userName << (online?quint8(1):quint8(0)) ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -399,7 +380,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName  ;
+        out << m_assetNO  ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -433,7 +414,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << adminAddress << adminPort << adminName ;
+        out << m_assetNO << adminAddress << adminPort << adminName ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -465,7 +446,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << adminAddress << adminPort << adminName << oldPassword << newPassword ;
+        out << m_assetNO << adminAddress << adminPort << adminName << oldPassword << newPassword ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -498,7 +479,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << adminName << announcementID << serverAnnouncement << confirmationRequired << validityPeriod;
+        out << m_assetNO << adminName << announcementID << serverAnnouncement << confirmationRequired << validityPeriod;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -525,7 +506,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << cpuTemperature << harddiskTemperature;
+        out << m_assetNO << cpuTemperature << harddiskTemperature;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -550,7 +531,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << m_adminName << adminAddress << adminPort ;
+        out << m_assetNO << m_adminName << adminAddress << adminPort ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -574,7 +555,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << userName << originalMessageID << replyMessage;
+        out << m_assetNO << userName << originalMessageID << replyMessage;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -622,7 +603,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << serviceName << processID << startupType;
+        out << m_assetNO << serviceName << processID << startupType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -645,7 +626,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << parentDirPath << fileSystemInfoData;
+        out << m_assetNO << parentDirPath << fileSystemInfoData;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -667,7 +648,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileMD5Sum << fileName << size << remoteFileSaveDir;
+        out << m_assetNO << fileMD5Sum << fileName << size << remoteFileSaveDir;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -689,7 +670,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << remoteBaseDir << remoteFileName << localFileSaveDir;
+        out << m_assetNO << remoteBaseDir << remoteFileName << localFileSaveDir;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -711,7 +692,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileName << accepted << fileMD5Sum << size << remoteFileSaveDir;
+        out << m_assetNO << fileName << accepted << fileMD5Sum << size << remoteFileSaveDir;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -732,7 +713,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileName << accepted << message;
+        out << m_assetNO << fileName << accepted << message;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -754,7 +735,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileMD5Sum << accepted << message;
+        out << m_assetNO << fileMD5Sum << accepted << message;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -778,7 +759,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileMD5 << startPieceIndex << endPieceIndex;
+        out << m_assetNO << fileMD5 << startPieceIndex << endPieceIndex;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -800,7 +781,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileMD5 << pieceIndex << *data << *sha1 ;
+        out << m_assetNO << fileMD5 << pieceIndex << *data << *sha1 ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -822,7 +803,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileMD5 << status ;
+        out << m_assetNO << fileMD5 << status ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -844,7 +825,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localComputerName << fileMD5 << errorCode << errorString ;
+        out << m_assetNO << fileMD5 << errorCode << errorString ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -862,17 +843,16 @@ private slots:
 
 
 signals:
-    void  signalHeartbeatPacketReceived(const QString &computerName);
-    void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
+    //void  signalHeartbeatPacketReceived(const QString &computerName);
+    //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
 
     void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void signalServerOnlinePacketReceived(const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
-    void signalServerOfflinePacketReceived(const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
+    void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
 
-    void signalClientInfoRequestedPacketReceived(SOCKETID socketID, const QString &computerName, quint8 infoType);
-    void signalAdminRequestRemoteConsolePacketReceived(const QString &computerName, const QString &applicationPath, const QString &adminID, bool startProcess, const QString &adminAddress, quint16 adminPort);
-    void signalRemoteConsoleCMDFromServerPacketReceived(const QString &computerName, const QString &command, const QString &adminAddress, quint16 adminPort);
+    void signalClientInfoRequestedPacketReceived(SOCKETID socketID, const QString &assetNO, quint8 infoType);
+    void signalAdminRequestRemoteConsolePacketReceived(const QString &assetNO, const QString &applicationPath, const QString &adminID, bool startProcess, const QString &adminAddress, quint16 adminPort);
+    void signalRemoteConsoleCMDFromServerPacketReceived(const QString &assetNO, const QString &command, const QString &adminAddress, quint16 adminPort);
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
     void signalServerResponseSoftwareVersionPacketReceived(const QString &softwareName, const QString &version);
@@ -882,16 +862,15 @@ signals:
     void signalUpdateClientSoftwarePacketReceived();
 
     void signalSetupUSBSDPacketReceived(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
-    void signalSetupProgramesPacketReceived(bool enable, bool temporarilyAllowed, const QString &adminName);
     void signalShowAdminPacketReceived(bool show);
-    void signalModifyAdminGroupUserPacketReceived(const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
+    void signalModifyAdminGroupUserPacketReceived(const QString &assetNO, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void signalRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
     void signalJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 
-    void signalAdminRequestConnectionToClientPacketReceived(SOCKETID socketID, const QString &computerName, const QString &users);
+    void signalAdminRequestConnectionToClientPacketReceived(SOCKETID socketID, const QString &adminComputerName, const QString &users);
     void signalAdminSearchClientPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName);
     
-    void signalAdminRequestRemoteAssistancePacketReceived(const QString &computerName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
+    //void signalAdminRequestRemoteAssistancePacketReceived(const QString &computerName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void signalAdminRequestUpdateMSUserPasswordPacketReceived(const QString &workgroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void signalAdminRequestInformUserNewPasswordPacketReceived(const QString &workgroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 
@@ -924,6 +903,9 @@ private:
 
 
 private:
+    QString m_assetNO;
+    //QString m_localComputerName;
+
     QHostAddress serverAddress;
     quint16 serverUDTListeningPort;
     QString serverName;
@@ -933,9 +915,6 @@ private:
 //    quint16 m_localUDTServerListeningPort;
     quint16 m_localTCPServerListeningPort;
     quint16 m_localENETListeningPort;
-
-
-    QString m_localComputerName;
 
     ClientResourcesManager *m_resourcesManager;
 

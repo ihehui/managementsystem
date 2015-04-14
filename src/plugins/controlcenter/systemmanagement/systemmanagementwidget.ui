@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>874</width>
-    <height>658</height>
+    <height>680</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -38,17 +38,7 @@
       <string>Target</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEditComputerName"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="labelComputerName">
-        <property name="text">
-         <string>Computer Name:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="9">
+      <item row="0" column="7">
        <widget class="QToolButton" name="toolButtonVerify">
         <property name="toolTip">
          <string>Verify Client Info</string>
@@ -65,32 +55,48 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="8">
+      <item row="0" column="6">
        <widget class="QComboBox" name="comboBoxProtocol"/>
       </item>
-      <item row="0" column="7">
+      <item row="0" column="5">
        <widget class="QLabel" name="labelProtocol">
         <property name="text">
          <string>Protocol:</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="5">
-       <widget class="QLineEdit" name="lineEditIPAddress">
+      <item row="0" column="3">
+       <widget class="QLineEdit" name="lineEditHost">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="0" column="4">
-       <widget class="QLabel" name="labelIPAddress">
+      <item row="0" column="2">
+       <widget class="QLabel" name="labelHost">
+        <property name="toolTip">
+         <string>Host name or IP address</string>
+        </property>
         <property name="text">
-         <string>&amp;IP Address:</string>
+         <string>&amp;Host:</string>
         </property>
         <property name="buddy">
-         <cstring>lineEditIPAddress</cstring>
+         <cstring>lineEditHost</cstring>
         </property>
        </widget>
+      </item>
+      <item row="0" column="8">
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
@@ -101,7 +107,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <property name="movable">
       <bool>true</bool>
@@ -232,24 +238,7 @@
           <property name="sizeConstraint">
            <enum>QLayout::SetDefaultConstraint</enum>
           </property>
-          <item row="2" column="2">
-           <widget class="QToolButton" name="toolButtonRenameComputer">
-            <property name="toolTip">
-             <string>Rename computer</string>
-            </property>
-            <property name="text">
-             <string>Rename</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../controlcenter.qrc">
-              <normaloff>:/icon/resources/images/computername.png</normaloff>:/icon/resources/images/computername.png</iconset>
-            </property>
-            <property name="autoRaise">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
+          <item row="1" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
              <string>OS Version:</string>
@@ -259,24 +248,7 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Copmuter Name:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="computerNameLineEdit">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
+          <item row="3" column="3">
            <widget class="QLabel" name="workgroupLabel">
             <property name="text">
              <string>Workgroup/Domain:</string>
@@ -286,14 +258,14 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="4">
+          <item row="3" column="4">
            <widget class="QLineEdit" name="workgroupLineEdit">
             <property name="readOnly">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="4" column="0">
            <widget class="QLabel" name="labelSystemUsers">
             <property name="text">
              <string>System Users:</string>
@@ -303,14 +275,14 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="1" colspan="4">
+          <item row="4" column="1" colspan="4">
            <widget class="QLineEdit" name="lineEditUsers">
             <property name="readOnly">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="installDatelabel">
             <property name="text">
              <string>Installation Date:</string>
@@ -320,39 +292,42 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="2" column="1">
            <widget class="QLineEdit" name="installationDateLineEdit">
             <property name="readOnly">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="0" column="1" colspan="4">
+          <item row="1" column="1" colspan="4">
            <widget class="QLineEdit" name="osVersionLineEdit">
             <property name="readOnly">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="1" column="3">
+          <item row="2" column="3">
            <widget class="QLabel" name="labelOSKey">
             <property name="text">
-             <string>Key:</string>
+             <string>Product Key:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
-          <item row="1" column="4">
+          <item row="2" column="4">
            <widget class="QLineEdit" name="lineEditOSKey">
             <property name="readOnly">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="2" column="5">
+          <item row="3" column="5">
            <widget class="QToolButton" name="toolButtonChangeWorkgroup">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Change workgroup or domain</string>
             </property>
@@ -368,8 +343,11 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="5">
+          <item row="1" column="5">
            <widget class="QToolButton" name="toolButtonShutdown">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="toolTip">
              <string>Shutdown or reboot system</string>
             </property>
@@ -381,6 +359,97 @@
               <normaloff>:/icon/resources/images/system_shutdown.png</normaloff>:/icon/resources/images/system_shutdown.png</iconset>
             </property>
             <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelAssetNO">
+            <property name="text">
+             <string>Asset Number:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="lineEditAssetNO">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <widget class="QToolButton" name="toolButtonRenameComputer">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="toolTip">
+             <string>Rename computer</string>
+            </property>
+            <property name="text">
+             <string>Rename</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../controlcenter.qrc">
+              <normaloff>:/icon/resources/images/computername.png</normaloff>:/icon/resources/images/computername.png</iconset>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLineEdit" name="lineEditComputerName1">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Copmuter Name:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QToolButton" name="toolButtonModifyAssetNO">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="toolTip">
+             <string>Modify Asset NO.</string>
+            </property>
+            <property name="text">
+             <string>Modify</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../controlcenter.qrc">
+              <normaloff>:/icon/resources/images/connect.png</normaloff>:/icon/resources/images/connect.png</iconset>
+            </property>
+            <property name="autoRaise">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="labelIP">
+            <property name="text">
+             <string>IP:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="lineEditIP">
+            <property name="readOnly">
              <bool>true</bool>
             </property>
            </widget>
@@ -1000,14 +1069,12 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>lineEditComputerName</tabstop>
-  <tabstop>lineEditIPAddress</tabstop>
+  <tabstop>lineEditHost</tabstop>
   <tabstop>toolButtonVerify</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>toolButtonRequestHardwareInfo</tabstop>
   <tabstop>toolButtonSaveAs</tabstop>
   <tabstop>osVersionLineEdit</tabstop>
-  <tabstop>computerNameLineEdit</tabstop>
   <tabstop>workgroupLineEdit</tabstop>
   <tabstop>pushButtonMMC</tabstop>
   <tabstop>pushButtonCMD</tabstop>

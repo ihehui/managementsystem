@@ -164,7 +164,7 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
         return;
     }
 
-    SettingsCore settings(name(), version(), name(), "./");
+    SettingsCore settings(name(), "./");
     QByteArray encryptionKey = QByteArray("HEHUI");
     if(settings.contains("ControlCenter/DB_DRIVER")){
         m_driver = settings.getValueWithDecryption("ControlCenter/DB_DRIVER", encryptionKey).toString();

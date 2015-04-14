@@ -57,19 +57,19 @@
 //#endif
 
 #ifndef UDT_FILE_LISTENING_PORT
-#define UDT_FILE_LISTENING_PORT	12347
+#define UDT_FILE_LISTENING_PORT	22347
 #endif
 
 #ifndef UDT_LISTENING_PORT
-#define UDT_LISTENING_PORT	12346
+#define UDT_LISTENING_PORT	22346
 #endif
 
 #ifndef IP_MULTICAST_GROUP_PORT
-#define IP_MULTICAST_GROUP_PORT 12345
+#define IP_MULTICAST_GROUP_PORT 22345
 #endif
 
 #ifndef TCP_LISTENING_PORT
-#define TCP_LISTENING_PORT	12344
+#define TCP_LISTENING_PORT	22344
 #endif
 
 #ifndef INVALID_SOCK_ID
@@ -81,7 +81,7 @@
 #endif
 
 #ifndef CRYPTOGRAPHY_KEY
-#define CRYPTOGRAPHY_KEY "HEHUI"
+#define CRYPTOGRAPHY_KEY "HEHUI@2015"
 #endif
 
 #ifndef HEARTBEAT_TIMER_INTERVAL
@@ -146,7 +146,7 @@
 #endif
 
 #ifndef REMOTE_SITOY_COMPUTERS_DB_NAME
-#define REMOTE_SITOY_COMPUTERS_DB_NAME	"sitoycomputers"
+#define REMOTE_SITOY_COMPUTERS_DB_NAME	"managementsystem"
 #endif
 
 //Sitoy SQL Server
@@ -196,17 +196,15 @@ namespace HEHUI {
             ServerDeclare,
             Update,
 
-            ClientOnline,
-            ClientOffline,
+            ClientOnlineStatusChanged,
 
-            ServerOnline,
+            ServerOnlineStatusChanged,
             ServerOffline, //12
 
             ClientInfoRequested,
             ClientInfo,
 
-            AdminOnline,
-            AdminOffline,
+            AdminOnlineStatusChanged,
 
             AdminRequestRemoteConsole,
             ClientResponseRemoteConsoleStatus,
@@ -223,8 +221,6 @@ namespace HEHUI {
 
             AdminRequestSetupUSBSD,
             ClientResponseUSBInfo,
-            AdminRequestSetupProgrames,
-            ClientResponseProgramesInfo,
             ShowAdmin,
             ModifyAdminGroupUser,
             AdminRequestConnectionToClient,
@@ -338,6 +334,14 @@ namespace HEHUI {
             SYSINFO_USERS,
             SYSINFO_PROCESSMONITOR
         };
+
+        enum AlarmType{
+            ALARM_UNKNOWN = 0,
+            ALARM_HARDWARECHANGE,
+            ALARM_PROCESSMONITOR
+
+        };
+
 
 
 

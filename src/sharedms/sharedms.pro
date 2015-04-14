@@ -32,7 +32,8 @@ HEADERS += clientinfo.h \
     tcpserver.h \
     rtp.h \
     enetprotocol.h \
-    processmonitorrule.h
+    processmonitorrule.h \
+    settings.h
 
 SOURCES += clientinfo.cpp \
     udtprotocol.cpp \
@@ -41,7 +42,8 @@ SOURCES += clientinfo.cpp \
     tcpserver.cpp \
     rtp.cpp \
     enetprotocol.cpp \
-    processmonitorrule.cpp
+    processmonitorrule.cpp \
+    settings.cpp
 
 FORMS +=
 

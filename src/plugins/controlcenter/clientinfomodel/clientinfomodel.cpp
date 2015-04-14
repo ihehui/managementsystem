@@ -39,15 +39,19 @@ ClientInfoModel::ClientInfoModel(QObject *parent)
 }
 
 ClientInfoModel::~ClientInfoModel() {
-	clientsList.clear();
+    clear();
 }
 
-void ClientInfoModel::setClientList(QList<ClientInfo*> clientsList)
+void ClientInfoModel::setClientList(QList<ClientInfo *> &clientsList)
 {
+
+    clear();
+
     beginResetModel();
+
     this->clientsList = clientsList;
+
     endResetModel();
-    
 }
 
 void ClientInfoModel::addClientInfo(ClientInfo *clientInfo){
@@ -58,9 +62,42 @@ void ClientInfoModel::addClientInfo(ClientInfo *clientInfo){
         this->clientsList.append(clientInfo);
     }
     
-    //this->clientsList = clientsList;
     endResetModel();
     
+}
+
+ClientInfo* ClientInfoModel::getClientInfo(const QModelIndex & index){
+
+    if(!index.isValid()){
+        return 0;
+    }
+
+    return clientsList.at(index.data(Qt::UserRole).toInt());
+
+}
+
+ClientInfo * ClientInfoModel::getClientInfo(const QString &assetNO){
+
+    foreach (ClientInfo *info, clientsList) {
+        if(info->getAssetNO() == assetNO){
+            return info;
+        }
+    }
+
+    return 0;
+}
+
+void ClientInfoModel::clear(){
+    beginResetModel();
+
+    foreach (ClientInfo *info, clientsList) {
+        delete info;
+        info = 0;
+    }
+
+    clientsList.clear();
+
+    endResetModel();
 }
 
 int ClientInfoModel::rowCount ( const QModelIndex & parent) const {
@@ -76,7 +113,7 @@ int	 ClientInfoModel::columnCount ( const QModelIndex & parent) const{
 		return 0;
 	}
 
-    return 11;
+    return 13;
 
 
 }
@@ -95,45 +132,55 @@ QVariant ClientInfoModel::data ( const QModelIndex & index, int role) const{
             ClientInfo *info = static_cast<ClientInfo *> (clientsList.at(row));
             switch (index.column()) {
             case 0:
-                return info->getComputerName();
+                return info->getAssetNO();
                 break;
             case 1:
-                return info->getWorkgroup();
+                return info->getComputerName();
                 break;
             case 2:
-                return info->getNetwork();
+                return info->getOSVersion();
                 break;
             case 3:
-                return info->getUsers();
+                return info->getInstallationDate();
                 break;
             case 4:
-                return info->getOs();
+                return info->getOsKey();
                 break;
             case 5:
-                return info->getUsbSDStatus()?"1":"0";
+                return info->getWorkgroup();
                 break;
             case 6:
-                return info->getProgramsEnabled()?"1":"0";
+                return info->isJoinedToDomain()?tr("Yes"):tr("No");
                 break;
             case 7:
-                return info->isJoinedToDomain()?"1":"0";
+                return info->getUsers();
                 break;
             case 8:
                 return info->getAdministrators();
                 break;
             case 9:
-                return info->getLastOnlineTime().toString("yyyy.MM.dd hh:mm:ss");
+                return info->getIP();
                 break;
             case 10:
                 return info->getClientVersion();
                 break;
-            
+            case 11:
+                return info->isProcessMonitorEnabled()?tr("Enabled"):tr("Disabled");
+                break;
+            case 12:
+                return info->getLastOnlineTime().toString("yyyy.MM.dd hh:mm:ss");
+                break;
 
             default:
                 return QVariant();
                 break;
             }
 	}
+
+    if(role == Qt::UserRole){
+        return row;
+    }
+
 
 	return QVariant();
 
@@ -147,38 +194,44 @@ QVariant ClientInfoModel::headerData ( int section, Qt::Orientation orientation,
 	if(orientation ==  Qt::Horizontal){
             switch (section) {
             case 0:
-                return QString(tr("Computer Name"));
+                return QString(tr("Asset NO."));
                 break;
             case 1:
-                return QString(tr("Workgroup"));
+                return QString(tr("Computer Name"));
                 break;
             case 2:
-                return QString(tr("Network"));
+                return QString(tr("OS Version"));
                 break;
             case 3:
-                return QString(tr("Users"));
+                return QString(tr("Installation Date"));
                 break;                         
             case 4:
-                return QString(tr("OS"));
+                return QString(tr("Product Key"));
                 break;   
             case 5:
-                return QString(tr("USBSD"));
+                return QString(tr("Workgroup"));
                 break; 
             case 6:
-                return QString(tr("Programes"));
+                return QString(tr("Joined To Domain"));
                 break; 
             case 7:
-                return QString(tr("JoinedToDomain"));
+                return QString(tr("Users"));
                 break;
             case 8:
                 return QString(tr("Administrators"));
                 break; 
             case 9:
-                return QString(tr("LastOnlineTime"));
+                return QString(tr("IP"));
                 break;       
             case 10:
                 return QString(tr("ClientVersion"));
                 break; 
+            case 11:
+                return QString(tr("Process Monitor"));
+                break;
+            case 12:
+                return QString(tr("Last Online Time"));
+                break;
                 
             default:
                 return QVariant();

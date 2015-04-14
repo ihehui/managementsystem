@@ -86,17 +86,17 @@ public slots:
 
     }
 
-    bool sendServerOnlinePacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
+    bool sendServerOnlinePacket(bool online, const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
         qDebug()<<"----sendServerOnlinePacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket();
 
-        packet->setPacketType(quint8(MS::ServerOnline));
+        packet->setPacketType(quint8(MS::ServerOnlineStatusChanged));
         packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << localUDTListeningAddress << localUDTListeningPort;
+        out << m_serverName << quint8(online) << localUDTListeningAddress << localUDTListeningPort;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -135,7 +135,7 @@ public slots:
     }
 
 
-    bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &computerName = "", quint8 infoType = 0){
+    bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0){
 
         QHostAddress targetAddress = QHostAddress(peerAddress);
         Packet *packet = PacketHandlerBase::getPacket();
@@ -145,7 +145,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << computerName << infoType;
+        out << m_serverName << assetNO << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -159,7 +159,7 @@ public slots:
         return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
     }
 
-    bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &computerName = "", quint8 infoType = 0){
+    bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &assetNO = "", quint8 infoType = 0){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setTransmissionProtocol(TP_UDT);
@@ -168,7 +168,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << computerName << infoType;
+        out << m_serverName << assetNO << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -246,18 +246,18 @@ signals:
     //void signalClientOnlinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
     //void signalClientOfflinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
 
-    void signalClientInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
+    void signalClientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
 
-    void signalClientLogReceived(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
+    void signalClientLogReceived(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
 
-    void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+    void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
 
-    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &clientName, bool online);
+    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online, const QString &ip, quint16 port);
 
-    void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online);
+    void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
 private:
 

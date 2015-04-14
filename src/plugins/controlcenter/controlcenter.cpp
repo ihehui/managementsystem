@@ -1,4 +1,4 @@
-﻿
+
 
 
 #include <QObject>
@@ -41,29 +41,22 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
     //setWindowFlags(Qt::Dialog);
 
 
+    ui.comboBoxOSVersion->addItem("All", QVariant(""));
+    ui.comboBoxOSVersion->addItem("WIN_XP", QVariant("xp"));
+    ui.comboBoxOSVersion->addItem("WIN_2003", QVariant("2003"));
+    ui.comboBoxOSVersion->addItem("WIN_Vista", QVariant("vista"));
+    ui.comboBoxOSVersion->addItem("WIN_7", QVariant("7"));
+    ui.comboBoxOSVersion->addItem("WIN_2008", QVariant("2008"));
+    ui.comboBoxOSVersion->addItem("WIN_8", QVariant(" 8"));
+    ui.comboBoxOSVersion->addItem("WIN_2012", QVariant("2012"));
+    ui.comboBoxOSVersion->addItem("WIN_8.1", QVariant("8.1"));
+    ui.comboBoxOSVersion->addItem("WIN_10", QVariant("10"));
+    ui.comboBoxOSVersion->setCurrentIndex(0);
+
+
     QMap<QString/*Short Name*/, QString/*Department*/> departments;
     departments.insert("", tr(""));
     departments.insert("it", tr("IT"));
-    departments.insert("ac", tr("Accounting"));
-    departments.insert("ad", tr("Administration"));
-    departments.insert("co", tr("Cost Control"));
-    departments.insert("cu", tr("Custom"));
-    departments.insert("gm", tr("GMO"));
-    departments.insert("hr", tr("HR"));
-    departments.insert("ma", tr("Marker"));
-    departments.insert("pd", tr("PDS"));
-    departments.insert("pg", tr("PG"));
-    departments.insert("pl", tr("Planning"));
-    departments.insert("pm", tr("PMC"));
-    departments.insert("qc", tr("QC"));
-    departments.insert("re", tr("Retail"));
-    departments.insert("sa", tr("Sales"));
-    //departmentsHash.insert("", tr("Sample"));
-    departments.insert("se", tr("Secretary"));
-    departments.insert("sh", tr("Shipping"));
-    departments.insert("sp", tr("Shop"));
-    departments.insert("wh", tr("Warehouse"));
-    //QString department = m_computerName.mid(2, 2).toLower();
     foreach (QString key, departments.keys()) {
         ui.comboBoxWorkgroup->addItem(departments.value(key), key);
     }
@@ -81,18 +74,16 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
 
     //databaseConnectionName = QString(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME) + "-ControlCenter";
     databaseConnectionName = QString(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
-    queryModel = new QSqlQueryModel(this);
+    query = 0;
 
     clientInfoModel = new ClientInfoModel(this);
-    //proxyModel = new QSortFilterProxyModel(this);
     proxyModel = new ClientInfoSortFilterProxyModel(this);
-    proxyModel->setSourceModel(queryModel);
+    proxyModel->setSourceModel(clientInfoModel);
     proxyModel->setDynamicSortFilter(true);
-
     ui.tableViewClientList->setModel(proxyModel);
 
 
-    connect(ui.toolButtonManage, SIGNAL(clicked()), this, SLOT(slotRemoteManagement()));
+    connect(ui.actionManage, SIGNAL(triggered()), this, SLOT(slotRemoteManagement()));
 
     connect(ui.actionQueryDatabase, SIGNAL(triggered()), this, SLOT(slotQueryDatabase()));
     connect(ui.actionSearchNetwork, SIGNAL(triggered()), this, SLOT(slotSearchNetwork()));
@@ -132,8 +123,6 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
     slotInitTabWidget();
 
 
-
-
     ui.lineEditComputerName->setFocus();
 
     this->installEventFilter(this);
@@ -167,22 +156,6 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
 
     ui.toolButtonfilter->setDefaultAction(ui.actionFilter);
     
-    updatePasswordMenu = new QMenu;
-    updatePasswordMenu->addAction(ui.actionInformNewPassword);
-    updatePasswordMenu->addAction(ui.actionUpdatePassword);
-    ui.toolButtonUpdatePassword->setMenu(updatePasswordMenu);
-    ui.toolButtonUpdatePassword->addAction(ui.actionInformNewPassword);
-    ui.toolButtonUpdatePassword->setDefaultAction(ui.actionInformNewPassword);
-    
-    ui.toolButtonAnnouncement->setDefaultAction(ui.actionAnnouncement);
-
-    if(m_adminName != "kiwa" && m_adminName != "hehui"){
-        ui.toolButtonUpdatePassword->setEnabled(false);
-    }
-    
-    if(m_adminName != "hehui"){
-        ui.toolButtonAnnouncement->setEnabled(false);
-    }
     
     //    ui.toolButtonUpdatePassword->setEnabled(false);
     //    ui.toolButtonAnnouncement->setEnabled(false);
@@ -206,10 +179,10 @@ ControlCenter::~ControlCenter()
         vncProcess->terminate();
     }
 
-    if(queryModel){
-        queryModel->clear();
-        delete queryModel;
-        queryModel = 0;
+    if(query){
+        query->clear();
+        delete query;
+        query = 0;
     }
 
     QSqlDatabase db = QSqlDatabase::database(databaseConnectionName);
@@ -235,11 +208,13 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
     if (event->type() == QEvent::KeyRelease ) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *> (event);
         if(keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down){
-            slotShowClientInfo(ui.tableViewClientList->currentIndex());
+            //slotShowClientInfo(ui.tableViewClientList->currentIndex());
         }
 
         if(keyEvent->key() == Qt::Key_Escape){
             if(ui.lineEditComputerName->isReadOnly()){
+
+                ui.lineEditAssetNO->setReadOnly(false);
 
                 ui.lineEditComputerName->setReadOnly(false);
                 ui.lineEditUserName->setReadOnly(false);
@@ -247,7 +222,6 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
                 //ui.comboBoxWorkgroup->setEnabled(true);
                 ui.comboBoxUSBSD->setEnabled(true);
 
-                ui.lineEditMACAddress->setReadOnly(false);
                 ui.lineEditIPAddress->setReadOnly(false);
 
                 ui.comboBoxOSVersion->setEnabled(true);
@@ -257,13 +231,13 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
                 ui.lineEditUserName->setFocus();
 
             }else{
+                ui.lineEditAssetNO->clear();
                 ui.lineEditComputerName->clear();
                 ui.lineEditUserName->clear();
 
                 ui.comboBoxWorkgroup->setCurrentIndex(0);
                 ui.comboBoxUSBSD->setCurrentIndex(0);
 
-                ui.lineEditMACAddress->clear();
                 ui.lineEditIPAddress->clear();
 
                 ui.comboBoxOSVersion->setCurrentIndex(0);
@@ -274,7 +248,6 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
 
             }
 
-            ui.toolButtonManage->setEnabled(false);
         }
 
         if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_O){
@@ -298,8 +271,6 @@ void ControlCenter::languageChange() {
 
 void ControlCenter::closeEvent(QCloseEvent *e) {
 
-
-
     //关闭所有相关的TabPage
     //Close all related TabPage
     int tabPages = ui.tabWidget->count();
@@ -322,8 +293,7 @@ void ControlCenter::closeEvent(QCloseEvent *e) {
         m_rtp->closeSocket(m_socketConnectedToServer);
     }
     
-    clientInfoModel->setClientList(QList<ClientInfo*>());
-    clientInfoHash.clear();
+    clientInfoModel->clear();
     
 //    clientSocketsHash.clear();
 
@@ -378,15 +348,7 @@ void ControlCenter::slotInitTabWidget(){
     closeTabButton->setEnabled(false);
 
 
-    //    QString localComputerName = QHostInfo::localHostName();
-    //    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_adminName, 0, localComputerName, "", "127.0.0.1", "");
-    //    ui.gridLayoutTabLocalComputer->addWidget(systemManagementWidget);
-    //    //ui.tabWidget->addTab(systemManagementWidget, tr("Local Computer: %1").arg(localComputerName));
-    //    //ui.tabWidget->setCurrentWidget(systemManagementWidget);
-    //    ui.tabWidget->setCurrentWidget(ui.tabLocalComputer);
-
-
-    ClientInfo localInfo(localComputerName);
+    ClientInfo localInfo("");
     localSystemManagementWidget = new SystemManagementWidget(0, 0, m_adminName, &localInfo);
     localSystemManagementWidget->setParent(this);
     ui.tabWidget->addTab(localSystemManagementWidget, tr("Local Computer"));
@@ -464,58 +426,135 @@ void ControlCenter::slotcloseTab(){
 
 void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 
-    ClientInfo *info = 0;
-    QString targetComputerName = computerName();
+    QModelIndex idx = index;
+    if(!idx.isValid()){
+        QModelIndexList  indexList = ui.tableViewClientList->selectionModel()->selectedIndexes();
+        if(indexList.isEmpty()){return;}
+        idx = indexList.at(0);
+    }
+    if(!idx.isValid()){
+        return;
+    }
 
-//    if(index.isValid()){
-//        int row = index.row();
-//        QModelIndex idx =  index.sibling(row,0);
-//        QString computerName = idx.data().toString();
-//        info = clientInfoHash.value(computerName);
-//        //QMessageBox::information(this,QString(row),idx.data().toString());
+    ClientInfo *info = clientInfoModel->getClientInfo(idx);
+    Q_ASSERT(info);
 
-//    }
+    QString assetNO = info->getAssetNO();
 
-
-    if(targetComputerName == localComputerName){
+    if(info->getComputerName() == localComputerName){
         ui.tabWidget->setCurrentWidget(localSystemManagementWidget);
         return;
-    }else{
-        info = clientInfoHash.value(targetComputerName);
     }
 
     int tabPages = ui.tabWidget->count();
     for(int i = tabPages; i >= 0; --i){
-        if(ui.tabWidget->tabText(i) == targetComputerName){
+        SystemManagementWidget *wgt = qobject_cast<SystemManagementWidget *>(ui.tabWidget->widget(i));
+        if(!wgt){continue;}
+        if(wgt->peerAssetNO() == assetNO){
             ui.tabWidget->setCurrentIndex(i);
             return;
         }
-        //QWidget *widget = qobject_cast<QWidget *>(ui.tabWidget->widget(i));
-        //if(!widget){continue;}
-
     }
-
 
     SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, m_adminName, info, this);
     connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTitle(SystemManagementWidget*)));
     connect(systemManagementWidget, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
 
-    ui.tabWidget->addTab(systemManagementWidget, targetComputerName);
+    ui.tabWidget->addTab(systemManagementWidget, assetNO);
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
     ui.tabWidget->setCurrentWidget(systemManagementWidget);
 
 }
 
+bool ControlCenter::openDatabase(bool reopen){
 
-QString ControlCenter::computerName() const {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QSqlDatabase db;
+
+    if(reopen){
+        if(query){
+            query->clear();
+            delete query;
+            query = 0;
+        }
+        db = QSqlDatabase::database(databaseConnectionName);
+        db.close();
+        QSqlDatabase::removeDatabase(databaseConnectionName);
+    }
+
+
+    DatabaseConnecter dc(this);
+    if(!dc.isDatabaseOpened(databaseConnectionName,
+                            REMOTE_SITOY_COMPUTERS_DB_DRIVER,
+                            REMOTE_SITOY_COMPUTERS_DB_SERVER_HOST,
+                            REMOTE_SITOY_COMPUTERS_DB_SERVER_PORT,
+                            REMOTE_SITOY_COMPUTERS_DB_USER_NAME,
+                            REMOTE_SITOY_COMPUTERS_DB_USER_PASSWORD,
+                            REMOTE_SITOY_COMPUTERS_DB_NAME,
+                            HEHUI::MYSQL
+                            )){
+        QApplication::restoreOverrideCursor();
+        QMessageBox::critical(this, tr("Error"), tr("Database Connection Failed!"));
+        qCritical() << QString("Error: Database Connection Failed! Query Failed!");
+        return false;
+    }
+
+    db = QSqlDatabase::database(databaseConnectionName);
+    if(!query){
+        query = new QSqlQuery(db);
+    }
+
+    QApplication::restoreOverrideCursor();
+
+    return true;
+
+}
+
+bool ControlCenter::execQuery(const QString &statement ){
+
+    if(!query){
+        if(!openDatabase()){
+            return false;
+        }
+    }else{
+        query->clear();
+    }
+
+    if(!query->exec(statement)){
+        QSqlError error = query->lastError();
+        QString msg = tr("Can not execute the SQL statement! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
+        QMessageBox::critical(this, tr("Error"), msg);
+
+        qCritical()<<msg;
+        qCritical()<<"statement:";
+        qCritical()<<statement;
+        qCritical()<<"";
+        //MySQL数据库重启，重新连接
+        if(error.number() == 2006){
+            query->clear();
+            openDatabase(true);
+        }
+
+        return false;
+    }
+
+    return true;
+
+}
+
+inline QString ControlCenter::assetNO() const {
+    return ui.lineEditAssetNO->text().trimmed();
+}
+
+inline QString ControlCenter::computerName() const {
     return ui.lineEditComputerName->text().trimmed();
 }
 
-QString ControlCenter::userName() const {
+inline QString ControlCenter::userName() const {
     return ui.lineEditUserName->text().trimmed();
 }
 
-QString ControlCenter::workgroup() const {
+inline QString ControlCenter::workgroup() const {
     return ui.comboBoxWorkgroup->currentText();
 }
 
@@ -527,17 +566,12 @@ QString ControlCenter::usbsdStatus(){
     }
 }
 
-QString ControlCenter::macAddress() const {
-    return ui.lineEditMACAddress->text().trimmed();
-
-}
-
-QString ControlCenter::ipAddress() const {
+inline QString ControlCenter::ipAddress() const {
     return ui.lineEditIPAddress->text().trimmed();
 }
 
-QString ControlCenter::osVersion() const{
-    return ui.comboBoxOSVersion->currentText();
+inline QString ControlCenter::osVersion() const{
+    return ui.comboBoxOSVersion->currentData().toString();
 }
 
 QString ControlCenter::programesEnabled() const{
@@ -547,30 +581,72 @@ QString ControlCenter::programesEnabled() const{
     }else if(index == 2){
         return "0";
     }else{
-        return "";
+        return "-1";
     }
-
-    //QString text = ui.comboBoxPrograms->currentText();
-    //    if(text == tr("Enabled")){
-    //        return "1";
-    //    }else if(text == tr("Disabled")){
-    //        return "0";
-    //    }else{
-    //        return "";
-    //    }
 
 }
 
+void ControlCenter::updateActions() {
+
+    bool selected = ui.tableViewClientList->currentIndex().isValid() && ui.tableViewClientList->selectionModel()->selectedIndexes().size();
+
+    if(osVersion().contains("2000", Qt::CaseInsensitive)){
+        ui.actionRemoteDesktop->setEnabled(false);
+    }else{
+        ui.actionRemoteDesktop->setEnabled(selected);
+    }
+
+    ui.actionExport->setEnabled(selected);
+    ui.actionPrint->setEnabled(selected);
+
+    ui.actionManage->setEnabled(selected);
+
+}
 
 void ControlCenter::slotQueryDatabase() {
     
     ui.toolButtonQuery->setDefaultAction(ui.actionQueryDatabase);  
-//    ui.tableViewClientList->setModel(queryModel);
-    proxyModel->setSourceModel(queryModel);
+
+    clientInfoModel->clear();
     proxyModel->cleanFilters();
-    
-    slotQueryClient(computerName(), userName(), workgroup(), macAddress(), ipAddress(), osVersion(), usbsdStatus(), programesEnabled());
-    
+
+    QString statement = QString("call sp_OS_Query('%1', '%2', '%3', '%4', '%5', '%6', %7 ); ")
+            .arg(assetNO())
+            .arg(computerName())
+            .arg(osVersion())
+            .arg(workgroup())
+            .arg(userName())
+            .arg(ipAddress())
+            .arg(programesEnabled())
+            ;        
+
+    if(!execQuery(statement)){
+        return;
+    }
+
+    QList<ClientInfo*> clientsList;
+    while(query->next()){
+        ClientInfo *info = new ClientInfo("", this);
+        info->setAssetNO(query->value("AssetNO").toString());
+        info->setComputerName(query->value("ComputerName").toString());
+        info->setOSVersion(query->value("OSVersion").toString());
+        info->setInstallationDate(query->value("InstallationDate").toString());
+        info->setOsKey(query->value("OSKey").toString());
+        info->setWorkgroup(query->value("Workgroup").toString());
+        info->setIsJoinedToDomain(query->value("JoinedToDomain").toBool());
+        info->setUsers(query->value("Users").toString());
+        info->setAdministrators(query->value("Administrators").toString());
+        info->setIP(query->value("IP").toString());
+        info->setClientVersion(query->value("ClientVersion").toString());
+        info->setProcessMonitorEnabled(query->value("ProcessMonitorEnabled").toBool());
+        info->setLastOnlineTime(query->value("LastOnlineTime").toDateTime());
+
+        clientsList.append(info);
+    }
+    clientInfoModel->setClientList(clientsList);
+
+    query->clear();
+
     //statusBar()->showMessage(tr("Matched In Database:%1").arg(QString::number(queryModel->rowCount())));
     
 }
@@ -578,17 +654,16 @@ void ControlCenter::slotQueryDatabase() {
 void ControlCenter::slotSearchNetwork() {
 
     ui.toolButtonQuery->setDefaultAction(ui.actionSearchNetwork);
-    
-    proxyModel->setSourceModel(clientInfoModel);
-    filter();
+
+    clientInfoModel->clear();
+    proxyModel->cleanFilters();
 
     //Broadcast
     QList<QHostAddress> broadcastAddresses = NetworkUtilities::broadcastAddresses();
     foreach (QHostAddress address, broadcastAddresses) {
-        controlCenterPacketsParser->sendAdminSearchClientPacket(address, computerName(), userName(), workgroup(), macAddress(), ipAddress(), osVersion(), m_adminName);        
+        controlCenterPacketsParser->sendAdminSearchClientPacket(address, computerName(), userName(), workgroup(), assetNO(), ipAddress(), osVersion(), m_adminName);
     }
     
-
     //statusBar()->showMessage(tr("Matched:%1 Total:%2").arg(QString::number(proxyModel->rowCount())).arg(clientInfoHash.size()));
     statusBar()->showMessage(tr("Matched In Network:%1").arg(QString::number(proxyModel->rowCount())));
 
@@ -621,7 +696,7 @@ void ControlCenter::filter(){
         usbSDRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
-    filterString = macAddress();
+    filterString = assetNO();
     if(!filterString.trimmed().isEmpty()){
         macRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
@@ -652,89 +727,6 @@ void ControlCenter::filter(){
 
 }
 
-void ControlCenter::slotQueryClient(const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &usbsd, const QString &programes) {
-
-    QString queryString = QString("select * from summaryinfo where ComputerName like '%%1%' and Workgroup like '%%2%' ") .arg(
-                computerName) .arg(workgroup);
-
-    QString network = "";
-    if(!ipAddress.isEmpty()){
-        network += ipAddress;
-    }
-    if(!macAddress.isEmpty()){
-        network += QString("%" + macAddress);
-    }
-    queryString += QString(" and Network like '%%1%' ").arg(network);
-
-    if(!userName.isEmpty()){
-        queryString += QString(" and Users like '%%1%' ").arg(userName);
-    }
-
-    if(!osVersion.isEmpty()){
-        queryString += QString(" and OS like '%%1%' ").arg(osVersion);
-    }
-
-    if(!usbsd.isEmpty()){
-        queryString += QString(" and USBSD = %1 ").arg(usbsd);
-    }
-
-    if(!programes.isEmpty()){
-        queryString += QString(" and Programes = %1 ").arg(programes == "1"?1:0);
-    }
-
-    querySitoyClientInfo(queryString);
-
-}
-
-void ControlCenter::querySitoyClientInfo(const QString &queryString){
-
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
-    DatabaseConnecter dc(this);
-    if(!dc.isDatabaseOpened(databaseConnectionName,
-                            REMOTE_SITOY_COMPUTERS_DB_DRIVER,
-                            REMOTE_SITOY_COMPUTERS_DB_SERVER_HOST,
-                            REMOTE_SITOY_COMPUTERS_DB_SERVER_PORT,
-                            REMOTE_SITOY_COMPUTERS_DB_USER_NAME,
-                            REMOTE_SITOY_COMPUTERS_DB_USER_PASSWORD,
-                            REMOTE_SITOY_COMPUTERS_DB_NAME,
-                            HEHUI::MYSQL
-                            )){
-        QApplication::restoreOverrideCursor();
-        QMessageBox::critical(this, tr("Fatal Error"), tr("Database Connection Failed! Query Failed!"));
-        qCritical() << QString("Error: Database Connection Failed! Query Failed!");
-        return ;
-    }
-
-
-    QSqlDatabase db;
-    db = QSqlDatabase::database(databaseConnectionName);
-
-    queryModel->setQuery(QSqlQuery(queryString, db));
-
-    QSqlError error = queryModel->lastError();
-    if (error.type() != QSqlError::NoError) {
-        QString msg = QString("Can not query client info from database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
-        QApplication::restoreOverrideCursor();
-        QMessageBox::critical(this, tr("Fatal Error"), msg);
-
-        //MySQL数据库重启，重新连接
-        if(error.number() == 2006){
-            db.close();
-            QSqlDatabase::removeDatabase(databaseConnectionName);
-            return;
-        }
-
-    }
-
-    while(queryModel->canFetchMore()){
-        queryModel->fetchMore();
-    }
-
-    QApplication::restoreOverrideCursor();
-
-}
-
 //void ControlCenter::slotUpdateButtonClicked() {
 
 
@@ -743,52 +735,53 @@ void ControlCenter::querySitoyClientInfo(const QString &queryString){
 
 void ControlCenter::slotShowClientInfo(const QModelIndex &index) {
 
-    if(!index.isValid()){
-        return;
-    }
+//    if(!index.isValid()){
+//        return;
+//    }
 
-    int row = index.row();
-    QStringList list;
-
-
-    for(int i = 0; i < 8; i++){
-        QModelIndex idx =  index.sibling(row,i);
-        list << idx.data().toString();
-        //QMessageBox::information(this,QString(row),idx.data().toString());
-    }
-
-    ui.lineEditComputerName->setText(list.at(0));
-    ui.comboBoxWorkgroup->setCurrentIndex( ui.comboBoxWorkgroup->findText(list.at(1),Qt::MatchStartsWith));
-
-    QStringList networkInfoList = list.at(2).split(",").at(0).split("/");
-    ui.lineEditIPAddress->setText(networkInfoList.at(0));
-    ui.lineEditMACAddress->setText(networkInfoList.at(1).toLower());
-
-    ui.lineEditUserName->setText(list.at(3));
-    ui.comboBoxOSVersion->setCurrentIndex(ui.comboBoxOSVersion->findText(list.at(4),Qt::MatchStartsWith));
+//    int row = index.row();
+//    QStringList list;
 
 
-    ui.comboBoxUSBSD->setCurrentIndex( ui.comboBoxUSBSD->findData((list.at(5).toUShort())));
-    ui.comboBoxPrograms->setCurrentIndex( ui.comboBoxPrograms->findText((list.at(6) == "1"?tr("Enabled"):tr("Disabled")),Qt::MatchStartsWith));
+//    for(int i = 0; i < 13; i++){
+//        QModelIndex idx =  index.sibling(row,i);
+//        list << idx.data().toString();
+//        //QMessageBox::information(this,QString(row),idx.data().toString());
+//    }
 
-    m_administrators = list.at(7);
+//    int index = 0;
+//    ui.lineEditAssetNO->setText(networkInfoList.at(index++).toLower());
+//    ui.lineEditComputerName->setText(list.at(index++));
+//    ui.comboBoxWorkgroup->setCurrentIndex( ui.comboBoxWorkgroup->findText(list.at(1),Qt::MatchStartsWith));
+
+//    QStringList networkInfoList = list.at(2).split(",").at(0).split("/");
+//    ui.lineEditIPAddress->setText(networkInfoList.at(0));
+
+//    ui.lineEditUserName->setText(list.at(3));
+//    ui.comboBoxOSVersion->setCurrentIndex(ui.comboBoxOSVersion->findText(list.at(4),Qt::MatchStartsWith));
 
 
-    if(!ui.lineEditComputerName->isReadOnly()){
-        ui.lineEditComputerName->setReadOnly(true);
-        ui.lineEditUserName->setReadOnly(true);
+//    ui.comboBoxUSBSD->setCurrentIndex( ui.comboBoxUSBSD->findData((list.at(5).toUShort())));
+//    ui.comboBoxPrograms->setCurrentIndex( ui.comboBoxPrograms->findText((list.at(6) == "1"?tr("Enabled"):tr("Disabled")),Qt::MatchStartsWith));
 
-        ui.comboBoxWorkgroup->setEnabled(false);
-        ui.comboBoxUSBSD->setEnabled(false);
+//    m_administrators = list.at(7);
 
-        ui.lineEditMACAddress->setReadOnly(true);
-        ui.lineEditIPAddress->setReadOnly(true);
 
-        ui.comboBoxOSVersion->setEnabled(false);
-        ui.comboBoxPrograms->setEnabled(false);
-    }
+//    if(!ui.lineEditComputerName->isReadOnly()){
+//        ui.lineEditComputerName->setReadOnly(true);
+//        ui.lineEditUserName->setReadOnly(true);
 
-    ui.toolButtonManage->setEnabled(true);
+//        ui.comboBoxWorkgroup->setEnabled(false);
+//        ui.comboBoxUSBSD->setEnabled(false);
+
+//        ui.lineEditMACAddress->setReadOnly(true);
+//        ui.lineEditIPAddress->setReadOnly(true);
+
+//        ui.comboBoxOSVersion->setEnabled(false);
+//        ui.comboBoxPrograms->setEnabled(false);
+//    }
+
+//    ui.toolButtonManage->setEnabled(true);
 
 
 }
@@ -920,7 +913,6 @@ void ControlCenter::slotUpdateUserLogonPassword(){
         return;
     }
     
-    ui.toolButtonUpdatePassword->setDefaultAction(ui.actionUpdatePassword);
     
     controlCenterPacketsParser->sendUpdateMSUserPasswordPacket("", 0, workgroup(), m_adminName);
 }
@@ -946,7 +938,6 @@ void ControlCenter::slotInformUserNewLogonPassword(){
         return;
     }
     
-    ui.toolButtonUpdatePassword->setDefaultAction(ui.actionInformNewPassword);
     
     controlCenterPacketsParser->sendInformUpdatePasswordPacket("", 0, workgroup(), m_adminName);
     
@@ -1016,6 +1007,8 @@ void ControlCenter::slotShowCustomContextMenu(const QPoint & pos){
 
     QMenu menu(this);
 
+    menu.addAction(ui.actionManage);
+    menu.addSeparator();
     menu.addAction(ui.actionRemoteDesktop);
     menu.addSeparator();
 
@@ -1030,27 +1023,10 @@ void ControlCenter::slotShowCustomContextMenu(const QPoint & pos){
 
 #endif
 
-    //        menu.addSeparator();
-    //        menu.addAction(ui.actionUpdateUserLogonPassword);
-
     menu.exec(tableView->viewport()->mapToGlobal(pos));
 
 }
 
-void ControlCenter::updateActions() {
-
-    bool selected = ui.tableViewClientList->currentIndex().isValid() && ui.tableViewClientList->selectionModel()->selectedIndexes().size();
-
-    if(osVersion().contains("2000", Qt::CaseInsensitive)){
-        ui.actionRemoteDesktop->setEnabled(false);
-    }else{
-        ui.actionRemoteDesktop->setEnabled(selected);
-    }
-
-    ui.actionExport->setEnabled(selected);
-    ui.actionPrint->setEnabled(selected);
-
-}
 
 void ControlCenter::startNetwork(){
 
@@ -1139,20 +1115,14 @@ void ControlCenter::serverFound(const QString &serverAddress, quint16 serverUDTL
 
     QMessageBox::information(this, tr("Server Found"), msg);
 
-
-
 }
 
-void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QByteArray &clientInfo, quint8 infoType){
-    qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...) "<< " computerName:"<<computerName;
+void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType){
+    qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...) "<< " Asset NO.:"<<assetNO;
     
-    ClientInfo *info = 0;
-    if(clientInfoHash.contains(computerName)){
-        info = clientInfoHash.value(computerName);
-        //qWarning()<<QString("Client Info of '%1' Exists In:  Memory:YES  DB:%2").arg(computerName).arg(isRecordExistInDB(computerName)?"YES":"NO")<<"\n";
-    }else{
-        info = new ClientInfo(computerName, this);
-        clientInfoHash.insert(computerName, info);                      
+    ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
+    if(!info){
+        info = new ClientInfo(assetNO, this);
     }
 
     switch (infoType) {
@@ -1168,16 +1138,11 @@ void ControlCenter::updateOrSaveClientInfo(const QString &computerName, const QB
 //        updateServicesInfo(object);
 //        break;
     default:
+        qCritical()<<"ERROR! Invalid client info!";
         break;
     }
 
     clientInfoModel->addClientInfo(info);
-    
-
-    //if(ui.tableViewClientList->model() == proxyModel){
-        statusBar()->showMessage(tr("Matched:%1 Total:%2").arg(QString::number(ui.tableViewClientList->model()->rowCount())).arg(clientInfoHash.size()));
-    //}
-
 
     qApp->processEvents();
 

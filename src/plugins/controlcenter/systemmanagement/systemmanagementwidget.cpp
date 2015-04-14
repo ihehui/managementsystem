@@ -1,4 +1,4 @@
-﻿
+
 #include "systemmanagementwidget.h"
 
 #include <QHostInfo>
@@ -28,153 +28,9 @@ namespace HEHUI {
 
 
 SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, ClientInfo *clientInfo,  QWidget *parent)
-    : QWidget(parent), m_adminName(adminName)
+    : QWidget(parent), controlCenterPacketsParser(parser), m_adminName(adminName)
 {
     ui.setupUi(this);
-
-    if(clientInfo){
-        m_clientInfo = *clientInfo;
-    }
-
-    m_peerComputerName = m_clientInfo.getComputerName();
-    ui.lineEditComputerName->setText(m_peerComputerName.toUpper());
-
-
-    ui.lineEditIPAddress->setText("200.200.200.105");
-
-
-    if(m_peerComputerName.toLower() == QHostInfo::localHostName().toLower()){
-        localComputer = true;
-    }else{
-        localComputer = false;
-    }
-
-    if(localComputer){
-        this->m_peerIPAddress = QHostAddress::LocalHost;
-        ui.lineEditIPAddress->setText("127.0.0.1");
-    }
-
-    m_isJoinedToDomain = m_clientInfo.isJoinedToDomain();
-
-    ui.comboBoxProtocol->addItem(tr("Auto"), quint8(RTP::AUTO));
-    ui.comboBoxProtocol->addItem("TCP", quint8(RTP::TCP));
-    ui.comboBoxProtocol->addItem("ENET", quint8(RTP::ENET));
-    //ui.comboBoxProtocol->addItem("UDT", quint8(RTP::UDT));
-
-
-
-    m_winDirPath = "";
-
-
-
-
-#ifdef Q_OS_WIN32
-
-    WindowsManagement wm;
-
-    if(localComputer){
-        ui.groupBoxAdministrationTools->show();
-        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabFileManagement));
-
-        WinUtilities::getJoinInformation(&m_isJoinedToDomain);
-        m_clientInfo.setIsJoinedToDomain(m_isJoinedToDomain);
-
-    }else{
-        int index = ui.tabWidget->indexOf(ui.tabLocalManagement);
-        ui.tabWidget->removeTab(index);
-
-        ui.tabLocalManagement->setEnabled(false);
-        //            ui.groupBoxAdministrationTools->setEnabled(false);;
-        //            ui.groupBoxAdministrationTools->hide();
-    }
-
-    m_winDirPath = wm.getEnvironmentVariable("windir");
-    //m_winDirPath = QDir::rootPath() + "windows";
-
-
-
-
-#else
-    ui.pushButtonShowAdmin->setEnabled(false);
-    ui.pushButtonShowAdmin->hide();
-    //    ui.pushButtonRenameComputer->setEnabled(false);
-    //    ui.pushButtonRenameComputer->hide();
-    //    ui.pushButtonDomain->setEnabled(false);
-    //    ui.pushButtonDomain->hide();
-
-    int index = ui.tabWidget->indexOf(ui.tabLocalManagement);
-    ui.tabWidget->removeTab(index);
-    ui.tabLocalManagement->setEnabled(false);
-    //        ui.groupBoxAdministrationTools->setEnabled(false);;
-    //        ui.groupBoxAdministrationTools->hide();
-
-
-
-#endif
-
-
-    administratorsManagementMenu = 0;
-
-
-
-    ui.horizontalLayoutCommand->setEnabled(false);
-
-
-    //ui.tabSystemInfo->setEnabled(false);
-    ui.toolButtonRequestHardwareInfo->setEnabled(false);
-    ui.toolButtonSaveAs->setEnabled(false);
-
-
-
-    ui.tabRemoteConsole->setEnabled(false);
-
-
-    queryModel = 0;
-
-
-    setRTP(rtp);
-    m_peerSocket = INVALID_SOCK_ID;
-
-    m_aboutToCloseSocket = false;
-
-
-    setControlCenterPacketsParser(parser);
-
-    clientResponseAdminConnectionResultPacketReceived = false;
-
-    remoteConsoleRunning = false;
-
-
-    //No editing possible.
-    //ui.tableWidgetSoftware->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    //ui.tableWidgetServices->setEditTriggers(QAbstractItemView::NoEditTriggers);
-
-    //    m_fileManager = 0;
-
-
-    m_fileManagementWidget = qobject_cast<FileManagement *>(ui.tabFileManagement);
-    Q_ASSERT(m_fileManagementWidget);
-    if(!localComputer){
-        m_fileManagementWidget->setPacketsParser(parser);
-    }
-
-
-    //    connect(m_fileManagementWidget, SIGNAL(signalShowRemoteFiles(const QString &)), this, SLOT(requestFileSystemInfo(const QString &)));
-    //    connect(m_fileManagementWidget, SIGNAL(signalUploadFilesToRemote(const QStringList &, const QString &)), this, SLOT(requestUploadFilesToRemote(const QStringList &, const QString &)));
-    //    connect(m_fileManagementWidget, SIGNAL(signalDownloadFileFromRemote(const QStringList &, const QString &)), this, SLOT(requestDownloadFileFromRemote(const QStringList &, const QString &)));
-
-    m_updateTemperaturesTimer = 0;
-
-
-
-//    m_shutdownMenu = new QMenu(this);
-//    m_shutdownMenu->addAction(ui.actionReboot);
-//    m_shutdownMenu->addAction(ui.actionShutdown);
-//    ui.toolButtonShutdown->setMenu(m_shutdownMenu);
-//    ui.toolButtonShutdown->setDefaultAction(ui.actionReboot);
-//    connect(ui.actionReboot, SIGNAL(triggered()), this, SLOT(shutdownSystem()));
-//    connect(ui.actionShutdown, SIGNAL(triggered()), this, SLOT(shutdownSystem()));
-
 
     m_joinWorkgroupMenu = new QMenu(this);
     m_joinWorkgroupMenu->addAction(ui.actionJoinWorkgroup);
@@ -205,6 +61,109 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     connect(ui.tabProcessMonitor, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
     ui.tabProcessMonitor->setEnabled(false);
 
+    ui.comboBoxProtocol->addItem(tr("Auto"), quint8(RTP::AUTO));
+    ui.comboBoxProtocol->addItem("TCP", quint8(RTP::TCP));
+    ui.comboBoxProtocol->addItem("ENET", quint8(RTP::ENET));
+    //ui.comboBoxProtocol->addItem("UDT", quint8(RTP::UDT));
+
+    //ui.tabSystemInfo->setEnabled(false);
+    ui.toolButtonRequestHardwareInfo->setEnabled(false);
+    ui.toolButtonSaveAs->setEnabled(false);
+
+    ui.tabRemoteConsole->setEnabled(false);
+    ui.horizontalLayoutCommand->setEnabled(false);
+
+
+    m_rtp = 0;
+    if(rtp){
+        setRTP(rtp);
+    }
+    m_peerSocket = INVALID_SOCK_ID;
+    m_aboutToCloseSocket = false;
+
+    controlCenterPacketsParser = 0;
+    if(parser){
+        setControlCenterPacketsParser(parser);
+    }
+
+
+    if(clientInfo){
+        m_clientInfo = *clientInfo;
+    }
+
+    m_peerAssetNO = m_clientInfo.getAssetNO();
+    m_peerComputerName = m_clientInfo.getComputerName();
+    ui.lineEditAssetNO->setText(m_peerAssetNO);
+    ui.lineEditComputerName1->setText(m_peerComputerName.toUpper());
+
+
+    ui.lineEditHost->setText("200.200.200.105");
+
+
+    if(m_peerComputerName.toLower() == QHostInfo::localHostName().toLower()){
+        localComputer = true;
+    }else{
+        localComputer = false;
+    }
+
+    ui.lineEditHost->setText(clientInfo->getIP());
+    m_peerIPAddress = QHostAddress(clientInfo->getIP());
+    if(localComputer){
+        ui.lineEditHost->setText("127.0.0.1");
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabFileManagement));
+        ui.tabFileManagement->setEnabled(false);
+    }else{
+        ui.lineEditHost->setText(clientInfo->getIP());
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabLocalManagement));
+        ui.tabLocalManagement->setEnabled(false);
+    }
+
+    m_isJoinedToDomain = m_clientInfo.isJoinedToDomain();
+
+    m_winDirPath = "";
+
+
+#ifdef Q_OS_WIN32
+
+    WindowsManagement wm;
+
+    if(localComputer){
+        ui.groupBoxAdministrationTools->show();
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabFileManagement));
+
+        WinUtilities::getJoinInformation(&m_isJoinedToDomain);
+        m_clientInfo.setIsJoinedToDomain(m_isJoinedToDomain);
+
+    }
+
+    m_winDirPath = WinUtilities::getEnvironmentVariable("windir");
+
+
+
+#else
+
+    int index = ui.tabWidget->indexOf(ui.tabLocalManagement);
+    ui.tabWidget->removeTab(index);
+    ui.tabLocalManagement->setEnabled(false);
+
+#endif
+
+    administratorsManagementMenu = 0;
+
+
+    clientResponseAdminConnectionResultPacketReceived = false;
+    remoteConsoleRunning = false;
+
+
+    m_fileManagementWidget = qobject_cast<FileManagement *>(ui.tabFileManagement);
+    Q_ASSERT(m_fileManagementWidget);
+    if(parser){
+        m_fileManagementWidget->setPacketsParser(parser);
+    }
+
+
+    m_updateTemperaturesTimer = 0;
+
 
 
 }
@@ -219,9 +178,10 @@ SystemManagementWidget::~SystemManagementWidget()
         delete m_updateTemperaturesTimer;
     }
 
+}
 
-
-
+QString SystemManagementWidget::peerAssetNO() const{
+    return m_peerAssetNO;
 }
 
 void SystemManagementWidget::closeEvent(QCloseEvent *event){
@@ -237,12 +197,6 @@ void SystemManagementWidget::closeEvent(QCloseEvent *event){
 #endif
 
     controlCenterPacketsParser->disconnect(this);
-
-    if(queryModel){
-        queryModel->clear();
-        delete queryModel;
-        queryModel = 0;
-    }
 
     m_aboutToCloseSocket = true;
     m_rtp->closeSocket(m_peerSocket);
@@ -344,7 +298,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
 
     this->controlCenterPacketsParser = parser;
     connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(SOCKETID, const QString &, bool, const QString &)), this, SLOT(processClientResponseAdminConnectionResultPacket(SOCKETID, const QString &, bool, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(SOCKETID, const QString &, const QString &, bool, const QString &)), this, SLOT(processClientResponseAdminConnectionResultPacket(SOCKETID, const QString &, const QString &, bool, const QString &)));
     connect(controlCenterPacketsParser, SIGNAL(signalClientMessagePacketReceived(const QString &, const QString &, quint8)), this, SLOT(clientMessageReceived(const QString &, const QString &, quint8)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
@@ -357,7 +311,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     connect(controlCenterPacketsParser, SIGNAL(signalUserResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)), this, SLOT(userResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)));
     
 
-    connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &, const QString &)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, quint32 , const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, quint32 , const QString &)));
 
@@ -390,13 +344,13 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
         return;
     }
 
-    m_peerIPAddress = QHostAddress(ui.lineEditIPAddress->text().trimmed());
+    m_peerIPAddress = QHostAddress(ui.lineEditHost->text().trimmed());
     if(localComputer){
         this->m_peerIPAddress = QHostAddress::LocalHost;
     }
     if(m_peerIPAddress.isNull()){
         QMessageBox::critical(this, tr("Error"), tr("Invalid IP Address!"));
-        ui.lineEditIPAddress->setFocus();
+        ui.lineEditHost->setFocus();
         return;
     }
 
@@ -614,7 +568,7 @@ void SystemManagementWidget::changeWorkgroup(){
         }
     }
 
-    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_peerComputerName, m_adminName, !joinWorkgroupAction, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
+    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_peerAssetNO, m_adminName, !joinWorkgroupAction, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
@@ -721,6 +675,19 @@ void SystemManagementWidget::on_pushButtonOtherEXE_clicked(){
 
 void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
 
+    QString assetNO = ui.lineEditAssetNO->text().trimmed();
+    QString computerName = ui.lineEditComputerName1->text().trimmed();
+
+    if(assetNO.isEmpty() && computerName.isEmpty()){
+        QMessageBox::critical(this, tr("Error"), tr("Please input asset NO. or computer name!"));
+        ui.osGroupBox->setEnabled(true);
+        ui.lineEditAssetNO->setReadOnly(false);
+        ui.lineEditComputerName1->setReadOnly(false);
+        ui.lineEditAssetNO->setFocus();
+        return;
+    }
+
+
     resetSystemInfo();
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -745,17 +712,17 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
     QSqlDatabase db;
     db = QSqlDatabase::database(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
 
+    QSqlQueryModel queryModel;
 
-    if(!queryModel){
-        queryModel = new QSqlQueryModel(this);
+    QString condition = QString("s.AssetNO = '%1'").arg(assetNO);
+    if(assetNO.isEmpty()){
+        condition = QString("s.ComputerName = '%1'").arg(computerName);
     }
-    queryModel->clear();
-
-    QString queryString = QString("SELECT s.OS, s.Workgroup, s.Users, d.* FROM summaryinfo s, detailedinfo d WHERE s.ComputerName = '%1' AND d.ComputerName = '%1' ").arg(m_peerComputerName);
-    queryModel->setQuery(QSqlQuery(queryString, db));
+    QString queryString = QString("SELECT s.*, d.* FROM OS s, Hardware d WHERE (s.AssetNO = d.AssetNO) AND (%1); ").arg(condition);
+    queryModel.setQuery(QSqlQuery(queryString, db));
     QApplication::restoreOverrideCursor();
 
-    QSqlError error = queryModel->lastError();
+    QSqlError error = queryModel.lastError();
     if (error.type() != QSqlError::NoError) {
         QString msg = QString("Can not query client info from database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
         //QApplication::restoreOverrideCursor();
@@ -770,48 +737,53 @@ void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
 
     }
 
-    QSqlRecord record = queryModel->record(0);
+    QSqlRecord record = queryModel.record(0);
     if(record.isEmpty()){
         QMessageBox::critical(this, tr("Fatal Error"), tr("No Record Found!"));
         return;
     }
 
+    ui.lineEditAssetNO->setText(record.value("AssetNO").toString());
+    ui.lineEditComputerName1->setText(record.value("ComputerName").toString());
     ui.osVersionLineEdit->setText(record.value("OS").toString());
     ui.installationDateLineEdit->setText(record.value("InstallationDate").toString());
-    ui.computerNameLineEdit->setText(m_peerComputerName);
+    ui.lineEditOSKey->setText(record.value("OSKey").toString());
+    ui.lineEditIP->setText(record.value("IP").toString());
     ui.workgroupLineEdit->setText(record.value("Workgroup").toString());
-
+    ui.lineEditUsers->setText(record.value("Users").toString());
     ui.osGroupBox->setEnabled(true);
 
 
     ui.cpuLineEdit->setText(record.value("CPU").toString());
-    ui.motherboardLineEdit->setText(record.value("MotherboardName").toString());
+    ui.motherboardLineEdit->setText(record.value("Motherboard").toString());
     ui.memoryLineEdit->setText(record.value("Memory").toString());
-    ui.videoCardLineEdit->setText(record.value("Video").toString());
+    ui.lineEditDiskDrives->setText(record.value("Storage").toString());
     ui.monitorLineEdit->setText(record.value("Monitor").toString());
+    ui.videoCardLineEdit->setText(record.value("Video").toString());
     ui.audioLineEdit->setText(record.value("Audio").toString());
-    ui.lineEditNetworkAdapter->setText(record.value("NetworkAdapter").toString());
+    ui.lineEditNetworkAdapter->setText(record.value("NIC").toString());
 
-    ui.devicesInfoGroupBox->setEnabled(true);
+    //ui.devicesInfoGroupBox->setEnabled(true);
 
 
-    queryModel->clear();
-    queryString = QString("SELECT SoftwareName, SoftwareVersion, InstallationDate, Publisher FROM installedsoftware WHERE ComputerName = '%1' ").arg(m_peerComputerName);
-    queryModel->setQuery(QSqlQuery(queryString, db));
-    while (queryModel->canFetchMore()){
-        queryModel->fetchMore();
+    queryModel.clear();
+    queryString = QString("SELECT SoftwareName, SoftwareVersion, InstallationDate, Publisher FROM InstalledSoftware WHERE AssetNO = '%1'; ").arg(m_peerAssetNO);
+    queryModel.setQuery(QSqlQuery(queryString, db));
+    while (queryModel.canFetchMore()){
+        queryModel.fetchMore();
     }
-    int rows = queryModel->rowCount();
-//    ui.tableWidgetSoftware->setRowCount(rows);
-//    for(int i=0; i<rows; i++){
-//        QSqlRecord record = queryModel->record(i);
-//        for(int j=0; j<4; j++){
-//            ui.tableWidgetSoftware->setItem(i, j, new QTableWidgetItem(record.value(j).toString()));
-//        }
-//    }
-    queryModel->clear();
+    int rows = queryModel.rowCount();
+    QTableWidget *wgt = ui.tabSoftware->softwareTable();
+    wgt->clearContents();
+    wgt->setRowCount(rows);
+    for(int i=0; i<rows; i++){
+        QSqlRecord record = queryModel.record(i);
+        for(int j=0; j<4; j++){
+            wgt->setItem(i, j, new QTableWidgetItem(record.value(j).toString()));
+        }
+    }
+    queryModel.clear();
 
-    //ui.tableWidgetSoftware->setModel(queryModel);
     ui.labelReportCreationTime->setText(tr("Last Update Time: %1").arg(record.value("UpdateTime").toString()));
 
 
@@ -973,7 +945,7 @@ void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID soc
 
 }
 
-void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool result, const QString &message){
+void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message){
     qDebug()<<"SystemManagementWidget::processClientResponseVerifyInfoResultPacket:"<<"computerName:"<<computerName<<" result:"<<result;
 
     if(socketID != m_peerSocket){
@@ -983,14 +955,16 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
     clientResponseAdminConnectionResultPacketReceived = true;
 
     if(result == true){
+        m_peerAssetNO = assetNO;
         m_peerComputerName = computerName;
         setWindowTitle(computerName);
         emit updateTitle(this);
 
-        ui.computerNameLineEdit->setText(computerName);
+        ui.lineEditAssetNO->setText(assetNO);
+        ui.lineEditAssetNO->setReadOnly(true);
 
-        ui.lineEditComputerName->setText(computerName);
-        ui.lineEditComputerName->setReadOnly(true);
+        ui.lineEditComputerName1->setText(computerName);
+        ui.lineEditComputerName1->setReadOnly(true);
 
         ui.tabSystemInfo->setEnabled(true);
         ui.groupBoxTemperatures->setEnabled(true);
@@ -1042,14 +1016,14 @@ void SystemManagementWidget::requestConnectionToClientTimeout(){
 
 }
 
-void SystemManagementWidget::clientMessageReceived(const QString &computerName, const QString &message, quint8 clientMessageType){
-    qDebug()<<"--SystemManagementWidget::clientMessageReceived(...)"<<" computerName:"<<computerName;
+void SystemManagementWidget::clientMessageReceived(const QString &assetNO, const QString &message, quint8 clientMessageType){
+    qDebug()<<"--SystemManagementWidget::clientMessageReceived(...)"<<" Asset NO:"<<assetNO;
 
-    if(computerName.toLower() != this->m_peerComputerName.toLower()){
+    if(assetNO != m_peerAssetNO){
         return;
     }
 
-    QString msg = QString(tr("<p>Message From Computer <b>%1</b> :</p>").arg(computerName));
+    QString msg = QString(tr("<p>Message From Computer <b>%1</b> :</p>").arg(m_peerComputerName));
     msg += message;
     switch(clientMessageType){
     case quint8(MS::MSG_Information):
@@ -1078,11 +1052,11 @@ void SystemManagementWidget::requestClientInfo(quint8 infoType){
 
 }
 
-void SystemManagementWidget::clientInfoPacketReceived(const QString &computerName, const QByteArray &data, quint8 infoType){
+void SystemManagementWidget::clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType){
 
-    qDebug()<<"--SystemManagementWidget::clientInfoPacketReceived(...)"<<"  computerName:"<<computerName<<"  m_peerComputerName:"<<m_peerComputerName<<"  Type:"<<infoType;
+    qDebug()<<"--SystemManagementWidget::clientInfoPacketReceived(...)"<<"  Asset NO.:"<<assetNO<<"  m_peerComputerName:"<<m_peerComputerName<<"  Type:"<<infoType;
 
-    if(this->m_peerComputerName.toLower() != computerName.toLower()){
+    if(m_peerAssetNO != assetNO){
         return;
     }
 
@@ -1155,17 +1129,25 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &computerNam
 
 void SystemManagementWidget::updateOSInfo(){
 
+    m_peerAssetNO = m_clientInfo.getAssetNO();
+    m_peerComputerName = m_clientInfo.getComputerName();
+    Q_ASSERT(!m_peerComputerName.trimmed().isEmpty());
+
     //OS
-    ui.osVersionLineEdit->setText(m_clientInfo.getOs());
+    ui.lineEditAssetNO->setText(m_peerAssetNO);
+    ui.toolButtonModifyAssetNO->setEnabled(true);
+    ui.lineEditComputerName1->setText(m_peerComputerName);
+    ui.toolButtonRenameComputer->setEnabled(true);
+    ui.osVersionLineEdit->setText(m_clientInfo.getOSVersion());
+    ui.toolButtonShutdown->setEnabled(true);
     ui.installationDateLineEdit->setText(m_clientInfo.getInstallationDate());
     ui.lineEditOSKey->setText(m_clientInfo.getOsKey());
-    ui.computerNameLineEdit->setText(m_clientInfo.getComputerName());
+    ui.lineEditIP->setText(m_clientInfo.getIP());
     ui.workgroupLineEdit->setText(m_clientInfo.getWorkgroup());
+    ui.toolButtonChangeWorkgroup->setEnabled(true);
     ui.lineEditUsers->setText(m_clientInfo.getUsers());
     ui.osGroupBox->setEnabled(true);
 
-    m_peerComputerName = m_clientInfo.getComputerName();
-    Q_ASSERT(!m_peerComputerName.trimmed().isEmpty());
 
     m_isJoinedToDomain = m_clientInfo.isJoinedToDomain();
     if(m_isJoinedToDomain){
@@ -1322,10 +1304,10 @@ void SystemManagementWidget::requestClientInfoTimeout(){
 
 }
 
-void SystemManagementWidget::clientResponseRemoteConsoleStatusPacketReceived(const QString &computerName, bool running, const QString &extraMessage, quint8 messageType){
+void SystemManagementWidget::clientResponseRemoteConsoleStatusPacketReceived(const QString &assetNO, bool running, const QString &extraMessage, quint8 messageType){
 
 
-    if(computerName != this->m_peerComputerName){
+    if(assetNO != this->m_peerAssetNO){
         return;
     }
 
@@ -1358,20 +1340,18 @@ void SystemManagementWidget::clientResponseRemoteConsoleStatusPacketReceived(con
     }
 
     if(!extraMessage.trimmed().isEmpty()){
-        clientMessageReceived(computerName, extraMessage, messageType);
+        clientMessageReceived(assetNO, extraMessage, messageType);
     }
 
 }
 
-void SystemManagementWidget::remoteConsoleCMDResultFromClientPacketReceived(const QString &computerName, const QString &result){
+void SystemManagementWidget::remoteConsoleCMDResultFromClientPacketReceived(const QString &assetNO, const QString &result){
 
-
-    if(computerName != this->m_peerComputerName){
+    if(assetNO != this->m_peerAssetNO){
         return;
     }
 
     ui.textBrowserRemoteApplicationOutput->append(result);
-
 
 }
 
@@ -1393,8 +1373,8 @@ void SystemManagementWidget::userResponseRemoteAssistancePacketReceived(const QS
     }
 }
 
-void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString &userName, const QString &computerName, bool online){
-    if(computerName != this->m_peerComputerName){
+void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString &assetNO, const QString &userName, bool online){
+    if(assetNO != m_peerAssetNO){
         return;
     }
 
@@ -1412,7 +1392,10 @@ void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString
 
 }
 
-void SystemManagementWidget::updateTemperatures(const QString &cpuTemperature, const QString &harddiskTemperature){
+void SystemManagementWidget::updateTemperatures(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature){
+    if(assetNO != m_peerAssetNO){
+        return;
+    }
 
     QStringList temperatures;
 
@@ -1432,8 +1415,8 @@ void SystemManagementWidget::updateTemperatures(const QString &cpuTemperature, c
     ui.labelHarddiskTemperature->setText(temperatures.join(" "));
 }
 
-void SystemManagementWidget::replyMessageReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage){
-    if(computerName != this->m_peerComputerName){
+void SystemManagementWidget::replyMessageReceived(const QString &assetNO, const QString &userName, quint32 originalMessageID, const QString &replyMessage){
+    if(assetNO != m_peerAssetNO){
         return;
     }
 
@@ -1441,8 +1424,8 @@ void SystemManagementWidget::replyMessageReceived(const QString &computerName, c
 
 }
 
-void SystemManagementWidget::serviceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType){
-    if(computerName != this->m_peerComputerName){
+void SystemManagementWidget::serviceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType){
+    if(assetNO != m_peerAssetNO){
         return;
     }
 
@@ -1563,15 +1546,15 @@ void SystemManagementWidget::runProgrameAsAdmin(const QString &exeFilePath, cons
 
 void SystemManagementWidget::resetSystemInfo(){
 
-
+    ui.lineEditAssetNO->clear();
+    ui.lineEditComputerName1->clear();
     ui.osVersionLineEdit->clear();
     ui.installationDateLineEdit->clear();
     ui.lineEditOSKey->clear();
-    ui.computerNameLineEdit->clear();
+    ui.lineEditIP->clear();
     ui.workgroupLineEdit->clear();
     ui.lineEditUsers->clear();
     ui.osGroupBox->setEnabled(false);
-
 
     ui.cpuLineEdit->clear();
     ui.motherboardLineEdit->clear();

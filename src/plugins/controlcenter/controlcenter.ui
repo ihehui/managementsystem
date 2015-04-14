@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>865</width>
+    <width>922</width>
     <height>515</height>
    </rect>
   </property>
@@ -37,52 +37,8 @@
            <string>Query</string>
           </property>
           <layout class="QGridLayout" name="gridLayout">
-           <item row="1" column="0">
-            <widget class="QLabel" name="labelComputerName">
-             <property name="text">
-              <string>&amp;Computer Name:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="buddy">
-              <cstring>lineEditComputerName</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="lineEditComputerName">
-             <property name="minimumSize">
-              <size>
-               <width>100</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="5">
-            <widget class="QComboBox" name="comboBoxOSVersion">
-             <item>
-              <property name="text">
-               <string/>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>WIN_2000</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>WIN_XP</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>WIN_7</string>
-              </property>
-             </item>
-            </widget>
+            <widget class="QComboBox" name="comboBoxOSVersion"/>
            </item>
            <item row="2" column="4">
             <widget class="QLabel" name="labelOS">
@@ -155,29 +111,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="labelMACAddress">
-             <property name="text">
-              <string>&amp;MAC Address:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="buddy">
-              <cstring>lineEditMACAddress</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="lineEditMACAddress">
-             <property name="minimumSize">
-              <size>
-               <width>100</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="2">
             <widget class="QLabel" name="labelIPAddress">
              <property name="text">
@@ -204,7 +137,7 @@
            <item row="1" column="6">
             <widget class="QLabel" name="labelUSBSD">
              <property name="text">
-              <string>USB &amp;SD:</string>
+              <string>USB Device:</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -220,7 +153,7 @@
            <item row="2" column="6">
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>&amp;Programs:</string>
+              <string>&amp;Process Monitor:</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -269,67 +202,43 @@
              </property>
             </widget>
            </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="lineEditComputerName">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="lineEditAssetNO"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="labelComputerName">
+             <property name="text">
+              <string>&amp;Computer Name:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="buddy">
+              <cstring>lineEditComputerName</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Asset NO.:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
            <item row="2" column="8">
-            <widget class="QToolButton" name="toolButtonManage">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Remote Management</string>
-             </property>
-             <property name="icon">
-              <iconset resource="controlcenter.qrc">
-               <normaloff>:/icon/resources/images/connect.png</normaloff>:/icon/resources/images/connect.png</iconset>
-             </property>
-             <property name="autoRaise">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="10">
-            <widget class="QToolButton" name="toolButtonAnnouncement">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Update All Clients' Info</string>
-             </property>
-             <property name="icon">
-              <iconset resource="controlcenter.qrc">
-               <normaloff>:/icon/resources/images/announcement.png</normaloff>:/icon/resources/images/announcement.png</iconset>
-             </property>
-             <property name="shortcut">
-              <string>F5</string>
-             </property>
-             <property name="autoRaise">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="9">
-            <widget class="QToolButton" name="toolButtonUpdatePassword">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="toolTip">
-              <string>Update Windows Logon Password</string>
-             </property>
-             <property name="statusTip">
-              <string>Update Windows Logon Password</string>
-             </property>
-             <property name="text">
-              <string>Update Windows Logon Password</string>
-             </property>
-             <property name="icon">
-              <iconset resource="controlcenter.qrc">
-               <normaloff>:/icon/resources/images/password.png</normaloff>:/icon/resources/images/password.png</iconset>
-             </property>
-             <property name="autoRaise">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="9">
             <widget class="QToolButton" name="toolButtonfilter">
              <property name="enabled">
               <bool>true</bool>
@@ -360,6 +269,9 @@
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="alternatingRowColors">
            <bool>true</bool>
           </property>
@@ -368,6 +280,9 @@
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="textElideMode">
+           <enum>Qt::ElideMiddle</enum>
           </property>
           <property name="sortingEnabled">
            <bool>true</bool>
@@ -388,7 +303,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>865</width>
+     <width>922</width>
      <height>23</height>
     </rect>
    </property>
@@ -472,23 +387,25 @@
     <string>Filter</string>
    </property>
   </action>
+  <action name="actionManage">
+   <property name="text">
+    <string>Manage</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
-  <tabstop>tabWidget</tabstop>
+  <tabstop>lineEditAssetNO</tabstop>
   <tabstop>lineEditComputerName</tabstop>
   <tabstop>lineEditUserName</tabstop>
+  <tabstop>lineEditIPAddress</tabstop>
   <tabstop>comboBoxWorkgroup</tabstop>
+  <tabstop>comboBoxOSVersion</tabstop>
   <tabstop>comboBoxUSBSD</tabstop>
+  <tabstop>comboBoxPrograms</tabstop>
   <tabstop>toolButtonQuery</tabstop>
   <tabstop>toolButtonfilter</tabstop>
-  <tabstop>lineEditMACAddress</tabstop>
-  <tabstop>lineEditIPAddress</tabstop>
-  <tabstop>comboBoxOSVersion</tabstop>
-  <tabstop>comboBoxPrograms</tabstop>
-  <tabstop>toolButtonManage</tabstop>
-  <tabstop>toolButtonUpdatePassword</tabstop>
-  <tabstop>toolButtonAnnouncement</tabstop>
   <tabstop>tableViewClientList</tabstop>
+  <tabstop>tabWidget</tabstop>
  </tabstops>
  <resources>
   <include location="controlcenter.qrc"/>

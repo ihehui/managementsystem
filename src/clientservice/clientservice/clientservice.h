@@ -1,4 +1,4 @@
-﻿
+
 #ifndef CLIENTSERVICE_H
 #define CLIENTSERVICE_H
 
@@ -10,6 +10,8 @@
 
 #include "../../sharedms/global_shared.h"
 #include "../../sharedms/clientinfo.h"
+#include "../../sharedms/settings.h"
+
 
 #include "packetmanager/clientpacketsparser.h"
 #include "../clientresourcesmanager.h"
@@ -27,7 +29,6 @@
 //#include "HHSharedUDT/hudtprotocolforfiletransmission.h"
 
 #ifdef Q_OS_WIN32
-    #include "HHSharedWindowsManagement/hwindowsmanagement.h"
     #include "HHSharedWindowsManagement/hhardwaremonitor.h"
     #include "HHSharedWindowsManagement/WinUtilities"
 
@@ -63,14 +64,12 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void processClientInfoRequestedPacket(SOCKETID socketID, const QString &computerName, quint8 infoType);
+    void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
     void systemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID);
     void systemInfoThreadFinished();
 
     void processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
-    void processSetupProgramesPacket(bool enable, bool temporarilyAllowed, const QString &adminName);
     void processShowAdminPacket(bool show);
-    void processModifyAdminGroupUserPacket(const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
     void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool joinDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 
@@ -83,8 +82,8 @@ private slots:
     void processAdminRequestUpdateMSUserPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
     void processAdminRequestInformUserNewPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 
-    void processAdminRequestRemoteConsolePacket(const QString &computerName, const QString &applicationPath, const QString &adminID, bool startProcess, const QString &adminAddress, quint16 adminPort);
-    void processRemoteConsoleCMDFromServerPacket(const QString &computerName, const QString &command, const QString &adminAddress, quint16 adminPort);
+    void processAdminRequestRemoteConsolePacket(const QString &assetNO, const QString &applicationPath, const QString &adminID, bool startProcess, const QString &adminAddress, quint16 adminPort);
+    void processRemoteConsoleCMDFromServerPacket(const QString &assetNO, const QString &command, const QString &adminAddress, quint16 adminPort);
 
     void consoleProcessStateChanged(bool running, const QString &message);
     void consoleProcessOutputRead(const QString &output);
@@ -105,8 +104,8 @@ private slots:
 
 
     QStringList usersOnLocalComputer();
-    void uploadClientSummaryInfo(SOCKETID socketID);
-    void uploadClientSummaryInfo(const QString &adminAddress, quint16 adminPort);
+    void uploadClientOSInfo(SOCKETID socketID);
+    void uploadClientOSInfo(const QString &adminAddress, quint16 adminPort);
 
 //    void uploadClientDetailedInfoToServer();
 
@@ -115,7 +114,6 @@ private slots:
     void setWinAdminPassword(const QString &userPassword);
     QString getWinAdminPassword() const;
 
-    bool checkUsersAccount();
 
     bool setupUSBStorageDevice(bool readable, bool writeable, bool temporary);
 //    bool isUSBSDEnabled();
@@ -123,19 +121,16 @@ private slots:
 
     void checkUSBSD();
 
-    bool enableProgrames(bool temporary);
-    void disableProgrames();
-    bool isProgramesEnabled();
-    void checkProgrames();
-
 
     QStringList administrators();
     void modifyAdminGroupUser(const QString &userName, bool addToAdminGroup);
 
     bool setupStartupWithSafeMode(bool startup);
 
-    QString getServerLastUsed() const;
-    void setServerLastUsed(const QString &serverAddress);
+    bool getServerLastUsed(QString *ip, quint16 *port = 0);
+    void setServerLastUsed(const QString &serverAddress, quint16 serverPort = 0);
+
+    void uploadSoftwareInfo();
 
     void checkHasAnyServerBeenFound();
 
@@ -163,6 +158,9 @@ private slots:
 private:
     bool getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage);
 
+    void getLocalAssetNO();
+    void setLocalAssetNO(const QString &assetNO);
+
 
 protected:
     void start();
@@ -171,6 +169,7 @@ protected:
     void resume();
     void processCommand(int code);
 
+    void processArguments(int argc, char **argv);
 
 
 private:
@@ -195,17 +194,17 @@ private:
 
     DatabaseUtility *databaseUtility;
 
-    QSettings *settings;
-    QByteArray encryptionKey;
-    Cryptography *cryptography;
+    Settings *settings;
+    QByteArray m_encryptionKey;
 
+    QString m_localAssetNO;
     QString m_localComputerName;
+
     bool m_isJoinedToDomain;
     QString m_joinInfo;
 
 
 #if defined(Q_OS_WIN32)
-    WindowsManagement *m_wm;
 
     HardwareMonitor *m_hardwareMonitor;
 
@@ -236,11 +235,13 @@ private:
 
     QStringList logs;
 
+    bool m_procMonEnabled;
+    ProcessMonitor *m_processMonitor;
+
     ClientInfo *m_myInfo;
     SystemInfo *systemInfo;
 
-    bool m_procMonEnabled;
-    ProcessMonitor *m_processMonitor;
+
 
 
 

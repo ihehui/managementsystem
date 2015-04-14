@@ -48,8 +48,12 @@ public:
 	ClientInfoModel(QObject *parent = 0);
 	virtual ~ClientInfoModel();
 
-    void setClientList(QList<ClientInfo*> clientsList);
+    void setClientList(QList<ClientInfo*> &clientsList);
     void addClientInfo(ClientInfo *clientInfo);
+    ClientInfo * getClientInfo(const QModelIndex & index);
+    ClientInfo * getClientInfo(const QString &assetNO);
+
+    void clear();
 
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
     int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;

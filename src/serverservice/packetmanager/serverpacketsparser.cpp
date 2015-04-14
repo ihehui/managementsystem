@@ -148,93 +148,26 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
         qWarning()<<"~~ClientLookForServer--"<<" peerAddress:"<<peerAddress.toString()<<"   peerPort:"<<peerPort<<" peerUDPListeningPort:"<<peerUDPListeningPort <<" Version:"<<version;
     }
     break;
-    case quint8(MS::ClientOnline):
+    case quint8(MS::ClientOnlineStatusChanged):
     {
-        QString peerName;
-        in >> peerName;
-        emit signalClientOnlineStatusChanged(socketID, peerName, true);
+        quint8 online;
+        in >> online;
+        emit signalClientOnlineStatusChanged(socketID, peerID, online, peerAddress.toString(), peerPort);
 
-        qDebug()<<"~~ClientOnline--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<peerName;
-    }
-    break;
-    case quint8(MS::ClientOffline):
-    {
-        QString peerName;
-        in >> peerName;
-        emit signalClientOnlineStatusChanged(socketID, peerName, false);
-        qDebug()<<"~~ClientOffline--"<<" peerAddress:"<<peerAddress.toString()<<"   peerName:"<<peerName;;
+        qDebug()<<"~~ClientOnlineStatusChanged--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<online;
     }
     break;
 
-
-    case quint8(MS::AdminOnline):
+    case quint8(MS::AdminOnlineStatusChanged):
     {
-        QString peerName = "", adminName = "";
-        in >> peerName >> adminName;
-        emit signalAdminOnlineStatusChanged(socketID, peerName, adminName, true);
+        QString peerComputerName = "", adminName = "";
+        quint8 online = 0;
+        in >> peerComputerName >> adminName >> online;
+        emit signalAdminOnlineStatusChanged(socketID, peerComputerName, adminName, online);
 
-        qDebug()<<"~~AdminOnline--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<peerName <<" adminName:"<<adminName;
-
+        qDebug()<<"~~AdminOnlineStatusChanged--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<peerComputerName <<" adminName:"<<adminName;
     }
     break;
-    case quint8(MS::AdminOffline):
-    {
-        QString peerName = "", adminName = "";
-        in >> peerName >> adminName;
-        emit signalAdminOnlineStatusChanged(socketID, peerName, adminName, false);
-
-        qDebug()<<"~~AdminOffline--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<peerName <<" adminName:"<<adminName;
-
-    }
-    break;
-
-    //    case quint8(MS::ServerOnline):
-    //        break;
-    //    case quint8(MS::ServerOffline):
-    //        break;
-    //    case quint8(MS::AdminRequestClientInfo):
-    //        {
-    //            sendConfirmationOfReceiptPacket(packet->getPeerHostAddress(), packet->getPeerHostPort(), packet->getPacketSerialNumber(), peerID);
-
-    //            QString peerAddress;
-    //            quint16 peerPort;
-    //            QString adminID;
-    //            QByteArray passwordArray;
-    //            in >> peerAddress >> peerPort >> adminID >> passwordArray;
-    //            emit signalAdminLoggedOnToServerRequestPacketReceived(QHostAddress(peerAddress), peerPort, adminID, passwordArray);
-    //            qDebug()<<"~~AdminLoggedOnToServerRequest";
-    //        }
-    //        break;
-    //    case quint8(MS::ServerResponseAdminLoggedOnToServerRequest):
-    //        break;
-    //    case quint8(MS::ServerRequestRemoteConsole):
-    //        break;
-    //    case quint8(MS::ClientResponseRemoteConsoleRequest):
-    //        {
-    //            sendConfirmationOfReceiptPacket(packet->getPeerHostAddress(), packet->getPeerHostPort(), packet->getPacketSerialNumber(), peerID);
-
-    //            QString adminID;
-    //            quint8 accept;
-    //            QString extraMessage;
-    //            in >> adminID >> accept >> extraMessage;
-    //            emit signalClientResponseRemoteConsolePacketReceived(packet->getPeerHostAddress(), packet->getPeerHostPort(), adminID, ((accept == 0)?false:true), extraMessage);
-    //            qDebug()<<"~~ClientResponseRemoteConsole";
-    //        }
-    //        break;
-    //    case quint8(MS::RemoteConsoleCMDFromServer):
-    //        break;
-    //    case quint8(MS::RemoteConsoleCMDResultFromClient):
-    //        {
-    //            sendConfirmationOfReceiptPacket(packet->getPeerHostAddress(), packet->getPeerHostPort(), packet->getPacketSerialNumber());
-
-    //            QString result;
-    //            in >> result;
-    //            emit signalRemoteConsoleCMDResultFromClientPacketReceived(packet->getPacketSerialNumber(), result);
-    //            qDebug()<<"~~RemoteConsoleCMDResultFromClient";
-    //        }
-    //        break;
-    //    case quint8(MS::ServerRequestClientInfo):
-    //        break;
 
     case quint8(MS::ClientInfo):
     {
@@ -242,7 +175,7 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
         quint8 infoType = 0;
         in >> systemInfo >> infoType;
         emit signalClientInfoPacketReceived(peerID, systemInfo, infoType);
-        qDebug()<<"~~ClientResponseClientDetailedInfo";
+        qDebug()<<"~~ClientInfo";
 
     }
     break;
@@ -275,17 +208,17 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::RequestChangeProcessMonitorInfo):
     {
-        QByteArray localRulesData,  globalRulesData;
+        QByteArray localRules,  globalRules;
         quint8 enableProcMon = 0;
         quint8 enablePassthrough = 1;
         quint8 enableLogAllowedProcess = 0;
         quint8 enableLogBlockedProcess = 1;
         quint8 useGlobalRules = 1;
-        QString computerName = "";
+        QString assetNO = "";
 
-        in >> localRulesData >> globalRulesData >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>computerName;
+        in >> localRules >> globalRules >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>assetNO;
 
-        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, localRulesData, globalRulesData, enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, computerName);
+        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, localRules, globalRules, enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, assetNO);
         qDebug()<<"~~RequestChangeProcessMonitorInfo";
     }
     break;

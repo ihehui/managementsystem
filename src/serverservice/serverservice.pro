@@ -22,14 +22,12 @@ include(../sharedms/sharedms.pri)
 DEPENDPATH += 
 INCLUDEPATH += 
 SOURCES += \
-    settings.cpp \
     packetmanager/serverpacketsparser.cpp \
     main.cpp \
     serverservice/serverservice.cpp \
     resourcesmanagerinstance.cpp
 HEADERS += \
     app_constants.h \
-    settings.h \
     packetmanager/serverpacketsparser.h \
     serverservice/serverservice.h \
     resourcesmanagerinstance.h

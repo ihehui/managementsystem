@@ -22,7 +22,7 @@
 
 /*
  ***************************************************************************
- * Last Modified on: 2010-9-3
+ * Last Modified on: 2015-4-10
  * Last Modified by: 贺辉
  ***************************************************************************
  */
@@ -34,9 +34,7 @@
 #include "serverservice.h"
 
 #include "../app_constants.h"
-#include "../settings.h"
-
-
+#include "../sharedms/settings.h"
 
 
 
@@ -61,7 +59,7 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
 
     m_udpServer = 0;
     m_rtp = 0;
-//    m_udtProtocol = 0;
+    //    m_udtProtocol = 0;
 
     databaseUtility = 0;
     query = 0;
@@ -71,7 +69,9 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
 
     onlineAdminsCount = 0;
 
+    m_isUsingMySQL = true;
 
+    processArguments(argc, argv);
 
 }
 
@@ -87,12 +87,12 @@ ServerService::~ServerService(){
         serverPacketsParser = 0;
     }
 
-//    ResourcesManagerInstance::cleanInstance();
+    //    ResourcesManagerInstance::cleanInstance();
     delete resourcesManager;
     resourcesManager = 0;
 
-//    delete m_udpServer;
-//    delete m_udtProtocol;
+    //    delete m_udpServer;
+    //    delete m_udtProtocol;
 
     PacketHandlerBase::clean();
 
@@ -129,13 +129,13 @@ bool ServerService::startMainService(){
 
 
     QString errorMessage = "";
-//    m_udpServer = resourcesManager->startIPMCServer(QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16(IP_MULTICAST_GROUP_PORT), &errorMessage);
-//    if(!m_udpServer){
-//        logMessage(QString("Can not start IP Multicast listening on address '%1', port %2! %3").arg(IP_MULTICAST_GROUP_ADDRESS).arg(IP_MULTICAST_GROUP_PORT).arg(errorMessage), QtServiceBase::Error);
-//        m_udpServer = resourcesManager->startUDPServer(QHostAddress::Any, quint16(IP_MULTICAST_GROUP_PORT), true, &errorMessage);
-//    }else{
-//        qWarning()<<QString("IP Multicast listening on address '%1', port %2!").arg(IP_MULTICAST_GROUP_ADDRESS).arg(IP_MULTICAST_GROUP_PORT);
-//    }
+    //    m_udpServer = resourcesManager->startIPMCServer(QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16(IP_MULTICAST_GROUP_PORT), &errorMessage);
+    //    if(!m_udpServer){
+    //        logMessage(QString("Can not start IP Multicast listening on address '%1', port %2! %3").arg(IP_MULTICAST_GROUP_ADDRESS).arg(IP_MULTICAST_GROUP_PORT).arg(errorMessage), QtServiceBase::Error);
+    //        m_udpServer = resourcesManager->startUDPServer(QHostAddress::Any, quint16(IP_MULTICAST_GROUP_PORT), true, &errorMessage);
+    //    }else{
+    //        qWarning()<<QString("IP Multicast listening on address '%1', port %2!").arg(IP_MULTICAST_GROUP_ADDRESS).arg(IP_MULTICAST_GROUP_PORT);
+    //    }
 
     m_udpServer = resourcesManager->startUDPServer(QHostAddress::Any, quint16(IP_MULTICAST_GROUP_PORT), true, &errorMessage);
     if(!m_udpServer){
@@ -148,8 +148,8 @@ bool ServerService::startMainService(){
     m_rtp = resourcesManager->startRTP(QHostAddress::Any, UDT_LISTENING_PORT, true, &errorMessage);
     connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)), Qt::QueuedConnection);
 
-//    m_udtProtocol = m_rtp->getUDTProtocol();
-//    m_udtProtocol->startWaitingForIOInOneThread(30);
+    //    m_udtProtocol = m_rtp->getUDTProtocol();
+    //    m_udtProtocol->startWaitingForIOInOneThread(30);
     //m_udtProtocol->startWaitingForIOInSeparateThread(10, 500);
 
 
@@ -159,13 +159,13 @@ bool ServerService::startMainService(){
     //connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
 
     connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
+    connect(serverPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)), Qt::QueuedConnection);
 
-    connect(serverPacketsParser, SIGNAL(signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID, const QByteArray &, bool, bool, bool, bool, bool)), this, SLOT(processRequestChangeProcessMonitorInfoPacket(SOCKETID, const QByteArray &, bool, bool, bool, bool, bool)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID, const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(processRequestChangeProcessMonitorInfoPacket(SOCKETID, const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), Qt::QueuedConnection);
 
 
-//    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
+    //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool, const QString&, quint16)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool, const QString&, quint16)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
 
     //Single Process Thread
@@ -194,42 +194,22 @@ bool ServerService::startMainService(){
     return true;
 }
 
-void ServerService::saveClientLog(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime){
+void ServerService::saveClientLog(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime){
     //qWarning()<<"ServerService::saveClientLog(...) IP:"<<clientAddress<<" log:"<<log;
 
-    if(!query){
-        if(!openDatabase()){
-            return;
-        }
-    }else{
-        query->clear();
+    QString statement = QString("call sp_Logs_Save('%1', '%2', %3, '%4', '%5', '%6');")
+            .arg(assetNO)
+            .arg(clientAddress)
+            .arg(logType)
+            .arg(log)
+            .arg("NULL")
+            .arg(clientTime)
+            ;
+
+    if(!saveDataToDB(statement)){
+        QString error = QString("ERROR! An error occurred when saving client log to database. Asset NO.: %1.").arg(assetNO);
+        logMessage(error, QtServiceBase::Error);
     }
-
-    query->prepare("INSERT INTO logs (ComputerName, Users, IPAddress, Type, Content, ClientTime) "
-                   "VALUES (:ComputerName, :Users, :IPAddress, :Type, :Content, :ClientTime)");
-
-    query->bindValue(":ComputerName", computerName);
-    query->bindValue(":Users", "");
-    query->bindValue(":IPAddress", clientAddress);
-    query->bindValue(":Type", logType);
-    query->bindValue(":Content", log);
-    query->bindValue(":ClientTime", clientTime);
-
-    if(!query->exec()){
-        QSqlError error = query->lastError();
-        QString msg = QString("Can not write log to database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
-        logMessage(msg, QtServiceBase::Error);
-        qCritical()<< msg;
-
-        //MySQL数据库重启，重新连接
-        if(error.number() == 2006){
-            query->clear();
-            openDatabase(true);
-        }
-
-    }
-
-    query->clear();
 
 }
 
@@ -241,188 +221,170 @@ void ServerService::sendServerOnlinePacket(){
 
     //serverPacketsParser->sendServerOnlinePacket();
     
-    updateOrSaveAllClientsInfoToDatabase();
+    //updateOrSaveAllClientsInfoToDatabase();
 
 }
 
-bool ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info){
-    //    qWarning()<<"ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info)";
+//bool ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info){
+//    //    qWarning()<<"ServerService::updateOrSaveClientInfoToDatabase(ClientInfo *info)";
 
-    if(!info){
-        return false;
-    }
+//    if(!info){
+//        return false;
+//    }
 
-    QString computerName = info->getComputerName();
+//    QString assetNO = info->getAssetNO();
 
-    QString summaryStatement = "";
-    QString detailedStatement = "";
-    QString updateInstalledSoftwaresInfoStatement = "";
+//    QString osInfoStatement = "";
+//    QString hardwareInfoStatement = "";
+//    QString updateInstalledSoftwaresInfoStatement = "";
 
-    //    if(isRecordExistInDB(info->getComputerName())){
-    if(!info->getSummaryInfoSavedTODatabase()){
-        summaryStatement = info->getUpdateOSInfoStatement();
-    }
-    if(!info->getDetailedInfoSavedTODatabase()){
-        detailedStatement = info->getUpdateHardwareInfoStatement();
-        //qWarning()<<"detailedStatement:"<<detailedStatement;
-    }
-    if(!info->isInstalledSoftwaresInfoSavedTODatabase()){
-        updateInstalledSoftwaresInfoStatement = info->getUpdateInstalledSoftwaresInfoStatement();
-    }
-
-
-    //    }
-    //    else{
-    //        summaryStatement = "START TRANSACTION;";
-    //        //statement += QString("delete from clientinfo where ComputerName = '%1'; ").arg(computerName);
-    //        summaryStatement += QString("INSERT INTO summaryinfo (ComputerName, Workgroup, Network, Users, OS, USBSD, Programes, Administrators, ClientVersion) "
-    //                            "VALUES ('%1', '%2', '%3', '%4', '%5', %6, %7, '%8', '%9'); ")
-    //                .arg(computerName).arg(info->getJoinInformation()).arg(info->getNetwork()).arg(info->getUsers()).arg(info->getOs())
-    //                .arg(QVariant(info->getUsbSDEnabled()).toUInt()).arg(QVariant(info->getProgramsEnabled()).toUInt())
-    //                .arg(info->getAdministrators()).arg(info->getClientVersion());
-
-    //        summaryStatement += QString("INSERT INTO detailedinfo (ComputerName) "
-    //                            "VALUES ('%1'); ").arg(computerName);
-
-    //        summaryStatement += "COMMIT;";
-
-    //    }
+//    //    if(isRecordExistInDB(info->getComputerName())){
+//    if(!info->getOSInfoSavedTODatabase()){
+//        osInfoStatement = info->getUpdateOSInfoStatement();
+//    }
+//    if(!info->getHardwareInfoSavedTODatabase()){
+//        hardwareInfoStatement = info->getUpdateHardwareInfoStatement();
+//        //qWarning()<<"detailedStatement:"<<detailedStatement;
+//    }
+//    if(!info->isInstalledSoftwaresInfoSavedTODatabase()){
+//        updateInstalledSoftwaresInfoStatement = info->getUpdateInstalledSoftwaresInfoStatement();
+//    }
 
 
-    if(!query){
-        if(!openDatabase()){
-            return false;
-        }
-    }else{
-        query->clear();
-    }
+//    if(!query){
+//        if(!openDatabase()){
+//            return false;
+//        }
+//    }else{
+//        query->clear();
+//    }
 
-    if(!summaryStatement.trimmed().isEmpty()){
-        if(!query->exec(summaryStatement)){
-            QSqlError error = query->lastError();
-            QString msg = QString("Can not write client summary info to database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
-            logMessage(msg, QtServiceBase::Error);
-            qCritical()<<msg;
-            qCritical()<<"summaryStatement:";
-            qCritical()<<summaryStatement;
-            qCritical()<<"";
-            //MySQL数据库重启，重新连接
-            if(error.number() == 2006){
-                query->clear();
-                openDatabase(true);
-            }else{
-                getRecordsInDatabase();
-            }
+//    if(!osInfoStatement.trimmed().isEmpty()){
+//        if(!query->exec(osInfoStatement)){
+//            QSqlError error = query->lastError();
+//            QString msg = QString("Can not write client summary info to database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
+//            logMessage(msg, QtServiceBase::Error);
+//            qCritical()<<msg;
+//            qCritical()<<"summaryStatement:";
+//            qCritical()<<osInfoStatement;
+//            qCritical()<<"";
+//            //MySQL数据库重启，重新连接
+//            if(error.number() == 2006){
+//                query->clear();
+//                openDatabase(true);
+//            }else{
+//                getRecordsInDatabase();
+//            }
 
-            return false;
-        }
-//        qWarning()<<" Summary Statement For "<<computerName<<": "<<summaryStatement;
+//            return false;
+//        }
+//        //        qWarning()<<" Summary Statement For "<<computerName<<": "<<summaryStatement;
 
-        info->setOSInfoSavedTODatabase(true);
-        info->setUpdateOSInfoStatement("");
-        qWarning()<<"Client summary info from "<<computerName<<" has been saved!";
+//        info->setOSInfoSavedTODatabase(true);
+//        info->setUpdateOSInfoStatement("");
+//        qWarning()<<"Client OS info from "<<assetNO<<" has been saved!";
 
-        query->clear();
-    }
+//        query->clear();
+//    }
 
-    if(!detailedStatement.trimmed().isEmpty()){
-        if(!query->exec(detailedStatement)){
-            QSqlError error = query->lastError();
-            QString msg = QString("Can not write client detailed info to database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
-            logMessage(msg, QtServiceBase::Error);
-            qCritical()<<msg;
+//    if(!hardwareInfoStatement.trimmed().isEmpty()){
+//        if(!query->exec(hardwareInfoStatement)){
+//            QSqlError error = query->lastError();
+//            QString msg = QString("Can not write client detailed info to database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
+//            logMessage(msg, QtServiceBase::Error);
+//            qCritical()<<msg;
 
-            //MySQL数据库重启，重新连接
-            if(error.number() == 2006){
-                query->clear();
-                openDatabase(true);
-            }else{
-                getRecordsInDatabase();
-            }
+//            //MySQL数据库重启，重新连接
+//            if(error.number() == 2006){
+//                query->clear();
+//                openDatabase(true);
+//            }else{
+//                getRecordsInDatabase();
+//            }
 
-            return false;
-        }
-//        qWarning()<<" Detailed Statement For "<<computerName<<": "<<detailedStatement;
+//            return false;
+//        }
+//        //        qWarning()<<" Detailed Statement For "<<computerName<<": "<<detailedStatement;
 
-        info->setHardwareInfoSavedTODatabase(true);
-        info->setUpdateHardwareInfoStatement("");
-        qWarning()<<"Client detailed info from "<<computerName<<" has been saved!";
+//        info->setHardwareInfoSavedTODatabase(true);
+//        info->setUpdateHardwareInfoStatement("");
+//        qWarning()<<"Client hardware info from "<<assetNO<<" has been saved!";
 
-        query->clear();
+//        query->clear();
 
-    }
+//    }
 
-    if(!updateInstalledSoftwaresInfoStatement.trimmed().isEmpty()){
-        query->exec(updateInstalledSoftwaresInfoStatement);
-        QSqlError error = query->lastError();
-        if(error.type() != QSqlError::NoError){
-            //QSqlError error = query->lastError();
-            QString msg = QString("Can not write client installed softwares info to database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
-            logMessage(msg, QtServiceBase::Error);
-            qCritical()<<msg;
+//    if(!updateInstalledSoftwaresInfoStatement.trimmed().isEmpty()){
+//        query->exec(updateInstalledSoftwaresInfoStatement);
+//        QSqlError error = query->lastError();
+//        if(error.type() != QSqlError::NoError){
+//            //QSqlError error = query->lastError();
+//            QString msg = QString("Can not write client installed softwares info to database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
+//            logMessage(msg, QtServiceBase::Error);
+//            qCritical()<<msg;
 
-            //MySQL数据库重启，重新连接
-            if(error.number() == 2006){
-                query->clear();
-                openDatabase(true);
-            }else{
-                getRecordsInDatabase();
-            }
+//            //MySQL数据库重启，重新连接
+//            if(error.number() == 2006){
+//                query->clear();
+//                openDatabase(true);
+//            }else{
+//                getRecordsInDatabase();
+//            }
 
-            return false;
-        }
-//        qWarning()<<" Installed Softwares Statement For "<<computerName<<": "<<updateInstalledSoftwaresInfoStatement;
+//            return false;
+//        }
+//        //        qWarning()<<" Installed Softwares Statement For "<<computerName<<": "<<updateInstalledSoftwaresInfoStatement;
 
-        info->setInstalledSoftwaresInfoSavedTODatabase(true);
-        info->setUpdateInstalledSoftwaresInfoStatement("");
-        qWarning()<<"Client installed softwares info from "<<computerName<<" has been saved!";
+//        info->setInstalledSoftwaresInfoSavedTODatabase(true);
+//        info->setUpdateInstalledSoftwaresInfoStatement("");
+//        qWarning()<<"Client installed softwares info from "<<assetNO<<" has been saved!";
 
-        query->clear();
+//        query->clear();
 
-    }
+//    }
 
 
 
-    if(!isRecordExistInDB(computerName)){
-        recordsInDatabase.append(computerName.toLower());
-    }
+//    if(!isRecordExistInDB(assetNO)){
+//        recordsInDatabase.append(assetNO.toLower());
+//    }
 
-    return true;
+//    return true;
 
-}
+//}
 
-void ServerService::updateOrSaveAllClientsInfoToDatabase(){
+//void ServerService::updateOrSaveAllClientsInfoToDatabase(){
 
-    getRecordsInDatabase();
+//    getRecordsInDatabase();
 
-    foreach(ClientInfo *info, clientInfoHash.values()){
-        updateOrSaveClientInfoToDatabase(info);
-    }
+//    foreach(ClientInfo *info, clientInfoHash.values()){
+//        updateOrSaveClientInfoToDatabase(info);
+//    }
 
-}
+//}
 
-void ServerService::clientInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo, quint8 infoType){
+void ServerService::clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType){
+    qDebug()<<"--ServerService::clientInfoPacketReceived(...) "<<" assetNO:"<<assetNO;
 
-    qWarning()<<"Client detailed info has been received From "<< computerName;
-    //    qWarning()<<"-----clientDetailedInfoPacketReceived";
-
-    if(computerName.trimmed().isEmpty()){
-        qCritical()<<"Invalid Computer Name!";
+    if(assetNO.trimmed().isEmpty()){
+        qCritical()<<"Invalid Asset NO. !";
         return;
     }
 
     ClientInfo *info = 0;
-    if(clientInfoHash.contains(computerName)){
-        info = clientInfoHash.value(computerName);
+    if(clientInfoHash.contains(assetNO)){
+        info = clientInfoHash.value(assetNO);
     }else{
-        info = new ClientInfo(computerName, this);
-        clientInfoHash.insert(computerName, info);
+        info = new ClientInfo(assetNO, this);
+        clientInfoHash.insert(assetNO, info);
     }
 
     switch (infoType) {
+
     case quint8(MS::SYSINFO_OS):
         processOSInfo(info, clientInfo);
-          break;
+        break;
+
     case quint8(MS::SYSINFO_HARDWARE):
         processHardwareInfo(info, clientInfo);
         break;
@@ -430,9 +392,7 @@ void ServerService::clientInfoPacketReceived(const QString &computerName, const 
     case quint8(MS::SYSINFO_SOFTWARE):
         processSoftwareInfo(info, clientInfo);
         break;
-//    case quint8(MS::SYSINFO_SERVICES):
-//        updateServicesInfo(object);
-//        break;
+
     default:
         break;
     }
@@ -445,111 +405,151 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
         return;
     }
 
-    QString osInfo = info->getOs();
-    QString installationDate = info->getInstallationDate();
-    QString osKey = info->getOsKey();
-    QString workgroupName = info->getWorkgroup();
-    bool isJoinedToDomain = info->isJoinedToDomain();
-    QString usersInfo = info->getUsers();
-    QString admins = info->getAdministrators();
-    QString ipInfo = info->getIPInfo();
-    QString clientVersion = info->getClientVersion();
+    QString assetNO = info->getAssetNO();
+
+//    QString computerName = info->getComputerName();
+//    QString osInfo = info->getOSVersion();
+//    QString installationDate = info->getInstallationDate();
+//    QString osKey = info->getOsKey();
+//    QString workgroupName = info->getWorkgroup();
+//    bool isJoinedToDomain = info->isJoinedToDomain();
+//    QString usersInfo = info->getUsers();
+//    QString admins = info->getAdministrators();
+//    QString ipInfo = info->getIP();
+//    QString clientVersion = info->getClientVersion();
 
     info->setJsonData(osData);
-    QString computerName = info->getComputerName();
+
+    QString newComputerName = info->getComputerName();
+    QString newOSInfo = info->getOSVersion();
+    QString newinstallationDate = info->getInstallationDate();
+    QString newOSKey = info->getOsKey();
+    QString newworkgroupName = info->getWorkgroup();
+    bool newJoinedToDomain = info->isJoinedToDomain();
+    QString newUsers = info->getUsers();
+    QString newadmins = info->getAdministrators();
+    QString newipInfo = info->getIP();
+    QString newclientVersion = info->getClientVersion();
+
+    if(m_isUsingMySQL){
+        newUsers = newUsers.replace("\\", "\\\\");
+        newadmins = newadmins.replace("\\", "\\\\");
+    }
 
     QString statement;
-    if(isRecordExistInDB(computerName)){
-        qDebug()<<"Client Info Exists!";
-        //info = clientInfoHash.value(computerName);
-        statement = "UPDATE os SET LastOnlineTime = NULL ";
+//    if(isRecordExistInDB(assetNO)){
+//        qDebug()<<"Client Info Exists!";
 
-        QString newOSInfo = info->getOs();
-        if(osInfo != newOSInfo){
-            statement += QString(", OS = '%1' ").arg(newOSInfo);
+//        statement = "UPDATE OS SET LastOnlineTime = NULL ";
+
+//        if(computerName != newComputerName){
+//            statement += QString(", ComputerName = '%1' ").arg(newComputerName);
+//        }
+
+//        if(osInfo != newOSInfo){
+//            statement += QString(", OSVersion = '%1' ").arg(newOSInfo);
+//        }
+
+//        if(installationDate != newinstallationDate){
+//            statement += QString(", InstallationDate = '%1' ").arg(newinstallationDate);
+//        }
+
+//        if(osKey != newOSKey){
+//            statement += QString(", OSKey = '%1' ").arg(newOSKey);
+//        }
+
+//        if(workgroupName != newworkgroupName){
+//            statement += QString(", Workgroup = '%1' ").arg(newworkgroupName);
+//        }
+
+//        if(isJoinedToDomain != newJoinedToDomain){
+//            statement += QString(", JoinedToDomain = %1 ").arg(newJoinedToDomain?1:0);
+//        }
+
+//        if(usersInfo != newUsers){
+//            QString tempUsersInfo = newUsers;
+//            tempUsersInfo.replace("\\", "\\\\");
+//            statement += QString(", Users = '%1' ").arg(tempUsersInfo);
+//        }
+
+//        if(admins != newadmins){
+//            QString tempAdminsInfo = newadmins;
+//            tempAdminsInfo.replace("\\", "\\\\");
+//            statement += QString(", Administrators = '%1' ").arg(tempAdminsInfo);
+//        }
+
+//        if(ipInfo != newipInfo){
+//            statement += QString(", IP = '%1' ").arg(newipInfo);
+//        }
+
+//        if(clientVersion != newclientVersion){
+//            statement += QString(", ClientVersion = '%1' ").arg(newclientVersion);
+//        }
+
+//        statement += QString("WHERE AssetNO = '%1'").arg(assetNO);
+//        //qWarning()<<"Update Client Info For Computer "<<computerName << " "<<networkInfo;
+//        //qWarning()<<statement;
+
+//    }else{
+//        qDebug()<<"Client OS Info Not Exists!";
+
+//        statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11' ); ")
+//                .arg(assetNO)
+//                .arg(newComputerName)
+//                .arg(newOSInfo)
+//                .arg(newinstallationDate)
+//                .arg(newOSKey)
+//                .arg(newworkgroupName)
+//                .arg(QVariant(newJoinedToDomain).toUInt())
+//                .arg(newUsers)
+//                .arg(newadmins)
+//                .arg(newipInfo)
+//                .arg(newclientVersion)
+//                ;
+//    }
+
+
+    statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11' ); ")
+            .arg(assetNO)
+            .arg(newComputerName)
+            .arg(newOSInfo)
+            .arg(newinstallationDate)
+            .arg(newOSKey)
+            .arg(newworkgroupName)
+            .arg(QVariant(newJoinedToDomain).toUInt())
+            .arg(newUsers)
+            .arg(newadmins)
+            .arg(newipInfo)
+            .arg(newclientVersion)
+            ;
+
+    if(saveDataToDB(statement)){
+        if(!isRecordExistInDB(assetNO)){
+            recordsInDatabase.append(assetNO);
         }
-
-        QString newinstallationDate = info->getNetwork();
-        if(installationDate != newinstallationDate){
-            statement += QString(", InstallationDate = '%1' ").arg(newinstallationDate);
-        }
-
-        QString newOSKey = info->getOsKey();
-        if(osKey != newOSKey){
-            statement += QString(", OSKey = '%1' ").arg(newOSKey);
-        }
-
-        QString newworkgroupName = info->getWorkgroup();
-        if(workgroupName != newworkgroupName){
-            statement += QString(", Workgroup = '%1' ").arg(newworkgroupName);
-        }
-
-        bool newJoinedToDomain = info->isJoinedToDomain();
-        if(isJoinedToDomain != newJoinedToDomain){
-            statement += QString(", JoinedToDomain = %1 ").arg(newJoinedToDomain?1:0);
-        }
-
-        QString newUsers = info->getUsers();
-        if(usersInfo != newUsers){
-            QString tempUsersInfo = newUsers;
-            tempUsersInfo.replace("\\", "\\\\");
-            statement += QString(", Users = '%1' ").arg(tempUsersInfo);
-        }
-
-        QString newadmins = info->getAdministrators();
-        if(admins != newadmins){
-            QString tempAdminsInfo = newadmins;
-            tempAdminsInfo.replace("\\", "\\\\");
-            statement += QString(", Administrators = '%1' ").arg(tempAdminsInfo);
-        }
-
-        QString newipInfo = info->getIPInfo();
-        if(ipInfo != newipInfo){
-            statement += QString(", IP = '%1' ").arg(newipInfo);
-        }
-
-        QString newclientVersion = info->getClientVersion();
-        if(clientVersion != newclientVersion){
-            statement += QString(", ClientVersion = '%1' ").arg(newclientVersion);
-        }
-
-        statement += QString("WHERE ComputerName = '%1'").arg(computerName);
-        //qWarning()<<"Update Client Info For Computer "<<computerName << " "<<networkInfo;
-        //qWarning()<<statement;
-
     }else{
-        qDebug()<<"Client OS Info Not Exists!";
-
-        statement = "START TRANSACTION;";
-        statement += QString("INSERT INTO os (ComputerName, OS, InstallationDate, OSKey, Workgroup, JoinedToDomain, Users, Administrators, IP, ClientVersion) "
-                             "VALUES ('%1', '%2', '%3', '%4', '%5', %6, '%7', '%8', '%9', '%10' ); ")
-                .arg(computerName).arg(osInfo).arg(installationDate).arg(osKey).arg(workgroupName)
-                .arg(QVariant(isJoinedToDomain).toUInt()).arg(usersInfo).arg(admins).arg(ipInfo).arg(clientVersion);
-
-        statement += QString("INSERT INTO hardware (ComputerName) "
-                             "VALUES ('%1'); ").arg(computerName);
-
-        statement += "COMMIT;";
+        QString error = QString("ERROR! An error occurred when saving OS info to database. Asset NO.: %1.").arg(assetNO);
+        logMessage(error, QtServiceBase::Error);
     }
 
 
-    info->setOSInfoSavedTODatabase(false);
-    info->setUpdateOSInfoStatement(statement);
+//    info->setOSInfoSavedTODatabase(false);
+//    info->setUpdateOSInfoStatement(statement);
 
-    if(onlineAdminsCount > 0){
-        if(updateOrSaveClientInfoToDatabase(info)){
-            info->setLastHeartbeatTime(QDateTime::currentDateTime());
-        }
-    }
+//    //if(onlineAdminsCount > 0){
+//        if(updateOrSaveClientInfoToDatabase(info)){
+//            info->setLastHeartbeatTime(QDateTime::currentDateTime());
+//        }
+//    //}
 
     qWarning();
-    qWarning()<<QString(" '%1' Exists In:  Memory:%2  DB:%3 Version:%4").arg(computerName).arg(clientInfoHash.contains(computerName)?"YES":"NO").arg(isRecordExistInDB(computerName)?"YES":"NO").arg(clientVersion);
-
+    qWarning()<<QString(" '%1' Exists In:  Memory:%2  DB:%3 Version:%4").arg(assetNO).arg(clientInfoHash.contains(assetNO)?"YES":"NO").arg(isRecordExistInDB(assetNO)?"YES":"NO").arg(newclientVersion);
 
 
 }
 
 void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData){
+    qDebug()<<"--ServerService::processHardwareInfo(...)";
 
     if(!info){
         return;
@@ -567,10 +567,8 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     info->setJsonData(hardwareData);
 
     QStringList changes;
-
     QString statement;
-    //    if(isRecordExistInDB(computerName)){
-    statement = "UPDATE hardware SET UpdateTime = NULL ";
+    statement = "UPDATE Hardware SET UpdateTime = NULL ";
 
     QString newCPU = info->getCpu();
     if(cpu != newCPU){
@@ -637,25 +635,47 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     }
 
 
-    QString computerName = info->getComputerName();
+    QString assetNO = info->getAssetNO();
+    statement += QString("WHERE AssetNO = '%1'").arg(assetNO);
 
-    statement += QString("WHERE ComputerName = '%1'").arg(computerName);
+    if(!saveDataToDB(statement)){
+        QString error = QString("ERROR! An error occurred when saving hardware info to database. Asset NO.: %1.").arg(assetNO);
+        logMessage(error, QtServiceBase::Error);
+    }
 
-    info->setHardwareInfoSavedTODatabase(false);
-    info->setUpdateHardwareInfoStatement(statement);
 
+
+//    info->setHardwareInfoSavedTODatabase(false);
+//    info->setUpdateHardwareInfoStatement(statement);
+
+//    //if(onlineAdminsCount > 0){
+//        if(updateOrSaveClientInfoToDatabase(info)){
+//            info->setLastHeartbeatTime(QDateTime::currentDateTime());
+//        }
+//    //}
 
     if(changes.isEmpty()){return;}
 
     QString alarmStatement ;
+    quint8 alarmType = quint8(MS::ALARM_HARDWARECHANGE);
     foreach (QString change, changes) {
-        alarmStatement += QString("INSERT INTO alarm(ComputerName, Type, Message) VALUES('%1', %2, '%3' ); ").arg(computerName).arg(1).arg(change);
+        alarmStatement += QString("INSERT INTO Alarm(AssetNO, AlarmType, Message) VALUES('%1', %2, '%3' ); ")
+                .arg(assetNO)
+                .arg(alarmType)
+                .arg(change)
+                ;
     }
-    info->setUpdateAlarmsInfoStatement(alarmStatement);
+
+    if(!saveDataToDB(alarmStatement)){
+        QString error = QString("ERROR! An error occurred when saving hardware alarm info to database. Asset NO.: %1.").arg(assetNO);
+        logMessage(error, QtServiceBase::Error);
+    }
+
+//    info->setUpdateAlarmsInfoStatement(alarmStatement);
 
 
-    qCritical()<<"!!!!!!!!!!!!!Hardware Changed!!!!!!!!!!!!!"<<changes.join("\n");
-    qCritical()<<"Computer:"<<info->getComputerName();
+    qCritical()<<"!!!!!!!!!!!!!Hardware Changed!!!!!!!!!!!!!";
+    qCritical()<<"Asset NO.:"<<assetNO;
     qCritical()<<changes.join("\n");
 
 
@@ -674,34 +694,69 @@ void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data
     if(object.isEmpty()){return;}
 
     QJsonArray array = object["Software"].toArray();
-//    if(array.isEmpty()){
-//        return;
-//    }
 
     int softwareCount = array.size();
 
-    if(softwareCount != info->getinstalledSoftwaresCount()){
-        QString updateInstalledSoftwaresInfoStatement = QString("START TRANSACTION; delete from installedsoftware where ComputerName = '%1'; ").arg(info->getComputerName());
+    QString assetNO = info->getAssetNO();
+    QString statement = QString("START TRANSACTION; delete from InstalledSoftware where AssetNO = '%1'; ").arg(assetNO);
 
-        for(int i=0;i<softwareCount;i++){
-            QJsonArray infoArray = array.at(i).toArray();
-            if(infoArray.size() != 4){continue;}
+    for(int i=0;i<softwareCount;i++){
+        QJsonArray infoArray = array.at(i).toArray();
+        if(infoArray.size() != 4){continue;}
 
-            updateInstalledSoftwaresInfoStatement += QString(" insert into installedsoftware(ComputerName, SoftwareName, SoftwareVersion, Size, InstallationDate, Publisher) values('%1', '%2', '%3', '%4', '%5'); ").arg(info->getComputerName()).arg(infoArray.at(0).toString()).arg(infoArray.at(1).toString()).arg(infoArray.at(2).toString()).arg(infoArray.at(3).toString());
-        }
-        updateInstalledSoftwaresInfoStatement += "COMMIT;";
+        statement += QString(" insert into InstalledSoftware values(NULL, '%1', '%2', '%3', '%4', '%5'); ")
+                .arg(assetNO)
+                .arg(infoArray.at(0).toString())
+                .arg(infoArray.at(1).toString())
+                .arg(infoArray.at(2).toString())
+                .arg(infoArray.at(3).toString())
+                ;
+    }
+    statement += "COMMIT;";
 
-        info->setInstalledSoftwaresInfoSavedTODatabase(false);
-        info->setUpdateInstalledSoftwaresInfoStatement(updateInstalledSoftwaresInfoStatement);
-        //qWarning()<<"------0------updateInstalledSoftwaresInfoStatement:"<<updateInstalledSoftwaresInfoStatement;
 
+//    info->setInstalledSoftwaresInfoSavedTODatabase(false);
+//    info->setUpdateInstalledSoftwaresInfoStatement(statement);
+
+    if(!saveDataToDB(statement)){
+        QString error = QString("ERROR! An error occurred when saving installed software info to database. Asset NO.: %1.").arg(assetNO);
+        logMessage(error, QtServiceBase::Error);
     }
 
 
 }
 
-void ServerService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules){
-    //TODO
+void ServerService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRules, const QByteArray &globalRules, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO){
+
+    QString adminName = adminSocketsHash.value(socketID);
+    Q_ASSERT(adminName.isEmpty());
+
+    QString rules;
+    if(assetNO.isEmpty()){
+        rules = QString(globalRules);
+    }else{
+        rules = QString(localRules);
+    }
+
+    QString statement = QString("call sp_ProcessMonitorSettings_Update('%1', %2, '%3', %4, %5, %6, %7, '%8');")
+            .arg(assetNO)
+            .arg(enableProcMon)
+            .arg(rules)
+            .arg(enablePassthrough)
+            .arg(enableLogAllowedProcess)
+            .arg(enableLogBlockedProcess)
+            .arg(useGlobalRules)
+            .arg(adminName)
+            ;
+
+    if(!saveDataToDB(statement)){
+        QString error = QString("ERROR! An error occurred when saving process monitor info to database. Admin: %1.").arg(adminName);
+        logMessage(error, QtServiceBase::Error);
+    }
+
+
+
+
 }
 
 void ServerService::getRecordsInDatabase(){
@@ -715,7 +770,7 @@ void ServerService::getRecordsInDatabase(){
     }
 
     recordsInDatabase.clear();
-    if(query->exec("select ComputerName from summaryinfo")){
+    if(query->exec("select AssetNO from OS")){
         while(query->next()){
             recordsInDatabase.append(query->value(0).toString().toLower());
         }
@@ -727,36 +782,14 @@ void ServerService::getRecordsInDatabase(){
 
 }
 
-//void ServerService::processHeartbeatPacket(const QString &clientAddress, const QString &computerName){
+void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port){
+    qDebug()<<"ServerService::processClientOnlineStatusChangedPacket(...)"<<" socketID:"<<socketID<<" clientAssetNO:"<<clientAssetNO<<" online:"<<online;
 
-//    ClientInfo *info = 0;
-//    if(clientInfoHash.contains(computerName)){
-//        info = clientInfoHash.value(computerName);
-//        info->setLastHeartbeatTime(QDateTime::currentDateTime());
-//        info->setOnline(true);
-//        //qWarning()<<"Heartbeat Packet From:"<<computerName;
-//    }else{
-//        //serverPacketsParser->sendServerRequestClientSummaryInfoPacket("", computerName, "", clientAddress);
-//        qWarning()<<QString("Unknown Heartbeat Packet From Computer '%1'! IP:%2").arg(computerName).arg(clientAddress);
-//    }
-
-//}
-
-void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online){
-    qDebug()<<"ServerService::processClientOnlineStatusChangedPacket(...)"<<" socketID:"<<socketID<<" clientName:"<<clientName<<" online:"<<online;
-
-    QString ip = "";
-    quint16 port = 0;
 
     if(online){
 
-        if(!m_rtp->getAddressInfoFromSocket(socketID, &ip, &port)){
-            qCritical()<<m_rtp->lastErrorString();
-            return;
-        }
-
-        if(clientSocketsHash.values().contains(clientName)){
-            SOCKETID preSocketID = clientSocketsHash.key(clientName);
+        if(clientSocketsHash.values().contains(clientAssetNO)){
+            SOCKETID preSocketID = clientSocketsHash.key(clientAssetNO);
             qDebug()<<"---------preSocketID:"<<preSocketID<<" socketID:"<<socketID;
             if(preSocketID != socketID){
                 m_rtp->closeSocket(preSocketID);
@@ -765,10 +798,10 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
                 adminSocketsHash.remove(preSocketID);
             }
 
-//            clientSocketsHash.remove(preSocketID);
-//            m_udtProtocol->closeSocket(preSocketID);
+            //            clientSocketsHash.remove(preSocketID);
+            //            m_udtProtocol->closeSocket(preSocketID);
         }
-        clientSocketsHash.insert(socketID, clientName);
+        clientSocketsHash.insert(socketID, clientAssetNO);
 
     }else{
         clientSocketsHash.remove(socketID);
@@ -776,23 +809,20 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
     }
 
     ClientInfo *info = 0;
-    if(clientInfoHash.contains(clientName)){
-        info = clientInfoHash.value(clientName);
-        if(!online){
-            ip = info->getClientUDTListeningAddress();
-            port = info->getClientUDTListeningPort();
-        }
+    if(clientInfoHash.contains(clientAssetNO)){
+        info = clientInfoHash.value(clientAssetNO);
     }else{
-        info =  new ClientInfo(clientName, this);
-        clientInfoHash.insert(clientName, info);
+        info =  new ClientInfo(clientAssetNO, this);
+        clientInfoHash.insert(clientAssetNO, info);
 
-//        if(online){
-//            serverPacketsParser->sendServerRequestClientSummaryInfoPacket(socketID, "", clientName, "");
-//        }
+        //        if(online){
+        //            serverPacketsParser->sendServerRequestClientSummaryInfoPacket(socketID, "", clientName, "");
+        //        }
         //qWarning()<<QString("Unknown Client '%1' %2 ! %3").arg(clientName).arg(online?"Online":"Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         //qWarning()<<QString("Unknown Client '%1' From %2:%3 %4 ! %5").arg(clientName).arg(ip).arg(port).arg(online?"Online":"Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
     }
 
+    info->setIP(ip);
     info->setOnline(online);
     if(online){
         info->setClientUDTListeningAddress(ip);
@@ -800,13 +830,13 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
     }
 
     qWarning();
-    qWarning()<<QString("Client '%1' From %2:%3 %4 via %5! Time:%6 Socket: %7").arg(clientName).arg(ip).arg(port).arg(online?"Online":"Offline").arg(m_rtp->socketProtocolString(socketID)).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")).arg(socketID);
+    qWarning()<<QString("Client '%1' From %2:%3 %4 via %5! Time:%6 Socket: %7").arg(clientAssetNO).arg(ip).arg(port).arg(online?"Online":"Offline").arg(m_rtp->socketProtocolString(socketID)).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")).arg(socketID);
     qWarning()<<QString("Total Online Clients:%1").arg(clientSocketsHash.size());
 
 
 }
 
-void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online){
+void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online){
 
     QString ip = "";
     quint16 port = 0;
@@ -817,11 +847,11 @@ void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, con
         return;
     }
 
-    qWarning()<<QString(" Admin %1@%2 %3! %4").arg(adminName).arg(clientName).arg(online?"Online":"Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    qWarning()<<QString(" Admin %1@%2 %3! %4").arg(adminName).arg(adminComputerName).arg(online?"Online":"Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
 
     if(online){
         adminSocketsHash.insert(socketID, adminName);
-        updateOrSaveAllClientsInfoToDatabase();
+        //updateOrSaveAllClientsInfoToDatabase();
     }else{
         adminSocketsHash.remove(socketID);
     }
@@ -849,10 +879,9 @@ void ServerService::peerDisconnected(const QHostAddress &peerAddress, quint16 pe
 }
 
 void ServerService::peerDisconnected(SOCKETID socketID){
-    qDebug()<<"ServerService::peerDisconnected(...)"<<" socketID:"<<socketID;
-    qDebug()<<"----------3----------"<<" socketID:"<<socketID<<" Time:"<<QDateTime::currentDateTime().toString("mm:ss:zzz")<<" ThreadID:"<<QThread::currentThreadId();
+    qDebug()<<"ServerService::peerDisconnected(...) "<<" socketID:"<<socketID<<" Time:"<<QDateTime::currentDateTime().toString("mm:ss:zzz")<<" ThreadID:"<<QThread::currentThreadId();
 
-//    m_rtp->closeSocket(socketID);
+    //    m_rtp->closeSocket(socketID);
 
     if(clientSocketsHash.contains(socketID)){
         QString address = "Unknown Address";
@@ -907,7 +936,7 @@ bool ServerService::openDatabase(bool reopen){
         //                                            REMOTE_SITOY_COMPUTERS_DB_USER_PASSWORD,
         //                                            REMOTE_SITOY_COMPUTERS_DB_NAME,
         //                                            HEHUI::MYSQL);
-        HEHUI::Settings settings(APP_NAME, APP_VERSION, SERVICE_NAME, "./");
+        Settings settings(SERVICE_NAME, "./");
         err = databaseUtility->openDatabase(SERVERSERVICE_DB_CONNECTION_NAME,
                                             settings.getDBDriver(),
                                             settings.getDBServerHost(),
@@ -944,6 +973,12 @@ bool ServerService::openDatabase(bool reopen){
 
     }
 
+    if(db.driverName().toUpper() == "QMYSQL"){
+        m_isUsingMySQL = true;
+    }else{
+        m_isUsingMySQL = false;
+    }
+
 
     return true;
 
@@ -951,34 +986,50 @@ bool ServerService::openDatabase(bool reopen){
 
 }
 
-bool ServerService::isRecordExistInDB(const QString &computerName){
+bool ServerService::saveDataToDB(const QString &statement, QString *errorString ){
 
-    //    if(!query){
-    //        if(!openDatabase()){
-    //            return false;
-    //        }
-    //    }else{
-    //        query->clear();
-    //    }
+    if(!query){
+        if(!openDatabase()){
+            return false;
+        }
+    }else{
+        query->clear();
+    }
 
-    //    QString queryString = QString("select ComputerName from clientinfo where ComputerName = '%1'").arg(computerName);
+    if(!query->exec(statement)){
+        QSqlError error = query->lastError();
+        QString msg = QString("Can not execute the SQL statement! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
+        logMessage(msg, QtServiceBase::Error);
+        if(errorString){
+            *errorString = msg;
+        }
 
-    //    if(!query->exec(queryString)){
-    //        qWarning()<<query->lastError().text();
-    //        return false;
-    //    }
-    //    query->first();
-    //    QString value = query->value(0).toString();
-    //    qWarning()<<"value:"<<value;
-    //    if(value == computerName){
-    //        return true;
-    //    }
+        qCritical()<<msg;
+        qCritical()<<"statement:";
+        qCritical()<<statement;
+        qCritical()<<"";
+        //MySQL数据库重启，重新连接
+        if(error.number() == 2006){
+            query->clear();
+            openDatabase(true);
+        }else{
+            getRecordsInDatabase();
+        }
 
-    //    return false;
+        return false;
+    }
 
-    return recordsInDatabase.contains(computerName, Qt::CaseInsensitive);
+    query->clear();
+
+    return true;
 
 }
+
+inline bool ServerService::isRecordExistInDB(const QString &assetNO){
+    return recordsInDatabase.contains(assetNO, Qt::CaseInsensitive);
+}
+
+
 
 
 void ServerService::start()
@@ -1006,7 +1057,7 @@ void ServerService::stop()
         serverPacketsParser->sendServerOfflinePacket();
     }
 
-    updateOrSaveAllClientsInfoToDatabase();
+    //updateOrSaveAllClientsInfoToDatabase();
 
     databaseUtility->closeAllDBConnections();
 
@@ -1044,7 +1095,7 @@ void ServerService::processCommand(int code)
         serverPacketsParser->sendRequestClientInfoPacket();
         break;
     case 2:
-        updateOrSaveAllClientsInfoToDatabase();
+        //updateOrSaveAllClientsInfoToDatabase();
         break;
     case 3:
         serverPacketsParser->sendRequestClientInfoPacket("255.255.255.255", IP_MULTICAST_GROUP_PORT, "", false);
@@ -1059,6 +1110,224 @@ void ServerService::processCommand(int code)
 }
 
 
+void ServerService::processArguments(int argc, char **argv){
+
+    QCoreApplication core(argc, argv);
+    qDebug()<<"-------availableDrivers:"<<DatabaseUtility::availableDrivers();
+
+
+    QStringList arguments;
+    for(int i = 0; i < argc; i++){
+        arguments.append(QString(argv[i]));
+    }
+
+    HEHUI::Settings settings(SERVICE_NAME, "./");
+    if(settings.getDBServerHost().isEmpty()
+            || settings.getDBName().isEmpty()
+            || settings.getDBServerUserName().isEmpty()
+            ){
+        qCritical()<<QString("No database settings found!");
+        arguments.append("-setup");
+    }
+
+    if(arguments.contains("-setup", Qt::CaseInsensitive)){
+        QStringList databaseTypes;
+        databaseTypes<<"Other"<<"MYSQL"<<"SQLITE"<<"POSTGRESQL"<<"FIREBIRD"<<"DB2"<<"ORACLE"<<"M$ SQLSERVER"<<"M$ ACCESS";
+
+        //HEHUI::Settings settings(SERVICE_NAME, "./");
+        wcout<<tr("Current Database Info:").toStdWString()<<endl;
+        wcout<<tr("\tDatabase type: ").toStdWString()<<databaseTypes.at(settings.getDBType()).toStdWString()<<endl;
+        wcout<<tr("\tDriver: ").toStdWString()<<settings.getDBDriver().toStdWString()<<endl;
+        wcout<<tr("\tDatabase server address: ").toStdWString()<<settings.getDBServerHost().toStdWString()<<endl;
+        wcout<<tr("\tDatabase server port: ").toStdWString()<<settings.getDBServerPort()<<endl;
+        wcout<<tr("\tUser name: ").toStdWString()<<settings.getDBServerUserName().toStdWString()<<endl;
+        //wcout<<tr("\tPassword: ").toStdWString()<<settings.getDBServerUserPassword().toStdWString()<<endl;
+        wcout<<tr("\tDatabase name: ").toStdWString()<<settings.getDBName().toStdWString()<<endl<<endl;
+
+        wcerr<<tr("Database settings is invalid! Please reconfigure it!").toStdWString()<<endl;
+
+
+        string input = "";
+        bool ok = false;
+
+        wcout<<tr("Database type:").toStdWString()<<endl;
+        for(int i = 0; i<databaseTypes.size(); i++){
+            QString type = databaseTypes.at(i);
+            cout<<"\t"<<i<<":"<<qPrintable(type)<<endl;
+        }
+        //cout<<" 0:Other  1:MYSQL  2:SQLITE  3:POSTGRESQL  4:FIREBIRD  5:DB2  6:ORACLE  7:M$SQLSERVER  8:M$ACCESS"<<endl;
+        int type = -1;
+        while(1){
+            wcout<<tr("Please select database type number: ").toStdWString();
+            cin>>input;
+            type = QString::fromStdString(input).toInt(&ok);
+            if(ok && type >= 0 && type < databaseTypes.size()){
+                break;
+            }else{
+                wcerr<<tr("Invalid type number!").toStdWString()<<endl;
+            }
+        }
+        cout<<endl;
+        input = "";
+
+        wcout<<tr("Available Database Drivers:").toStdWString()<<endl;
+        QStringList drivers = DatabaseUtility::availableDrivers();
+        for(int i = 0; i<drivers.size(); i++){
+            QString driver = drivers.at(i);
+            cout<<"\t"<<i<<":"<<qPrintable(driver)<<endl;
+        }
+        QString driver = "";
+        while(1){
+            wcout<<tr("Please select database driver number: ").toStdWString();
+            cin>>input;
+            int driverNO = QString::fromStdString(input).toInt(&ok);
+            if(ok && driverNO >= 0 && driverNO < drivers.size()){
+                driver = drivers.at(driverNO);
+                break;
+            }else{
+                wcerr<<tr("Invalid driver number!").toStdWString()<<endl;
+            }
+        }
+        cout<<endl;
+        input = "";
+
+        QString host = "";
+        while(1){
+            wcout<<tr("Please input database server host name or IP address: ").toStdWString();
+            cin>>input;
+            host = QString::fromStdString(input);
+            if(QHostAddress(host).isNull()){
+                wcerr<<tr("Invalid database server host name or IP address!").toStdWString()<<endl;
+            }else{
+                break;
+            }
+        }
+        cout<<endl;
+        input = "";
+
+        int port = 0;
+        while(1){
+            wcout<<tr("Please input database server port: ").toStdWString();
+            cin>>input;
+            port = QString::fromStdString(input).toInt(&ok);
+            if(ok && port > 0 && port < 65535){
+                break;
+            }else{
+                wcerr<<tr("Invalid database server port!").toStdWString()<<endl;
+            }
+
+        }
+        cout<<endl;
+        input = "";
+
+        QString databaseName = "";
+        while(1){
+            wcout<<tr("Please input database name: ").toStdWString();
+            cin>>input;
+            databaseName = QString::fromStdString(input).trimmed();
+            if(databaseName.isEmpty()){
+                wcerr<<tr("Invalid database name!").toStdWString()<<endl;
+            }else{
+                break;
+            }
+
+        }
+        cout<<endl;
+        input = "";
+
+        QString userName = "";
+        while(1){
+            wcout<<tr("Please input user name: ").toStdWString();
+            cin>>input;
+            userName = QString::fromStdString(input).trimmed();
+            if(userName.isEmpty()){
+                wcerr<<tr("Invalid user name!").toStdWString()<<endl;
+            }else{
+                break;
+            }
+
+        }
+        cout<<endl;
+        input = "";
+
+        QString userPassword = "";
+        while(1){
+            wcout<<tr("Please input password: ").toStdWString();
+            cin>>input;
+            userPassword = QString::fromStdString(input);
+
+            string userPassword2 = "";
+            wcout<<tr("Please type your password again to confirm it: ").toStdWString();
+            cin>>userPassword2;
+            if(userPassword == QString::fromStdString(userPassword2)){
+                break;
+            }else{
+                wcout<<tr("The two passwords you entered did not match!").toStdWString()<<endl;
+            }
+
+        }
+        cout<<endl;
+        input = "";
+
+
+        wcout<<tr("New Database Info:").toStdWString()<<endl;
+        wcout<<tr("\tDatabase type: ").toStdWString()<<databaseTypes.at(type).toStdWString()<<endl;
+        wcout<<tr("\tDatabase driver: ").toStdWString()<<driver.toStdWString()<<endl;
+        wcout<<tr("\tDatabase server address: ").toStdWString()<<host.toStdWString()<<endl;
+        wcout<<tr("\tDatabase server port: ").toStdWString()<<port<<endl;
+        wcout<<tr("\tDatabase name: ").toStdWString()<<databaseName.toStdWString()<<endl;
+        wcout<<tr("\tUser name: ").toStdWString()<<userName.toStdWString()<<endl;
+        wcout<<tr("\tPassword: ").toStdWString()<<userPassword.toStdWString()<<endl<<endl;
+
+
+        wcout<<tr("Testing database connection...").toStdWString()<<endl;
+        DatabaseUtility databaseUtility;
+        QSqlError err = databaseUtility.openDatabase(SERVERSERVICE_DB_CONNECTION_NAME,
+                                            driver,
+                                            host,
+                                            port,
+                                            userName,
+                                            userPassword,
+                                            databaseName,
+                                            HEHUI::DatabaseType(type));
+        if (err.type() != QSqlError::NoError) {
+            QString errorString = tr("Error! Database connection failed! An error occurred when opening the database: %1").arg(err.text());
+            wcerr<<errorString.toStdWString()<<endl;
+            qCritical() << errorString;
+
+            exit( err.type() );
+        }else{
+            QString str = tr("Database connection succeeded!");
+            wcout<<str.toStdWString()<<endl;
+            qWarning()<<str;
+        }
+        //databaseUtility.closeDBConnection(SERVERSERVICE_DB_CONNECTION_NAME);
+        qWarning();
+
+
+        QString confirmString = "";
+        wcout<<tr("Do you wnat to save the changes?[Y:Yes  N:No]").toStdWString();
+        cin>>input;
+        confirmString = QString::fromStdString(input).toLower();
+        input = "";
+        if(confirmString == "y" || confirmString == "yes"){
+            settings.setDBType(type);
+            settings.setDBDriver(driver);
+            settings.setDBServerHost(host);
+            settings.setDBServerPort(port);
+            settings.setDBName(databaseName);
+            settings.setDBServerUserName(userName);
+            settings.setDBServerUserPassword(userPassword);
+            wcout<<tr("Database Info Saved!").toStdWString()<<endl<<endl;
+        }else{
+            wcout<<tr("Operation canceled! Nothing changes!").toStdWString()<<endl<<endl;
+        }
+
+
+    }
+
+
+}
 
 
 

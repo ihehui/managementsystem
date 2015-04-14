@@ -37,9 +37,15 @@
 namespace HEHUI {
 
 
-ClientPacketsParser::ClientPacketsParser(ClientResourcesManager *manager, QObject *parent)
-    :QObject(parent), m_resourcesManager(manager)
+ClientPacketsParser::ClientPacketsParser(const QString &assetNO, ClientResourcesManager *manager, QObject *parent)
+    :QObject(parent), m_assetNO(assetNO), m_resourcesManager(manager)
 {
+
+    if(m_assetNO.trimmed().isEmpty()){
+        m_assetNO = QHostInfo::localHostName().toLower();
+    }
+    //m_localComputerName = QHostInfo::localHostName().toLower();
+
 
     Q_ASSERT(m_resourcesManager);
 
@@ -74,7 +80,6 @@ ClientPacketsParser::ClientPacketsParser(ClientResourcesManager *manager, QObjec
     m_localTCPServerListeningPort = m_rtp->getTCPServerPort();
     m_localENETListeningPort = m_rtp->getENETProtocolPort();
 
-    m_localComputerName = QHostInfo::localHostName().toLower();
 
     m_socketConnectedToAdmin = INVALID_SOCK_ID;
     
@@ -131,48 +136,36 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverUDTListeningPort << " serverTCPListeningPort:"<<tcpPort;
     }
     break;
-    case quint8(MS::ServerOnline):
+    case quint8(MS::ServerOnlineStatusChanged):
     {
+        quint8 online = 1;
         QString address = "";
         quint16 port = 0;
-        in >> address >> port;
-        serverAddress = peerAddress;
-        serverUDTListeningPort = port;
+        in >> online >> address >> port;
+        serverAddress = online?peerAddress:QHostAddress::Null;
+        serverUDTListeningPort = online?port:0;
         serverName = peerName;
 
-
-        emit signalServerOnlinePacketReceived(serverAddress, serverUDTListeningPort, serverName);
-        qDebug()<<"~~ServerOnline"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverUDTListeningPort;
+        emit signalServerOnlineStatusChangedPacketReceived(online, serverAddress, serverUDTListeningPort, serverName);
+        qDebug()<<"~~ServerOnlineStatusChanged"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverUDTListeningPort;
 
     }
     break;
-    case quint8(MS::ServerOffline):
-    {
-        QString address = "";
-        quint16 port = 0;
-        in >> address >> port;
-        serverAddress = QHostAddress::Null;
-        serverUDTListeningPort = 0;
-        serverName = "";
 
-        //emit signalServerOfflinePacketReceived(serverAddress, serverRUDPListeningPort, serverName);
-        qDebug()<<"~~ServerOffline"<<" peerAddress:"<<peerAddress.toString()<<" servername:"<<peerName <<" peerPort:"<<peerPort;
-    }
-    break;
     case quint8(MS::ClientInfoRequested):
     {
-        QString computerName = "";
+        QString assetNO = "";
         quint8 infoType = 0;
-        in >> computerName >> infoType;
+        in >> assetNO >> infoType;
 
-        if(!computerName.isEmpty()){
-            if(computerName.toLower() != m_localComputerName){
+        if(!assetNO.isEmpty()){
+            if(assetNO != m_assetNO){
                 qCritical()<<"ERROR! Computer Name Not Match!";
                 return;
             }
         }
 
-        emit signalClientInfoRequestedPacketReceived(socketID, computerName, infoType);
+        emit signalClientInfoRequestedPacketReceived(socketID, assetNO, infoType);
         qDebug()<<"~~ClientInfoRequested";
     }
     break;
@@ -181,15 +174,15 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
 
-        QString computerName = "", applicationPath = "", adminID = "";
+        QString assetNO = "", applicationPath = "", adminID = "";
         bool startProcess = true;
-        in >> computerName >> applicationPath >> adminID >> startProcess;
+        in >> assetNO >> applicationPath >> adminID >> startProcess;
 
-        if(computerName.toLower() != m_localComputerName){
+        if(assetNO != m_assetNO){
             return;
         }
 
-        emit signalAdminRequestRemoteConsolePacketReceived(computerName, applicationPath, adminID, startProcess, peerAddress.toString(), peerPort);
+        emit signalAdminRequestRemoteConsolePacketReceived(assetNO, applicationPath, adminID, startProcess, peerAddress.toString(), peerPort);
 
         qDebug()<<"~~AdminRequestRemoteConsole";
     }
@@ -201,14 +194,14 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
 
-        QString computerName = "", command = "";
-        in >> computerName >> command;
+        QString assetNO = "", command = "";
+        in >> assetNO >> command;
 
-        if(computerName.toLower() != m_localComputerName){
+        if(assetNO != m_assetNO){
             return;
         }
 
-        emit signalRemoteConsoleCMDFromServerPacketReceived(computerName, command, peerAddress.toString(), peerPort);
+        emit signalRemoteConsoleCMDFromServerPacketReceived(assetNO, command, peerAddress.toString(), peerPort);
         qDebug()<<"~~RemoteConsoleCMDFromAdmin";
     }
     break;
@@ -274,20 +267,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~AdminRequestSetupUSBSD";
     }
     break;
-    case quint8(MS::AdminRequestSetupProgrames):
-    {
 
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
-        QString adminName = "";
-        bool enable = false;
-        bool temporarilyAllowed = true;
-        in >> enable >> temporarilyAllowed >> adminName;
-
-        emit signalSetupProgramesPacketReceived(enable, temporarilyAllowed, adminName);
-        qDebug()<<"~~SetupProgrames";
-    }
-    break;
     case quint8(MS::ShowAdmin):
     {
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
@@ -304,24 +284,24 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
 //        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
 
-        QString computerName = "", userName = "", adminName = "";
+        QString assetNO = "", userName = "", adminName = "";
         bool addToAdminGroup = false;
-        in >> computerName >> userName >> addToAdminGroup >> adminName;
+        in >> assetNO >> userName >> addToAdminGroup >> adminName;
 
-        if(computerName.toLower() != m_localComputerName){
+        if(assetNO != m_assetNO){
             return;
         }
 
-        emit signalModifyAdminGroupUserPacketReceived(computerName, userName, addToAdminGroup, adminName, peerAddress.toString(), peerPort);
+        emit signalModifyAdminGroupUserPacketReceived(assetNO, userName, addToAdminGroup, adminName, peerAddress.toString(), peerPort);
         qDebug()<<"~~ModifyAdminGroupUser";
     }
     break;
     case quint8(MS::RenameComputer):
     {
-        QString oldComputerName = "", newComputerName = "", adminName = "", domainAdminName = "", domainAdminPassword = "";
-        in >> oldComputerName >> newComputerName >> adminName >> domainAdminName >> domainAdminPassword;
+        QString assetNO = "", newComputerName = "", adminName = "", domainAdminName = "", domainAdminPassword = "";
+        in >> assetNO >> newComputerName >> adminName >> domainAdminName >> domainAdminPassword;
 
-        if(oldComputerName.toLower() != m_localComputerName){
+        if(assetNO != m_assetNO){
             return;
         }
 
@@ -331,11 +311,11 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     break;
     case quint8(MS::JoinOrUnjoinDomain):
     {
-        QString computerName = "", adminName = "", domainOrWorkgroupName = "", domainAdminName = "", domainAdminPassword = "";
+        QString assetNO = "", adminName = "", domainOrWorkgroupName = "", domainAdminName = "", domainAdminPassword = "";
         bool join = false;
-        in >> computerName >> adminName >> join >> domainOrWorkgroupName >> domainAdminName >> domainAdminPassword;
+        in >> assetNO >> adminName >> join >> domainOrWorkgroupName >> domainAdminName >> domainAdminPassword;
 
-        if(computerName.toLower() != m_localComputerName){
+        if(assetNO != m_assetNO){
             return;
         }
 
@@ -366,12 +346,6 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         QString computerName = "", userName = "", workgroup = "", macAddress = "", ipAddress = "", osVersion = "", adminName = "" ;
         in >> computerName >> userName >> workgroup >> macAddress >> ipAddress >> osVersion >> adminName;
 
-        if(!computerName.isEmpty()){
-            if(computerName.toLower() != m_localComputerName){
-                return;
-            }
-        }
-
         emit signalAdminSearchClientPacketReceived(peerAddress.toString(), peerPort, computerName, userName, workgroup, macAddress, ipAddress, osVersion, adminName);
 
         qDebug()<<"~~AdminSearchClient "<<" peerAddress:"<<peerAddress<<" peerPort:"<<peerPort;
@@ -382,11 +356,10 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::AdminRequestRemoteAssistance):
     {
 
-        QString computerName = "", adminName = "", userName = "";
-        in >> computerName >> adminName >> userName;
-        //emit signalAdminRequestRemoteAssistancePacketReceived(peerName, adminName, peerAddress.toString(), peerPort);
+        QString assetNO = "", adminName = "", userName = "";
+        in >> assetNO >> adminName >> userName;
 
-        if(computerName.toLower() != m_localComputerName){
+        if(assetNO != m_assetNO){
             return;
         }
 
@@ -550,21 +523,21 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::RequestChangeProcessMonitorInfo):
     {
-        QByteArray localRulesData,  globalRulesData;
+        QByteArray localRules,  globalRules;
         quint8 enableProcMon = 0;
         quint8 enablePassthrough = 1;
         quint8 enableLogAllowedProcess = 0;
         quint8 enableLogBlockedProcess = 1;
         quint8 useGlobalRules = 1;
-        QString computerName = "";
+        QString assetNO = "";
 
-        in >> localRulesData >> globalRulesData >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>computerName;
+        in >> localRules >> globalRules >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>assetNO;
 
-        if(computerName.toLower() != m_localComputerName){
+        if(assetNO != m_assetNO){
             return;
         }
 
-        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, localRulesData, globalRulesData, enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules);
+        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, localRules, globalRules, enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules);
         qDebug()<<"~~RequestChangeProcessMonitorInfo";
     }
     break;

@@ -28,7 +28,6 @@ RESOURCES += resources.qrc
 SOURCES += \
     systeminfo.cpp \
     process.cpp \
-    settings.cpp \
     packetmanager/clientpacketsparser.cpp \
     main.cpp \
     clientservice/clientservice.cpp \
@@ -37,7 +36,6 @@ SOURCES += \
 HEADERS += \
     systeminfo.h \
     process.h \
-    settings.h \
     app_constants.h \
     packetmanager/clientpacketsparser.h \
     clientservice/clientservice.h \

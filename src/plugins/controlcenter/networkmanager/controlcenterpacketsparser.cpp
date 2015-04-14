@@ -166,45 +166,29 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     //        break;
     //    case quint8(MS::ClientOffline):
     //        break;
-    case quint8(MS::ServerOnline):
+    case quint8(MS::ServerOnlineStatusChanged):
     {
+        quint8 online = 1;
         QString address = "";
         quint16 port;
-        in >> address >> port;
-        serverAddress = peerAddress;
-        serverUDTListeningPort = port;
+        in >> online >> address >> port;
+        serverAddress = online?peerAddress:QHostAddress::Null;
+        serverUDTListeningPort = online?port:0;
         serverName = peerName;
-        emit signalServerOnlinePacketReceived(serverAddress, serverUDTListeningPort, serverName);
+        emit signalServerOnlineStatusChangedPacketReceived(online, serverAddress, serverUDTListeningPort, serverName);
     }
     break;
-    case quint8(MS::ServerOffline):
-    {
-        QString address = "";
-        quint16 port = 0;
-        in >> address >> port;
-        serverAddress = QHostAddress::Null;
-        serverUDTListeningPort = 0;
-        serverName = peerName;
-        emit signalServerOfflinePacketReceived(serverAddress, serverUDTListeningPort, serverName);
-    }
-    break;
-    case quint8(MS::ClientOnline):
-    {
-        QString peerName;
-        in >> peerName;
-        emit signalClientOnlineStatusChanged(socketID, peerName, true);
 
-        qDebug()<<"~~ClientOnline--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<peerName;
-    }
-    break;
-    case quint8(MS::ClientOffline):
+    case quint8(MS::ClientOnlineStatusChanged):
     {
-        QString peerName;
-        in >> peerName;
-        emit signalClientOnlineStatusChanged(socketID, peerName, false);
-        qDebug()<<"~~ClientOffline--"<<" peerAddress:"<<peerAddress.toString()<<"   peerName:"<<peerName;;
+        quint8 online;
+        in >> online;
+        emit signalClientOnlineStatusChanged(socketID, peerName, online);
+
+        qDebug()<<"~~ClientOnlineStatusChanged--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<peerName;
     }
     break;
+
     case quint8(MS::ClientInfo):
     {
         qDebug()<<"ClientInfo";
@@ -226,25 +210,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     }
     break;
-    case quint8(MS::ClientResponseProgramesInfo):
-    {
-        qDebug()<<"ClientResponseUSBInfo";
 
-        QString info = "";
-        in >> info;
-        emit signalClientResponseProgramesInfoPacketReceived(socketID, peerName, info);
-
-    }
-    break;
-    //    case quint8(MS::ServerResponseAdminLoggedOnToServerRequest):
-    //        break;
-    //    case quint8(MS::AdminRequestRemoteConsole):
-    //        {
-    //            QString adminID;
-    //            in >> adminID;
-    //            emit signalServerRequestRemoteConsolePacketReceived(adminID);
-    //        }
-    //        break;
     case quint8(MS::ClientResponseRemoteConsoleStatus):
     {
         quint8 running = false;
@@ -282,10 +248,10 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ClientResponseAdminConnectionResult):
     {
-        QString message = "";
-        bool result = false;
-        in >> result >> message;
-        emit signalClientResponseAdminConnectionResultPacketReceived(socketID, peerName, result, message);
+        QString computerName = "", message = "";
+        quint8 result = 0;
+        in >> computerName >> result >> message;
+        emit signalClientResponseAdminConnectionResultPacketReceived(socketID, peerName, computerName, result, message);
         qDebug()<<"~~ClientResponseAdminConnectionResult";
     }
     break;
@@ -327,11 +293,11 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::LocalUserOnlineStatusChanged):
     {
-        QString userName = "", computerName = "";
+        QString userName = "";
         quint8 online = 0;
-        in >> computerName >> userName >> online;
+        in >> userName >> online;
 
-        emit signalUserOnlineStatusChanged(userName, computerName, online);
+        emit signalUserOnlineStatusChanged(peerName, userName, online);
 
     }
     break;
@@ -341,7 +307,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
         QString cpuTemperature, harddiskTemperature;
         in >> cpuTemperature >> harddiskTemperature ;
 
-        emit signalTemperaturesPacketReceived(cpuTemperature, harddiskTemperature);
+        emit signalTemperaturesPacketReceived(peerName, cpuTemperature, harddiskTemperature);
 
     }
     break;

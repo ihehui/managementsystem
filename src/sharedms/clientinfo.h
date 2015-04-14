@@ -23,7 +23,7 @@ namespace HEHUI {
 class SHAREDMSLIB_API ClientInfo : public QObject{
 
 public:
-    ClientInfo(const QString &computerName = "", QObject *parent = 0);
+    ClientInfo(const QString &assetNO = "", QObject *parent = 0);
     virtual ~ClientInfo();
 
     ClientInfo & operator = (const ClientInfo &clientInfo);
@@ -31,9 +31,12 @@ public:
 public:
     bool isValid();
     void setJsonData(const QByteArray &data);
-    QByteArray getJsonData() const;
+    QByteArray getOSJsonData() const;
+    QByteArray getHardwareJsonData() const;
 
 
+    void setAssetNO(const QString &assetNO);
+    QString getAssetNO() const;
 
 
     void setIsJoinedToDomain(bool joined){
@@ -89,20 +92,20 @@ public:
         return this->cpu;
     }
 
-    bool getDetailedInfoSavedTODatabase() const
-    {
-        return this->detailedInfoSavedTODatabase;
-    }
+//    bool getHardwareInfoSavedTODatabase() const
+//    {
+//        return this->hardwareInfoSavedTODatabase;
+//    }
 
     QString getInstallationDate() const
     {
         return this->installationDate;
     }
 
-    QDateTime getLastHeartbeatTime() const
-    {
-        return lastHeartbeatTime;
-    }
+//    QDateTime getLastHeartbeatTime() const
+//    {
+//        return lastHeartbeatTime;
+//    }
 
     QDateTime getLastOnlineTime() const
     {
@@ -129,14 +132,14 @@ public:
         return network;
     }
 
-    bool getOnline() const
+    bool isOnline() const
     {
         return online;
     }
 
-    QString getOs() const
+    QString getOSVersion() const
     {
-        return os;
+        return osVersion;
     }
 
     QString getOsKey() const
@@ -144,25 +147,6 @@ public:
         return osKey;
     }
 
-    bool getProgramsEnabled() const
-    {
-        return programsEnabled;
-    }
-
-    bool getSummaryInfoSavedTODatabase() const
-    {
-        return summaryInfoSavedTODatabase;
-    }
-
-    QString getUpdateHardwareInfoStatement() const
-    {
-        return updateHardwareInfoStatement;
-    }
-
-    QString getUpdateOSInfoStatement() const
-    {
-        return updateOSInfoStatement;
-    }
 
     MS::USBSTORStatus getUsbSDStatus() const
     {
@@ -221,20 +205,11 @@ public:
         this->cpu = cpu;
     }
 
-    void setHardwareInfoSavedTODatabase(bool detailedInfoSavedTODatabase)
-    {
-        this->detailedInfoSavedTODatabase = detailedInfoSavedTODatabase;
-    }
-
-    void setInstallationDate(QString installationDate)
+    void setInstallationDate(const QString &installationDate)
     {
         this->installationDate = installationDate;
     }
 
-    void setLastHeartbeatTime(QDateTime lastHeartbeatTime)
-    {
-        this->lastHeartbeatTime = lastHeartbeatTime;
-    }
 
     void setLastOnlineTime(QDateTime lastOnlineTime)
     {
@@ -266,9 +241,9 @@ public:
         this->online = online;
     }
 
-    void setOs(QString os)
+    void setOSVersion(QString os)
     {
-        this->os = os;
+        this->osVersion = os;
     }
 
     void setOsKey(QString osKey)
@@ -276,25 +251,6 @@ public:
         this->osKey = osKey;
     }
 
-    void setProgramsEnabled(bool programsEnabled)
-    {
-        this->programsEnabled = programsEnabled;
-    }
-
-    void setOSInfoSavedTODatabase(bool summaryInfoSavedTODatabase)
-    {
-        this->summaryInfoSavedTODatabase = summaryInfoSavedTODatabase;
-    }
-
-    void setUpdateHardwareInfoStatement(QString updateDetailedInfoStatement)
-    {
-        this->updateHardwareInfoStatement = updateDetailedInfoStatement;
-    }
-
-    void setUpdateOSInfoStatement(QString updateSummaryInfoStatement)
-    {
-        this->updateOSInfoStatement = updateSummaryInfoStatement;
-    }
 
     void setUsbSDStatus(quint8 usbSDStatus)
     {
@@ -316,41 +272,6 @@ public:
         this->workgroup = workgroup;
     }
 
-    //    QStringList getInstalledSoftwaresInfo(){
-    //        return installedSoftwaresInfo;
-    //    }
-    //    void setInstalledSoftwaresInfo(const QStringList &list){
-    //        this->installedSoftwaresInfo = list;
-    //    }
-
-    int getinstalledSoftwaresCount() const{
-        return this->installedSoftwaresCount;
-    }
-    void setInstalledSoftwaresCount(int count){
-        this->installedSoftwaresCount = count;
-    }
-
-    QString getUpdateInstalledSoftwaresInfoStatement() const{
-        return updateInstalledSoftwaresInfoStatement;
-    }
-    void setUpdateInstalledSoftwaresInfoStatement(const QString &statement){
-        this->updateInstalledSoftwaresInfoStatement = statement;
-    }
-    bool isInstalledSoftwaresInfoSavedTODatabase() const{
-        return installedSoftwaresInfoSavedTODatabase;
-    }
-    void setInstalledSoftwaresInfoSavedTODatabase(bool saved){
-        this->installedSoftwaresInfoSavedTODatabase = saved;
-    }
-
-    void setUpdateAlarmsInfoStatement(const QString &statement){
-        this->updateAlarmsInfoStatement = statement;
-    }
-    QString getUpdateAlarmsInfoStatement()const {
-        return updateAlarmsInfoStatement;
-    }
-
-
     QString getOnlineUsers() const{
         return onlineUsers;
     }
@@ -359,25 +280,36 @@ public:
     }
 
 
-    void setIPInfo(const QString &ipInfo){
-        this->ipInfo = ipInfo;
+    void setIP(const QString &ipInfo){
+        this->ip = ipInfo;
     }
-    QString getIPInfo() const {
-        return this->ipInfo;
+    QString getIP() const {
+        return this->ip;
+    }
+
+    bool isProcessMonitorEnabled() const{
+        return processMonitorEnabled;
+    }
+
+    void setProcessMonitorEnabled(bool enable){
+        this->processMonitorEnabled = enable;
     }
 
 private:
 
+    QString assetNO;
     QString computerName;
-    QString os;
+    QString osVersion;
     QString installationDate;
     QString osKey;
     QString workgroup;
     bool m_isJoinedToDomain;
     QString users;
     QString administrators;
-    QString ipInfo;
+    QString ip;
     QString clientVersion;
+    bool processMonitorEnabled;
+    QDateTime lastOnlineTime;
 
 
     QString cpu;
@@ -392,42 +324,12 @@ private:
 
 
 
-
-    bool programsEnabled;
-    QDateTime lastOnlineTime;
-
-    QString updateOSInfoStatement;
-    bool summaryInfoSavedTODatabase;
-
-
-    ///////////////////////////////////////////
-    QString updateHardwareInfoStatement;
-    bool detailedInfoSavedTODatabase;
-
-    /////////////////////////////////////////////////
-
-    //    QStringList installedSoftwaresInfo;
-    int installedSoftwaresCount;
-    QString updateInstalledSoftwaresInfoStatement;
-    bool installedSoftwaresInfoSavedTODatabase;
-
-    /////////////////////////////////////////////////
-
-    QString updateAlarmsInfoStatement;
-    //bool alarmsInfoSavedTODatabase;
-
-
-    QDateTime lastHeartbeatTime;
-
     bool online;
 
     QString clientUDTListeningAddress;
     quint16 clientUDTListeningPort;
 
     QString onlineUsers;
-
-
-
 
 
 

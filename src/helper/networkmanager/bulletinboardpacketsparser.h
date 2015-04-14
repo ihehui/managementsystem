@@ -234,8 +234,8 @@ public slots:
 
 
 signals:
-    void  signalHeartbeatPacketReceived(const QString &computerName);
-    void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
+    //void  signalHeartbeatPacketReceived(const QString &computerName);
+    //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
 
     void signalLocalServiceServerDeclarePacketReceived(const QString &localComputerName);
 

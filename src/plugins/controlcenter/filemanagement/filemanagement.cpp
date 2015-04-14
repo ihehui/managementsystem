@@ -1055,7 +1055,6 @@ void FileManagement::fileUploadRequestResponsed(SOCKETID socketID, const QByteAr
 
 //        QFileInfo fi("C:/3.dxf");
 //        m_udtProtocolForFileTransmission->sendFileToPeer(m_peerFileTransmissionSocket, fi.absoluteFilePath(), 0, fi.size());
-//        qDebug()<<"------------------------------------------1";
 
     }else{
         //QMessageBox::critical(this, tr("Error"), tr("Can not send file!<br>%1").arg(message) );

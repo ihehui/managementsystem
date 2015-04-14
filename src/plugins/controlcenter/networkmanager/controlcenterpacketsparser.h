@@ -22,7 +22,7 @@
 
 /*
  ***************************************************************************
- * Last Modified On: 2010-7-13
+ * Last Modified On: 2015-4-10
  * Last Modified By: 贺辉
  ***************************************************************************
  */
@@ -87,17 +87,17 @@ public slots:
         return m_udpServer->sendDatagram(ba, address, quint16(IP_MULTICAST_GROUP_PORT));
     }
 
-    bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online){
+    bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, const QString &adminName, quint8 online){
         qDebug()<<"----sendAdminOnlineStatusChangedPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
-        packet->setPacketType(online?quint8(MS::AdminOnline):quint8(MS::AdminOffline));
+        packet->setPacketType(quint8(MS::AdminOnlineStatusChanged));
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << clientName << adminName;
+        out << m_localID << computerName << adminName << online;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -114,7 +114,7 @@ public slots:
 
 
 
-    bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &computerName, quint8 infoType){
+    bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::ClientInfoRequested));
@@ -122,7 +122,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << infoType;
+        out << m_localID << assetNO << infoType;
 
         packet->setPacketData(ba);
 
@@ -207,29 +207,6 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendSetupProgramesPacket(SOCKETID socketID, bool enable, bool temporarilyAllowed, const QString &adminName){
-
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
-        packet->setPacketType(quint8(MS::AdminRequestSetupProgrames));
-        packet->setTransmissionProtocol(TP_RUDP);
-        //packet->setRemainingRetransmissionTimes(int(PACKET_RETRANSMISSION_TIMES));
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << enable << temporarilyAllowed << adminName;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
-    }
-
     bool sendShowAdminPacket(SOCKETID socketID, bool show){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -296,7 +273,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendJoinOrUnjoinDomainPacket(SOCKETID socketID, const QString &computerName, const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
+    bool sendJoinOrUnjoinDomainPacket(SOCKETID socketID, const QString &assetNO, const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::JoinOrUnjoinDomain));
@@ -304,7 +281,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << adminName << join << domainOrWorkgroupName << domainAdminName << domainAdminPassword;
+        out << m_localID << assetNO << adminName << join << domainOrWorkgroupName << domainAdminName << domainAdminPassword;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -699,7 +676,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, quint8 enableProcMon, quint8 enablePassthrough, quint8 enableLogAllowedProcess, quint8 enableLogBlockedProcess, quint8 useGlobalRules, const QString &computerName ){
+    bool sendRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRules, const QByteArray &globalRules, quint8 enableProcMon, quint8 enablePassthrough, quint8 enableLogAllowedProcess, quint8 enableLogBlockedProcess, quint8 useGlobalRules, const QString &assetNO ){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -708,7 +685,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << localRulesData << globalRulesData << enableProcMon << enablePassthrough << enableLogAllowedProcess << enableLogBlockedProcess << useGlobalRules << computerName;
+        out << m_localID << localRules << globalRules << enableProcMon << enablePassthrough << enableLogAllowedProcess << enableLogBlockedProcess << useGlobalRules << assetNO;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -951,8 +928,8 @@ public slots:
 
 
 signals:
-    void  signalHeartbeatPacketReceived(const QString &computerName);
-    void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
+    //void  signalHeartbeatPacketReceived(const QString &computerName);
+    //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
 
     //    void signalClientLookForServerPacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
     void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
@@ -960,22 +937,20 @@ signals:
     //    void signalClientOnlinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
     //    void signalClientOfflinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
 
-    void signalServerOnlinePacketReceived(const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
-    void signalServerOfflinePacketReceived(const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
+    void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
 
     void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &clientName, bool online);
 
     //    void signalAdminLoggedOnToServerRequestPacketReceived(const QHostAddress adminAddress, quint16 adminPort, const QString &adminID);
     //    void signalServerRequestRemoteConsolePacketReceived(const QString &adminID);
-    void signalClientResponseRemoteConsoleStatusPacketReceived(const QString &computerName, bool accept, const QString &extraMessage, quint8 messageType);
+    void signalClientResponseRemoteConsoleStatusPacketReceived(const QString &assetNO, bool accept, const QString &extraMessage, quint8 messageType);
     //    void signalRemoteConsoleCMDFromServerPacketReceived(const QString &command);
-    void signalRemoteConsoleCMDResultFromClientPacketReceived(const QString &computerName, const QString &result);
+    void signalRemoteConsoleCMDResultFromClientPacketReceived(const QString &assetNO, const QString &result);
 
 
 
-    void signalClientInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
-    void signalClientResponseUSBInfoPacketReceived(SOCKETID socketID, const QString &computerName, const QString &usbInfo);
-    void signalClientResponseProgramesInfoPacketReceived(SOCKETID socketID, const QString &computerName, const QString &usbInfo);
+    void signalClientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
+    void signalClientResponseUSBInfoPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &usbInfo);
 
 
 
@@ -985,23 +960,24 @@ signals:
     //    void  signalServerAnnouncementPacketReceived(const QString &groupName, const QString &computerName, const QString &announcement, bool mustRead = true);
 
 
-    void signalClientResponseAdminConnectionResultPacketReceived(SOCKETID socketID, const QString &computerName, bool result, const QString &message);
-    void signalClientMessagePacketReceived(const QString &computerName, const QString &message, quint8 clientMessageType);
+    void signalClientResponseAdminConnectionResultPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message);
+    void signalClientMessagePacketReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
+
 
     void signalUserResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
     void signalNewPasswordRetrevedByUserPacketReceived(const QString &userName, const QString &computerName);
     
-    void signalUserOnlineStatusChanged(const QString &userName, const QString &computerName, bool online);
 
+    void signalUserOnlineStatusChanged(const QString &assetNO, const QString &userName, bool online);
 
-    void signalTemperaturesPacketReceived(const QString &cpuTemperature, const QString &harddiskTemperature);
+    void signalTemperaturesPacketReceived(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
 
-    void signalUserReplyMessagePacketReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
+    void signalUserReplyMessagePacketReceived(const QString &assetNO, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
 
     void signalDesktopInfoPacketReceived(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight,int  blockWidth, int blockHeight);
     void signalScreenshotPacketReceived(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
 
-    void signalServiceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType);
+    void signalServiceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType);
 
 
 

@@ -63,26 +63,27 @@ signals:
 private slots:
     bool startMainService();
     //void saveClientLog(const QString &computerName, const QString &users, const QString &log, const QString &clientAddress);
-    void saveClientLog(const QString &computerName, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
+    void saveClientLog(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
 
     void sendServerOnlinePacket();
-    bool updateOrSaveClientInfoToDatabase(ClientInfo *info);
-    void updateOrSaveAllClientsInfoToDatabase();
 
-    void clientInfoPacketReceived(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
+//    bool updateOrSaveClientInfoToDatabase(ClientInfo *info);
+//    void updateOrSaveAllClientsInfoToDatabase();
+
+    void clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
     void processOSInfo(ClientInfo *info, const QByteArray &osData);
     void processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData);
     void processSoftwareInfo(ClientInfo *info, const QByteArray &data);
 
-    void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules);
+    void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
 
     void getRecordsInDatabase();
 
 //    void processHeartbeatPacket(const QString &clientAddress, const QString &computerName);
 
-    void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
-    void processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, const QString &adminName, bool online);
+    void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port);
+    void processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
 
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
@@ -94,7 +95,10 @@ private slots:
 
 private:
     bool openDatabase(bool reopen = false);
-    bool isRecordExistInDB(const QString &computerName);
+    bool saveDataToDB(const QString &statement , QString *errorString = 0);
+
+    bool isRecordExistInDB(const QString &assetNO);
+
 
 protected:
     void start();
@@ -102,6 +106,8 @@ protected:
     void pause();
     void resume();
     void processCommand(int code);
+
+    void processArguments(int argc, char **argv);
 
 
 
@@ -123,15 +129,16 @@ private:
 
     QTimer *sendServerOnlinePacketTimer;
 
-    QHash<QString/*Client Name*/, ClientInfo *> clientInfoHash;
-    QHash<SOCKETID /*Socket ID*/, QString/*Client Name*/> clientSocketsHash;
+    QHash<QString/*Asset NO.*/, ClientInfo *> clientInfoHash;
+    QHash<SOCKETID /*Socket ID*/, QString/*Asset NO.*/> clientSocketsHash;
     QHash<SOCKETID /*Socket ID*/, QString/*Admin Name*/> adminSocketsHash;
 
 
     int onlineAdminsCount;
+    bool m_isUsingMySQL;
+
 
     QStringList recordsInDatabase;
-
     QStringList logs;
 
 

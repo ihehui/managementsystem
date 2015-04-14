@@ -28,9 +28,14 @@ public:
     ~SystemManagementWidget();
 
 
-    QHostAddress peerIPAddress() const{return m_peerIPAddress;}
+    QString peerAssetNO() const;
 
-    
+protected:
+    void closeEvent(QCloseEvent *event);
+//    void dragEnterEvent(QDragEnterEvent *event);
+//    void dragMoveEvent(QDragMoveEvent *event);
+//    void dropEvent(QDropEvent *event);
+
     
 signals:
     void updateTitle(SystemManagementWidget *wgt);
@@ -43,11 +48,6 @@ public slots:
 //    void setTCPServer(TCPServer *tcpServer);
     void setControlCenterPacketsParser(ControlCenterPacketsParser *parser);
 
-protected:
-    void closeEvent(QCloseEvent *event);
-//    void dragEnterEvent(QDragEnterEvent *event);
-//    void dragMoveEvent(QDragMoveEvent *event);
-//    void dropEvent(QDropEvent *event);
 
 
 private slots:
@@ -78,11 +78,11 @@ private slots:
 
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online);
-    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool result, const QString &message);
+    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message);
 
     void requestConnectionToClientTimeout();
 
-    void clientMessageReceived(const QString &computerName, const QString &message, quint8 clientMessageType);
+    void clientMessageReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
 
     void requestClientInfo(quint8 infoType);
     void clientInfoPacketReceived(const QString &computerName, const QByteArray &data, quint8 infoType);
@@ -105,18 +105,18 @@ private slots:
 
     void requestClientInfoTimeout();
 
-    void clientResponseRemoteConsoleStatusPacketReceived(const QString &computerName, bool running, const QString &extraMessage, quint8 messageType);
-    void remoteConsoleCMDResultFromClientPacketReceived(const QString &computerName, const QString &result);
+    void clientResponseRemoteConsoleStatusPacketReceived(const QString &assetNO, bool running, const QString &extraMessage, quint8 messageType);
+    void remoteConsoleCMDResultFromClientPacketReceived(const QString &assetNO, const QString &result);
     void requestRemoteConsoleTimeout();
 
-    void userOnlineStatusChangedPacketReceived(const QString &userName, const QString &computerName, bool online);
+    void userOnlineStatusChangedPacketReceived(const QString &assetNO, const QString &userName, bool online);
 
     void userResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
 
-    void updateTemperatures(const QString &cpuTemperature, const QString &harddiskTemperature);
+    void updateTemperatures(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
     void replyMessageReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
 
-    void serviceConfigChangedPacketReceived(const QString &computerName, const QString &serviceName, quint64 processID, quint64 startupType);
+    void serviceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType);
 
     void peerDisconnected(SOCKETID socketID);
     void peerDisconnected(bool normalClose);
@@ -133,70 +133,39 @@ private:
 private:
     Ui::SystemManagementWidgetClass ui;
 
-    QString m_adminName;
-    ClientInfo m_clientInfo;
+    QMenu *m_joinWorkgroupMenu;
 
-    QString m_peerComputerName;
 
-    QHostAddress m_peerIPAddress;
+    RTP *m_rtp;
+    SOCKETID m_peerSocket;
+    bool m_aboutToCloseSocket;
 
     ControlCenterPacketsParser *controlCenterPacketsParser;
 
-//    QString m_users;
+    QString m_adminName;
+    ClientInfo m_clientInfo;
 
-//    QString m_peerMACAddress;
-//    quint8 m_usbSTORStatus;
-//    bool m_programesEnabled;
-
+    QString m_peerAssetNO;
+    QString m_peerComputerName;
+    QHostAddress m_peerIPAddress;
 
     bool localComputer;
     bool m_isJoinedToDomain;
 
     QString m_winDirPath;
-    //QString m_joinInfo;
-
-    static QMap<QString/*Short Name*/, QString/*Department*/>departments;
 
     QMenu *administratorsManagementMenu;
 
-    QStringList m_onlineUsers;
-
-
-    QStringList adminProcesses;
-
     bool clientResponseAdminConnectionResultPacketReceived;
     bool remoteConsoleRunning;
-
-
-    QSqlQueryModel *queryModel;
-
-    RTP *m_rtp;
-    SOCKETID m_peerSocket;
-
-    bool m_aboutToCloseSocket;
-
-    //UDPServer *m_udpServer;
-//    UDTProtocol *m_udtProtocol;
-
-//    TCPServer *m_tcpServer;
-//    bool m_usingTCP;
-
-//    UDTProtocolForFileTransmission *m_udtProtocolForFileTransmission;
-//    UDTSOCKET m_peerFileTransmissionSocket;
-
-//    FileManager *m_fileManager;
-//    QList<int/*File TX Request ID*/> fileTXRequestList;
-//    QList<QByteArray/*File MD5*/> filesList;
 
     FileManagement *m_fileManagementWidget;
 
     QTimer *m_updateTemperaturesTimer;
 
 
-//    QMenu *m_shutdownMenu;
-    QMenu *m_joinWorkgroupMenu;
-
-
+    QStringList m_onlineUsers;
+    QStringList adminProcesses;
 
 };
 

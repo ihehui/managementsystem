@@ -52,7 +52,6 @@ protected:
     void closeEvent(QCloseEvent *e);
 
 public slots:
-    void slotQueryClient(const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &usbsd, const QString &programes);
 
 
 private slots:
@@ -88,7 +87,7 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void updateOrSaveClientInfo(const QString &computerName, const QByteArray &clientInfo, quint8 infoType);
+    void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
     
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 
@@ -104,24 +103,22 @@ private slots:
     void peerDisconnected(SOCKETID socketID);
 
 private:
-    void updateActions();
-
 
 
 private:
+    bool openDatabase(bool reopen = false);
+    bool execQuery(const QString &statement );
+
+    QString assetNO() const;
     QString computerName() const;
     QString userName() const;
-
     QString workgroup() const;
     QString usbsdStatus();
-
-    QString macAddress() const;
     QString ipAddress() const;
-
     QString osVersion() const;
     QString programesEnabled() const;
 
-    void querySitoyClientInfo(const QString &queryString);
+    void updateActions();
 
 private:
     Ui::ControlCenterClass ui;
@@ -129,8 +126,9 @@ private:
     static bool running;
 
     QString databaseConnectionName;
-    QSqlQueryModel *queryModel;
-
+    QSqlQuery *query;
+    ClientInfoModel *clientInfoModel;
+    ClientInfoSortFilterProxyModel *proxyModel;
 
     //QWidget *m_progressWidget;
     //QLayout* hlayout;
@@ -153,12 +151,8 @@ private:
     QProcess *vncProcess;
     
     QMenu *searchClientsMenu;
-    QMenu *updatePasswordMenu;
 
-    QHash<QString/*Computer Name*/, ClientInfo *> clientInfoHash;
-    ClientInfoModel *clientInfoModel;
-    ClientInfoSortFilterProxyModel *proxyModel;
-    
+
 
     bool m_networkReady;
 

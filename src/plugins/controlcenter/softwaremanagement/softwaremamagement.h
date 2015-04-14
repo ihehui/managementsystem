@@ -2,6 +2,7 @@
 #define SOFTWAREMAMAGEMENT_H
 
 #include <QWidget>
+#include <QTableWidget>
 
 #include "../../sharedms/global_shared.h"
 
@@ -22,6 +23,7 @@ public:
     explicit SoftwareMamagement(QWidget *parent = 0);
     ~SoftwareMamagement();
 
+    QTableWidget *softwareTable();
 
 signals:
     void signalGetSoftwaresInfo(quint8 infoType = MS::SYSINFO_SOFTWARE);

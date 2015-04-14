@@ -35,6 +35,10 @@ SoftwareMamagement::~SoftwareMamagement()
     delete ui;
 }
 
+QTableWidget *SoftwareMamagement::softwareTable(){
+    return ui->tableWidgetSoftware;
+}
+
 void SoftwareMamagement::setData(const QByteArray &data){
     qDebug()<<"--SoftwareMamagement::setData(...)";
 

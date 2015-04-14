@@ -61,21 +61,12 @@ bool SystemInfo::isRunning(){
 QByteArray SystemInfo::getOSInfo(){
 
     QJsonObject obj;
-    obj["ComputerName"] = QHostInfo::localHostName().toLower();
+    QString computerName = QHostInfo::localHostName().toLower();
+    obj["ComputerName"] = computerName;
 
 #ifdef Q_OS_WIN32
     HardwareMonitor hwm;
-
     hwm.getOSInfo(&obj);
-
-    QStringList users = WinUtilities::localCreatedUsers();
-    WinUtilities::getAllUsersLoggedOn(&users);
-    users.removeDuplicates();
-    obj["Users"] = users.join(";");
-
-    QStringList admins = WinUtilities::getMembersOfLocalGroup("Administrators");
-    obj["Admins"] = admins.join(";");
-
 
     bool isJoinedToDomain = false;
     QString joinInfo = WinUtilities::getJoinInformation(&isJoinedToDomain);
@@ -85,24 +76,36 @@ QByteArray SystemInfo::getOSInfo(){
     obj["Workgroup"] = joinInfo;
     obj["JoinedToDomain"] = QString::number(isJoinedToDomain?1:0);
 
+
+    QStringList users = WinUtilities::localCreatedUsers();
+    WinUtilities::getAllUsersLoggedOn(&users);
+    users.removeDuplicates();
+    obj["Users"] = users.join(";");
+
+    QStringList admins = WinUtilities::getMembersOfLocalGroup("Administrators");
+    QString admisStr = admins.join(";").toLower();
+    admisStr = admisStr.replace(computerName + "\\", "");
+    obj["Admins"] = admisStr;
+
+
+
+
 #else
 
 
 #endif
 
-    QStringList ipAddresses;
-    foreach (QNetworkInterface nic, QNetworkInterface::allInterfaces()) {
-        foreach (QNetworkAddressEntry entry, nic.addressEntries()) {
-            qDebug()<<"entry.ip():"<<entry.ip().toString();
-            QHostAddress broadcastAddress = entry.broadcast();
-            if (broadcastAddress != QHostAddress::Null && entry.ip() != QHostAddress::LocalHost) {
-                ipAddresses << entry.ip().toString() << "/" << nic.hardwareAddress();
-            }
-        }
-    }
-
-    obj["IPInfo"] = ipAddresses.join(";");
-
+//    QStringList ipAddresses;
+//    foreach (QNetworkInterface nic, QNetworkInterface::allInterfaces()) {
+//        foreach (QNetworkAddressEntry entry, nic.addressEntries()) {
+//            qDebug()<<"entry.ip():"<<entry.ip().toString();
+//            QHostAddress broadcastAddress = entry.broadcast();
+//            if (broadcastAddress != QHostAddress::Null && entry.ip() != QHostAddress::LocalHost) {
+//                ipAddresses << entry.ip().toString() << "/" << nic.hardwareAddress();
+//            }
+//        }
+//    }
+//    obj["IPInfo"] = ipAddresses.join(";");
 
 
     QJsonObject object;
