@@ -159,28 +159,12 @@
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
              <property name="buddy">
-              <cstring>comboBoxPrograms</cstring>
+              <cstring>comboBoxProcMon</cstring>
              </property>
             </widget>
            </item>
            <item row="2" column="7">
-            <widget class="QComboBox" name="comboBoxPrograms">
-             <item>
-              <property name="text">
-               <string/>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Enabled</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Disabled</string>
-              </property>
-             </item>
-            </widget>
+            <widget class="QComboBox" name="comboBoxProcMon"/>
            </item>
            <item row="1" column="8">
             <widget class="QToolButton" name="toolButtonQuery">
@@ -401,7 +385,7 @@
   <tabstop>comboBoxWorkgroup</tabstop>
   <tabstop>comboBoxOSVersion</tabstop>
   <tabstop>comboBoxUSBSD</tabstop>
-  <tabstop>comboBoxPrograms</tabstop>
+  <tabstop>comboBoxProcMon</tabstop>
   <tabstop>toolButtonQuery</tabstop>
   <tabstop>toolButtonfilter</tabstop>
   <tabstop>tableViewClientList</tabstop>

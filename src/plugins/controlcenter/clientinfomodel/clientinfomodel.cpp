@@ -29,6 +29,10 @@
 
 #include "clientinfomodel.h"
 
+#include <QDebug>
+
+
+
 namespace HEHUI {
 
 ClientInfoModel::ClientInfoModel(QObject *parent)
@@ -128,8 +132,10 @@ QVariant ClientInfoModel::data ( const QModelIndex & index, int role) const{
 		return QVariant();
 	}
 
-	if(role == Qt::DisplayRole || role == Qt::EditRole){
-            ClientInfo *info = static_cast<ClientInfo *> (clientsList.at(row));
+    ClientInfo *info = static_cast<ClientInfo *> (clientsList.at(row));
+    Q_ASSERT(info);
+
+    if(role == Qt::DisplayRole/* || role == Qt::EditRole*/){
             switch (index.column()) {
             case 0:
                 return info->getAssetNO();
@@ -181,6 +187,12 @@ QVariant ClientInfoModel::data ( const QModelIndex & index, int role) const{
         return row;
     }
 
+    if(role == Qt::EditRole){
+        if(index.column() == 11){
+            return info->isProcessMonitorEnabled()?"1":"0";
+        }
+        return index.data(Qt::DisplayRole);
+    }
 
 	return QVariant();
 
@@ -250,39 +262,40 @@ ClientInfoSortFilterProxyModel::ClientInfoSortFilterProxyModel(QObject *parent)
     :QSortFilterProxyModel(parent)
 {
 
+    assetNO = QRegExp(".*", Qt::CaseInsensitive);
     computerName = QRegExp(".*", Qt::CaseInsensitive);
-    userName = QRegExp(".*", Qt::CaseInsensitive);
-    workgroup = QRegExp(".*", Qt::CaseInsensitive);
-    usbSD = QRegExp(".*", Qt::CaseInsensitive);
-    mac = QRegExp(".*", Qt::CaseInsensitive);
-    ip = QRegExp(".*", Qt::CaseInsensitive);
     os = QRegExp(".*", Qt::CaseInsensitive);
-
+    workgroup = QRegExp(".*", Qt::CaseInsensitive);
+    userName = QRegExp(".*", Qt::CaseInsensitive);
+    ip = QRegExp(".*", Qt::CaseInsensitive);
+    usbSD = QRegExp(".*", Qt::CaseInsensitive);
+    procMon = QRegExp(".*", Qt::CaseInsensitive);
 }
 
 void ClientInfoSortFilterProxyModel::cleanFilters(){
 
+    assetNO = QRegExp(".*", Qt::CaseInsensitive);
     computerName = QRegExp(".*", Qt::CaseInsensitive);
-    userName = QRegExp(".*", Qt::CaseInsensitive);
-    workgroup = QRegExp(".*", Qt::CaseInsensitive);
-    usbSD = QRegExp(".*", Qt::CaseInsensitive);
-    mac = QRegExp(".*", Qt::CaseInsensitive);
-    ip = QRegExp(".*", Qt::CaseInsensitive);
     os = QRegExp(".*", Qt::CaseInsensitive);
+    workgroup = QRegExp(".*", Qt::CaseInsensitive);
+    userName = QRegExp(".*", Qt::CaseInsensitive);
+    ip = QRegExp(".*", Qt::CaseInsensitive);
+    usbSD = QRegExp(".*", Qt::CaseInsensitive);
+    procMon = QRegExp(".*", Qt::CaseInsensitive);
 
     invalidateFilter();
 }
 
-void ClientInfoSortFilterProxyModel::setFilters(const QRegExp &computerName, const QRegExp &userName, const QRegExp &workgroup, const QRegExp &usbSD, const QRegExp &mac, const QRegExp &ip, const QRegExp &os, const QRegExp &programs){
+void ClientInfoSortFilterProxyModel::setFilters(const QRegExp &assetNO, const QRegExp &computerName, const QRegExp &os, const QRegExp &workgroup, const QRegExp &userName, const QRegExp &ip, const QRegExp &usbSD, const QRegExp &procMon){
 
+    this->assetNO = assetNO;
     this->computerName = computerName;
-    this->userName = userName;
-    this->workgroup = workgroup;
-    this->usbSD = usbSD;
-    this->mac = mac;
-    this->ip = ip;
     this->os = os;
-    this->programs = programs;
+    this->workgroup = workgroup;
+    this->userName = userName;
+    this->ip = ip;
+    this->usbSD = usbSD;
+    this->procMon = procMon;
 
     invalidateFilter();
 
@@ -293,29 +306,19 @@ bool ClientInfoSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QMode
     QModelIndex index0 = sourceModel()->index(sourceRow, 0, sourceParent);
     QModelIndex index1 = sourceModel()->index(sourceRow, 1, sourceParent);
     QModelIndex index2 = sourceModel()->index(sourceRow, 2, sourceParent);
-    QModelIndex index3 = sourceModel()->index(sourceRow, 3, sourceParent);
-    QModelIndex index4 = sourceModel()->index(sourceRow, 4, sourceParent);
-    QModelIndex index5 = sourceModel()->index(sourceRow, 5, sourceParent);
-    QModelIndex index6 = sourceModel()->index(sourceRow, 6, sourceParent);
+    QModelIndex index3 = sourceModel()->index(sourceRow, 5, sourceParent);
+    QModelIndex index4 = sourceModel()->index(sourceRow, 7, sourceParent);
+    QModelIndex index5 = sourceModel()->index(sourceRow, 9, sourceParent);
+    QModelIndex indexProcMon = sourceModel()->index(sourceRow, 11, sourceParent);
 
 
-//    return (sourceModel()->data(index0).toString().contains(computerName)
-//            && sourceModel()->data(index1).toString().contains(workgroup)
-//            && ( sourceModel()->data(index2).toString().contains(ip) && sourceModel()->data(index2).toString().contains(mac) )
-//            && sourceModel()->data(index3).toString().contains(userName)
-//            && sourceModel()->data(index4).toString().contains(os)
-//            && sourceModel()->data(index5).toString().contains(usbSD)
-//            && sourceModel()->data(index6).toString().contains(programs)
-
-//            );
-
-    return (index0.data().toString().contains(computerName)
-            && index1.data().toString().contains(workgroup)
-            && ( index2.data().toString().contains(ip) && index2.data().toString().contains(mac) )
-            && index3.data().toString().contains(userName)
-            && index4.data().toString().contains(os)
-            && index5.data().toString().contains(usbSD)
-            && index6.data().toString().contains(programs)
+    return (index0.data().toString().contains(assetNO)
+            && index1.data().toString().contains(computerName)
+            && index2.data().toString().contains(os)
+            && index3.data().toString().contains(workgroup)
+            && index4.data().toString().contains(userName)
+            && index5.data().toString().contains(ip)
+            && indexProcMon.data(Qt::EditRole).toString().contains(procMon)
 
             );
 

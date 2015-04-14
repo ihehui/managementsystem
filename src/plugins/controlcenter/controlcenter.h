@@ -111,12 +111,12 @@ private:
 
     QString assetNO() const;
     QString computerName() const;
-    QString userName() const;
-    QString workgroup() const;
-    QString usbsdStatus();
-    QString ipAddress() const;
     QString osVersion() const;
-    QString programesEnabled() const;
+    QString workgroup() const;
+    QString userName() const;
+    QString ipAddress() const;
+    QString usbsdStatus();
+    QString procMonEnabled() const;
 
     void updateActions();
 

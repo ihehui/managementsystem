@@ -298,7 +298,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
 
     this->controlCenterPacketsParser = parser;
     connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(SOCKETID, const QString &, const QString &, bool, const QString &)), this, SLOT(processClientResponseAdminConnectionResultPacket(SOCKETID, const QString &, const QString &, bool, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(SOCKETID, const QString &, const QString &, bool, const QString &, const QString &)), this, SLOT(processClientResponseAdminConnectionResultPacket(SOCKETID, const QString &, const QString &, bool, const QString &, const QString &)));
     connect(controlCenterPacketsParser, SIGNAL(signalClientMessagePacketReceived(const QString &, const QString &, quint8)), this, SLOT(clientMessageReceived(const QString &, const QString &, quint8)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
@@ -945,7 +945,7 @@ void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID soc
 
 }
 
-void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message){
+void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP){
     qDebug()<<"SystemManagementWidget::processClientResponseVerifyInfoResultPacket:"<<"computerName:"<<computerName<<" result:"<<result;
 
     if(socketID != m_peerSocket){
@@ -956,7 +956,9 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
 
     if(result == true){
         m_peerAssetNO = assetNO;
+        m_clientInfo.setAssetNO(assetNO);
         m_peerComputerName = computerName;
+        m_clientInfo.setComputerName(computerName);
         setWindowTitle(computerName);
         emit updateTitle(this);
 
@@ -965,6 +967,9 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
 
         ui.lineEditComputerName1->setText(computerName);
         ui.lineEditComputerName1->setReadOnly(true);
+
+        ui.lineEditIP->setText(clientIP);
+
 
         ui.tabSystemInfo->setEnabled(true);
         ui.groupBoxTemperatures->setEnabled(true);
@@ -1142,7 +1147,6 @@ void SystemManagementWidget::updateOSInfo(){
     ui.toolButtonShutdown->setEnabled(true);
     ui.installationDateLineEdit->setText(m_clientInfo.getInstallationDate());
     ui.lineEditOSKey->setText(m_clientInfo.getOsKey());
-    ui.lineEditIP->setText(m_clientInfo.getIP());
     ui.workgroupLineEdit->setText(m_clientInfo.getWorkgroup());
     ui.toolButtonChangeWorkgroup->setEnabled(true);
     ui.lineEditUsers->setText(m_clientInfo.getUsers());

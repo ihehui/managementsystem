@@ -1,4 +1,4 @@
-﻿#ifndef SYSTEMMANAGEMENTWIDGET_H
+#ifndef SYSTEMMANAGEMENTWIDGET_H
 #define SYSTEMMANAGEMENTWIDGET_H
 
 #include <QWidget>
@@ -78,14 +78,14 @@ private slots:
 
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online);
-    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message);
+    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP);
 
     void requestConnectionToClientTimeout();
 
     void clientMessageReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
 
     void requestClientInfo(quint8 infoType);
-    void clientInfoPacketReceived(const QString &computerName, const QByteArray &data, quint8 infoType);
+    void clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType);
     void updateOSInfo();
     void updateHardwareInfo();
 

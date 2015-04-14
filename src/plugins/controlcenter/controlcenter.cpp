@@ -68,6 +68,11 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
     ui.comboBoxUSBSD->addItem(tr("Disabled"), quint8(MS::USBSTOR_Disabled));
     ui.comboBoxUSBSD->addItem(tr("Unknown"), quint8(MS::USBSTOR_Unknown));
 
+    ui.comboBoxProcMon->addItem("All", QVariant("-1"));
+    ui.comboBoxProcMon->addItem("Enabled", QVariant("1"));
+    ui.comboBoxProcMon->addItem("Disabled", QVariant("0"));
+    ui.comboBoxProcMon->setCurrentIndex(0);
+
 
     localSystemManagementWidget = 0;
     localComputerName = QHostInfo::localHostName().toLower();
@@ -225,7 +230,7 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
                 ui.lineEditIPAddress->setReadOnly(false);
 
                 ui.comboBoxOSVersion->setEnabled(true);
-                ui.comboBoxPrograms->setEnabled(true);
+                ui.comboBoxProcMon->setEnabled(true);
 
                 //ui.lineEditComputerName->setFocus();
                 ui.lineEditUserName->setFocus();
@@ -241,7 +246,7 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
                 ui.lineEditIPAddress->clear();
 
                 ui.comboBoxOSVersion->setCurrentIndex(0);
-                ui.comboBoxPrograms->setCurrentIndex(0);
+                ui.comboBoxProcMon->setCurrentIndex(0);
 
                 //ui.lineEditComputerName->setFocus();
                 ui.lineEditUserName->setFocus();
@@ -349,6 +354,7 @@ void ControlCenter::slotInitTabWidget(){
 
 
     ClientInfo localInfo("");
+    localInfo.setComputerName(localComputerName);
     localSystemManagementWidget = new SystemManagementWidget(0, 0, m_adminName, &localInfo);
     localSystemManagementWidget->setParent(this);
     ui.tabWidget->addTab(localSystemManagementWidget, tr("Local Computer"));
@@ -550,12 +556,20 @@ inline QString ControlCenter::computerName() const {
     return ui.lineEditComputerName->text().trimmed();
 }
 
-inline QString ControlCenter::userName() const {
-    return ui.lineEditUserName->text().trimmed();
+inline QString ControlCenter::osVersion() const{
+    return ui.comboBoxOSVersion->currentData().toString();
 }
 
 inline QString ControlCenter::workgroup() const {
     return ui.comboBoxWorkgroup->currentText();
+}
+
+inline QString ControlCenter::userName() const {
+    return ui.lineEditUserName->text().trimmed();
+}
+
+inline QString ControlCenter::ipAddress() const {
+    return ui.lineEditIPAddress->text().trimmed();
 }
 
 QString ControlCenter::usbsdStatus(){
@@ -566,24 +580,8 @@ QString ControlCenter::usbsdStatus(){
     }
 }
 
-inline QString ControlCenter::ipAddress() const {
-    return ui.lineEditIPAddress->text().trimmed();
-}
-
-inline QString ControlCenter::osVersion() const{
-    return ui.comboBoxOSVersion->currentData().toString();
-}
-
-QString ControlCenter::programesEnabled() const{
-    int index = ui.comboBoxPrograms->currentIndex();
-    if(index == 1){
-        return "1";
-    }else if(index == 2){
-        return "0";
-    }else{
-        return "-1";
-    }
-
+QString ControlCenter::procMonEnabled() const{
+    return ui.comboBoxProcMon->currentData().toString();
 }
 
 void ControlCenter::updateActions() {
@@ -617,7 +615,7 @@ void ControlCenter::slotQueryDatabase() {
             .arg(workgroup())
             .arg(userName())
             .arg(ipAddress())
-            .arg(programesEnabled())
+            .arg(procMonEnabled())
             ;        
 
     if(!execQuery(statement)){
@@ -671,44 +669,24 @@ void ControlCenter::slotSearchNetwork() {
 
 void ControlCenter::filter(){
 
+    QRegExp assetNORegExp = QRegExp(".*", Qt::CaseInsensitive);
     QRegExp computerNameRegExp = QRegExp(".*", Qt::CaseInsensitive);
-    QRegExp userNameRegExp = QRegExp(".*", Qt::CaseInsensitive);
     QRegExp workgroupRegExp = QRegExp(".*", Qt::CaseInsensitive);
-    QRegExp usbSDRegExp = QRegExp(".*", Qt::CaseInsensitive);
-    QRegExp macRegExp = QRegExp(".*", Qt::CaseInsensitive);
-    QRegExp ipRegExp = QRegExp(".*", Qt::CaseInsensitive);
     QRegExp osRegExp = QRegExp(".*", Qt::CaseInsensitive);
-    QRegExp programsRegExp = QRegExp(".*", Qt::CaseInsensitive);
+    QRegExp userNameRegExp = QRegExp(".*", Qt::CaseInsensitive);
+    QRegExp ipRegExp = QRegExp(".*", Qt::CaseInsensitive);
+    QRegExp usbSDRegExp = QRegExp(".*", Qt::CaseInsensitive);
+    QRegExp procMonRegExp = QRegExp(".*", Qt::CaseInsensitive);
 
 
-    QString filterString = computerName();
+    QString filterString = assetNO();
+    if(!filterString.trimmed().isEmpty()){
+        assetNORegExp = QRegExp(filterString, Qt::CaseInsensitive);
+    }
+
+    filterString = computerName();
     if(!filterString.trimmed().isEmpty()){
         computerNameRegExp = QRegExp(filterString, Qt::CaseInsensitive);
-    }
-
-    filterString = workgroup();
-    if(!filterString.trimmed().isEmpty()){
-        workgroupRegExp = QRegExp(filterString, Qt::CaseInsensitive);
-    }
-
-    filterString = usbsdStatus();
-    if(!filterString.trimmed().isEmpty()){
-        usbSDRegExp = QRegExp(filterString, Qt::CaseInsensitive);
-    }
-
-    filterString = assetNO();
-    if(!filterString.trimmed().isEmpty()){
-        macRegExp = QRegExp(filterString, Qt::CaseInsensitive);
-    }
-
-    filterString = ipAddress();
-    if(!filterString.trimmed().isEmpty()){
-        ipRegExp = QRegExp(filterString, Qt::CaseInsensitive);
-    }
-
-    filterString = userName();
-    if(!filterString.trimmed().isEmpty()){
-        userNameRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = osVersion();
@@ -716,12 +694,32 @@ void ControlCenter::filter(){
         osRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
-    filterString = programesEnabled();
+    filterString = workgroup();
     if(!filterString.trimmed().isEmpty()){
-        programsRegExp = QRegExp(filterString, Qt::CaseInsensitive);
+        workgroupRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
-    proxyModel->setFilters(computerNameRegExp, userNameRegExp, workgroupRegExp, usbSDRegExp, macRegExp, ipRegExp, osRegExp, programsRegExp);
+    filterString = userName();
+    if(!filterString.trimmed().isEmpty()){
+        userNameRegExp = QRegExp(filterString, Qt::CaseInsensitive);
+    }
+
+    filterString = ipAddress();
+    if(!filterString.trimmed().isEmpty()){
+        ipRegExp = QRegExp(filterString, Qt::CaseInsensitive);
+    }
+
+    filterString = usbsdStatus();
+    if(!filterString.trimmed().isEmpty()){
+        usbSDRegExp = QRegExp(filterString, Qt::CaseInsensitive);
+    }
+
+    filterString = procMonEnabled();
+    if(filterString != "-1"){
+        procMonRegExp = QRegExp(filterString, Qt::CaseInsensitive);
+    }
+
+    proxyModel->setFilters(assetNORegExp, computerNameRegExp, osRegExp, workgroupRegExp, userNameRegExp, ipRegExp, usbSDRegExp, procMonRegExp);
 
     statusBar()->showMessage(tr("Matched:%1").arg(QString::number(proxyModel->rowCount())));
 

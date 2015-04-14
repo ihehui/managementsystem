@@ -74,7 +74,7 @@ public:
     ClientInfoSortFilterProxyModel(QObject *parent);
 
     void cleanFilters();
-    void setFilters(const QRegExp &computerName, const QRegExp &userName, const QRegExp &workgroup, const QRegExp &usbSD, const QRegExp &mac, const QRegExp &ip, const QRegExp &os, const QRegExp &programs);
+    void setFilters(const QRegExp &assetNO, const QRegExp &computerName, const QRegExp &os, const QRegExp &workgroup, const QRegExp &userName, const QRegExp &ip, const QRegExp &usbSD, const QRegExp &procMon);
 
 //    void setFilterComputerName(const QString &computerName);
 //    void setFilterUserName(const QString &userName);
@@ -91,14 +91,14 @@ protected:
 //    bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 
 private:
+    QRegExp assetNO;
     QRegExp computerName;
     QRegExp userName;
     QRegExp workgroup;
-    QRegExp usbSD;
-    QRegExp mac;
     QRegExp ip;
     QRegExp os;
-    QRegExp programs;
+    QRegExp usbSD;
+    QRegExp procMon;
 
 
 
