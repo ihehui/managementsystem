@@ -158,6 +158,16 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::AdminLogin):
+    {
+        QString adminComputerName = "", adminName = "", password = "";
+        in >> adminComputerName >> adminName >> password;
+        emit signalAdminLogin(socketID, adminName, password, adminComputerName, peerAddress.toString());
+
+        qDebug()<<"~~AdminLogin--"<<" peerAddress:"<<peerAddress<<"   peerName:"<<adminComputerName <<" adminName:"<<adminName;
+    }
+    break;
+
     case quint8(MS::AdminOnlineStatusChanged):
     {
         QString peerComputerName = "", adminName = "";
@@ -182,8 +192,6 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ClientRequestSoftwareVersion):
     {
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerID);
-
         QString softwareName;
         in >> softwareName;
         emit signalClientRequestSoftwareVersionPacketReceived(softwareName);

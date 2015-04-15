@@ -108,6 +108,21 @@ QByteArray SystemInfo::getOSInfo(){
 //    obj["IPInfo"] = ipAddresses.join(";");
 
 
+    bool ok = false, readable = true, writeable = true;
+    MS::USBSTORStatus status = MS::USBSTOR_ReadWrite;
+    ok = WinUtilities::readUSBStorageDeviceSettings(&readable, &writeable);
+    if(readable && writeable){
+        status = MS::USBSTOR_ReadWrite;
+    }else if(!readable){
+        status = MS::USBSTOR_Disabled;
+    }else{
+        status = MS::USBSTOR_ReadOnly;
+    }
+    obj["USBSD"] = QString::number(quint8(status));
+
+
+
+
     QJsonObject object;
     object["OS"] = obj;
     QJsonDocument doc(object);
@@ -133,19 +148,6 @@ void SystemInfo::getHardwareInfo(SOCKETID socketID){
     hwm.getSoundDeviceInfo(&obj);
     hwm.getMonitorInfo(&obj);
     hwm.getNetworkAdapterInfo(&obj);
-
-
-    bool ok = false, readable = true, writeable = true;
-    MS::USBSTORStatus status = MS::USBSTOR_ReadWrite;
-    ok = WinUtilities::readUSBStorageDeviceSettings(&readable, &writeable);
-    if(readable && writeable){
-        status = MS::USBSTOR_ReadWrite;
-    }else if(!readable){
-        status = MS::USBSTOR_Disabled;
-    }else{
-        status = MS::USBSTOR_ReadOnly;
-    }
-    obj["USBSD"] = QString::number(quint8(status));
 
 #else
 

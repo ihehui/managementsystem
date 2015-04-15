@@ -128,6 +128,7 @@ void ClientInfo::setJsonData(const QByteArray &data){
         //ip = osObj["IPInfo"].toString();
         clientVersion = osObj["Version"].toString();
         processMonitorEnabled = osObj["ProcessMonitorEnabled"].toBool();
+        usbSDStatus = MS::USBSTORStatus(osObj.value("USBSD").toString().toUShort());
 
     }
 
@@ -141,7 +142,6 @@ void ClientInfo::setJsonData(const QByteArray &data){
         audio = hwObj.value("SoundDevice").toString();
         storage = hwObj.value("DiskDrive").toString();
         network = hwObj.value("NetworkAdapter").toString();
-        usbSDStatus = MS::USBSTORStatus(hwObj.value("USBSD").toString().toUShort());
     }
 
 }
@@ -161,6 +161,7 @@ QByteArray ClientInfo::getOSJsonData() const{
     //osObj["IPInfo"] = ip;
     osObj["Version"] = clientVersion;
     osObj["ProcessMonitorEnabled"] = processMonitorEnabled?"1":"0";
+    osObj["USBSD"] = usbSDStatus;
 
 //    QJsonObject hwObj;
 //    hwObj["Processor"] = cpu;

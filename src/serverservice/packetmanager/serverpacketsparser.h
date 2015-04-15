@@ -231,6 +231,29 @@ public slots:
         return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
+    bool sendAdminLoginResultPacket(SOCKETID socketID, bool result, const QString &message){
+        qDebug()<<"----sendAdminLoginResultPacket(...)";
+
+        Packet *packet = PacketHandlerBase::getPacket();
+
+        packet->setPacketType(quint8(MS::ServerResponseAdminLoginResult));
+        packet->setTransmissionProtocol(TP_UDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_serverName << quint8(result) << message;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
 
 
 private slots:
@@ -257,6 +280,7 @@ signals:
 
     void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online, const QString &ip, quint16 port);
 
+    void signalAdminLogin(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
     void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
 private:

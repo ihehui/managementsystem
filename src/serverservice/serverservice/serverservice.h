@@ -83,6 +83,7 @@ private slots:
 //    void processHeartbeatPacket(const QString &clientAddress, const QString &computerName);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port);
+    void processAdminLoginPacket(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
     void processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
 
@@ -95,7 +96,7 @@ private slots:
 
 private:
     bool openDatabase(bool reopen = false);
-    bool saveDataToDB(const QString &statement , QString *errorString = 0);
+    bool execQuery(const QString &statement , QString *errorString = 0);
 
     bool isRecordExistInDB(const QString &assetNO);
 

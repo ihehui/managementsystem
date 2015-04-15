@@ -77,14 +77,7 @@ public slots:
 private:
     QList<QWidget *> widgetList;
 
-    QString m_connectionName;
-    QString m_driver;
-    QString m_host;
-    quint16 m_port;
-    QString m_user;
-    QString m_passwd;
-    QString m_databaseName;
-    HEHUI::DatabaseType m_databaseType;
+
 
 
 };

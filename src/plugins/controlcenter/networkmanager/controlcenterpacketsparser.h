@@ -87,6 +87,30 @@ public slots:
         return m_udpServer->sendDatagram(ba, address, quint16(IP_MULTICAST_GROUP_PORT));
     }
 
+    bool sendAdminLoginPacket(SOCKETID socketID, const QString &computerName, const QString &adminName, const QString &password){
+        qDebug()<<"----sendAdminLoginPacket(...)";
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::AdminLogin));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << computerName << adminName << password;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
     bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, const QString &adminName, quint8 online){
         qDebug()<<"----sendAdminOnlineStatusChangedPacket(...)";
 
@@ -959,7 +983,7 @@ signals:
 
     //    void  signalServerAnnouncementPacketReceived(const QString &groupName, const QString &computerName, const QString &announcement, bool mustRead = true);
 
-
+    void signalServerResponseAdminLoginResultPacketReceived(SOCKETID socketID, const QString &serverName, bool result, const QString &message);
     void signalClientResponseAdminConnectionResultPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP);
     void signalClientMessagePacketReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
 

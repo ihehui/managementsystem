@@ -20,12 +20,13 @@ class SHAREDMSLIB_API Settings : public SettingsCore
 	Q_OBJECT
 
 public:
-    Settings(const QString fileBaseName = "settings", const QString fileDirPath = QCoreApplication::applicationDirPath(), QObject *parent = 0 );
+    Settings(const QString fileBaseName, const QString fileDirPath, QObject *parent = 0 );
     Settings(const QString fileName, Format format, QObject* parent= 0 );
 
     ~Settings();
 
     void setEncryptionKey(const QByteArray &encryptionKey);
+    QByteArray getEncryptionKey() const;
 
 
     void setDBType(unsigned int databaseType);
@@ -52,6 +53,8 @@ public:
     QString getAppServerIP();
     void setAppServerPort(quint16 port);
     quint16 getAppServerPort();
+
+
 
 private:
 

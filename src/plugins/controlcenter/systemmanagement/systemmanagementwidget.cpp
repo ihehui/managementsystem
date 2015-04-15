@@ -12,7 +12,7 @@
 #include "constants.h"
 #include "shutdowndialog.h"
 #include "../announcement/announcement.h"
-
+#include "../../sharedms/settings.h"
 
 #ifdef Q_OS_WIN32
 #include "HHSharedWindowsManagement/hwindowsmanagement.h"
@@ -675,119 +675,8 @@ void SystemManagementWidget::on_pushButtonOtherEXE_clicked(){
 
 void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
 
-    QString assetNO = ui.lineEditAssetNO->text().trimmed();
-    QString computerName = ui.lineEditComputerName1->text().trimmed();
-
-    if(assetNO.isEmpty() && computerName.isEmpty()){
-        QMessageBox::critical(this, tr("Error"), tr("Please input asset NO. or computer name!"));
-        ui.osGroupBox->setEnabled(true);
-        ui.lineEditAssetNO->setReadOnly(false);
-        ui.lineEditComputerName1->setReadOnly(false);
-        ui.lineEditAssetNO->setFocus();
-        return;
-    }
 
 
-    resetSystemInfo();
-
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
-    DatabaseConnecter dc(this);
-    if(!dc.isDatabaseOpened(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME,
-                            REMOTE_SITOY_COMPUTERS_DB_DRIVER,
-                            REMOTE_SITOY_COMPUTERS_DB_SERVER_HOST,
-                            REMOTE_SITOY_COMPUTERS_DB_SERVER_PORT,
-                            REMOTE_SITOY_COMPUTERS_DB_USER_NAME,
-                            REMOTE_SITOY_COMPUTERS_DB_USER_PASSWORD,
-                            REMOTE_SITOY_COMPUTERS_DB_NAME,
-                            HEHUI::MYSQL
-                            )){
-        QApplication::restoreOverrideCursor();
-        QMessageBox::critical(this, tr("Fatal Error"), tr("Database Connection Failed! Query Failed!"));
-        qCritical() << QString("Error: Database Connection Failed! Query Failed!");
-        return ;
-    }
-
-
-    QSqlDatabase db;
-    db = QSqlDatabase::database(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
-
-    QSqlQueryModel queryModel;
-
-    QString condition = QString("s.AssetNO = '%1'").arg(assetNO);
-    if(assetNO.isEmpty()){
-        condition = QString("s.ComputerName = '%1'").arg(computerName);
-    }
-    QString queryString = QString("SELECT s.*, d.* FROM OS s, Hardware d WHERE (s.AssetNO = d.AssetNO) AND (%1); ").arg(condition);
-    queryModel.setQuery(QSqlQuery(queryString, db));
-    QApplication::restoreOverrideCursor();
-
-    QSqlError error = queryModel.lastError();
-    if (error.type() != QSqlError::NoError) {
-        QString msg = QString("Can not query client info from database! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
-        //QApplication::restoreOverrideCursor();
-        QMessageBox::critical(this, tr("Fatal Error"), msg);
-
-        //MySQL数据库重启，重新连接
-        if(error.number() == 2006){
-            db.close();
-            QSqlDatabase::removeDatabase(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
-            return;
-        }
-
-    }
-
-    QSqlRecord record = queryModel.record(0);
-    if(record.isEmpty()){
-        QMessageBox::critical(this, tr("Fatal Error"), tr("No Record Found!"));
-        return;
-    }
-
-    ui.lineEditAssetNO->setText(record.value("AssetNO").toString());
-    ui.lineEditComputerName1->setText(record.value("ComputerName").toString());
-    ui.osVersionLineEdit->setText(record.value("OS").toString());
-    ui.installationDateLineEdit->setText(record.value("InstallationDate").toString());
-    ui.lineEditOSKey->setText(record.value("OSKey").toString());
-    ui.lineEditIP->setText(record.value("IP").toString());
-    ui.workgroupLineEdit->setText(record.value("Workgroup").toString());
-    ui.lineEditUsers->setText(record.value("Users").toString());
-    ui.osGroupBox->setEnabled(true);
-
-
-    ui.cpuLineEdit->setText(record.value("CPU").toString());
-    ui.motherboardLineEdit->setText(record.value("Motherboard").toString());
-    ui.memoryLineEdit->setText(record.value("Memory").toString());
-    ui.lineEditDiskDrives->setText(record.value("Storage").toString());
-    ui.monitorLineEdit->setText(record.value("Monitor").toString());
-    ui.videoCardLineEdit->setText(record.value("Video").toString());
-    ui.audioLineEdit->setText(record.value("Audio").toString());
-    ui.lineEditNetworkAdapter->setText(record.value("NIC").toString());
-
-    //ui.devicesInfoGroupBox->setEnabled(true);
-
-
-    queryModel.clear();
-    queryString = QString("SELECT SoftwareName, SoftwareVersion, InstallationDate, Publisher FROM InstalledSoftware WHERE AssetNO = '%1'; ").arg(m_peerAssetNO);
-    queryModel.setQuery(QSqlQuery(queryString, db));
-    while (queryModel.canFetchMore()){
-        queryModel.fetchMore();
-    }
-    int rows = queryModel.rowCount();
-    QTableWidget *wgt = ui.tabSoftware->softwareTable();
-    wgt->clearContents();
-    wgt->setRowCount(rows);
-    for(int i=0; i<rows; i++){
-        QSqlRecord record = queryModel.record(i);
-        for(int j=0; j<4; j++){
-            wgt->setItem(i, j, new QTableWidgetItem(record.value(j).toString()));
-        }
-    }
-    queryModel.clear();
-
-    ui.labelReportCreationTime->setText(tr("Last Update Time: %1").arg(record.value("UpdateTime").toString()));
-
-
-    //QApplication::restoreOverrideCursor();
 
 }
 
@@ -1492,7 +1381,7 @@ bool SystemManagementWidget::verifyPrivilege(){
     bool ok = false;
     do {
         QString text = QInputDialog::getText(this, tr("Privilege Required"),
-                                             tr("Access Code:"), QLineEdit::NoEcho,
+                                             tr("Access Code:"), QLineEdit::Password,
                                              "", &ok);
         if (ok && !text.isEmpty()){
             QString accessCodeString = "hehui";

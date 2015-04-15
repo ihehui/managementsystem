@@ -21,6 +21,7 @@
 #include "controlcenter.h"
 #include "announcement/announcement.h"
 
+#include "../../sharedms/settings.h"
 
 #include "HHSharedCore/hglobal_core.h"
 #include "HHSharedCore/hutilities.h"
@@ -34,8 +35,8 @@ namespace HEHUI {
 
 bool ControlCenter::running = false;
 
-ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
-    : QMainWindow(parent), m_adminName(adminName)
+ControlCenter::ControlCenter(QWidget *parent)
+    : QMainWindow(parent)
 {
     ui.setupUi(this);
     //setWindowFlags(Qt::Dialog);
@@ -62,23 +63,25 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
     }
     ui.comboBoxWorkgroup->setCurrentIndex(0);
 
-    ui.comboBoxUSBSD->addItem(tr("All"), 255);
+    ui.comboBoxUSBSD->addItem(tr("All"), -1);
     ui.comboBoxUSBSD->addItem(tr("ReadWrite"), quint8(MS::USBSTOR_ReadWrite));
     ui.comboBoxUSBSD->addItem(tr("ReadOnly"), quint8(MS::USBSTOR_ReadOnly));
     ui.comboBoxUSBSD->addItem(tr("Disabled"), quint8(MS::USBSTOR_Disabled));
     ui.comboBoxUSBSD->addItem(tr("Unknown"), quint8(MS::USBSTOR_Unknown));
 
-    ui.comboBoxProcMon->addItem("All", QVariant("-1"));
-    ui.comboBoxProcMon->addItem("Enabled", QVariant("1"));
-    ui.comboBoxProcMon->addItem("Disabled", QVariant("0"));
+    ui.comboBoxProcMon->addItem("All", QVariant(-1));
+    ui.comboBoxProcMon->addItem("Enabled", QVariant(1));
+    ui.comboBoxProcMon->addItem("Disabled", QVariant(0));
     ui.comboBoxProcMon->setCurrentIndex(0);
 
+    m_adminUser = new User();
+    m_userVerified = false;
+    m_adminName = "";
 
-    localSystemManagementWidget = 0;
     localComputerName = QHostInfo::localHostName().toLower();
+    localSystemManagementWidget = 0;
 
-    //databaseConnectionName = QString(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME) + "-ControlCenter";
-    databaseConnectionName = QString(REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME);
+    databaseConnectionName = QString(DB_CONNECTION_NAME);
     query = 0;
 
     clientInfoModel = new ClientInfoModel(this);
@@ -146,6 +149,12 @@ ControlCenter::ControlCenter(const QString &adminName, QWidget *parent)
     m_localRTPListeningPort = UDT_LISTENING_PORT + 10;
     m_socketConnectedToServer = INVALID_SOCK_ID;
 
+    Settings settings(SETTINGS_FILE_NAME, "./");
+    m_serverAddress = settings.getAppServerIP();
+    m_serverPort = settings.getAppServerPort();
+
+    m_loginDlg = 0;
+
 
     startNetwork();
 
@@ -180,6 +189,8 @@ ControlCenter::~ControlCenter()
 {
     qDebug()<<"--ControlCenter::~ControlCenter()";
 
+
+
     if(vncProcess){
         vncProcess->terminate();
     }
@@ -204,6 +215,9 @@ ControlCenter::~ControlCenter()
     resourcesManager = 0;
 
     PacketHandlerBase::clean();
+
+    delete m_adminUser;
+    m_adminUser = 0;
 
     running = false;   
 
@@ -317,8 +331,7 @@ void ControlCenter::retranslateUi() {
 
 void ControlCenter::slotInitTabWidget(){
 
-    connect(ui.tabWidget, SIGNAL(currentChanged(int)),
-            this, SLOT(slotTabPageChanged()));
+    connect(ui.tabWidget, SIGNAL(currentChanged(int)), this, SLOT(slotTabPageChanged()));
 
     QTabBar *tabBar = ui.tabWidget->tabBar();
     QStyleOptionTab opt;
@@ -474,30 +487,65 @@ void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 
 bool ControlCenter::openDatabase(bool reopen){
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    QSqlDatabase db;
-
-    if(reopen){
-        if(query){
-            query->clear();
-            delete query;
-            query = 0;
-        }
-        db = QSqlDatabase::database(databaseConnectionName);
-        db.close();
-        QSqlDatabase::removeDatabase(databaseConnectionName);
+    if(query){
+        query->clear();
+        delete query;
+        query = 0;
     }
 
+    QSqlDatabase db;
+    if(!openDatabase(&db, reopen)){
+        return false;
+    }
+
+    if(!query){
+        query = new QSqlQuery(db);
+    }
+
+    return true;
+
+}
+
+bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *errorString){
+    if(!database){
+        return false;
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    if(reopen){
+        database->close();
+        QSqlDatabase::removeDatabase(DB_CONNECTION_NAME);
+    }
+
+    Settings settings(SETTINGS_FILE_NAME, "./");
+
+    QString driver = DB_DRIVER;
+    QString host = "";
+    quint16 port = DB_SERVER_PORT;
+    QString user = DB_USER_NAME;
+    QString passwd = "";
+    QString databaseName = DB_NAME;
+    HEHUI::DatabaseType databaseType = HEHUI::MYSQL ;
+
+    host = settings.getDBServerHost();
+    if(!host.isEmpty()){
+        driver = settings.getDBDriver();
+        port = settings.getDBServerPort();
+        user = settings.getDBServerUserName();
+        passwd = settings.getDBServerUserPassword();
+        databaseName = settings.getDBName();
+        databaseType = settings.getDBType();
+    }
 
     DatabaseConnecter dc(this);
-    if(!dc.isDatabaseOpened(databaseConnectionName,
-                            REMOTE_SITOY_COMPUTERS_DB_DRIVER,
-                            REMOTE_SITOY_COMPUTERS_DB_SERVER_HOST,
-                            REMOTE_SITOY_COMPUTERS_DB_SERVER_PORT,
-                            REMOTE_SITOY_COMPUTERS_DB_USER_NAME,
-                            REMOTE_SITOY_COMPUTERS_DB_USER_PASSWORD,
-                            REMOTE_SITOY_COMPUTERS_DB_NAME,
-                            HEHUI::MYSQL
+    if(!dc.isDatabaseOpened(DB_CONNECTION_NAME,
+                            driver,
+                            host,
+                            port,
+                            user,
+                            passwd,
+                            databaseName,
+                            databaseType
                             )){
         QApplication::restoreOverrideCursor();
         QMessageBox::critical(this, tr("Error"), tr("Database Connection Failed!"));
@@ -505,16 +553,21 @@ bool ControlCenter::openDatabase(bool reopen){
         return false;
     }
 
-    db = QSqlDatabase::database(databaseConnectionName);
-    if(!query){
-        query = new QSqlQuery(db);
+    if(dc.settingsModified()){
+        settings.setDBDriver(dc.dbDriver());
+        settings.setDBServerHost(dc.dbServerHost());
+        settings.setDBServerPort(dc.dbServerPort());
+        settings.setDBServerUserName(dc.dbUser());
+        settings.setDBServerUserPassword(dc.dbPasswd());
+        settings.setDBName(dc.dbName());
+        settings.setDBType(dc.dbType());
     }
 
-    QApplication::restoreOverrideCursor();
-
-    return true;
+    *database = QSqlDatabase::database(DB_CONNECTION_NAME);
 
 }
+
+
 
 bool ControlCenter::execQuery(const QString &statement ){
 
@@ -572,16 +625,12 @@ inline QString ControlCenter::ipAddress() const {
     return ui.lineEditIPAddress->text().trimmed();
 }
 
-QString ControlCenter::usbsdStatus(){
-    if(ui.comboBoxUSBSD->currentIndex() == 0){
-        return "";
-    }else{
-        return QString::number(ui.comboBoxUSBSD->currentData().toUInt());
-    }
+int ControlCenter::usbsdStatus(){
+    return ui.comboBoxUSBSD->currentData().toInt();
 }
 
-QString ControlCenter::procMonEnabled() const{
-    return ui.comboBoxProcMon->currentData().toString();
+int ControlCenter::procMonEnabled() const{
+    return ui.comboBoxProcMon->currentData().toInt();
 }
 
 void ControlCenter::updateActions() {
@@ -608,7 +657,7 @@ void ControlCenter::slotQueryDatabase() {
     clientInfoModel->clear();
     proxyModel->cleanFilters();
 
-    QString statement = QString("call sp_OS_Query('%1', '%2', '%3', '%4', '%5', '%6', %7 ); ")
+    QString statement = QString("call sp_OS_Query('%1', '%2', '%3', '%4', '%5', '%6', %7, %8 ); ")
             .arg(assetNO())
             .arg(computerName())
             .arg(osVersion())
@@ -616,6 +665,7 @@ void ControlCenter::slotQueryDatabase() {
             .arg(userName())
             .arg(ipAddress())
             .arg(procMonEnabled())
+            .arg(usbsdStatus())
             ;        
 
     if(!execQuery(statement)){
@@ -637,6 +687,7 @@ void ControlCenter::slotQueryDatabase() {
         info->setIP(query->value("IP").toString());
         info->setClientVersion(query->value("ClientVersion").toString());
         info->setProcessMonitorEnabled(query->value("ProcessMonitorEnabled").toBool());
+        info->setUsbSDStatus(query->value("USB").toUInt());
         info->setLastOnlineTime(query->value("LastOnlineTime").toDateTime());
 
         clientsList.append(info);
@@ -709,17 +760,17 @@ void ControlCenter::filter(){
         ipRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
-    filterString = usbsdStatus();
-    if(!filterString.trimmed().isEmpty()){
+    filterString = QString::number(usbsdStatus());
+    if(filterString != "-1"){
         usbSDRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
-    filterString = procMonEnabled();
+    filterString = QString::number(procMonEnabled());
     if(filterString != "-1"){
         procMonRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
-    proxyModel->setFilters(assetNORegExp, computerNameRegExp, osRegExp, workgroupRegExp, userNameRegExp, ipRegExp, usbSDRegExp, procMonRegExp);
+    proxyModel->setFilters(assetNORegExp, computerNameRegExp, osRegExp, workgroupRegExp, userNameRegExp, ipRegExp, usbSDRegExp, procMonRegExp );
 
     statusBar()->showMessage(tr("Matched:%1").arg(QString::number(proxyModel->rowCount())));
 
@@ -1061,6 +1112,8 @@ void ControlCenter::startNetwork(){
 
     connect(controlCenterPacketsParser, SIGNAL(signalDesktopInfoPacketReceived(quint32, const QString &, int, int, int, int)), this, SLOT(processDesktopInfo(quint32, const QString &, int, int, int, int)));
     connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, QList<QPoint>, QList<QByteArray>)), this, SLOT(processScreenshot(const QString &, QList<QPoint>, QList<QByteArray>)));
+    connect(controlCenterPacketsParser, SIGNAL(signalServerResponseAdminLoginResultPacketReceived(SOCKETID, const QString &, bool, const QString &)), this, SLOT(processLoginResult(SOCKETID, const QString &, bool, const QString &)));
+
 
 
     if(localSystemManagementWidget){
@@ -1268,10 +1321,118 @@ void ControlCenter::peerDisconnected(SOCKETID socketID){
 //        clientSocketsHash.remove(socketID);
 //    }
 
+
+    if(socketID == m_socketConnectedToServer){
+        m_socketConnectedToServer = INVALID_SOCK_ID;
+        m_userVerified = false;
+        return;
+    }
+
     if(m_remoteDesktopMonitor){
         m_remoteDesktopMonitor->peerDisconnected(socketID);
     }
 
+}
+
+void ControlCenter::verifyUser(){
+
+
+    if(!m_loginDlg){
+        m_loginDlg = new  LoginDlg(m_adminUser, APP_NAME, this);
+        connect(m_loginDlg, SIGNAL(signalModifySettings()), this, SLOT(modifyServerSettings()));
+        connect(m_loginDlg, SIGNAL(signalLogin()), this, SLOT(login()));
+
+    }
+
+    m_loginDlg->show();
+
+}
+
+void ControlCenter::modifyServerSettings(){
+
+    bool ok = false;
+    QString text = QInputDialog::getText(this,
+                                         tr("Server Address"),
+                                         tr("Please input server address:"),
+                                         QLineEdit::Normal,
+                                         m_serverAddress,
+                                         &ok
+                                         ).trimmed();
+    if (ok && !text.isEmpty()){
+        m_serverAddress = text;
+    }
+
+    ok = false;
+    int port = QInputDialog::getInt(this,
+                                        tr("Server Port"),
+                                        tr("Please input server port:"),
+                                        m_serverPort,
+                                        0,
+                                        65535,
+                                        1,
+                                        &ok
+                                        );
+
+    if (ok){
+        m_serverPort = port;
+    }
+
+}
+
+bool ControlCenter::connectToServer(const QString &serverAddress, quint16 serverPort){
+
+    if(m_socketConnectedToServer != INVALID_SOCK_ID){
+        m_rtp->closeSocket(m_socketConnectedToServer);
+    }
+
+    QString errorMessage;
+    m_socketConnectedToServer = m_rtp->connectToHost(QHostAddress(serverAddress), serverPort, 10000, &errorMessage);
+    if(m_socketConnectedToServer == INVALID_SOCK_ID){
+        m_loginDlg->setErrorMessage(errorMessage);
+        qCritical()<<tr("ERROR! Can not connect to server %1:%2 ! %3").arg(serverAddress).arg(serverPort).arg(errorMessage);
+        return false;
+    }
+    m_serverAddress = serverAddress;
+    m_serverPort = serverPort;
+
+    Settings settings(SETTINGS_FILE_NAME, "./");
+    settings.setAppServerIP(m_serverAddress);
+    settings.setAppServerPort(m_serverPort);
+
+    controlCenterPacketsParser->sendAdminOnlineStatusChangedPacket(m_socketConnectedToServer, localComputerName, m_adminName, true);
+
+    qWarning()<<"Server Connected!"<<" Address:"<<serverAddress<<" Port:"<<m_serverPort;
+
+    return true;
+}
+
+bool ControlCenter::login(){
+
+    if(m_socketConnectedToServer != INVALID_SOCK_ID){
+        connectToServer(m_serverAddress, m_serverPort);
+    }
+
+    m_adminName = m_adminUser->getUserID();
+    bool ok = controlCenterPacketsParser->sendAdminLoginPacket(m_socketConnectedToServer, localComputerName, m_adminName, m_adminUser->getPassword());
+    if(!ok){
+        m_loginDlg->setErrorMessage(tr("Can not send data to server!"));
+    }
+
+    return ok;
+
+}
+
+void ControlCenter::processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message){
+
+    if(result){
+        m_loginDlg->accept();
+        delete m_loginDlg;
+        m_loginDlg = 0;
+    }else{
+        m_loginDlg->setErrorMessage(message);
+    }
+
+    m_userVerified = result;
 }
 
 

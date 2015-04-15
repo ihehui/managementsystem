@@ -27,6 +27,7 @@
 #include "HHSharedCore/huser.h"
 #include "HHSharedCore/hmysharedlib_global.h"
 #include "HHSharedGUI/hprogressdlg.h"
+#include "HHSharedGUI/hlogindlg.h"
 
 
 
@@ -39,7 +40,7 @@ class ControlCenter : public QMainWindow
     Q_OBJECT
 
 public:
-    ControlCenter(const QString &adminName, QWidget *parent = 0);
+    ControlCenter(QWidget *parent = 0);
     ~ControlCenter();
 
     static bool isRunning(){return running;}
@@ -102,11 +103,18 @@ private slots:
     void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
     void peerDisconnected(SOCKETID socketID);
 
-private:
+
+    void verifyUser();
+    void modifyServerSettings();
+
+    bool connectToServer(const QString &serverAddress, quint16 serverPort);
+    bool login();
+    void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message);
 
 
 private:
     bool openDatabase(bool reopen = false);
+    bool openDatabase(QSqlDatabase *database, bool reopen = false, QString *errorString = 0);
     bool execQuery(const QString &statement );
 
     QString assetNO() const;
@@ -115,8 +123,8 @@ private:
     QString workgroup() const;
     QString userName() const;
     QString ipAddress() const;
-    QString usbsdStatus();
-    QString procMonEnabled() const;
+    int procMonEnabled() const;
+    int usbsdStatus();
 
     void updateActions();
 
@@ -124,6 +132,13 @@ private:
     Ui::ControlCenterClass ui;
 
     static bool running;
+
+    User *m_adminUser;
+    bool m_userVerified;
+    QString m_adminName;
+
+    QString localComputerName;
+    SystemManagementWidget *localSystemManagementWidget;
 
     QString databaseConnectionName;
     QSqlQuery *query;
@@ -140,13 +155,10 @@ private:
     ControlCenterPacketsParser *controlCenterPacketsParser;
 
 
-    QString m_adminName;
 
     QString m_administrators;
 
-    SystemManagementWidget *localSystemManagementWidget;
 
-    QString localComputerName;
 
     QProcess *vncProcess;
     
@@ -162,6 +174,9 @@ private:
     RTP *m_rtp;
     quint16 m_localRTPListeningPort;
     SOCKETID m_socketConnectedToServer;
+    QString m_serverAddress;
+    quint16 m_serverPort;
+    LoginDlg *m_loginDlg;
 
     RemoteDesktopMonitor *m_remoteDesktopMonitor;
 //    QHash<int/*Socket ID*/, QHostAddress/*IP*/> clientSocketsHash;

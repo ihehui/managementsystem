@@ -246,6 +246,16 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::ServerResponseAdminLoginResult):
+    {
+        quint8 result = 0;
+        QString message = "";
+        in >> result >> message;
+        emit signalServerResponseAdminLoginResultPacketReceived(socketID, peerName, result, message);
+        qDebug()<<"~~ServerResponseAdminLoginResult";
+    }
+    break;
+
     case quint8(MS::ClientResponseAdminConnectionResult):
     {
         QString computerName = "", message = "";
@@ -255,6 +265,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ClientResponseAdminConnectionResult";
     }
     break;
+
     case quint8(MS::ClientMessage):
     {
 

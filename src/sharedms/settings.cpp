@@ -1,7 +1,6 @@
 
-
-
 #include "settings.h"
+
 
 
 namespace HEHUI {
@@ -26,6 +25,10 @@ Settings::~Settings()
 
 void Settings::setEncryptionKey(const QByteArray &encryptionKey){
     m_encryptionKey = encryptionKey;
+}
+
+QByteArray Settings::getEncryptionKey() const{
+    return m_encryptionKey;
 }
 
 void Settings::setDBType(unsigned int databaseType){
@@ -124,6 +127,8 @@ void Settings::setAppServerPort(quint16 port){
 quint16 Settings::getAppServerPort(){
     return getValueWithDecryption("Server/Port", m_encryptionKey, 0).toUInt();
 }
+
+
 
 
 

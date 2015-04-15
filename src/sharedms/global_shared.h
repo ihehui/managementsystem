@@ -122,7 +122,7 @@
 
 //MySQL
 #ifndef REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME
-#define REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME	"SITOY_COMPUTERS_DB"
+#define REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME	"MANAGEMENTSYSTEM_DB"
 #endif
 
 #ifndef REMOTE_SITOY_COMPUTERS_DB_DRIVER
@@ -204,6 +204,8 @@ namespace HEHUI {
             ClientInfoRequested,
             ClientInfo,
 
+            AdminLogin,
+            ServerResponseAdminLoginResult,
             AdminOnlineStatusChanged,
 
             AdminRequestRemoteConsole,
@@ -320,9 +322,9 @@ namespace HEHUI {
         
         enum USBSTORStatus{
             USBSTOR_Disabled = 0,
-            USBSTOR_ReadWrite,
-            USBSTOR_ReadOnly,
-            USBSTOR_Unknown
+            USBSTOR_ReadWrite = 1,
+            USBSTOR_ReadOnly = 2,
+            USBSTOR_Unknown = 3
         };
 
         enum SystemInfoType{

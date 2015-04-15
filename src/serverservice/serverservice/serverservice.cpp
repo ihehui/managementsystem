@@ -166,6 +166,7 @@ bool ServerService::startMainService(){
 
     //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool, const QString&, quint16)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool, const QString&, quint16)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalAdminLogin(SOCKETID, const QString &, const QString &, const QString &, const QString &)), this, SLOT(processAdminLoginPacket(SOCKETID, const QString &, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
 
     //Single Process Thread
@@ -206,7 +207,7 @@ void ServerService::saveClientLog(const QString &assetNO, const QString &clientA
             .arg(clientTime)
             ;
 
-    if(!saveDataToDB(statement)){
+    if(!execQuery(statement)){
         QString error = QString("ERROR! An error occurred when saving client log to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -430,6 +431,7 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
     QString newadmins = info->getAdministrators();
     QString newipInfo = info->getIP();
     QString newclientVersion = info->getClientVersion();
+    quint8 newUsbSDStatus = quint8(info->getUsbSDStatus());
 
     if(m_isUsingMySQL){
         newUsers = newUsers.replace("\\", "\\\\");
@@ -509,7 +511,7 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
 //    }
 
 
-    statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11' ); ")
+    statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11', %12 ); ")
             .arg(assetNO)
             .arg(newComputerName)
             .arg(newOSInfo)
@@ -521,9 +523,10 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
             .arg(newadmins)
             .arg(newipInfo)
             .arg(newclientVersion)
+            .arg(newUsbSDStatus)
             ;
 
-    if(saveDataToDB(statement)){
+    if(execQuery(statement)){
         if(!isRecordExistInDB(assetNO)){
             recordsInDatabase.append(assetNO);
         }
@@ -638,7 +641,7 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     QString assetNO = info->getAssetNO();
     statement += QString("WHERE AssetNO = '%1'").arg(assetNO);
 
-    if(!saveDataToDB(statement)){
+    if(!execQuery(statement)){
         QString error = QString("ERROR! An error occurred when saving hardware info to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -666,7 +669,7 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
                 ;
     }
 
-    if(!saveDataToDB(alarmStatement)){
+    if(!execQuery(alarmStatement)){
         QString error = QString("ERROR! An error occurred when saving hardware alarm info to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -718,7 +721,7 @@ void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data
 //    info->setInstalledSoftwaresInfoSavedTODatabase(false);
 //    info->setUpdateInstalledSoftwaresInfoStatement(statement);
 
-    if(!saveDataToDB(statement)){
+    if(!execQuery(statement)){
         QString error = QString("ERROR! An error occurred when saving installed software info to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -749,7 +752,7 @@ void ServerService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socket
             .arg(adminName)
             ;
 
-    if(!saveDataToDB(statement)){
+    if(!execQuery(statement)){
         QString error = QString("ERROR! An error occurred when saving process monitor info to database. Admin: %1.").arg(adminName);
         logMessage(error, QtServiceBase::Error);
     }
@@ -834,6 +837,37 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
     qWarning()<<QString("Total Online Clients:%1").arg(clientSocketsHash.size());
 
 
+}
+
+void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName){
+
+    bool verified = false;
+    QString message = "";
+
+    QString statement = QString("call sp_Admin_Login('%1', %2, '%3', '%4' );")
+            .arg(adminName)
+            .arg(password)
+            .arg(adminIP)
+            .arg(adminComputerName)
+            ;
+
+    if(!execQuery(statement)){
+        QString error = QString("ERROR! An error occurred when querying admin info. Admin: %1.").arg(adminName);
+        logMessage(error, QtServiceBase::Error);
+        verified = false;
+        message = error;
+    }else{
+        if(!query->first()){
+            verified = false;
+            message = "Invalid user name or password.";
+        }else{
+            verified = true;
+        }
+    }
+
+    //TODO
+
+    serverPacketsParser->sendAdminLoginResultPacket(socketID, verified, message);
 }
 
 void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online){
@@ -986,7 +1020,7 @@ bool ServerService::openDatabase(bool reopen){
 
 }
 
-bool ServerService::saveDataToDB(const QString &statement, QString *errorString ){
+bool ServerService::execQuery(const QString &statement, QString *errorString ){
 
     if(!query){
         if(!openDatabase()){
@@ -1015,11 +1049,11 @@ bool ServerService::saveDataToDB(const QString &statement, QString *errorString 
         }else{
             getRecordsInDatabase();
         }
+        query->clear();
 
         return false;
     }
 
-    query->clear();
 
     return true;
 
