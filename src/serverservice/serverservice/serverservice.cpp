@@ -145,7 +145,7 @@ bool ServerService::startMainService(){
     }
 
 
-    m_rtp = resourcesManager->startRTP(QHostAddress::Any, UDT_LISTENING_PORT, true, &errorMessage);
+    m_rtp = resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT, true, &errorMessage);
     connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)), Qt::QueuedConnection);
 
     //    m_udtProtocol = m_rtp->getUDTProtocol();
@@ -841,10 +841,10 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
 
 void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName){
 
-    bool verified = false;
+    bool verified = false, readonly = true;
     QString message = "";
 
-    QString statement = QString("call sp_Admin_Login('%1', %2, '%3', '%4' );")
+    QString statement = QString("call sp_Admin_Login('%1', '%2', '%3', '%4' );")
             .arg(adminName)
             .arg(password)
             .arg(adminIP)
@@ -862,12 +862,13 @@ void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &ad
             message = "Invalid user name or password.";
         }else{
             verified = true;
+            readonly = query->value(0).toUInt();
         }
     }
 
     //TODO
 
-    serverPacketsParser->sendAdminLoginResultPacket(socketID, verified, message);
+    serverPacketsParser->sendAdminLoginResultPacket(socketID, verified, message, readonly);
 }
 
 void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online){
@@ -1088,7 +1089,7 @@ void ServerService::stop()
 {
 
     if(serverPacketsParser){
-        serverPacketsParser->sendServerOfflinePacket();
+        serverPacketsParser->sendServerOnlineStatusChangedPacket(false);
     }
 
     //updateOrSaveAllClientsInfoToDatabase();

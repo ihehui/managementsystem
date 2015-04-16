@@ -77,7 +77,8 @@ ServerPacketsParser::ServerPacketsParser(ResourcesManagerInstance *manager, QObj
 
 //    localUDTListeningAddress = m_udtProtocol->getUDTListeningAddress();
 //    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
-    m_enetProtocol->getLocalListeningAddressInfo(&localUDTListeningAddress, &localUDTListeningPort);
+    localRTPListeningPort = m_resourcesManager->getRTPPort();
+    qDebug()<<"---------------localRTPListeningPort:"<<localRTPListeningPort;
 
     m_localTCPServerListeningPort = m_tcpServer->getTCPServerListeningPort();
 

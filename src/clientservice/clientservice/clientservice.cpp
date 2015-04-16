@@ -215,7 +215,7 @@ bool ClientService::startMainService(){
         qWarning()<<QString("UDP listening on port %1!").arg(IP_MULTICAST_GROUP_PORT);
     }
 
-    m_rtp = resourcesManager->startRTP(QHostAddress::Any, UDT_LISTENING_PORT, true, &errorMessage);
+    resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT, true, &errorMessage);
     connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)));
 
 //    m_udtProtocol = m_rtp->getUDTProtocol();

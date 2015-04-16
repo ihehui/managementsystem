@@ -846,7 +846,7 @@ signals:
     //void  signalHeartbeatPacketReceived(const QString &computerName);
     //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
 
-    void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
+    void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
     void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
 
@@ -907,7 +907,7 @@ private:
     //QString m_localComputerName;
 
     QHostAddress serverAddress;
-    quint16 serverUDTListeningPort;
+    quint16 serverRTPListeningPort;
     QString serverName;
 
 

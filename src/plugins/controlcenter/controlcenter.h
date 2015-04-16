@@ -106,10 +106,10 @@ private slots:
 
     void verifyUser();
     void modifyServerSettings();
-
+    void serverSelected(const QString &serverAddress, quint16 serverPort);
     bool connectToServer(const QString &serverAddress, quint16 serverPort);
     bool login();
-    void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message);
+    void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
 
 
 private:
@@ -133,8 +133,8 @@ private:
 
     static bool running;
 
+    bool m_readonly;
     User *m_adminUser;
-    bool m_userVerified;
     QString m_adminName;
 
     QString localComputerName;
@@ -154,11 +154,7 @@ private:
     ResourcesManagerInstance *resourcesManager;
     ControlCenterPacketsParser *controlCenterPacketsParser;
 
-
-
     QString m_administrators;
-
-
 
     QProcess *vncProcess;
     

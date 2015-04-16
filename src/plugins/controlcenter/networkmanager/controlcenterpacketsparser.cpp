@@ -79,7 +79,7 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
 
 
     serverAddress = QHostAddress::Null;
-    serverUDTListeningPort = 0;
+    serverRTPListeningPort = 0;
     serverName = "";
 
 
@@ -148,18 +148,16 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 //    break;
     case quint8(MS::ServerDeclare):
     {
-
-        QString address = "";
-        quint16 udtPort = 0, tcpPort = 0;
+        quint16 rtpPort = 0, tcpPort = 0;
         QString version;
         int serverInstanceID = 0;
-        in >> address >> udtPort >> tcpPort >> version >> serverInstanceID;
+        in >> rtpPort >> tcpPort >> version >> serverInstanceID;
         serverAddress = peerAddress;
-        serverUDTListeningPort = udtPort;
+        serverRTPListeningPort = rtpPort;
         serverName = peerName;
-        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverUDTListeningPort, tcpPort, serverName, version, serverInstanceID);
+        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, tcpPort, serverName, version, serverInstanceID);
 
-        qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress<<" servername:"<<peerName <<" serverRUDPListeningPort:"<<serverUDTListeningPort<<" serverTCPListeningPort:"<<tcpPort;
+        qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress<<" servername:"<<peerName <<" serverRUDPListeningPort:"<<serverRTPListeningPort<<" serverTCPListeningPort:"<<tcpPort;
     }
     break;
     //    case quint8(MS::ClientOnline):
@@ -169,13 +167,12 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::ServerOnlineStatusChanged):
     {
         quint8 online = 1;
-        QString address = "";
-        quint16 port;
-        in >> online >> address >> port;
+        quint16 rtpPort = 0, tcpPort = 0;
+        in >> online >> rtpPort >> tcpPort;
         serverAddress = online?peerAddress:QHostAddress::Null;
-        serverUDTListeningPort = online?port:0;
+        serverRTPListeningPort = online?rtpPort:0;
         serverName = peerName;
-        emit signalServerOnlineStatusChangedPacketReceived(online, serverAddress, serverUDTListeningPort, serverName);
+        emit signalServerOnlineStatusChangedPacketReceived(online, serverAddress, serverRTPListeningPort, serverName);
     }
     break;
 
@@ -248,10 +245,10 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ServerResponseAdminLoginResult):
     {
-        quint8 result = 0;
+        quint8 result = 0, readonly = 1;
         QString message = "";
-        in >> result >> message;
-        emit signalServerResponseAdminLoginResultPacketReceived(socketID, peerName, result, message);
+        in >> result >> message >> readonly;
+        emit signalServerResponseAdminLoginResultPacketReceived(socketID, peerName, result, message, readonly);
         qDebug()<<"~~ServerResponseAdminLoginResult";
     }
     break;

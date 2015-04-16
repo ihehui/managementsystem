@@ -1,4 +1,4 @@
-﻿/*
+/*
  * networkmanager.cpp
  *
  *  Created on: 2010-7-21
@@ -31,6 +31,7 @@ ResourcesManager::ResourcesManager(QObject *parent)
 //    m_tcpServer = new TCPServer(this);
 
     m_rtp = new RTP(this);
+    m_rtpPort = 0;
 
     m_fileManager = 0;
 
@@ -200,8 +201,13 @@ RTP * ResourcesManager::startRTP(const QHostAddress &localAddress, quint16 local
     }
 
     m_rtp->startServers(localAddress, localPort, tryOtherPort, errorMessage);
+    m_rtpPort = localPort;
     return m_rtp;
 
+}
+
+quint16 ResourcesManager::getRTPPort(){
+    return m_rtpPort;
 }
 
 FileManager * ResourcesManager::getFileManager(){

@@ -37,7 +37,7 @@ Helper::Helper(QObject *parent) :
     bulletinBoardWidget = 0;
     updatePasswordWidget = 0;
     
-    localUDTListeningPort = UDT_LISTENING_PORT + 20;
+    localUDTListeningPort = RTP_LISTENING_PORT + 20;
     m_rtp = 0;
     m_socketConnectedToLocalServer = INVALID_SOCK_ID;
     m_socketConnectedToAdmin = INVALID_SOCK_ID;
@@ -371,7 +371,7 @@ void Helper::connectToLocalServer(){
 
     m_rtp->closeSocket(m_socketConnectedToLocalServer);
     QString errorMessage;
-    m_socketConnectedToLocalServer = m_rtp->connectToHost(QHostAddress::LocalHost, UDT_LISTENING_PORT, 10000, &errorMessage);
+    m_socketConnectedToLocalServer = m_rtp->connectToHost(QHostAddress::LocalHost, RTP_LISTENING_PORT, 10000, &errorMessage);
     if(m_socketConnectedToLocalServer == INVALID_SOCK_ID){
         qCritical()<<tr("ERROR! Can not connect to local server! %3").arg(errorMessage);
         m_connectToLocalServerTimer->start();

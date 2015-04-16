@@ -71,7 +71,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << localUDTListeningAddress << localUDTListeningPort << m_localTCPServerListeningPort << QString(APP_VERSION) << serverInstanceID;
+        out << m_serverName << localRTPListeningPort << m_localTCPServerListeningPort << QString(APP_VERSION) << serverInstanceID;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -86,7 +86,7 @@ public slots:
 
     }
 
-    bool sendServerOnlinePacket(bool online, const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
+    bool sendServerOnlineStatusChangedPacket(bool online, const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
         qDebug()<<"----sendServerOnlinePacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket();
@@ -96,7 +96,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << quint8(online) << localUDTListeningAddress << localUDTListeningPort;
+        out << m_serverName << quint8(online) << localRTPListeningPort << m_localTCPServerListeningPort;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -109,31 +109,6 @@ public slots:
 
         return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
-
-    bool sendServerOfflinePacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
-        qDebug()<<"----sendServerOfflinePacket(...)";
-
-        Packet *packet = PacketHandlerBase::getPacket();
-
-        packet->setPacketType(quint8(MS::ServerOffline));
-        packet->setTransmissionProtocol(TP_UDP);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << localUDTListeningAddress << localUDTListeningPort;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
-    }
-
 
     bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0){
 
@@ -231,7 +206,7 @@ public slots:
         return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
-    bool sendAdminLoginResultPacket(SOCKETID socketID, bool result, const QString &message){
+    bool sendAdminLoginResultPacket(SOCKETID socketID, bool result, const QString &message, bool readonly){
         qDebug()<<"----sendAdminLoginResultPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket();
@@ -241,7 +216,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << quint8(result) << message;
+        out << m_serverName << quint8(result) << message << quint8(readonly);
         packet->setPacketData(ba);
 
         ba.clear();
@@ -286,15 +261,6 @@ signals:
 private:
 
 private:
-    QString localUDTListeningAddress;
-    quint16 localUDTListeningPort;
-    quint16 m_localTCPServerListeningPort;
-
-    QString m_serverName;
-
-    quint16 localIPMCListeningPort;
-
-
     ResourcesManagerInstance *m_resourcesManager;
     UDPServer *m_udpServer;
 
@@ -302,6 +268,16 @@ private:
 //    UDTProtocol *m_udtProtocol;
     TCPServer *m_tcpServer;
     ENETProtocol *m_enetProtocol;
+
+    quint16 localRTPListeningPort;
+    quint16 m_localTCPServerListeningPort;
+
+    QString m_serverName;
+
+    quint16 localIPMCListeningPort;
+
+
+
 
 
 };

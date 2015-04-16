@@ -112,20 +112,20 @@ QString Settings::getDBName() const{
     //return value("Database/DatabaseName", REMOTE_SITOY_COMPUTERS_DB_NAME).toString();
 }
 
-void Settings::setAppServerIP(const QString &serverIP){
-    setValueWithEncryption("Server/IP", serverIP, m_encryptionKey);
+void Settings::setAppServers(const QString &serversList){
+    setValueWithEncryption("AppServers", serversList, m_encryptionKey);
 }
 
-QString Settings::getAppServerIP(){
-    return getValueWithDecryption("Server/IP", m_encryptionKey, "").toString();
+QString Settings::getAppServers() const{
+    return getValueWithDecryption("AppServers", m_encryptionKey, "").toString();
 }
 
-void Settings::setAppServerPort(quint16 port){
-    setValueWithEncryption("Server/Port", port, m_encryptionKey);
+void Settings::setLastUsedAppServer(const QString &server){
+    setValueWithEncryption("AppServerLastUsed", server, m_encryptionKey);
 }
 
-quint16 Settings::getAppServerPort(){
-    return getValueWithDecryption("Server/Port", m_encryptionKey, 0).toUInt();
+QString Settings::getLastUsedAppServer() const{
+    return getValueWithDecryption("AppServerLastUsed", m_encryptionKey, QString()).toString();
 }
 
 

@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/icon">
+    <file>resources/images/verifying.gif</file>
     <file>resources/images/filter.png</file>
     <file>resources/images/computername.png</file>
     <file>resources/images/system_lock_screen.png</file>

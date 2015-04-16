@@ -25,11 +25,11 @@ int main(int argc, char *argv[])
 //    QTextCodec::setCodecForLocale(codec);
 //    QTextCodec::setCodecForTr(codec);
 
-    QApplication a(argc, argv);
-    a.addLibraryPath(QCoreApplication::applicationDirPath());
-    a.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(PLUGINS_MAIN_DIR));
-    a.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(MYLIBS_DIR));
-    qDebug()<<"--Library Paths:"<<a.libraryPaths ();
+    QApplication app(argc, argv);
+    app.addLibraryPath(QCoreApplication::applicationDirPath());
+    app.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(PLUGINS_MAIN_DIR));
+    app.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(MYLIBS_DIR));
+    qDebug()<<"--Library Paths:"<<app.libraryPaths ();
 
 
     for(int i = 0; i < argc; i++){
@@ -55,11 +55,11 @@ int main(int argc, char *argv[])
     //设置程序信息
     //Setup the program information
     showSplashMessage(splash, QObject::tr("Setup Application Info"));
-    a.setApplicationName(APP_NAME);
-    a.setApplicationVersion(APP_VERSION);
-    a.setWindowIcon(QIcon(QString(RESOURCE_PATH)+QString(APP_ICON_PATH)));
-    a.setOrganizationName(APP_ORG);
-    a.setOrganizationDomain(APP_ORG_DOMAIN);
+    app.setApplicationName(APP_NAME);
+    app.setApplicationVersion(APP_VERSION);
+    app.setWindowIcon(QIcon(QString(RESOURCE_PATH)+QString(APP_ICON_PATH)));
+    app.setOrganizationName(APP_ORG);
+    app.setOrganizationDomain(APP_ORG_DOMAIN);
     showSplashMessage(splash, QString(APP_NAME) + " " + QString(APP_VERSION));
 
 
@@ -77,6 +77,6 @@ int main(int argc, char *argv[])
     delete splash;
 
 
-    return a.exec();
+    return app.exec();
 
 }

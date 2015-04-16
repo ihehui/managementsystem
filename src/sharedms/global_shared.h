@@ -60,8 +60,8 @@
 #define UDT_FILE_LISTENING_PORT	22347
 #endif
 
-#ifndef UDT_LISTENING_PORT
-#define UDT_LISTENING_PORT	22346
+#ifndef RTP_LISTENING_PORT
+#define RTP_LISTENING_PORT	22346
 #endif
 
 #ifndef IP_MULTICAST_GROUP_PORT
@@ -199,7 +199,6 @@ namespace HEHUI {
             ClientOnlineStatusChanged,
 
             ServerOnlineStatusChanged,
-            ServerOffline, //12
 
             ClientInfoRequested,
             ClientInfo,

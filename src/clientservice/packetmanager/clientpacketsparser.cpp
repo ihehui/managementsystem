@@ -73,7 +73,7 @@ ClientPacketsParser::ClientPacketsParser(const QString &assetNO, ClientResources
 
 
     serverAddress = QHostAddress::Null;
-    serverUDTListeningPort = 0;
+    serverRTPListeningPort = 0;
     serverName = "";
 
 //    m_localUDTServerListeningPort = m_udtProtocol->getUDTListeningPort();
@@ -122,32 +122,30 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ServerDeclare):
     {
-
-        QString address = "";
         quint16 udtPort = 0, tcpPort = 0;
         QString version = "";
         int serverInstanceID = 0;
-        in >> address >> udtPort >> tcpPort >> version >> serverInstanceID;
+        in >> udtPort >> tcpPort >> version >> serverInstanceID;
         serverAddress = peerAddress;
-        serverUDTListeningPort = udtPort;
+        serverRTPListeningPort = udtPort;
         serverName = peerName;
 
-        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverUDTListeningPort, tcpPort, serverName, version, serverInstanceID);
-        qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverUDTListeningPort << " serverTCPListeningPort:"<<tcpPort;
+        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, tcpPort, serverName, version, serverInstanceID);
+        qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverRTPListeningPort << " serverTCPListeningPort:"<<tcpPort;
     }
     break;
+
     case quint8(MS::ServerOnlineStatusChanged):
     {
         quint8 online = 1;
-        QString address = "";
-        quint16 port = 0;
-        in >> online >> address >> port;
+        quint16 rtpPort = 0, tcpPort = 0;
+        in >> online >> rtpPort >> tcpPort;
         serverAddress = online?peerAddress:QHostAddress::Null;
-        serverUDTListeningPort = online?port:0;
+        serverRTPListeningPort = online?rtpPort:0;
         serverName = peerName;
 
-        emit signalServerOnlineStatusChangedPacketReceived(online, serverAddress, serverUDTListeningPort, serverName);
-        qDebug()<<"~~ServerOnlineStatusChanged"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverUDTListeningPort;
+        emit signalServerOnlineStatusChangedPacketReceived(online, serverAddress, serverRTPListeningPort, serverName);
+        qDebug()<<"~~ServerOnlineStatusChanged"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverRTPListeningPort;
 
     }
     break;

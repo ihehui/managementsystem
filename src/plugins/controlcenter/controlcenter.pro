@@ -61,7 +61,10 @@ HEADERS += \
     remotedesktop/AviFile.h \
     processmonitor/processmonitor.h \
     processmonitor/processmonitorrulemodel.h \
-    processmonitor/ruleinfowidget.h
+    processmonitor/ruleinfowidget.h \
+    servermanagement/serveraddressmanagerwindow.h \
+    servermanagement/serverinfo.h \
+    servermanagement/serverinfomodel.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -87,7 +90,10 @@ SOURCES += \
     remotedesktop/avifile.cpp \
     processmonitor/processmonitor.cpp \
     processmonitor/processmonitorrulemodel.cpp \
-    processmonitor/ruleinfowidget.cpp
+    processmonitor/ruleinfowidget.cpp \
+    servermanagement/serveraddressmanagerwindow.cpp \
+    servermanagement/serverinfo.cpp \
+    servermanagement/serverinfomodel.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -103,7 +109,8 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     softwaremanagement/softwaremamagement.ui \
     remotedesktop/remotedesktopmonitor.ui \
     processmonitor/processmonitor.ui \
-    processmonitor/ruleinfowidget.ui
+    processmonitor/ruleinfowidget.ui \
+    servermanagement/serveraddressmanagerwindow.ui
 
 RESOURCES += controlcenter.qrc
 

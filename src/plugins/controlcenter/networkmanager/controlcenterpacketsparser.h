@@ -58,7 +58,7 @@ public slots:
 
 
 
-    bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS)){
+    bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
         qDebug()<<"----sendClientLookForServerPacket(...) "<<" targetAddress:"<<targetAddress;
 
         QHostAddress address = QHostAddress(targetAddress);
@@ -84,10 +84,10 @@ public slots:
 
         PacketHandlerBase::recylePacket(packet);
 
-        return m_udpServer->sendDatagram(ba, address, quint16(IP_MULTICAST_GROUP_PORT));
+        return m_udpServer->sendDatagram(ba, address, targetPort);
     }
 
-    bool sendAdminLoginPacket(SOCKETID socketID, const QString &computerName, const QString &adminName, const QString &password){
+    bool sendAdminLoginPacket(SOCKETID socketID, const QString &adminName, const QString &password){
         qDebug()<<"----sendAdminLoginPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -97,7 +97,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << adminName << password;
+        out << m_localID << m_localComputerName << adminName << password;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -111,7 +111,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, const QString &adminName, quint8 online){
+    bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminName, quint8 online){
         qDebug()<<"----sendAdminOnlineStatusChangedPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -121,7 +121,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << adminName << online;
+        out << m_localID << m_localComputerName << adminName << online;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -956,7 +956,7 @@ signals:
     //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
 
     //    void signalClientLookForServerPacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
-    void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
+    void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
     //    void signalClientOnlinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
     //    void signalClientOfflinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
@@ -983,7 +983,8 @@ signals:
 
     //    void  signalServerAnnouncementPacketReceived(const QString &groupName, const QString &computerName, const QString &announcement, bool mustRead = true);
 
-    void signalServerResponseAdminLoginResultPacketReceived(SOCKETID socketID, const QString &serverName, bool result, const QString &message);
+    void signalServerResponseAdminLoginResultPacketReceived(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
+
     void signalClientResponseAdminConnectionResultPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP);
     void signalClientMessagePacketReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
 
@@ -1040,7 +1041,7 @@ private:
     ENETProtocol *m_enetProtocol;
 
     QHostAddress serverAddress;
-    quint16 serverUDTListeningPort;
+    quint16 serverRTPListeningPort;
 
 
     QString serverName;

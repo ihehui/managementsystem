@@ -52,7 +52,7 @@ public:
 
     RTP * getRTP();
     RTP * startRTP(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
-
+    quint16 getRTPPort();
 
     FileManager *getFileManager();
 
@@ -69,6 +69,7 @@ private:
 //    UDTProtocol *udtProtocol;
 //    TCPServer *m_tcpServer;
     RTP *m_rtp;
+    quint16 m_rtpPort;
 
     FileManager *m_fileManager;
 
