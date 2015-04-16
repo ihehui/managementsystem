@@ -232,7 +232,16 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::ClientInfoRequested):
+    {
+        QString assetNO = "";
+        quint8 infoType = 0;
+        in >> assetNO >> infoType;
 
+        emit signalClientInfoRequestedPacketReceived(socketID, assetNO, infoType);
+        qDebug()<<"~~ClientInfoRequested";
+    }
+    break;
 
 
 

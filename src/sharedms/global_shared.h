@@ -202,6 +202,7 @@ namespace HEHUI {
 
             ClientInfoRequested,
             ClientInfo,
+            SystemInfoFromServer,
 
             AdminLogin,
             ServerResponseAdminLoginResult,

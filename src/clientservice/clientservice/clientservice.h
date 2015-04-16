@@ -31,10 +31,6 @@
 #ifdef Q_OS_WIN32
     #include "HHSharedWindowsManagement/hhardwaremonitor.h"
     #include "HHSharedWindowsManagement/WinUtilities"
-
-    #ifndef SITOY_USERS_DB_CONNECTION_NAME
-    #define SITOY_USERS_DB_CONNECTION_NAME "200.200.200.2/mis/users"
-    #endif
 #endif
 
 

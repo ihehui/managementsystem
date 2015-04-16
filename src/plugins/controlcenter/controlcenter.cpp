@@ -670,44 +670,9 @@ void ControlCenter::slotQueryDatabase(){
     clientInfoModel->clear();
     proxyModel->cleanFilters();
 
-    QString statement = QString("call sp_OS_Query('%1', '%2', '%3', '%4', '%5', '%6', %7, %8 ); ")
-            .arg(assetNO())
-            .arg(computerName())
-            .arg(osVersion())
-            .arg(workgroup())
-            .arg(userName())
-            .arg(ipAddress())
-            .arg(procMonEnabled())
-            .arg(usbsdStatus())
-            ;        
+    controlCenterPacketsParser->sendRequestClientInfoPacket(m_socketConnectedToServer, "", MS::SYSINFO_OS);
+//    controlCenterPacketsParser->sendRequestClientInfoPacket(m_socketConnectedToServer, "", MS::SYSINFO_HARDWARE);
 
-    if(!execQuery(statement)){
-        return;
-    }
-
-    QList<ClientInfo*> clientsList;
-    while(query->next()){
-        ClientInfo *info = new ClientInfo("", this);
-        info->setAssetNO(query->value("AssetNO").toString());
-        info->setComputerName(query->value("ComputerName").toString());
-        info->setOSVersion(query->value("OSVersion").toString());
-        info->setInstallationDate(query->value("InstallationDate").toString());
-        info->setOsKey(query->value("OSKey").toString());
-        info->setWorkgroup(query->value("Workgroup").toString());
-        info->setIsJoinedToDomain(query->value("JoinedToDomain").toBool());
-        info->setUsers(query->value("Users").toString());
-        info->setAdministrators(query->value("Administrators").toString());
-        info->setIP(query->value("IP").toString());
-        info->setClientVersion(query->value("ClientVersion").toString());
-        info->setProcessMonitorEnabled(query->value("ProcessMonitorEnabled").toBool());
-        info->setUsbSDStatus(query->value("USB").toUInt());
-        info->setLastOnlineTime(query->value("LastOnlineTime").toDateTime());
-
-        clientsList.append(info);
-    }
-    clientInfoModel->setClientList(clientsList);
-
-    query->clear();
 
     //statusBar()->showMessage(tr("Matched In Database:%1").arg(QString::number(queryModel->rowCount())));
     
@@ -1122,6 +1087,8 @@ void ControlCenter::startNetwork(){
     //connect(controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)));
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
+
 
     connect(controlCenterPacketsParser, SIGNAL(signalDesktopInfoPacketReceived(quint32, const QString &, int, int, int, int)), this, SLOT(processDesktopInfo(quint32, const QString &, int, int, int, int)));
     connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, QList<QPoint>, QList<QByteArray>)), this, SLOT(processScreenshot(const QString &, QList<QPoint>, QList<QByteArray>)));
@@ -1181,7 +1148,7 @@ void ControlCenter::serverFound(const QString &serverAddress, quint16 serverUDTL
 
 }
 
-void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType){
+void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType){
     qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...) "<< " Asset NO.:"<<assetNO;
     
     ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
@@ -1192,7 +1159,7 @@ void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteAr
     switch (infoType) {
     case quint8(MS::SYSINFO_OS):
     case quint8(MS::SYSINFO_HARDWARE):
-        info->setJsonData(clientInfo);
+        info->setJsonData(clientInfoData);
         break;
 
 //    case quint8(MS::SYSINFO_SOFTWARE):
@@ -1211,6 +1178,65 @@ void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteAr
     qApp->processEvents();
 
 }
+
+void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType){
+    qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO;
+
+    if(assetNO.isEmpty()){
+        QList<ClientInfo*> clientsList;
+        if(infoData.isEmpty()){return;}
+
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
+        if(error.error != QJsonParseError::NoError){
+            qCritical()<<error.errorString();
+            return;
+        }
+        QJsonObject object = doc.object();
+        if(object.isEmpty()){return;}
+
+        QJsonArray infoArray = object["OS"].toArray();
+        if(infoArray.isEmpty()){return;}
+
+        for(int i=0;i<infoArray.size();i++){
+            QByteArray data = infoArray.at(i).toString().toUtf8();
+            ClientInfo *info = new ClientInfo("", this);
+            info->setJsonData(data);
+            clientsList.append(info);
+        }
+
+        clientInfoModel->setClientList(clientsList);
+
+    }else{
+        ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
+        if(!info){
+            info = new ClientInfo(assetNO, this);
+        }
+
+        switch (infoType) {
+        case quint8(MS::SYSINFO_OS):
+        case quint8(MS::SYSINFO_HARDWARE):
+            info->setJsonData(infoData);
+            break;
+
+    //    case quint8(MS::SYSINFO_SOFTWARE):
+    //        processSoftwareInfo(info, clientInfo);
+    //        break;
+    //    case quint8(MS::SYSINFO_SERVICES):
+    //        updateServicesInfo(object);
+    //        break;
+        default:
+            qCritical()<<"ERROR! Invalid client info!";
+            break;
+        }
+
+        clientInfoModel->addClientInfo(info);
+    }
+
+    qApp->processEvents();
+
+}
+
 
 void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online){
     qDebug()<<"--ControlCenter::processClientOnlineStatusChangedPacket(...)";
@@ -1424,7 +1450,7 @@ bool ControlCenter::login(){
 
     m_adminName = m_adminUser->getUserID();
     QString password = m_adminUser->getPassword();
-    m_adminUser->setPassword("");
+    //m_adminUser->setPassword("");
 
     bool ok = controlCenterPacketsParser->sendAdminLoginPacket(m_socketConnectedToServer, m_adminName, m_adminUser->getPassword());
     if(!ok){

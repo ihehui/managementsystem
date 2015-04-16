@@ -88,8 +88,9 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
-    
+    void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType);
+    void processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
+
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 
     void processDesktopInfo(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);

@@ -113,9 +113,9 @@ void ClientInfo::setJsonData(const QByteArray &data){
 
     QJsonObject osObj = object["OS"].toObject();
     if(!osObj.isEmpty()){
-//        if(osObj.contains("AssetNO")){
-//            assetNO = osObj["AssetNO"].toString();
-//        }
+        if(osObj.contains("AssetNO")){
+            assetNO = osObj["AssetNO"].toString();
+        }
 
         computerName = osObj["ComputerName"].toString();
         osVersion = osObj["OS"].toString();
@@ -125,7 +125,9 @@ void ClientInfo::setJsonData(const QByteArray &data){
         m_isJoinedToDomain = osObj["JoinedToDomain"].toBool();
         users = osObj["Users"].toString();
         administrators = osObj["Admins"].toString();
-        //ip = osObj["IPInfo"].toString();
+        if(osObj.contains("IPInfo")){
+            ip = osObj["IPInfo"].toString();
+        }
         clientVersion = osObj["Version"].toString();
         processMonitorEnabled = osObj["ProcessMonitorEnabled"].toBool();
         usbSDStatus = MS::USBSTORStatus(osObj.value("USBSD").toString().toUShort());
@@ -149,7 +151,7 @@ void ClientInfo::setJsonData(const QByteArray &data){
 QByteArray ClientInfo::getOSJsonData() const{
 
     QJsonObject osObj;
-    //osObj["AssetNO"] = assetNO;
+    osObj["AssetNO"] = assetNO;
     osObj["ComputerName"] = computerName;
     osObj["OS"] = osVersion;
     osObj["InstallDate"] = installationDate;
@@ -158,7 +160,7 @@ QByteArray ClientInfo::getOSJsonData() const{
     osObj["JoinedToDomain"] = m_isJoinedToDomain?"1":"0";
     osObj["Users"] = users;
     osObj["Admins"] = administrators;
-    //osObj["IPInfo"] = ip;
+    osObj["IPInfo"] = ip;
     osObj["Version"] = clientVersion;
     osObj["ProcessMonitorEnabled"] = processMonitorEnabled?"1":"0";
     osObj["USBSD"] = usbSDStatus;

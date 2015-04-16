@@ -197,6 +197,18 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::SystemInfoFromServer):
+    {
+        qDebug()<<"SystemInfoFromServer";
+
+        QString assetNO = "";
+        QByteArray systemInfo;
+        quint8 infoType = 0;
+        in >> assetNO >> systemInfo >> infoType;
+        emit signalSystemInfoFromServerReceived(assetNO, systemInfo, infoType);
+    }
+    break;
+
     case quint8(MS::ClientResponseUSBInfo):
     {
         qDebug()<<"ClientResponseUSBInfo";

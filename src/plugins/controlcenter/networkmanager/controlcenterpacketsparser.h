@@ -974,6 +974,8 @@ signals:
 
 
     void signalClientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
+    void signalSystemInfoFromServerReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
+
     void signalClientResponseUSBInfoPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &usbInfo);
 
 

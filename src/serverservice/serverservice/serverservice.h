@@ -75,10 +75,10 @@ private slots:
     void processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData);
     void processSoftwareInfo(ClientInfo *info, const QByteArray &data);
 
+    void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
     void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
 
-    void getRecordsInDatabase();
 
 //    void processHeartbeatPacket(const QString &clientAddress, const QString &computerName);
 
@@ -97,8 +97,11 @@ private slots:
 private:
     bool openDatabase(bool reopen = false);
     bool execQuery(const QString &statement , QString *errorString = 0);
+    void getAllClientsInfoFromDB();
 
-    bool isRecordExistInDB(const QString &assetNO);
+    void getOSInfo(SOCKETID socketID, const QString &assetNO);
+    void getHardwareInfo(SOCKETID socketID, const QString &assetNO);
+    void getSoftwareInfo(SOCKETID socketID, const QString &assetNO);
 
 
 protected:
@@ -139,7 +142,6 @@ private:
     bool m_isUsingMySQL;
 
 
-    QStringList recordsInDatabase;
     QStringList logs;
 
 

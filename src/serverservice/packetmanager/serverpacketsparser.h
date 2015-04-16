@@ -230,6 +230,29 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
+    bool sendClientInfoPacket(SOCKETID socketID, const QString &assetNO, const QByteArray &data, quint8 infoType){
+        //qWarning()<<"----sendClientInfoPacket(...)"<<" targetAddress:"<<targetAddress<<" targetPort:"<<targetPort;
+
+        Packet *packet = PacketHandlerBase::getPacket();
+
+        packet->setPacketType(quint8(MS::SystemInfoFromServer));
+        packet->setTransmissionProtocol(TP_UDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_serverName << assetNO << data << infoType;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
 
 private slots:
 
@@ -251,6 +274,8 @@ signals:
     void signalClientLogReceived(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
 
     void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
+
+    void signalClientInfoRequestedPacketReceived(SOCKETID socketID, const QString &assetNO, quint8 infoType);
 
 
     void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online, const QString &ip, quint16 port);
