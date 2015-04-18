@@ -215,7 +215,7 @@ bool ClientService::startMainService(){
         qWarning()<<QString("UDP listening on port %1!").arg(IP_MULTICAST_GROUP_PORT);
     }
 
-    resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT, true, &errorMessage);
+    m_rtp = resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT, true, &errorMessage);
     connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)));
 
 //    m_udtProtocol = m_rtp->getUDTProtocol();
@@ -244,6 +244,10 @@ bool ClientService::startMainService(){
 
     connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(quint8, bool, const QString & )), this, SLOT(processSetupUSBSDPacket(quint8, bool, const QString &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalShowAdminPacketReceived(bool)), this, SLOT(processShowAdminPacket(bool)), Qt::QueuedConnection);
+
+    connect(clientPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(const QString &, const QString &)), this, SLOT(processModifyAssetNOPacket(const QString &, const QString &)));
+    connect(clientPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &, bool, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &, bool, const QString &)));
+
     connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)), this, SLOT(processRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)));
     connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)));
     connect(clientPacketsParser, SIGNAL(signalAdminRequestConnectionToClientPacketReceived(SOCKETID, const QString &, const QString &)), this, SLOT(processAdminRequestConnectionToClientPacket(SOCKETID, const QString &, const QString &)), Qt::QueuedConnection);
@@ -401,7 +405,7 @@ void ClientService::serverLookedUp(const QHostInfo &host)
 
 }
 
-void ClientService::serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID){
+void ClientService::serverFound(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID){
     qDebug()<<"----ClientService::serverFound(...) serverInstanceID:"<<serverInstanceID <<" m_serverInstanceID:"<<m_serverInstanceID;
 
     //QMutexLocker locker(&mutex);
@@ -425,7 +429,7 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverUDTL
 
     QString errorMessage;
     if(m_socketConnectedToServer == INVALID_SOCK_ID){
-        m_socketConnectedToServer = m_rtp->connectToHost(QHostAddress(serverAddress), serverUDTListeningPort, 10000, &errorMessage);
+        m_socketConnectedToServer = m_rtp->connectToHost(QHostAddress(serverAddress), serverRTPListeningPort, 10000, &errorMessage);
     }
     if(m_socketConnectedToServer == INVALID_SOCK_ID){
         qCritical()<<tr("Can not connect to host! %1").arg(errorMessage);
@@ -443,7 +447,7 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverUDTL
     lookForServerTimer->stop();
 
     m_serverAddress = QHostAddress(serverAddress);
-    m_serverUDTListeningPort = serverUDTListeningPort;
+    m_serverUDTListeningPort = serverRTPListeningPort;
     m_serverName = serverName;
     m_serverInstanceID = serverInstanceID;
 
@@ -451,7 +455,7 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverUDTL
 
     //logMessage(QString("Server Found! Address:%1 TCP Port:%2 Name:%3").arg(serverAddress).arg(serverTCPListeningPort).arg(serverName), QtServiceBase::Information);
     qWarning();
-    qWarning()<<"Server Found!"<<" Address:"<<serverAddress<<" UDT Port:"<<serverUDTListeningPort<<" TCP Port:"<<serverTCPListeningPort<<" Name:"<<serverName<<" Instance ID:"<<serverInstanceID << " Socket ID:"<<m_socketConnectedToServer;
+    qWarning()<<"Server Found!"<<" Address:"<<serverAddress<<" UDT Port:"<<serverRTPListeningPort<<" TCP Port:"<<serverTCPListeningPort<<" Name:"<<serverName<<" Instance ID:"<<serverInstanceID << " Socket ID:"<<m_socketConnectedToServer;
     qWarning();
 
 
@@ -649,6 +653,58 @@ void ClientService::processShowAdminPacket(bool show){
     WinUtilities::showAdministratorAccountInLogonUI(show);
 #endif
 
+}
+
+void ClientService::processModifyAssetNOPacket(const QString &newAssetNO, const QString &adminName){
+
+    //TODO:
+
+    if(INVALID_SOCK_ID == m_socketConnectedToServer){
+        QString message = tr("No Server Connected!");
+        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, m_localAssetNO, false, message);
+        return;
+    }
+
+    bool sent = clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToServer, newAssetNO, adminName);
+    if(!sent){
+        QString message = tr("Can not send data to server!");
+        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, m_localAssetNO, false, message);
+        return;
+    }
+
+    setLocalAssetNO(newAssetNO, true);
+    QTimer::singleShot(5000, this, SLOT(modifyAssetNOTimeout()));
+
+}
+
+void ClientService::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
+
+    if(!modified){
+        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, oldAssetNO, false, message);
+        return;
+    }
+
+    setLocalAssetNO(newAssetNO);
+    m_localAssetNO = newAssetNO;
+    clientPacketsParser->setAssetNO(newAssetNO);
+    clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, oldAssetNO, true, "");
+
+    QString log = QString("Computer asset NO. modified from '%1' to '%2'. Computr name:%3").arg(oldAssetNO).arg(newAssetNO).arg(m_localComputerName);
+    logMessage(log);
+
+}
+
+void ClientService::modifyAssetNOTimeout(){
+    QString newAssetNOToBeUsed = "";
+    getLocalAssetNO(&newAssetNOToBeUsed);
+    if(newAssetNOToBeUsed.isEmpty()){
+        return;
+    }
+    if(newAssetNOToBeUsed != m_localAssetNO){
+        QString message = tr("Failed to modify asset number! Waitting for server response timed out!");
+        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, m_localAssetNO, false, message);
+        return;
+    }
 }
 
 void ClientService::processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
@@ -2152,49 +2208,65 @@ bool ClientService::getLocalFilesInfo(const QString &parentDirPath, QByteArray *
 
 }
 
-void ClientService::getLocalAssetNO(){
+void ClientService::getLocalAssetNO(QString *newAssetNOToBeUsed){
 
+    QString newAN = "";
 #ifdef Q_OS_WIN
 
     if(WinUtilities::getUserNameOfCurrentThread().toUpper() == "SYSTEM"){
         //assetNO = settings->value("AssetNO").toByteArray();
         m_localAssetNO = settings->getValueWithDecryption("AssetNO", m_encryptionKey, "").toString();
+        newAN = settings->getValueWithDecryption("NewAssetNO", m_encryptionKey, "").toString();
     }else{
         Settings s("HKEY_LOCAL_MACHINE\\SOFTWARE\\HeHui\\MS", QSettings::NativeFormat);
         m_localAssetNO = s.getValueWithDecryption("AssetNO", m_encryptionKey, "").toString();
+        newAN = s.getValueWithDecryption("NewAssetNO", m_encryptionKey, "").toString();
     }
 
 #else
     Settings settings(APP_NAME, APP_VERSION, SERVICE_NAME, "./");
     m_localAssetNO = s.getValueWithDecryption("AssetNO", encryptionKey, "").toString();
-
+    oldAN = s.getValueWithDecryption("NewAssetNO", m_encryptionKey, "").toString();
 #endif
 
     if(m_localAssetNO.trimmed().isEmpty()){
         m_localAssetNO = QHostInfo::localHostName().toLower();
     }
 
+    if(newAssetNOToBeUsed){
+        *newAssetNOToBeUsed = newAN;
+    }
 
 
 }
 
-void ClientService::setLocalAssetNO(const QString &assetNO){
+void ClientService::setLocalAssetNO(const QString &assetNO, bool tobeModified){
 
 #ifdef Q_OS_WIN
 
     if(WinUtilities::getUserNameOfCurrentThread().toUpper() == "SYSTEM"){
-        settings->setValueWithEncryption("AssetNO", assetNO, m_encryptionKey);
+        if(tobeModified){
+            settings->setValueWithEncryption("NewAssetNO", assetNO, m_encryptionKey);
+        }else{
+            settings->setValueWithEncryption("AssetNO", assetNO, m_encryptionKey);
+        }
     }
 
     Settings s("HKEY_LOCAL_MACHINE\\SOFTWARE\\HeHui\\MS", QSettings::NativeFormat);
-    s.setValueWithEncryption("AssetNO", assetNO, m_encryptionKey);
-
+    if(tobeModified){
+        s.setValueWithEncryption("NewAssetNO", assetNO, m_encryptionKey);
+    }else{
+        s.setValueWithEncryption("AssetNO", assetNO, m_encryptionKey);
+    }
 
 #else
 
     Settings settings(SERVICE_NAME, "./");
-    settings.setValueWithEncryption("AssetNO", assetNO, encryptionKey);
-
+    if(tobeModified){
+        s.setValueWithEncryption("NewAssetNO", assetNO, m_encryptionKey);
+    }else{
+        s.setValueWithEncryption("AssetNO", assetNO, m_encryptionKey);
+    }
 #endif
 
 

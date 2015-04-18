@@ -64,7 +64,8 @@ HEADERS += \
     processmonitor/ruleinfowidget.h \
     servermanagement/serveraddressmanagerwindow.h \
     servermanagement/serverinfo.h \
-    servermanagement/serverinfomodel.h
+    servermanagement/serverinfomodel.h \
+    adminuser.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -93,7 +94,8 @@ SOURCES += \
     processmonitor/ruleinfowidget.cpp \
     servermanagement/serveraddressmanagerwindow.cpp \
     servermanagement/serverinfo.cpp \
-    servermanagement/serverinfomodel.cpp
+    servermanagement/serverinfomodel.cpp \
+    adminuser.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \

@@ -275,7 +275,29 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRenameComputerPacket(SOCKETID socketID, const QString &oldComputerName, const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
+    bool sendModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName){
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+        packet->setPacketType(quint8(MS::ModifyAssetNO));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << newAssetNO << oldAssetNO << adminName;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
+    bool sendRenameComputerPacket(SOCKETID socketID, const QString &assetNO, const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::RenameComputer));
@@ -283,7 +305,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << oldComputerName << newComputerName << adminName << domainAdminName << domainAdminPassword;
+        out << m_localID << assetNO << newComputerName << adminName << domainAdminName << domainAdminPassword;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -990,6 +1012,7 @@ signals:
     void signalClientResponseAdminConnectionResultPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP);
     void signalClientMessagePacketReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
 
+    void signalAssetNOModifiedPacketReceived(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
 
     void signalUserResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
     void signalNewPasswordRetrevedByUserPacketReceived(const QString &userName, const QString &computerName);

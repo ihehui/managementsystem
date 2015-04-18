@@ -78,15 +78,12 @@ ServerPacketsParser::ServerPacketsParser(ResourcesManagerInstance *manager, QObj
 //    localUDTListeningAddress = m_udtProtocol->getUDTListeningAddress();
 //    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
     localRTPListeningPort = m_resourcesManager->getRTPPort();
-    qDebug()<<"---------------localRTPListeningPort:"<<localRTPListeningPort;
 
     m_localTCPServerListeningPort = m_tcpServer->getTCPServerListeningPort();
 
     m_serverName = QHostInfo::localHostName().toLower();
 
     localIPMCListeningPort = m_udpServer->localPort();
-
-
 
 }
 
@@ -212,6 +209,16 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
         in >> logType >> log >> clientTime;
         emit signalClientLogReceived(peerID, packet->getPeerHostAddress().toString(), logType, log, clientTime);
         qDebug()<<"~~ClientLog";
+    }
+    break;
+
+    case quint8(MS::ModifyAssetNO):
+    {
+        QString newAssetNO = "", adminName = "";
+        in >> newAssetNO >> adminName;
+
+        emit signalModifyAssetNOPacketReceived(socketID, newAssetNO, peerID, adminName);
+        qDebug()<<"~~ModifyAssetNO";
     }
     break;
 

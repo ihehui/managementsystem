@@ -131,6 +131,7 @@ quint16 RTP::getUDTServerPort(){
 }
 
 TCPServer * RTP::startTCPServer(const QHostAddress &address, quint16 port, bool tryOtherPort, QString *errorMessage){
+    qDebug()<<"--RTP::startTCPServer(...)";
 
     if(!m_tcpServer){
         m_tcpServer = new TCPServer(this);
@@ -200,6 +201,7 @@ quint16 RTP::getENETProtocolPort(){
 
 
 SOCKETID RTP::connectToHost( const QHostAddress & hostAddress, quint16 port, int waitMsecs, QString *errorMessage, Protocol protocol){
+    qDebug()<<"--RTP::connectToHost(...)";
 
     SOCKETID socketID = INVALID_SOCK_ID;
     QString err;

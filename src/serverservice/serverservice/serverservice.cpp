@@ -145,7 +145,7 @@ bool ServerService::startMainService(){
     }
 
 
-    m_rtp = resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT, true, &errorMessage);
+    m_rtp = resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT+1, true, &errorMessage);
     connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)), Qt::QueuedConnection);
 
     //    m_udtProtocol = m_rtp->getUDTProtocol();
@@ -160,6 +160,8 @@ bool ServerService::startMainService(){
 
     connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)), Qt::QueuedConnection);
+
+    connect(serverPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(SOCKETID, const QString &, const QString &, const QString &)), this, SLOT(processModifyAssetNOPacket(SOCKETID, const QString &, const QString &, const QString &)));
 
     connect(serverPacketsParser, SIGNAL(signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID, const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(processRequestChangeProcessMonitorInfoPacket(SOCKETID, const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), Qt::QueuedConnection);
 
@@ -421,7 +423,9 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
     //    QString ipInfo = info->getIP();
     //    QString clientVersion = info->getClientVersion();
 
+    QString newipInfo = info->getIP();
     info->setJsonData(osData);
+    info->setIP(newipInfo);
 
     QString newComputerName = info->getComputerName();
     QString newOSInfo = info->getOSVersion();
@@ -431,7 +435,7 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
     bool newJoinedToDomain = info->isJoinedToDomain();
     QString newUsers = info->getUsers();
     QString newadmins = info->getAdministrators();
-    QString newipInfo = info->getIP();
+    //QString newipInfo = info->getIP();
     QString newclientVersion = info->getClientVersion();
     quint8 newUsbSDStatus = quint8(info->getUsbSDStatus());
 
@@ -756,6 +760,42 @@ void ServerService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
 
 
 
+
+}
+
+void ServerService::processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName){
+
+    if(newAssetNO.isEmpty() || oldAssetNO.isEmpty()){
+        QString message = "Invalid asset NO.";
+        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, false, message);
+        return;
+    }
+
+    ClientInfo *info = 0;
+    if(clientInfoHash.contains(oldAssetNO)){
+        info = clientInfoHash.value(oldAssetNO);
+    }else{
+        QString message = QString("Asset NO. '%1' not found!").arg(oldAssetNO);
+        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, false, message);
+        return;
+    }
+
+
+    QString statement = QString("call sp_OS_AssetNO_Update('%1', '%2'); ")
+            .arg(newAssetNO)
+            .arg(oldAssetNO)
+            ;
+
+    QString errStr = "";
+    if(!execQuery(statement, &errStr)){
+        QString message = QString("An error occurred when updating asset NO. to database. Old asset NO.:%1, new Asset No.:%2. %3").arg(oldAssetNO).arg(newAssetNO).arg(errStr);
+        logMessage(errStr, QtServiceBase::Error);
+
+        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, false, message);
+        return;
+    }
+
+    serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, true, "");
 
 }
 

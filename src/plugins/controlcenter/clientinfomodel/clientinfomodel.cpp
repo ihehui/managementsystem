@@ -70,6 +70,16 @@ void ClientInfoModel::addClientInfo(ClientInfo *clientInfo){
     
 }
 
+void ClientInfoModel::updateClientInfo(ClientInfo *clientInfo){
+    if(!clientsList.contains(clientInfo)){
+        return;
+    }
+
+    beginResetModel();
+
+    endResetModel();
+}
+
 ClientInfo* ClientInfoModel::getClientInfo(const QModelIndex & index){
 
     if(!index.isValid()){

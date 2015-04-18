@@ -122,16 +122,16 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ServerDeclare):
     {
-        quint16 udtPort = 0, tcpPort = 0;
+        quint16 rtpPort = 0, tcpPort = 0;
         QString version = "";
         int serverInstanceID = 0;
-        in >> udtPort >> tcpPort >> version >> serverInstanceID;
+        in >> rtpPort >> tcpPort >> version >> serverInstanceID;
         serverAddress = peerAddress;
-        serverRTPListeningPort = udtPort;
+        serverRTPListeningPort = rtpPort;
         serverName = peerName;
 
         emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, tcpPort, serverName, version, serverInstanceID);
-        qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverRTPListeningPort << " serverTCPListeningPort:"<<tcpPort;
+        qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRTPListeningPort:"<<serverRTPListeningPort << " serverTCPListeningPort:"<<tcpPort;
     }
     break;
 
@@ -295,6 +295,37 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ModifyAdminGroupUser";
     }
     break;
+
+    case quint8(MS::ModifyAssetNO):
+    {
+        QString oldAssetNO = "", newAssetNO = "", adminName = "";
+        in >> newAssetNO >> oldAssetNO >> adminName;
+
+        if(oldAssetNO != m_assetNO){
+            return;
+        }
+
+        emit signalModifyAssetNOPacketReceived(newAssetNO, adminName);
+        qDebug()<<"~~ModifyAssetNO";
+    }
+    break;
+
+    case quint8(MS::AssetNOModified):
+    {
+        //From Server
+        QString newAssetNO = "", oldAssetNO = "", message = "";
+        quint8 modified = false;
+        in >> newAssetNO >> oldAssetNO >> modified >> message;
+
+        if(oldAssetNO != m_assetNO){
+            return;
+        }
+
+        emit signalAssetNOModifiedPacketReceived(newAssetNO, oldAssetNO, modified, message);
+        qDebug()<<"~~AssetNOModified";
+    }
+    break;
+
     case quint8(MS::RenameComputer):
     {
         QString assetNO = "", newComputerName = "", adminName = "", domainAdminName = "", domainAdminPassword = "";
@@ -308,6 +339,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~RenameComputer";
     }
     break;
+
     case quint8(MS::JoinOrUnjoinDomain):
     {
         QString assetNO = "", adminName = "", domainOrWorkgroupName = "", domainAdminName = "", domainAdminPassword = "";
@@ -706,6 +738,10 @@ void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QStrin
 void ClientPacketsParser::setSocketConnectedToAdmin(SOCKETID socketID, const QString &adminName){
     m_socketConnectedToAdmin = socketID;
     m_adminName = adminName;
+}
+
+void ClientPacketsParser::setAssetNO(const QString &assetNO){
+    m_assetNO = assetNO;
 }
 
 

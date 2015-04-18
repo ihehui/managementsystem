@@ -58,7 +58,7 @@ private slots:
 
     void serverLookedUp(const QHostInfo &host);
 
-    void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
+    void serverFound(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
     void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
     void systemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID);
@@ -66,6 +66,11 @@ private slots:
 
     void processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
     void processShowAdminPacket(bool show);
+
+    void processModifyAssetNOPacket(const QString &newAssetNO, const QString &adminName);
+    void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
+    void modifyAssetNOTimeout();
+
     void processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
     void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool joinDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 
@@ -154,8 +159,8 @@ private slots:
 private:
     bool getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage);
 
-    void getLocalAssetNO();
-    void setLocalAssetNO(const QString &assetNO);
+    void getLocalAssetNO(QString *newAssetNOToBeUsed = 0);
+    void setLocalAssetNO(const QString &assetNO, bool tobeModified = false);
 
 
 protected:

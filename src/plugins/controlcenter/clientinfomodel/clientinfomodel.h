@@ -50,6 +50,7 @@ public:
 
     void setClientList(QList<ClientInfo*> &clientsList);
     void addClientInfo(ClientInfo *clientInfo);
+    void updateClientInfo(ClientInfo *clientInfo);
     ClientInfo * getClientInfo(const QModelIndex & index);
     ClientInfo * getClientInfo(const QString &assetNO);
 

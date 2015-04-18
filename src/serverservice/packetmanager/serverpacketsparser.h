@@ -254,6 +254,33 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
+    bool sendServerResponseModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
+        qWarning()<<"----sendServerResponseModifyAssetNOPacket(...) newAssetNO:"<<newAssetNO<<" "<<modified;
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::AssetNOModified));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_serverName << newAssetNO << oldAssetNO << quint8(modified) << message;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
+
+
+
 private slots:
 
 
@@ -272,6 +299,8 @@ signals:
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
 
     void signalClientLogReceived(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
+
+    void signalModifyAssetNOPacketReceived(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
 
     void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 

@@ -286,6 +286,19 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::AssetNOModified):
+    {
+        //From Client
+        QString oldAssetNO = "", message = "";
+        quint8 modified = false;
+        in >> oldAssetNO >> modified >> message;
+
+        emit signalAssetNOModifiedPacketReceived(peerName, oldAssetNO, modified, message);
+        qDebug()<<"~~AssetNOModified";
+    }
+    break;
+
+
     case quint8(MS::UserResponseRemoteAssistance):
     {
 

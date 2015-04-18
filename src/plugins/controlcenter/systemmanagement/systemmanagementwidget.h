@@ -9,7 +9,7 @@
 #include "ui_systemmanagementwidget.h"
 
 #include "networkmanager/controlcenterpacketsparser.h"
-
+#include "../adminuser.h"
 
 #include "../../sharedms/clientinfo.h"
 #include "../../sharedms/rtp.h"
@@ -24,7 +24,7 @@ class SystemManagementWidget : public QWidget
     Q_OBJECT
 
 public:
-    SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, ClientInfo *clientInfo = 0,  QWidget *parent = 0);
+    SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, ClientInfo *clientInfo = 0,  QWidget *parent = 0);
     ~SystemManagementWidget();
 
 
@@ -53,13 +53,12 @@ public slots:
 private slots:
     void on_toolButtonVerify_clicked();
 
+    void on_toolButtonModifyAssetNO_clicked();
     void on_toolButtonShutdown_clicked();
-
     void on_toolButtonRenameComputer_clicked();
     void changeWorkgroup();
 
     void on_toolButtonSetupUSB_clicked();
-
 
     void on_pushButtonMMC_clicked();
     void on_pushButtonCMD_clicked();
@@ -88,6 +87,9 @@ private slots:
     void clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType);
     void updateOSInfo();
     void updateHardwareInfo();
+
+    void processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO, bool modified, const QString &message);
+    void modifyAssetNOTimeout();
 
     void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);
     void changProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
@@ -141,8 +143,7 @@ private:
     bool m_aboutToCloseSocket;
 
     ControlCenterPacketsParser *controlCenterPacketsParser;
-
-    QString m_adminName;
+    AdminUser *m_adminUser;
     ClientInfo m_clientInfo;
 
     QString m_peerAssetNO;

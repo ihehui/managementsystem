@@ -10,6 +10,7 @@
 #include <QProcess>
 
 #include "ui_controlcenter.h"
+#include "adminuser.h"
 #include "networkmanager/controlcenterpacketsparser.h"
 #include "networkmanager/resourcesmanagerinstance.h"
 
@@ -91,6 +92,8 @@ private slots:
     void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType);
     void processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
 
+    void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
+
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 
     void processDesktopInfo(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
@@ -104,13 +107,15 @@ private slots:
     void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
     void peerDisconnected(SOCKETID socketID);
 
+    void adminVerified();
 
-    void verifyUser();
-    void modifyServerSettings();
-    void serverSelected(const QString &serverAddress, quint16 serverPort);
-    bool connectToServer(const QString &serverAddress, quint16 serverPort);
-    bool login();
-    void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
+//    bool isAdminVerified();
+//    void verifyUser();
+//    void modifyServerSettings();
+//    void serverSelected(const QString &serverAddress, quint16 serverPort);
+//    bool connectToServer(const QString &serverAddress, quint16 serverPort);
+//    bool login();
+//    void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
 
 
 private:
@@ -131,12 +136,7 @@ private:
 
 private:
     Ui::ControlCenterClass ui;
-
-    static bool running;
-
-    bool m_readonly;
-    User *m_adminUser;
-    QString m_adminName;
+    QMenu *searchClientsMenu;
 
     QString localComputerName;
     SystemManagementWidget *localSystemManagementWidget;
@@ -151,33 +151,29 @@ private:
     //QLabel *label;
     //QProgressBar *progressBar;
 
-
-    ResourcesManagerInstance *resourcesManager;
-    ControlCenterPacketsParser *controlCenterPacketsParser;
-
-    QString m_administrators;
+    static bool running;
 
     QProcess *vncProcess;
-    
-    QMenu *searchClientsMenu;
-
-
 
     bool m_networkReady;
 
+    ResourcesManagerInstance *resourcesManager;
+    ControlCenterPacketsParser *controlCenterPacketsParser;
     UDPServer *m_udpServer;
     quint16 m_localUDPListeningPort;
 
     RTP *m_rtp;
     quint16 m_localRTPListeningPort;
     SOCKETID m_socketConnectedToServer;
-    QString m_serverAddress;
-    quint16 m_serverPort;
-    LoginDlg *m_loginDlg;
+    //QString m_serverAddress;
+    //quint16 m_serverPort;
+    //LoginDlg *m_loginDlg;
 
     RemoteDesktopMonitor *m_remoteDesktopMonitor;
 //    QHash<int/*Socket ID*/, QHostAddress/*IP*/> clientSocketsHash;
 
+    //bool m_readonly;
+    AdminUser *m_adminUser;
     
 };
 

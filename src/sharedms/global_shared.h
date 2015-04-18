@@ -253,6 +253,8 @@ namespace HEHUI {
             FileTXStatusChanged,
             FileTXError,
 
+            ModifyAssetNO,
+            AssetNOModified,
             RenameComputer,
             JoinOrUnjoinDomain,
             Remark,
@@ -295,18 +297,20 @@ namespace HEHUI {
 
         enum Log{
             LOG_Unknown = 0,
-            
+            LOG_Admin_Loggedin = 1,
+            LOG_ClientUpdate = 2,
+
+            LOG_Admin_ModifyAssetNO,
+            LOG_Admin_RenamePC,
+
             LOG_UpdateMSUserPassword,
             LOG_CheckMSUsersAccount,
-
-            LOG_ClientUpdate,
 
             LOG_AdminSetupUSBSD,
             LOG_AdminSetupProgrames,
             LOG_AdminSetupOSAdministrators,
             LOG_AdminRunCMD,
 
-            LOG_AdminLoggedin,
             LOG_AdminAddNewUserToOS,
             LOG_AdminQueryUserInfo,
 

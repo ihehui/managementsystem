@@ -66,7 +66,7 @@ public slots:
 
     void requestScreenshot(SOCKETID adminSocketID, const QString &userName, const QString &adminAddress, quint16 adminPort);
     void setSocketConnectedToAdmin(SOCKETID socketID, const QString &adminName);
-
+    void setAssetNO(const QString &assetNO);
 
 
     bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = IP_MULTICAST_GROUP_PORT){
@@ -406,7 +406,6 @@ public slots:
 
     bool sendRequestRemoteAssistancePacket( SOCKETID userSocketID, const QString &adminAddress, quint16 adminPort, const QString &adminName){
 
-
         Packet *packet = PacketHandlerBase::getPacket(userSocketID);
         
         packet->setPacketType(quint8(MS::AdminRequestRemoteAssistance));
@@ -494,7 +493,51 @@ public slots:
     }
 
 
+    bool sendClientResponseModifyAssetNOPacket(SOCKETID adminSocketID, const QString &oldAssetNO, bool modified, const QString &message){
+        qWarning()<<"----sendClientResponseModifyAssetNOPacket(...) oldAssetNO"<<oldAssetNO<<" "<<modified;
 
+        Packet *packet = PacketHandlerBase::getPacket(adminSocketID);
+
+        packet->setPacketType(quint8(MS::AssetNOModified));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_assetNO << oldAssetNO << quint8(modified) << message;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(adminSocketID, &ba);
+    }
+
+    bool sendModifyAssetNOPacket(SOCKETID serverSocketID, const QString &newAssetNO, const QString &adminName){
+
+        Packet *packet = PacketHandlerBase::getPacket(serverSocketID);
+        packet->setPacketType(quint8(MS::ModifyAssetNO));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_assetNO << newAssetNO << adminName;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(serverSocketID, &ba);
+    }
 
     bool sendClientResponseTemperaturesPacket(SOCKETID socketID, const QString &cpuTemperature, const QString &harddiskTemperature){
         qWarning()<<"----sendClientResponseTemperaturesPacket(...):"<<cpuTemperature<<" "<<harddiskTemperature;
@@ -864,6 +907,10 @@ signals:
     void signalSetupUSBSDPacketReceived(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
     void signalShowAdminPacketReceived(bool show);
     void signalModifyAdminGroupUserPacketReceived(const QString &assetNO, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
+
+    void signalModifyAssetNOPacketReceived(const QString &newAssetNO, const QString &adminName);
+    void signalAssetNOModifiedPacketReceived(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
+
     void signalRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
     void signalJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 

@@ -27,8 +27,8 @@
 namespace HEHUI {
 
 
-SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, const QString &adminName, ClientInfo *clientInfo,  QWidget *parent)
-    : QWidget(parent), controlCenterPacketsParser(parser), m_adminName(adminName)
+SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsParser *parser, ClientInfo *clientInfo,  QWidget *parent)
+    : QWidget(parent), controlCenterPacketsParser(parser)
 {
     ui.setupUi(this);
 
@@ -86,9 +86,10 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
         setControlCenterPacketsParser(parser);
     }
 
-
+    m_adminUser = AdminUser::instance();
     if(clientInfo){
         m_clientInfo = *clientInfo;
+        updateOSInfo();
     }
 
     m_peerAssetNO = m_clientInfo.getAssetNO();
@@ -97,23 +98,19 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     ui.lineEditComputerName1->setText(m_peerComputerName.toUpper());
 
 
-    ui.lineEditHost->setText("200.200.200.105");
-
-
     if(m_peerComputerName.toLower() == QHostInfo::localHostName().toLower()){
         localComputer = true;
     }else{
         localComputer = false;
     }
 
-    ui.lineEditHost->setText(clientInfo->getIP());
-    m_peerIPAddress = QHostAddress(clientInfo->getIP());
+    ui.lineEditHost->setText(m_clientInfo.getIP());
+    m_peerIPAddress = QHostAddress(m_clientInfo.getIP());
     if(localComputer){
         ui.lineEditHost->setText("127.0.0.1");
         ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabFileManagement));
         ui.tabFileManagement->setEnabled(false);
     }else{
-        ui.lineEditHost->setText(clientInfo->getIP());
         ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabLocalManagement));
         ui.tabLocalManagement->setEnabled(false);
     }
@@ -303,6 +300,8 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
 
+    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &, bool, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &, bool, const QString &)));
+
     connect(controlCenterPacketsParser, SIGNAL(signalClientResponseRemoteConsoleStatusPacketReceived(const QString &, bool, const QString &, quint8)), this, SLOT(clientResponseRemoteConsoleStatusPacketReceived(const QString &, bool, const QString &, quint8)));
     connect(controlCenterPacketsParser, SIGNAL(signalRemoteConsoleCMDResultFromClientPacketReceived(const QString &, const QString &)), this, SLOT(remoteConsoleCMDResultFromClientPacketReceived(const QString &, const QString &)));
 
@@ -368,7 +367,7 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
         return;
     }
 
-    bool ok = controlCenterPacketsParser->sendAdminRequestConnectionToClientPacket(m_peerSocket, QHostInfo::localHostName(), m_adminName);
+    bool ok = controlCenterPacketsParser->sendAdminRequestConnectionToClientPacket(m_peerSocket, QHostInfo::localHostName(), m_adminUser->getUserID());
     if(!ok){
         QString err = m_rtp->lastErrorString();
         m_rtp->closeSocket(m_peerSocket);
@@ -379,6 +378,54 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
     }
 
     QTimer::singleShot(60000, this, SLOT(requestConnectionToClientTimeout()));
+
+}
+
+void SystemManagementWidget::on_toolButtonModifyAssetNO_clicked(){
+
+    if(!verifyPrivilege()){
+        return;
+    }
+
+    if(m_adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return;
+    }
+
+    QString text = tr("Do you really want to <b><font color = 'red'>modify</font></b> the asset number? ");
+    int ret = QMessageBox::question(this, tr("Question"), text, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if(ret == QMessageBox::No){
+        return;
+    }
+
+    bool ok = false;
+    QString newAssetNO = m_peerAssetNO;
+    do {
+        newAssetNO = QInputDialog::getText(this, tr("Modify Asset NO."), tr("New Asset NO.:"), QLineEdit::Normal, newAssetNO, &ok).trimmed();
+        if (ok){
+            if(newAssetNO.isEmpty()){
+                QMessageBox::critical(this, tr("Error"), tr("Incorrect Asset NO.!"));
+            }else{
+                break;
+            }
+        }
+
+    } while (ok);
+
+    if(newAssetNO.isEmpty() || (newAssetNO == m_peerAssetNO)){
+        return;
+    }
+
+    ok = controlCenterPacketsParser->sendModifyAssetNOPacket(m_peerSocket, newAssetNO, m_peerAssetNO, m_adminUser->getUserID());
+    if(!ok){
+        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+        return;
+    }
+
+    ui.lineEditAssetNO->setText(newAssetNO);
+    ui.toolButtonModifyAssetNO->setEnabled(false);
+
+    QTimer::singleShot(10000, this, SLOT(modifyAssetNOTimeout()));
 
 }
 
@@ -431,9 +478,14 @@ void SystemManagementWidget::on_toolButtonShutdown_clicked(){
 
 void SystemManagementWidget::on_toolButtonRenameComputer_clicked(){
 
-    //    if(!verifyPrivilege()){
-    //        return;
-    //    }
+    if(!verifyPrivilege()){
+        return;
+    }
+
+    if(m_adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return;
+    }
 
     QString text = tr("Do you really want to <b><font color = 'red'>rename</font></b> the computer? ");
     int ret = QMessageBox::question(this, tr("Question"), text, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
@@ -486,7 +538,7 @@ void SystemManagementWidget::on_toolButtonRenameComputer_clicked(){
     }
 
 
-    ok = controlCenterPacketsParser->sendRenameComputerPacket(m_peerSocket, m_peerComputerName, newComputerName, m_adminName, domainAdminName, domainAdminPassword);
+    ok = controlCenterPacketsParser->sendRenameComputerPacket(m_peerSocket, m_peerAssetNO, newComputerName, m_adminUser->getUserID(), domainAdminName, domainAdminPassword);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
@@ -498,9 +550,14 @@ void SystemManagementWidget::on_toolButtonRenameComputer_clicked(){
 
 void SystemManagementWidget::changeWorkgroup(){
 
-    //    if(!verifyPrivilege()){
-    //        return;
-    //    }
+    if(!verifyPrivilege()){
+        return;
+    }
+
+    if(m_adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return;
+    }
 
     QAction *action = qobject_cast<QAction*>(sender());
     if(!action){return;}
@@ -568,7 +625,7 @@ void SystemManagementWidget::changeWorkgroup(){
         }
     }
 
-    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_peerAssetNO, m_adminName, !joinWorkgroupAction, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
+    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_peerAssetNO, m_adminUser->getUserID(), !joinWorkgroupAction, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
@@ -580,10 +637,14 @@ void SystemManagementWidget::changeWorkgroup(){
 
 void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
 
-    //    if(!verifyPrivilege()){
-    //        return;
-    //    }
+    if(!verifyPrivilege()){
+        return;
+    }
 
+    if(m_adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return;
+    }
 
     if(!ui.checkBoxUSBSDReadable->isEnabled()){
         ui.checkBoxUSBSDReadable->setEnabled(true);
@@ -629,7 +690,7 @@ void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
 //        m_temporarilyAllowed = temporarilyAllowed();
 //    }
 
-    bool ok = controlCenterPacketsParser->sendSetupUSBSDPacket(m_peerSocket, usbSTORStatus, m_temporarilyAllowed, m_adminName);
+    bool ok = controlCenterPacketsParser->sendSetupUSBSDPacket(m_peerSocket, usbSTORStatus, m_temporarilyAllowed, m_adminUser->getUserID());
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
@@ -750,14 +811,19 @@ void SystemManagementWidget::requestUpdateTemperatures(){
 
 void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
 
-    //    if(!verifyPrivilege()){
-    //        return;
-    //    }
-    
+    if(!verifyPrivilege()){
+        return;
+    }
+
+    if(m_adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return;
+    }
+
     if(remoteConsoleRunning){
         int rep = QMessageBox::question(this, tr("Confirm"), tr("Do you really want to terminate the process?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if(rep == QMessageBox::Yes){
-            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerComputerName, "", m_adminName, false);
+            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerComputerName, "", m_adminUser->getUserID(), false);
             if(!ok){
                 QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
                 return;
@@ -772,7 +838,7 @@ void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
 
         QString remoteAPPPath = ui.comboBoxRemoteApplicationPath->currentText();
         if(!remoteAPPPath.trimmed().isEmpty()){
-            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerComputerName, remoteAPPPath, m_adminName, true);
+            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerComputerName, remoteAPPPath, m_adminUser->getUserID(), true);
             if(!ok){
                 QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
                 return;
@@ -791,9 +857,14 @@ void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
 
 void SystemManagementWidget::on_toolButtonSendCommand_clicked(){
 
-    //    if(!verifyPrivilege()){
-    //        return;
-    //    }
+    if(!verifyPrivilege()){
+        return;
+    }
+
+    if(m_adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return;
+    }
 
     QString cmd = ui.comboBoxCommand->currentText();
     bool ok = controlCenterPacketsParser->sendRemoteConsoleCMDFromAdminPacket(m_peerSocket, m_peerComputerName, cmd);
@@ -850,6 +921,8 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         m_clientInfo.setComputerName(computerName);
         setWindowTitle(computerName);
         emit updateTitle(this);
+
+        ui.lineEditHost->setReadOnly(true);
 
         ui.lineEditAssetNO->setText(assetNO);
         ui.lineEditAssetNO->setReadOnly(true);
@@ -1027,17 +1100,20 @@ void SystemManagementWidget::updateOSInfo(){
     m_peerComputerName = m_clientInfo.getComputerName();
     Q_ASSERT(!m_peerComputerName.trimmed().isEmpty());
 
+    bool enableModifySysInfo = (!m_adminUser->isReadonly() && (m_peerSocket != INVALID_SOCK_ID));
+
     //OS
     ui.lineEditAssetNO->setText(m_peerAssetNO);
-    ui.toolButtonModifyAssetNO->setEnabled(true);
+    ui.toolButtonModifyAssetNO->setEnabled(enableModifySysInfo);
     ui.lineEditComputerName1->setText(m_peerComputerName);
-    ui.toolButtonRenameComputer->setEnabled(true);
+    ui.toolButtonRenameComputer->setEnabled(enableModifySysInfo);
     ui.osVersionLineEdit->setText(m_clientInfo.getOSVersion());
-    ui.toolButtonShutdown->setEnabled(true);
+    ui.toolButtonShutdown->setEnabled(enableModifySysInfo);
     ui.installationDateLineEdit->setText(m_clientInfo.getInstallationDate());
     ui.lineEditOSKey->setText(m_clientInfo.getOsKey());
+    ui.lineEditIP->setText(m_clientInfo.getIP());
     ui.workgroupLineEdit->setText(m_clientInfo.getWorkgroup());
-    ui.toolButtonChangeWorkgroup->setEnabled(true);
+    ui.toolButtonChangeWorkgroup->setEnabled(enableModifySysInfo);
     ui.lineEditUsers->setText(m_clientInfo.getUsers());
     ui.osGroupBox->setEnabled(true);
 
@@ -1053,6 +1129,7 @@ void SystemManagementWidget::updateOSInfo(){
         ui.actionJoinDomain->setText(tr("Join a domain"));
         ui.toolButtonChangeWorkgroup->setDefaultAction(ui.actionJoinWorkgroup);
     }
+    ui.toolButtonChangeWorkgroup->setEnabled(enableModifySysInfo);
 
     m_onlineUsers = m_clientInfo.getOnlineUsers().split(",");
 
@@ -1096,6 +1173,35 @@ void SystemManagementWidget::updateHardwareInfo(){
     ui.checkBoxUSBSDWriteable->setEnabled(false);
 
     ui.toolButtonRequestHardwareInfo->setEnabled(true);
+}
+
+void SystemManagementWidget::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
+
+    if(oldAssetNO != m_peerAssetNO){
+        return;
+    }
+
+    if(!modified){
+        ui.lineEditAssetNO->setText(oldAssetNO);
+        QMessageBox::critical(this, tr("Error"), message);
+        return;
+    }
+
+    m_peerAssetNO = newAssetNO;
+
+    QString log = tr("Computer asset NO. modified from '%1' to '%2'.").arg(oldAssetNO).arg(newAssetNO);
+    QMessageBox::information(this, tr("Asset NO. Modified"), log);
+
+}
+
+void SystemManagementWidget::modifyAssetNOTimeout(){
+
+    if(m_peerAssetNO != ui.lineEditAssetNO->text()){
+        ui.lineEditAssetNO->setText(m_peerAssetNO);
+        QString message = tr("Failed to modify asset number! Waitting for peer response timed out!");
+        QMessageBox::critical(this, tr("Error"), message);
+        return;
+    }
 }
 
 void SystemManagementWidget::changServiceConfig(const QString &serviceName, bool startService, quint64 startupType){
@@ -1157,7 +1263,7 @@ void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
     int validityPeriod;
     wgt.getMessageInfo(&messageID, &message, &confirmationRequired, &validityPeriod);
 
-    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(m_peerSocket, m_peerComputerName, userName, m_adminName, messageID, message, confirmationRequired, validityPeriod);
+    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(m_peerSocket, m_peerComputerName, userName, m_adminUser->getUserID(), messageID, message, confirmationRequired, validityPeriod);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
     }
@@ -1348,6 +1454,7 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
         ui.toolButtonSaveAs->setEnabled(false);
     }
 
+    //ui.lineEditHost->setReadOnly(false);
     ui.toolButtonVerify->setEnabled(true);
 
     ui.tabRemoteConsole->setEnabled(false);
@@ -1370,33 +1477,8 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
 }
 
 
-bool SystemManagementWidget::verifyPrivilege(){
-
-    return true;
-
-    if(m_adminName == "hehui"){
-        return true;
-    }
-    
-    bool ok = false;
-    do {
-        QString text = QInputDialog::getText(this, tr("Privilege Required"),
-                                             tr("Access Code:"), QLineEdit::Password,
-                                             "", &ok);
-        if (ok && !text.isEmpty()){
-            QString accessCodeString = "hehui";
-            accessCodeString.append(QTime::currentTime().toString("hhmm"));
-            if(text.toLower() == accessCodeString){
-                return true;
-            }
-        }
-
-        QMessageBox::critical(this, tr("Error"), tr("Incorrect Access Code!"));
-
-    } while (ok);
-
-    return false;
-
+inline bool SystemManagementWidget::verifyPrivilege(){
+    return m_adminUser->isAdminVerified();
 }
 
 bool SystemManagementWidget::temporarilyAllowed(){

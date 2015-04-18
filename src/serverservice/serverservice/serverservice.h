@@ -76,6 +76,9 @@ private slots:
     void processSoftwareInfo(ClientInfo *info, const QByteArray &data);
 
     void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
+
+    void processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
+
     void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
 
