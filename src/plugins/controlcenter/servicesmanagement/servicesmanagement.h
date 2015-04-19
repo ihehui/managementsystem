@@ -44,7 +44,7 @@ private slots:
     void changServiceStatus();
 
 private:
-
+    bool verifyPrivilege();
 
 
 private:
@@ -55,7 +55,6 @@ private:
 
     typedef WinUtilities::ServiceInfo ServiceInfo;
     ServiceInfo *m_selectedService;
-
 
 
 };

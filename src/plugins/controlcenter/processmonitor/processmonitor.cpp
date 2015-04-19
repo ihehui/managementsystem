@@ -12,7 +12,7 @@
 #include "HHSharedGUI/hdataoutputdialog.h"
 
 #include "ruleinfowidget.h"
-
+#include "../adminuser.h"
 
 namespace HEHUI {
 
@@ -165,10 +165,6 @@ void ProcessMonitor::rulesSaved(){
 
 void ProcessMonitor::slotShowCustomContextMenu(const QPoint & pos){
 
-    if(!verifyPrivilege()){
-        return;
-    }
-
     QTableView *wgt = qobject_cast<QTableView*> (sender());
     if (!wgt){
         return;
@@ -194,6 +190,11 @@ void ProcessMonitor::slotShowCustomContextMenu(const QPoint & pos){
     menu.addAction(ui->actionPrint);
 
 #endif
+
+    if(AdminUser::instance()->isReadonly()){
+        menu.exec(wgt->viewport()->mapToGlobal(pos));
+        return;
+    }
 
     menu.addSeparator();
     menu.addAction(ui->actionAddFileHash);
@@ -251,27 +252,14 @@ void ProcessMonitor::slotViewRuleInfo(const QModelIndex &index){
 
 bool ProcessMonitor::verifyPrivilege(){
 
-    //    if(m_verified){
-    //        return true;
-    //    }
-
-    //    bool ok = false;
-    //    do {
-    //        QString text = QInputDialog::getText(this, tr("Authentication Required"),
-    //                                             tr("Authorization Number:"), QLineEdit::NoEcho,
-    //                                             "", &ok);
-    //        if (ok && !text.isEmpty()){
-    //            QString accessCodeString = "";
-    //            accessCodeString.append(QTime::currentTime().toString("hhmm"));
-    //            if(text.toLower() == accessCodeString){
-    //                m_verified = true;
-    //                return true;
-    //            }
-    //        }
-
-    //        QMessageBox::critical(this, tr("Error"), tr("Incorrect Authorization Number!"));
-
-    //    } while (ok);
+    AdminUser *adminUser = AdminUser::instance();
+    if(!adminUser->isAdminVerified()){
+        return false;
+    }
+    if(adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return false;
+    }
 
     return true;
 
@@ -343,6 +331,8 @@ void ProcessMonitor::on_actionPrint_triggered(){
 
 void ProcessMonitor::on_pushButtonApply_clicked(){
 
+    if(!verifyPrivilege()){return;}
+
     bool useGlobalRules = ui->checkBoxUseGlobaRules->isChecked();;
     bool enableProcMon = ui->checkBoxLocallyEnableProcessMon->isChecked();
     bool enablePassthrough = ui->checkBoxLocallyEnablePassthrough->isChecked();
@@ -378,6 +368,8 @@ void ProcessMonitor::slotPrintQueryResult(){
 }
 
 bool ProcessMonitor::showRuleInfo(bool hashMode, bool readonly, QString *ruleString, QString *ruleComment, bool *blacklistRule){
+
+    if(!readonly && (!verifyPrivilege())){return false;}
 
     QDialog dlg(this);
     QVBoxLayout vbl(&dlg);

@@ -39,6 +39,8 @@
 
 #include "winusermanagerwidget.h"
 #include "winuserinfowidget.h"
+#include "../adminuser.h"
+
 
 #include "HHSharedGUI/hdataoutputdialog.h"
 
@@ -260,6 +262,10 @@ void WinUserManagerWidget::slotCreateUser(WinUserInfo *adUser){
 
 void WinUserManagerWidget::slotDeleteUser(){
 
+    if(!verifyPrivilege()){
+        return;
+    }
+
     if(!m_selectedWinUser){
         return;
     }
@@ -295,7 +301,7 @@ void WinUserManagerWidget::slotRefresh(){
 void WinUserManagerWidget::showUserInfoWidget(WinUserInfo *adUser, bool creareNewUser){
     qDebug()<<"--WinUserManagerWidget::showADUserInfoWidget(...)";
 
-    if(!verifyPrivilege()){
+    if(creareNewUser && !verifyPrivilege()){
         return;
     }
 
@@ -324,6 +330,11 @@ void WinUserManagerWidget::showUserInfoWidget(WinUserInfo *adUser, bool creareNe
 
 
 void WinUserManagerWidget::slotResetUserPassword(){
+
+
+    if(!verifyPrivilege()){
+        return;
+    }
 
     QString sAMAccountName = m_selectedWinUser->userName;
     if(sAMAccountName.isEmpty()){
@@ -378,10 +389,6 @@ void WinUserManagerWidget::slotResetUserPassword(){
 }
 
 void WinUserManagerWidget::slotShowCustomContextMenu(const QPoint & pos){
-
-    if(!verifyPrivilege()){
-        return;
-    }
 
     QTableView *tableView = qobject_cast<QTableView*> (sender());
     if (!tableView){
@@ -479,29 +486,40 @@ void WinUserManagerWidget::activityTimeout(){
 
 bool WinUserManagerWidget::verifyPrivilege(){
 
-    if(m_verified){
-        return true;
+    AdminUser *adminUser = AdminUser::instance();
+    if(!adminUser->isAdminVerified()){
+        return false;
+    }
+    if(adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return false;
     }
 
-    bool ok = false;
-    do {
-        QString text = QInputDialog::getText(this, tr("Authentication Required"),
-                                             tr("Authorization Number:"), QLineEdit::NoEcho,
-                                             "", &ok);
-        if (ok && !text.isEmpty()){
-            QString accessCodeString = "";
-            accessCodeString.append(QTime::currentTime().toString("hhmm"));
-            if(text.toLower() == accessCodeString){
-                m_verified = true;
-                return true;
-            }
-        }
+    return true;
 
-        QMessageBox::critical(this, tr("Error"), tr("Incorrect Authorization Number!"));
+//    if(m_verified){
+//        return true;
+//    }
 
-    } while (ok);
+//    bool ok = false;
+//    do {
+//        QString text = QInputDialog::getText(this, tr("Authentication Required"),
+//                                             tr("Authorization Number:"), QLineEdit::NoEcho,
+//                                             "", &ok);
+//        if (ok && !text.isEmpty()){
+//            QString accessCodeString = "";
+//            accessCodeString.append(QTime::currentTime().toString("hhmm"));
+//            if(text.toLower() == accessCodeString){
+//                m_verified = true;
+//                return true;
+//            }
+//        }
 
-    return false;
+//        QMessageBox::critical(this, tr("Error"), tr("Incorrect Authorization Number!"));
+
+//    } while (ok);
+
+//    return false;
 
 }
 

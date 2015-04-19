@@ -383,12 +383,7 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
 
 void SystemManagementWidget::on_toolButtonModifyAssetNO_clicked(){
 
-    if(!verifyPrivilege()){
-        return;
-    }
-
-    if(m_adminUser->isReadonly()){
-        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+    if(!canModifySettings()){
         return;
     }
 
@@ -478,12 +473,7 @@ void SystemManagementWidget::on_toolButtonShutdown_clicked(){
 
 void SystemManagementWidget::on_toolButtonRenameComputer_clicked(){
 
-    if(!verifyPrivilege()){
-        return;
-    }
-
-    if(m_adminUser->isReadonly()){
-        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+    if(!canModifySettings()){
         return;
     }
 
@@ -550,12 +540,7 @@ void SystemManagementWidget::on_toolButtonRenameComputer_clicked(){
 
 void SystemManagementWidget::changeWorkgroup(){
 
-    if(!verifyPrivilege()){
-        return;
-    }
-
-    if(m_adminUser->isReadonly()){
-        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+    if(!canModifySettings()){
         return;
     }
 
@@ -637,12 +622,7 @@ void SystemManagementWidget::changeWorkgroup(){
 
 void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
 
-    if(!verifyPrivilege()){
-        return;
-    }
-
-    if(m_adminUser->isReadonly()){
-        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+    if(!canModifySettings()){
         return;
     }
 
@@ -857,12 +837,7 @@ void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
 
 void SystemManagementWidget::on_toolButtonSendCommand_clicked(){
 
-    if(!verifyPrivilege()){
-        return;
-    }
-
-    if(m_adminUser->isReadonly()){
-        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+    if(!canModifySettings()){
         return;
     }
 
@@ -1479,6 +1454,18 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
 
 inline bool SystemManagementWidget::verifyPrivilege(){
     return m_adminUser->isAdminVerified();
+}
+
+bool SystemManagementWidget::canModifySettings(){
+    if(!m_adminUser->isAdminVerified()){
+        return false;
+    }
+    if(m_adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return false;
+    }
+
+    return true;
 }
 
 bool SystemManagementWidget::temporarilyAllowed(){

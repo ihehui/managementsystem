@@ -3,6 +3,8 @@
 
 #include <QMenu>
 
+#include "../adminuser.h"
+
 
 #include "HHSharedGUI/hdataoutputdialog.h"
 
@@ -115,6 +117,11 @@ void ServicesManagement::slotShowCustomContextMenu(const QPoint & pos){
     //  menu.addAction(ui.actionPrintPreview);
 
 #endif
+    if(AdminUser::instance()->isReadonly()){
+        menu.exec(tableView->viewport()->mapToGlobal(pos));
+        return;
+    }
+
 
     menu.addSeparator();
     menu.addAction(ui->actionStartService);
@@ -178,10 +185,22 @@ void ServicesManagement::updateSelectedServiceInfo(const QModelIndex &index) {
 
 void ServicesManagement::changServiceStartupType(){
 
+    if(!verifyPrivilege()){return;}
+
+
     if(!m_selectedService){return;}
 
     QAction *action = qobject_cast<QAction*>(sender());
     if(!action){return;}
+
+    AdminUser *adminUser = AdminUser::instance();
+    if(!adminUser->isAdminVerified()){
+        return;
+    }
+    if(adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return;
+    }
 
     unsigned long startupType;
     if(action == ui->actionAutoStart){
@@ -198,6 +217,8 @@ void ServicesManagement::changServiceStartupType(){
 
 void ServicesManagement::changServiceStatus(){
 
+    if(!verifyPrivilege()){return;}
+
     if(!m_selectedService){return;}
 
     QAction *action = qobject_cast<QAction*>(sender());
@@ -208,6 +229,20 @@ void ServicesManagement::changServiceStatus(){
 
 }
 
+bool ServicesManagement::verifyPrivilege(){
+
+    AdminUser *adminUser = AdminUser::instance();
+    if(!adminUser->isAdminVerified()){
+        return false;
+    }
+    if(adminUser->isReadonly()){
+        QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
+        return false;
+    }
+
+    return true;
+
+}
 
 
 

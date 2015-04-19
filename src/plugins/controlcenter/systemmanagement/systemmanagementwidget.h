@@ -126,6 +126,8 @@ private slots:
 
 private:
     bool verifyPrivilege();
+    bool canModifySettings();
+
     bool temporarilyAllowed();
 
     void runProgrameAsAdmin(const QString &exeFilePath, const QString &parameters = "", bool show = true);
