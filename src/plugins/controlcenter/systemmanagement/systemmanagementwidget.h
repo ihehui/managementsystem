@@ -4,7 +4,8 @@
 #include <QWidget>
 #include <QCloseEvent>
 #include <QMenu>
-#include <QSqlQueryModel>
+//#include <QSqlQueryModel>
+#include <QHostInfo>
 
 #include "ui_systemmanagementwidget.h"
 
@@ -75,6 +76,7 @@ private slots:
     void on_toolButtonRunRemoteApplication_clicked();
     void on_toolButtonSendCommand_clicked();
 
+    void targetHostLookedUp(const QHostInfo &host);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online);
     void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP);
@@ -87,6 +89,7 @@ private slots:
     void clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType);
     void updateOSInfo();
     void updateHardwareInfo();
+
 
     void processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO, bool modified, const QString &message);
     void modifyAssetNOTimeout();

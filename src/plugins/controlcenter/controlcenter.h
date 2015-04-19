@@ -41,7 +41,7 @@ class ControlCenter : public QMainWindow
     Q_OBJECT
 
 public:
-    ControlCenter(QWidget *parent = 0);
+    ControlCenter(const QString appName, QWidget *parent = 0);
     ~ControlCenter();
 
     static bool isRunning(){return running;}
@@ -59,8 +59,10 @@ public slots:
 private slots:
     void slotInitTabWidget();
     void slotTabPageChanged();
-    void slotNewTab();
+    void slotNewTab(ClientInfo *info = 0);
     void slotcloseTab();
+    void updateWindowTitle();
+    void updateTabText(SystemManagementWidget *wgt);
 
     void slotRemoteManagement(const QModelIndex &index = QModelIndex());
 
@@ -75,7 +77,6 @@ private slots:
 
     void slotRemoteDesktop();
     void slotVNC();
-    void updateTitle(SystemManagementWidget *wgt);
     void changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
 
     void slotUpdateUserLogonPassword();
@@ -136,10 +137,11 @@ private:
 
 private:
     Ui::ControlCenterClass ui;
+    QString m_appName;
     QMenu *searchClientsMenu;
 
     QString localComputerName;
-    SystemManagementWidget *localSystemManagementWidget;
+    //SystemManagementWidget *localSystemManagementWidget;
 
     QString databaseConnectionName;
     QSqlQuery *query;

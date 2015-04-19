@@ -382,8 +382,7 @@ bool ClientService::startMainService(){
 
 }
 
-void ClientService::serverLookedUp(const QHostInfo &host)
- {
+void ClientService::serverLookedUp(const QHostInfo &host){
     qDebug()<<"--ClientService::serverLookedUp(...)";
 
     if (host.error() != QHostInfo::NoError) {

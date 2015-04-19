@@ -1173,27 +1173,49 @@ void ServerService::getAllClientsInfoFromDB(){
 
 void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO){
 
-    QJsonArray infoArray;
-    foreach (ClientInfo *info, clientInfoHash.values()) {
-        infoArray.append(QString(info->getOSJsonData()));
+    QByteArray data;
+
+    if(assetNO.isEmpty()){
+        QJsonArray infoArray;
+        foreach (ClientInfo *info, clientInfoHash.values()) {
+            infoArray.append(QString(info->getOSJsonData()));
+        }
+
+        QJsonObject object;
+        object["OS"] = infoArray;
+        QJsonDocument doc(object);
+        data = doc.toJson(QJsonDocument::Compact);
+    }else{
+        ClientInfo *info = clientInfoHash.value(assetNO);
+        if(!info){return;}
+        data = info->getOSJsonData();
     }
 
-    QJsonObject object;
-    object["OS"] = infoArray;
-
-    QJsonDocument doc(object);
-    serverPacketsParser->sendClientInfoPacket(socketID, assetNO, doc.toJson(QJsonDocument::Compact), MS::SYSINFO_OS);
+    serverPacketsParser->sendClientInfoPacket(socketID, assetNO, data, MS::SYSINFO_OS);
 
 }
 
 void ServerService::getHardwareInfo(SOCKETID socketID, const QString &assetNO){
-    QJsonArray infoArray;
-    foreach (ClientInfo *info, clientInfoHash.values()) {
-        infoArray.append(QString(info->getHardwareJsonData()));
+    QByteArray data;
+
+    if(assetNO.isEmpty()){
+        QJsonArray infoArray;
+        foreach (ClientInfo *info, clientInfoHash.values()) {
+            infoArray.append(QString(info->getHardwareJsonData()));
+        }
+
+        QJsonObject object;
+        object["Hardware"] = infoArray;
+        QJsonDocument doc(object);
+        data = doc.toJson(QJsonDocument::Compact);
+    }else{
+        ClientInfo *info = clientInfoHash.value(assetNO);
+        if(!info){return;}
+        data = info->getHardwareJsonData();
     }
 
-    QJsonDocument doc(infoArray);
-    serverPacketsParser->sendClientInfoPacket(socketID, assetNO, doc.toJson(QJsonDocument::Compact), MS::SYSINFO_OS);
+    serverPacketsParser->sendClientInfoPacket(socketID, assetNO, data, MS::SYSINFO_HARDWARE);
+
 }
 
 void ServerService::getSoftwareInfo(SOCKETID socketID, const QString &assetNO){

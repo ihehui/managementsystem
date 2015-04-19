@@ -158,7 +158,7 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
 
 
     QWidget *parentWidget = qobject_cast<QWidget *> (parent());
-    ControlCenter *wgt = new ControlCenter(parentWidget);
+    ControlCenter *wgt = new ControlCenter(name(), parentWidget);
     //connect(controlCenter, SIGNAL(destroyed(QObject *)), SLOT(slotControlCenterWidgetDestoryed(QObject *)));
 
     QMdiArea *mdiArea = 0;

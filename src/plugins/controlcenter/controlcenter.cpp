@@ -36,11 +36,14 @@ namespace HEHUI {
 
 bool ControlCenter::running = false;
 
-ControlCenter::ControlCenter(QWidget *parent)
-    : QMainWindow(parent)
+ControlCenter::ControlCenter(const QString appName, QWidget *parent)
+    : QMainWindow(parent), m_appName(appName)
 {
     ui.setupUi(this);
     //setWindowFlags(Qt::Dialog);
+    setWindowTitle(m_appName);
+
+    ui.statusbar->hide();
 
     ui.comboBoxOSVersion->addItem("All", QVariant(""));
     ui.comboBoxOSVersion->addItem("WIN_XP", QVariant("xp"));
@@ -110,7 +113,7 @@ ControlCenter::ControlCenter(QWidget *parent)
 
 
     localComputerName = QHostInfo::localHostName().toLower();
-    localSystemManagementWidget = 0;
+    //localSystemManagementWidget = 0;
 
     databaseConnectionName = QString(DB_CONNECTION_NAME);
     query = 0;
@@ -365,8 +368,9 @@ void ControlCenter::slotInitTabWidget(){
 //    ui.tabWidget->addTab(localSystemManagementWidget, tr("Local Computer"));
 
     slotNewTab();
-    ui.tabWidget->setCurrentIndex(0);
-    ui.lineEditComputerName->setFocus();
+    //ui.tabWidget->setCurrentIndex(0);
+    ui.lineEditAssetNO->setFocus();
+    QTimer::singleShot(0, this, SLOT(slotcloseTab()));
 
 }
 
@@ -385,22 +389,14 @@ void ControlCenter::slotTabPageChanged(){
         ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(false);
     }
 
+    updateWindowTitle();
 
 }
 
-void ControlCenter::slotNewTab(){
+void ControlCenter::slotNewTab(ClientInfo *info){
 
-    //    slotRemoteManagement();
-    //    updateGeometry();
-
-    //    QString localComputerName = QHostInfo::localHostName();
-    //    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_adminName, controlCenterPacketsParser, localComputerName, "", "127.0.0.1", "");
-    //    ui.tabWidget->addTab(systemManagementWidget, tr("Computer"));
-    //    ui.tabWidget->setCurrentWidget(systemManagementWidget);
-
-
-    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, 0, this);
-    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTitle(SystemManagementWidget*)));
+    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, info, this);
+    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTabText(SystemManagementWidget*)));
     connect(systemManagementWidget, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
 
     ui.tabWidget->addTab(systemManagementWidget, tr("System Management"));
@@ -438,6 +434,20 @@ void ControlCenter::slotcloseTab(){
 
 }
 
+void ControlCenter::updateWindowTitle(){
+    QString title = ui.tabWidget->tabText(ui.tabWidget->currentIndex());
+    setWindowTitle(tr("%1[%2]").arg(m_appName).arg(title));
+}
+
+void ControlCenter::updateTabText(SystemManagementWidget *wgt){
+    if(!wgt){return;}
+    QString title = wgt->peerAssetNO();
+    ui.tabWidget->setTabText(ui.tabWidget->indexOf(wgt), title);
+
+    updateWindowTitle();
+}
+
+
 void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 
     QModelIndex idx = index;
@@ -470,13 +480,15 @@ void ControlCenter::slotRemoteManagement(const QModelIndex &index){
         }
     }
 
-    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, info, this);
-    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTitle(SystemManagementWidget*)));
-    connect(systemManagementWidget, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
+    slotNewTab(info);
 
-    ui.tabWidget->addTab(systemManagementWidget, assetNO);
-    //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
-    ui.tabWidget->setCurrentWidget(systemManagementWidget);
+//    SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, info, this);
+//    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTabText(SystemManagementWidget*)));
+//    connect(systemManagementWidget, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
+
+//    ui.tabWidget->addTab(systemManagementWidget, assetNO);
+//    //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
+//    ui.tabWidget->setCurrentWidget(systemManagementWidget);
 
 }
 
@@ -889,11 +901,6 @@ void ControlCenter::slotVNC(){
     
 }
 
-void ControlCenter::updateTitle(SystemManagementWidget *wgt){
-    if(!wgt){return;}
-    QString title = wgt->windowTitle();
-    ui.tabWidget->setTabText(ui.tabWidget->indexOf(wgt), title);
-}
 
 void ControlCenter::changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName){
 
@@ -1170,7 +1177,7 @@ void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteAr
 }
 
 void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType){
-    qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO;
+    qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO<<" infoType:"<<infoType;
 
     if(assetNO.isEmpty()){
         QList<ClientInfo*> clientsList;
@@ -1201,6 +1208,7 @@ void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QB
         ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
         if(!info){
             info = new ClientInfo(assetNO, this);
+            clientInfoModel->addClientInfo(info);
         }
 
         switch (infoType) {
@@ -1220,7 +1228,8 @@ void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QB
             break;
         }
 
-        clientInfoModel->addClientInfo(info);
+        clientInfoModel->updateClientInfo(info);
+
     }
 
     qApp->processEvents();

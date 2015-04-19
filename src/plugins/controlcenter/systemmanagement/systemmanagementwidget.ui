@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>874</width>
-    <height>680</height>
+    <width>827</width>
+    <height>620</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -33,12 +33,66 @@
     <number>3</number>
    </property>
    <item row="0" column="0">
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="groupBoxTargetHost">
      <property name="title">
       <string>Target</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="7">
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Preferred</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="4">
+       <spacer name="horizontalSpacer_7">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Preferred</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="8">
+       <widget class="QLabel" name="labelAuthentication">
+        <property name="text">
+         <string>Authentication Mode:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="9">
+       <widget class="QComboBox" name="comboBoxAuthenticationMode">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <item>
+         <property name="text">
+          <string>Server Authentication</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="11">
        <widget class="QToolButton" name="toolButtonVerify">
         <property name="toolTip">
          <string>Verify Client Info</string>
@@ -67,8 +121,11 @@
       </item>
       <item row="0" column="3">
        <widget class="QLineEdit" name="lineEditHost">
-        <property name="text">
-         <string/>
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -85,7 +142,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="8">
+      <item row="0" column="10">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -104,7 +161,7 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="tabPosition">
-      <enum>QTabWidget::North</enum>
+      <enum>QTabWidget::South</enum>
      </property>
      <property name="currentIndex">
       <number>0</number>
@@ -144,6 +201,12 @@
          </item>
          <item>
           <widget class="QToolButton" name="toolButtonQuerySystemInfo">
+           <property name="toolTip">
+            <string>Query hardware info from server</string>
+           </property>
+           <property name="statusTip">
+            <string>Query hardware info from server</string>
+           </property>
            <property name="text">
             <string>Query</string>
            </property>
@@ -178,10 +241,10 @@
             <bool>false</bool>
            </property>
            <property name="toolTip">
-            <string>Get Hardware Information</string>
+            <string>Get Hardware Information from client</string>
            </property>
            <property name="statusTip">
-            <string>Get Hardware Information</string>
+            <string>Get Hardware Information from client</string>
            </property>
            <property name="text">
             <string>Get</string>

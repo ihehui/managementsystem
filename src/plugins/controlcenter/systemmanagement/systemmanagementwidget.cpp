@@ -32,6 +32,8 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 {
     ui.setupUi(this);
 
+    ui.lineEditHost->setFocus();
+
     m_joinWorkgroupMenu = new QMenu(this);
     m_joinWorkgroupMenu->addAction(ui.actionJoinWorkgroup);
     m_joinWorkgroupMenu->addAction(ui.actionJoinDomain);
@@ -90,6 +92,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     if(clientInfo){
         m_clientInfo = *clientInfo;
         updateOSInfo();
+        updateHardwareInfo();
     }
 
     m_peerAssetNO = m_clientInfo.getAssetNO();
@@ -122,7 +125,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
 #ifdef Q_OS_WIN32
 
-    WindowsManagement wm;
+    //WindowsManagement wm;
 
     if(localComputer){
         ui.groupBoxAdministrationTools->show();
@@ -299,6 +302,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     connect(controlCenterPacketsParser, SIGNAL(signalClientMessagePacketReceived(const QString &, const QString &, quint8)), this, SLOT(clientMessageReceived(const QString &, const QString &, quint8)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
+    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &,quint8)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &, bool, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &, bool, const QString &)));
 
@@ -343,13 +347,15 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
         return;
     }
 
-    m_peerIPAddress = QHostAddress(ui.lineEditHost->text().trimmed());
+    QString host = ui.lineEditHost->text().trimmed();
+    m_peerIPAddress = QHostAddress(host);
     if(localComputer){
         this->m_peerIPAddress = QHostAddress::LocalHost;
     }
     if(m_peerIPAddress.isNull()){
-        QMessageBox::critical(this, tr("Error"), tr("Invalid IP Address!"));
-        ui.lineEditHost->setFocus();
+        QHostInfo::lookupHost(host, this, SLOT(targetHostLookedUp(QHostInfo)));
+        //QMessageBox::critical(this, tr("Error"), tr("Invalid IP Address!"));
+        //ui.lineEditHost->setFocus();
         return;
     }
 
@@ -376,6 +382,8 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
         ui.toolButtonVerify->setEnabled(true);
         return;
     }
+
+    ui.lineEditHost->setReadOnly(true);
 
     QTimer::singleShot(60000, this, SLOT(requestConnectionToClientTimeout()));
 
@@ -715,10 +723,8 @@ void SystemManagementWidget::on_pushButtonOtherEXE_clicked(){
 }
 
 void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
-
-
-
-
+    controlCenterPacketsParser->sendRequestClientInfoPacket(m_adminUser->socketConnectedToServer(), peerAssetNO(), MS::SYSINFO_HARDWARE);
+    ui.toolButtonQuerySystemInfo->setEnabled(false);
 }
 
 void SystemManagementWidget::on_toolButtonRequestHardwareInfo_clicked(){
@@ -857,6 +863,25 @@ void SystemManagementWidget::on_toolButtonSendCommand_clicked(){
 
 }
 
+void SystemManagementWidget::targetHostLookedUp(const QHostInfo &host){
+    qDebug()<<"--SystemManagementWidget::targetHostLookedUp(...)";
+
+    if (host.error() != QHostInfo::NoError) {
+        qDebug() << "Target host lookup failed:" << host.errorString();
+        return;
+    }
+
+    if(host.addresses().isEmpty()){return;}
+
+    QString address = host.addresses().first().toString();
+    qDebug() << "Found default host address:" << address;
+
+    if(INVALID_SOCK_ID == m_peerSocket){
+        ui.lineEditHost->setText(address);
+        on_toolButtonVerify_clicked();
+    }
+
+}
 
 void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online){
     qDebug()<<"--SystemManagementWidget::processClientOnlineStatusChangedPacket(...)";
@@ -897,7 +922,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         setWindowTitle(computerName);
         emit updateTitle(this);
 
-        ui.lineEditHost->setReadOnly(true);
+        //ui.lineEditHost->setReadOnly(true);
 
         ui.lineEditAssetNO->setText(assetNO);
         ui.lineEditAssetNO->setReadOnly(true);
@@ -927,7 +952,10 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         if(!message.trimmed().isEmpty()){
             QMessageBox::warning(this, tr("Warning"), message);
         }
+
+        ui.groupBoxTargetHost->hide();
     }else{
+        ui.lineEditHost->setReadOnly(false);
         //ui.tabSystemInfo->setEnabled(false);
         ui.groupBoxRemoteConsole->setEnabled(false);
 
@@ -953,6 +981,7 @@ void SystemManagementWidget::requestConnectionToClientTimeout(){
 
     if(!clientResponseAdminConnectionResultPacketReceived){
         QMessageBox::critical(this, tr("Error"), tr("Timeout! No response received from client!"));
+        ui.lineEditHost->setReadOnly(false);
         ui.toolButtonVerify->setEnabled(true);
     }
 
@@ -1147,7 +1176,9 @@ void SystemManagementWidget::updateHardwareInfo(){
     ui.checkBoxUSBSDReadable->setEnabled(false);
     ui.checkBoxUSBSDWriteable->setEnabled(false);
 
+    ui.toolButtonQuerySystemInfo->setEnabled(true);
     ui.toolButtonRequestHardwareInfo->setEnabled(true);
+
 }
 
 void SystemManagementWidget::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
@@ -1430,6 +1461,7 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
     }
 
     //ui.lineEditHost->setReadOnly(false);
+    ui.groupBoxTargetHost->show();
     ui.toolButtonVerify->setEnabled(true);
 
     ui.tabRemoteConsole->setEnabled(false);
