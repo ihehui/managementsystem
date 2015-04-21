@@ -34,7 +34,7 @@
 #include <QObject>
 #include <QAbstractTableModel>
 
-#include "serverinfo.h"
+#include "../../sharedms/serverinfo.h"
 
 
 

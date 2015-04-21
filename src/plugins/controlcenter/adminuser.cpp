@@ -32,6 +32,9 @@ AdminUser::AdminUser()
         m_serverPort = lastUsedAppServer.at(1).toUShort();
     }
 
+    m_serverName = "";
+    m_serverVersion = "";
+
     m_loginDlg = 0;
 
     m_readonly = true;
@@ -40,7 +43,7 @@ AdminUser::AdminUser()
 
 AdminUser::~AdminUser()
 {
-
+    adminUserInstance = 0;
 }
 
 void AdminUser::init(RTP *rtp, ControlCenterPacketsParser *controlCenterPacketsParser, QObject *parent){
@@ -62,6 +65,26 @@ bool AdminUser::isReadonly(){
 
 SOCKETID AdminUser::socketConnectedToServer(){
     return m_socketConnectedToServer;
+}
+
+ControlCenterPacketsParser *AdminUser::packetsParser(){
+    return  m_controlCenterPacketsParser;
+}
+
+QString AdminUser::serverAddress() const{
+    return m_serverAddress;
+}
+
+quint16 AdminUser::serverPort(){
+    return m_serverPort;
+}
+
+QString AdminUser::serverName() const{
+    return m_serverName;
+}
+
+QString AdminUser::serverVersion() const{
+    return m_serverVersion;
 }
 
 bool AdminUser::isAdminVerified(){
@@ -104,7 +127,7 @@ void AdminUser::modifyServerSettings(){
     ServerAddressManagerWindow smw(&dlg);
     connect(&smw, SIGNAL(signalLookForServer(const QString &, quint16 )), m_controlCenterPacketsParser, SLOT(sendClientLookForServerPacket(const QString &, quint16)));
     connect(m_controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), &smw, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
-    connect(&smw, SIGNAL(signalServerSelected(const QString &, quint16)), this, SLOT(serverSelected(const QString &, quint16)));
+    connect(&smw, SIGNAL(signalServerSelected(const QString &, quint16, const QString &, const QString &,)), this, SLOT(serverSelected(const QString &, quint16)));
 
     vbl.addWidget(&smw);
     dlg.setLayout(&vbl);
@@ -115,7 +138,7 @@ void AdminUser::modifyServerSettings(){
 
 }
 
-void AdminUser::serverSelected(const QString &serverAddress, quint16 serverPort){
+void AdminUser::serverSelected(const QString &serverAddress, quint16 serverPort, const QString &serverName, const QString &version){
     if(m_serverAddress != serverAddress || (m_serverPort != serverPort)){
         m_serverAddress = serverAddress;
         m_serverPort = serverPort;
@@ -124,6 +147,9 @@ void AdminUser::serverSelected(const QString &serverAddress, quint16 serverPort)
             m_socketConnectedToServer = INVALID_SOCK_ID;
         }
     }
+
+    m_serverName = serverName;
+    m_serverVersion = version;
 
 }
 
@@ -165,6 +191,11 @@ bool AdminUser::login(){
 void AdminUser::processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly){
     Q_ASSERT(socketID == m_socketConnectedToServer);
 
+    m_serverName = serverName;
+
+    setVerified(result);
+    m_readonly = readonly;
+
     if(result){
         m_loginDlg->accept();
         delete m_loginDlg;
@@ -174,8 +205,7 @@ void AdminUser::processLoginResult(SOCKETID socketID, const QString &serverName,
         m_loginDlg->setErrorMessage(message);
     }
 
-    setVerified(result);
-    m_readonly = readonly;
+
 }
 
 void AdminUser::peerDisconnected(SOCKETID socketID){

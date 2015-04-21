@@ -108,6 +108,8 @@ ServerService::~ServerService(){
         info = 0;
     }
 
+    qDeleteAll(adminsHash);
+
     delete databaseUtility;
     databaseUtility = 0;
     delete query;
@@ -127,6 +129,7 @@ bool ServerService::startMainService(){
     }
 
     getAllClientsInfoFromDB();
+    getAllAdminsInfoFromDB();
 
     QString errorMessage = "";
     //    m_udpServer = resourcesManager->startIPMCServer(QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16(IP_MULTICAST_GROUP_PORT), &errorMessage);
@@ -166,6 +169,7 @@ bool ServerService::startMainService(){
     connect(serverPacketsParser, SIGNAL(signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID, const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(processRequestChangeProcessMonitorInfoPacket(SOCKETID, const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalClientInfoRequestedPacketReceived(SOCKETID, const QString &, quint8)), this, SLOT(processClientInfoRequestedPacket(SOCKETID, const QString &, quint8)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalUpdateSysAdminInfoPacketReceived(SOCKETID, const QString &, const QByteArray &, bool)), this, SLOT(processUpdateSysAdminInfoPacket(SOCKETID, const QString &, const QByteArray &, bool)), Qt::QueuedConnection);
 
 
     //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
@@ -745,6 +749,10 @@ void ServerService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
         getSoftwareInfo(socketID, assetNO);
         break;
 
+    case quint8(MS::SYSINFO_SYSADMINS):
+        sendAdminsInfo(socketID);
+        break;
+
 
 
         //    case quint8(MS::SYSINFO_USERS):
@@ -760,6 +768,65 @@ void ServerService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
 
 
 
+
+}
+
+void ServerService::processUpdateSysAdminInfoPacket(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin){
+
+    AdminUserInfo *info = 0;
+    bool newAdmin = false;
+    if(adminsHash.contains(sysAdminID)){
+        info = adminsHash.value(sysAdminID);
+        if(deleteAdmin){
+            QString statement = QString("call sp_Admin_Delete('%1'); ").arg(sysAdminID);
+            if(!execQuery(statement)){
+                QString message = QString("Failed to delete admin! Admin ID:%1").arg(sysAdminID);
+                serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
+            }else{
+                QString message = QString("Admin '%1' deleted!").arg(sysAdminID);
+                serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Information));
+                adminsHash.remove(sysAdminID);
+                delete info;
+                info = 0;
+            }
+            return;
+        }
+    }else{
+        info = new AdminUserInfo(sysAdminID, this);
+        newAdmin = true;
+    }
+    info->setJsonData(infoData);
+
+    QString statement = QString("call sp_Admin_Update_Info('%1', '%2', '%3', '%4', %5, %6, '%7'); ")
+            .arg(sysAdminID)
+            .arg(info->getUserName())
+            .arg(info->getPassword())
+            .arg(info->businessAddress)
+            .arg(info->readonly?1:0)
+            .arg(info->active?1:0)
+            .arg(info->remark)
+            ;
+
+    if(!execQuery(statement)){
+        QString message = QString("Failed to update admin info! Admin ID:%1").arg(sysAdminID);
+        serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
+        if(newAdmin){
+            delete info;
+            info = 0;
+        }
+    }else{
+        QString message = QString("Admin info updated! Admin ID:%1").arg(sysAdminID);
+        serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Information));
+        if(newAdmin){
+            adminsHash.insert(sysAdminID, info);
+        }else{
+            SOCKETID socketID = info->socketID;
+            if(INVALID_SOCK_ID != socketID){
+                m_rtp->closeSocket(socketID);
+                info->socketID = INVALID_SOCK_ID;
+            }
+        }
+    }
 
 }
 
@@ -801,9 +868,15 @@ void ServerService::processModifyAssetNOPacket(SOCKETID socketID, const QString 
 
 
 void ServerService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRules, const QByteArray &globalRules, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO){
-
-    QString adminName = adminSocketsHash.value(socketID);
-    Q_ASSERT(adminName.isEmpty());
+    QString adminID = "";
+    foreach (AdminUserInfo *info, adminsHash) {
+        if(info->socketID == socketID){
+            adminID = info->getUserID();
+            break;
+        }
+    }
+    Q_ASSERT(!adminID.isEmpty());
+    if(adminID.isEmpty()){return;}
 
     QString rules;
     if(assetNO.isEmpty()){
@@ -820,11 +893,11 @@ void ServerService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socket
             .arg(enableLogAllowedProcess)
             .arg(enableLogBlockedProcess)
             .arg(useGlobalRules)
-            .arg(adminName)
+            .arg(adminID)
             ;
 
     if(!execQuery(statement)){
-        QString error = QString("ERROR! An error occurred when saving process monitor info to database. Admin: %1.").arg(adminName);
+        QString error = QString("ERROR! An error occurred when saving process monitor info to database. Admin: %1.").arg(adminID);
         logMessage(error, QtServiceBase::Error);
     }
 
@@ -846,7 +919,6 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
                 m_rtp->closeSocket(preSocketID);
                 //peerDisconnected(preSocketID);
                 clientSocketsHash.remove(preSocketID);
-                adminSocketsHash.remove(preSocketID);
             }
 
             //            clientSocketsHash.remove(preSocketID);
@@ -887,39 +959,38 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
 
 }
 
-void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName){
-    qDebug()<<"--ServerService::processAdminLoginPacket(...) "<<" adminName:"<<adminName<<" password:"<<password;
+void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &adminID, const QString &password, const QString &adminIP, const QString &adminComputerName){
+    qDebug()<<"--ServerService::processAdminLoginPacket(...) "<<" adminName:"<<adminID<<" password:"<<password;
     bool verified = false, readonly = true;
     QString message = "";
 
-    QString statement = QString("call sp_Admin_Login('%1', '%2', '%3', '%4' );")
-            .arg(adminName)
-            .arg(password)
+    AdminUserInfo *info = adminsHash.value(adminID);
+    if(!info){
+        message = "Invalid user name or password.";
+    }else if(info->getPassword() != password){
+        message = "Invalid user name or password.";
+    }else{
+        verified = true;
+        readonly = info->readonly;
+        info->socketID = socketID;
+    }
+    serverPacketsParser->sendAdminLoginResultPacket(socketID, verified, message, readonly);
+
+
+    QString statement = QString("call sp_Admin_Update_Login_Info('%1', '%2', '%3' );")
+            .arg(adminID)
             .arg(adminIP)
             .arg(adminComputerName)
             ;
 
     if(!execQuery(statement)){
-        QString error = QString("ERROR! An error occurred when querying admin info. Admin: %1.").arg(adminName);
+        QString error = QString("ERROR! An error occurred when querying admin info. Admin: %1.").arg(adminID);
         logMessage(error, QtServiceBase::Error);
-        verified = false;
-        message = error;
-    }else{
-        if(!query->first()){
-            verified = false;
-            message = "Invalid user name or password.";
-        }else{
-            verified = true;
-            readonly = query->value(0).toUInt();
-        }
     }
 
-    //TODO
-
-    serverPacketsParser->sendAdminLoginResultPacket(socketID, verified, message, readonly);
 }
 
-void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online){
+void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminID, bool online){
 
     QString ip = "";
     quint16 port = 0;
@@ -930,13 +1001,13 @@ void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, con
         return;
     }
 
-    qWarning()<<QString(" Admin %1@%2 %3! %4").arg(adminName).arg(adminComputerName).arg(online?"Online":"Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    qWarning()<<QString(" Admin %1@%2 %3! %4").arg(adminID).arg(adminComputerName).arg(online?"Online":"Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
 
-    if(online){
-        adminSocketsHash.insert(socketID, adminName);
-        //updateOrSaveAllClientsInfoToDatabase();
-    }else{
-        adminSocketsHash.remove(socketID);
+    foreach (AdminUserInfo *info, adminsHash) {
+        if(info->getUserID() == adminID){
+            info->socketID = (online?socketID:0);
+            return;
+        }
     }
 
 }
@@ -976,9 +1047,11 @@ void ServerService::peerDisconnected(SOCKETID socketID){
         clientSocketsHash.remove(socketID);
     }
 
-    if(adminSocketsHash.contains(socketID)){
-        qCritical()<<QString("ERROR! Admin '%1' Closed Connection Unexpectedly! %2").arg(adminSocketsHash.value(socketID)).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-        adminSocketsHash.remove(socketID);
+    foreach (AdminUserInfo *info, adminsHash) {
+        if(info->socketID == socketID){
+            info->socketID = 0;
+            return;
+        }
     }
 
 
@@ -1096,6 +1169,7 @@ bool ServerService::execQuery(const QString &statement, QString *errorString ){
             openDatabase(true);
         }else{
             getAllClientsInfoFromDB();
+            getAllAdminsInfoFromDB();
         }
         query->clear();
 
@@ -1171,6 +1245,43 @@ void ServerService::getAllClientsInfoFromDB(){
 
 }
 
+void ServerService::getAllAdminsInfoFromDB(){
+
+    QString statement = QString("call sp_Admins_Query(); ");
+    if(!execQuery(statement)){
+        return;
+    }
+    while(query->next()){
+        QString adminID = query->value("UserID").toString();
+        AdminUserInfo *info = 0;
+        if(adminsHash.contains(adminID)){
+            info = adminsHash.value(adminID);
+        }else{
+            info = new AdminUserInfo(adminID, this);
+            adminsHash.insert(adminID, info);
+        }
+
+        info->setUserName(query->value("UserName").toString());
+        info->setPassword(query->value("UserPassword").toString());
+        info->businessAddress = query->value("BusinessAddress").toString();
+        info->lastLoginIP = query->value("LastLoginIP").toString();
+        info->lastLoginPC = query->value("LastLoginPC").toString();
+        info->lastLoginTime = query->value("LastLoginTime").toString();
+        info->readonly = query->value("Readonly").toUInt();
+        info->remark = query->value("Remark").toString();
+
+        if(info->getPassword().isEmpty()){
+            QString log = QString("ERROR! Empty admin password! Admin:%1").arg(adminID);
+            qCritical()<<log;
+            logMessage(log, QtService::Error);
+        }
+
+    }
+    query->clear();
+
+}
+
+
 void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO){
 
     QByteArray data;
@@ -1222,8 +1333,21 @@ void ServerService::getSoftwareInfo(SOCKETID socketID, const QString &assetNO){
 
 }
 
+void ServerService::sendAdminsInfo(SOCKETID socketID){
 
+    QJsonArray infoArray;
+    foreach (AdminUserInfo *info, adminsHash.values()) {
+        infoArray.append(QString(info->getJsonData()));
+    }
 
+    QJsonObject object;
+    object["Administators"] = infoArray;
+    QJsonDocument doc(object);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+    serverPacketsParser->sendClientInfoPacket(socketID, "", data, MS::SYSINFO_SYSADMINS);
+
+}
 
 void ServerService::start()
 {

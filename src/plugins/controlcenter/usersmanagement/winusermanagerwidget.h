@@ -59,7 +59,7 @@ protected:
 
 
 signals:
-    void signalGetUsersInfo(quint8 infoType = MS::SYSINFO_USERS);
+    void signalGetUsersInfo(quint8 infoType = MS::SYSINFO_OSUSERS);
     void signalCreateOrModifyWinUser(const QByteArray &userdata);
     void signalDeleteUser(const QString &userName);
 
@@ -118,7 +118,6 @@ private:
     Ui::WinUserManagerWidgetUI ui;
 
     WinUserInfo *m_selectedWinUser;
-
 
     WinUserInfoModel *m_userInfoModel;
     WinUserInfoSortFilterProxyModel *m_sortFilterProxyModel;

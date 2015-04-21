@@ -241,7 +241,7 @@ void SystemInfo::getUsersInfo(SOCKETID socketID){
     QJsonObject object;
     object["Users"] = infoArray;
     QJsonDocument doc(object);
-    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_USERS, socketID);
+    emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_OSUSERS, socketID);
 
 }
 

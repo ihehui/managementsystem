@@ -28,6 +28,12 @@ public:
     bool isReadonly();
     bool isAdminVerified();
     SOCKETID socketConnectedToServer();
+    ControlCenterPacketsParser *packetsParser();
+
+    QString serverAddress() const;
+    quint16 serverPort();
+    QString serverName() const;
+    QString serverVersion() const;
 
 
 signals:
@@ -37,7 +43,7 @@ signals:
 public slots:
     void verifyUser();
     void modifyServerSettings();
-    void serverSelected(const QString &serverAddress, quint16 serverPort);
+    void serverSelected(const QString &serverAddress, quint16 serverPort, const QString &serverName, const QString &version);
     bool connectToServer(const QString &serverAddress, quint16 serverPort);
     bool login();
     void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
@@ -52,8 +58,11 @@ private:
     ControlCenterPacketsParser *m_controlCenterPacketsParser;
 
     SOCKETID m_socketConnectedToServer;
+
     QString m_serverAddress;
     quint16 m_serverPort;
+    QString m_serverName;
+    QString m_serverVersion;
 
     LoginDlg *m_loginDlg;
 

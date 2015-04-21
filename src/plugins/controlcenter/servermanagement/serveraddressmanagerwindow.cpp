@@ -159,17 +159,18 @@ void ServerAddressManagerWindow::serverFound(const QString &serverAddress, quint
     ServerInfo *info;
     if(serversHash.contains(serverAddress)){
         info = serversHash.value(serverAddress);
-        info->setPort(serverRTPListeningPort);
+        info->serverPort = serverRTPListeningPort;
     }else{
-        info = new ServerInfo(serverAddress, serverRTPListeningPort, this);
+        info = new ServerInfo(serverAddress, serverRTPListeningPort);
     }
 
-    info->setCurState(ServerInfo::TestOK);
+    info->serverName = serverName;
+    info->version = version;
+
+    info->currentState = ServerInfo::TestOK;
     serversHash[serverAddress] = info;
 
-
     updateModel();
-
 
 }
 
@@ -184,8 +185,8 @@ void ServerAddressManagerWindow::slotTestServers(){
 
     ui->toolButtonTestServers->setEnabled(false);
     foreach(ServerInfo *info, serversHash.values()){
-        info->setCurState(ServerInfo::Testing);
-        emit signalLookForServer(info->getIp(), info->getPort());
+        info->currentState = ServerInfo::Testing;
+        emit signalLookForServer(info->serverIP, info->serverPort);
     }
 
     updateModel();
@@ -196,8 +197,8 @@ void ServerAddressManagerWindow::slotTestServers(){
 
 void ServerAddressManagerWindow::slotTimeout(){
     foreach(ServerInfo *info, serversHash.values()){
-        if(info->getCurState() != ServerInfo::TestOK){
-            info->setCurState(ServerInfo::TestFailed);
+        if(info->currentState != ServerInfo::TestOK){
+            info->currentState = ServerInfo::TestFailed;
         }
     }
 
@@ -211,7 +212,7 @@ void ServerAddressManagerWindow::slotTimeout(){
 void ServerAddressManagerWindow::slotSaveServers(){
     QStringList serverList;
     foreach(ServerInfo *info, serversHash.values()){
-        serverList<<info->getIp() + ":" + QString::number(info->getPort());
+        serverList<<info->serverIP + ":" + QString::number(info->serverPort);
     }
 
     Settings settings(SETTINGS_FILE_NAME, "./");
@@ -229,7 +230,7 @@ void ServerAddressManagerWindow::slotLoadServers(){
         if(values.size() != 2){
             continue;
         }
-        ServerInfo *info = new ServerInfo(values.at(0), values.at(1).toUInt(), this);
+        ServerInfo *info = new ServerInfo(values.at(0), values.at(1).toUInt());
         serversHash.insert(values.at(0), info);
     }
 
@@ -273,19 +274,16 @@ void ServerAddressManagerWindow::on_toolButtonAddServer_clicked(){
     if(serversHash.contains(ip)){
         info = serversHash.value(ip);
     }else{
-        info = new ServerInfo(ip, port, this);
+        info = new ServerInfo(ip, port);
     }
 
-    info->setCurState(ServerInfo::NotTested);
+    info->currentState = ServerInfo::NotTested;
     serversHash[ip] = info;
 
     updateModel();
     
     emit signalLookForServer(ip, port);
     
-    
-
-
 }
 
 void ServerAddressManagerWindow::on_lineEditIP_editingFinished (){
@@ -325,12 +323,12 @@ void ServerAddressManagerWindow::slotServerSelected(const QModelIndex &index){
     QStringList server;
 
     int row = index.row();
-    for(int i=0; i<2; i++){
+    for(int i=0; i<4; i++){
         QModelIndex idx = index.sibling(row, i);
         server << idx.data().toString();
     }
     
-    emit signalServerSelected(server.at(0), server.at(1).toUShort());
+    emit signalServerSelected(server.at(0), server.at(1).toUShort(), server.at(2), server.at(3));
     
     QDialog *dlg = qobject_cast<QDialog *> (parentWidget());
     if(dlg){

@@ -161,7 +161,31 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendAdminRequestRemoteConsolePacket(SOCKETID socketID, const QString &computerName, const QString &applicationPath, const QString &adminID, bool startProcess = true){
+    bool sendRequestUpdateSysAdminInfoPacket(SOCKETID serverSocketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin = false){
+
+        Packet *packet = PacketHandlerBase::getPacket(serverSocketID);
+        packet->setPacketType(quint8(MS::UpdateSysAdminInfo));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << sysAdminID << infoData << quint8(deleteAdmin);
+
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(serverSocketID, &ba);
+    }
+
+
+    bool sendAdminRequestRemoteConsolePacket(SOCKETID socketID, const QString &assetNO, const QString &applicationPath, const QString &adminID, bool startProcess = true){
         qDebug()<<"----sendServerRequestRemoteConsolePacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -170,7 +194,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << applicationPath << adminID << startProcess;
+        out << m_localID << assetNO << applicationPath << adminID << startProcess;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -184,7 +208,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRemoteConsoleCMDFromAdminPacket(SOCKETID socketID, const QString &computerName, const QString &command){
+    bool sendRemoteConsoleCMDFromAdminPacket(SOCKETID socketID, const QString &assetNO, const QString &command){
         qDebug()<<"----sendRemoteConsoleCMDFromServerPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -194,7 +218,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << command;
+        out << m_localID << assetNO << command;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -253,7 +277,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendModifyAdminGroupUserPacket(SOCKETID socketID, const QString &computerName, const QString &userName, bool addToAdminGroup, const QString &adminName){
+    bool sendModifyAdminGroupUserPacket(SOCKETID socketID, const QString &assetNO, const QString &userName, bool addToAdminGroup, const QString &adminName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::ModifyAdminGroupUser));
@@ -261,7 +285,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << userName << addToAdminGroup  << adminName;
+        out << m_localID << assetNO << userName << addToAdminGroup  << adminName;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -387,7 +411,7 @@ public slots:
         return m_udpServer->sendDatagram(ba, targetAddress, quint16(IP_MULTICAST_GROUP_PORT));
     }
     
-    bool sendRemoteAssistancePacket(SOCKETID socketID, const QString &computerName, const QString &adminName, const QString &userName){
+    bool sendRemoteAssistancePacket(SOCKETID socketID, const QString &assetNO, const QString &adminName, const QString &userName){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -396,7 +420,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << adminName << userName;
+        out << m_localID << assetNO << adminName << userName;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -511,8 +535,8 @@ public slots:
     }
 
 
-    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, const QString &computerName, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
-        qDebug()<<"--sendAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" computerName:"<<computerName;
+    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, const QString &assetNO, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
+        qDebug()<<"--sendAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" computerName:"<<assetNO;
         Packet *packet = PacketHandlerBase::getPacket();
         QHostAddress targetAddress = QHostAddress(peerAddress);
         if(targetAddress.isNull()){
@@ -524,7 +548,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
+        out << m_localID << assetNO << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -538,7 +562,7 @@ public slots:
         return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
     }
 
-    bool sendAnnouncementPacket(SOCKETID socketID, const QString &computerName, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
+    bool sendAnnouncementPacket(SOCKETID socketID, const QString &assetNO, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -547,7 +571,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
+        out << m_localID << assetNO << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -985,7 +1009,7 @@ signals:
 
     void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
 
-    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &clientName, bool online);
+    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online);
 
     //    void signalAdminLoggedOnToServerRequestPacketReceived(const QHostAddress adminAddress, quint16 adminPort, const QString &adminID);
     //    void signalServerRequestRemoteConsolePacketReceived(const QString &adminID);

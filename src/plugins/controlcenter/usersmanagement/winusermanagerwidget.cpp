@@ -228,7 +228,6 @@ void WinUserManagerWidget::on_actionRefresh_triggered(){
     slotRefresh();
 }
 
-
 void WinUserManagerWidget::slotExportQueryResult(){
 
     DataOutputDialog dlg(ui.tableViewUsers, DataOutputDialog::EXPORT, this);
@@ -327,7 +326,6 @@ void WinUserManagerWidget::showUserInfoWidget(WinUserInfo *adUser, bool creareNe
     dlg.exec();
 
 }
-
 
 void WinUserManagerWidget::slotResetUserPassword(){
 

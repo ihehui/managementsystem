@@ -202,6 +202,10 @@ ControlCenter::~ControlCenter()
     }
     QSqlDatabase::removeDatabase(databaseConnectionName);
 
+
+    delete m_adminUser;
+    m_adminUser = 0;
+
     delete controlCenterPacketsParser;
     controlCenterPacketsParser = 0;
 
@@ -367,10 +371,15 @@ void ControlCenter::slotInitTabWidget(){
 //    localSystemManagementWidget->setParent(this);
 //    ui.tabWidget->addTab(localSystemManagementWidget, tr("Local Computer"));
 
-    slotNewTab();
-    //ui.tabWidget->setCurrentIndex(0);
-    ui.lineEditAssetNO->setFocus();
-    QTimer::singleShot(0, this, SLOT(slotcloseTab()));
+    ui.tabWidget->setCurrentIndex(0);
+
+    SystemManagementWidget systemManagementWidget(0, 0);
+    ui.tabServer->setMinimumSize(systemManagementWidget.minimumSizeHint());
+
+
+//    slotNewTab();
+//    ui.lineEditAssetNO->setFocus();
+//    QTimer::singleShot(0, this, SLOT(slotcloseTab()));
 
 }
 
@@ -403,6 +412,7 @@ void ControlCenter::slotNewTab(ClientInfo *info){
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
     ui.tabWidget->setCurrentWidget(systemManagementWidget);
 
+    updateGeometry();
 
 }
 
@@ -902,14 +912,14 @@ void ControlCenter::slotVNC(){
 }
 
 
-void ControlCenter::changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName){
+void ControlCenter::changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO){
 
     if(INVALID_SOCK_ID == m_socketConnectedToServer){
         QMessageBox::critical(this, tr("Error"), tr("Server is offline! Can not sync process monitor data to server!"));
         return;
     }
 
-    bool ok = controlCenterPacketsParser->sendRequestChangeProcessMonitorInfoPacket(m_socketConnectedToServer, localRulesData, globalRulesData, enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, computerName);
+    bool ok = controlCenterPacketsParser->sendRequestChangeProcessMonitorInfoPacket(m_socketConnectedToServer, localRulesData, globalRulesData, enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, assetNO);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to server!<br>%1").arg(m_rtp->lastErrorString()));
     }
@@ -1003,11 +1013,11 @@ void ControlCenter::slotSendAnnouncement(quint32 messageID, const QString &messa
         QModelIndex index = selectedIndexes.at(j);
         int row = index.row();
 
-        QString computerName = index.sibling(row,0).data().toString();
+        QString assetNO = index.sibling(row,0).data().toString();
         QStringList networkInfoList = index.sibling(row,2).data().toString().split(",");
         foreach (QString info, networkInfoList) {
             if(info.trimmed().isEmpty()){continue;}
-            controlCenterPacketsParser->sendAnnouncementPacket(info.split("/").at(0), IP_MULTICAST_GROUP_PORT, computerName, "", m_adminUser->getUserID(), messageID, message, confirmationRequired, validityPeriod);
+            controlCenterPacketsParser->sendAnnouncementPacket(info.split("/").at(0), IP_MULTICAST_GROUP_PORT, assetNO, "", m_adminUser->getUserID(), messageID, message, confirmationRequired, validityPeriod);
         }
 
 
@@ -1080,7 +1090,6 @@ void ControlCenter::startNetwork(){
 
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
-    //connect(controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)));
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
     connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
@@ -1102,46 +1111,6 @@ void ControlCenter::startNetwork(){
 
     //controlCenterPacketsParser->sendClientLookForServerPacket("255.255.255.255");
 
-
-}
-
-void ControlCenter::serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID){
-    qDebug()<<"----ControlCenter::serverFound(...)";
-
-
-    m_rtp->closeSocket(m_socketConnectedToServer);
-    QString errorMessage;
-    m_socketConnectedToServer = m_rtp->connectToHost(QHostAddress(serverAddress), serverUDTListeningPort, 10000, &errorMessage);
-    if(m_socketConnectedToServer == INVALID_SOCK_ID){
-        qCritical()<<tr("ERROR! Can not connect to server %1:%2 ! %3").arg(serverAddress).arg(serverUDTListeningPort).arg(errorMessage);
-        return;
-    }
-
-    controlCenterPacketsParser->sendAdminOnlineStatusChangedPacket(m_socketConnectedToServer, m_adminUser->getUserID(), true);
-
-//    if(m_serverInstanceID != 0 && serverInstanceID != m_serverInstanceID){
-//        controlCenterPacketsParser->sendClientOnlinePacket(networkManager->localRUDPListeningAddress(), networkManager->localRUDPListeningPort(), m_adminName+"@"+localComputerName, true);
-//    }
-
-    qWarning()<<"Server Found!"<<" Address:"<<serverAddress<<" UDT Port:"<<serverUDTListeningPort<<" Name:"<<serverName;
-
-    //controlCenterPacketsParser->sendClientOnlinePacket(networkManager->localRUDPListeningAddress(), networkManager->localRUDPListeningPort(), m_adminName+"@"+localComputerName, true);
-
-
-    QString msg = tr("IP: %1<br>UDT Port: %2<br>Name: %3<br>Version: %4").arg(serverAddress).arg(serverUDTListeningPort).arg(serverName).arg(version);
-
-#ifdef Q_OS_WIN
-
-    if(Utilities::versionCompare(version, QString(APP_VERSION)) == 1){
-        //QMessageBox::warning(this, tr("Update Needed"), tr("New version available! Please update!"));
-        msg += tr("<p><font color = 'red'><b>New version available! Please check for update!</b></font></p>");
-        //QMessageBox::warning(this, tr("Server Found"), msg);
-    }
-
-
-#endif
-
-    QMessageBox::information(this, tr("Server Found"), msg);
 
 }
 
@@ -1180,29 +1149,32 @@ void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QB
     qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO<<" infoType:"<<infoType;
 
     if(assetNO.isEmpty()){
-        QList<ClientInfo*> clientsList;
-        if(infoData.isEmpty()){return;}
 
-        QJsonParseError error;
-        QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
-        if(error.error != QJsonParseError::NoError){
-            qCritical()<<error.errorString();
-            return;
-        }
-        QJsonObject object = doc.object();
-        if(object.isEmpty()){return;}
+        updateSystemInfoFromServer(infoData, infoType);
 
-        QJsonArray infoArray = object["OS"].toArray();
-        if(infoArray.isEmpty()){return;}
+//        QList<ClientInfo*> clientsList;
+//        if(infoData.isEmpty()){return;}
 
-        for(int i=0;i<infoArray.size();i++){
-            QByteArray data = infoArray.at(i).toString().toUtf8();
-            ClientInfo *info = new ClientInfo("", this);
-            info->setJsonData(data);
-            clientsList.append(info);
-        }
+//        QJsonParseError error;
+//        QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
+//        if(error.error != QJsonParseError::NoError){
+//            qCritical()<<error.errorString();
+//            return;
+//        }
+//        QJsonObject object = doc.object();
+//        if(object.isEmpty()){return;}
 
-        clientInfoModel->setClientList(clientsList);
+//        QJsonArray infoArray = object["OS"].toArray();
+//        if(infoArray.isEmpty()){return;}
+
+//        for(int i=0;i<infoArray.size();i++){
+//            QByteArray data = infoArray.at(i).toString().toUtf8();
+//            ClientInfo *info = new ClientInfo("", this);
+//            info->setJsonData(data);
+//            clientsList.append(info);
+//        }
+
+//        clientInfoModel->setClientList(clientsList);
 
     }else{
         ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
@@ -1235,6 +1207,54 @@ void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QB
     qApp->processEvents();
 
 }
+
+void ControlCenter::updateSystemInfoFromServer(const QByteArray &infoData, quint8 infoType){
+
+    switch (infoType) {
+    case quint8(MS::SYSINFO_OS):
+    {
+        QList<ClientInfo*> clientsList;
+        if(infoData.isEmpty()){return;}
+
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
+        if(error.error != QJsonParseError::NoError){
+            qCritical()<<error.errorString();
+            return;
+        }
+        QJsonObject object = doc.object();
+        if(object.isEmpty()){return;}
+
+        QJsonArray infoArray = object["OS"].toArray();
+        if(infoArray.isEmpty()){return;}
+
+        for(int i=0;i<infoArray.size();i++){
+            QByteArray data = infoArray.at(i).toString().toUtf8();
+            ClientInfo *info = new ClientInfo("", this);
+            info->setJsonData(data);
+            clientsList.append(info);
+        }
+
+        clientInfoModel->setClientList(clientsList);
+
+    }
+        break;
+
+    case quint8(MS::SYSINFO_SYSADMINS):
+    {
+        ui.tabAdministrators->setData(infoData);
+    }
+        break;
+
+
+    default:
+        qCritical()<<"ERROR! Invalid info from server!";
+        break;
+    }
+
+
+}
+
 
 void ControlCenter::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
     if(!modified){return;}
@@ -1385,7 +1405,10 @@ void ControlCenter::peerDisconnected(SOCKETID socketID){
 void ControlCenter::adminVerified(){
     m_socketConnectedToServer = m_adminUser->socketConnectedToServer();
 
-    //ui.tabWidget->cornerWidget(Qt::TopLeftCorner)->setEnabled(true);
+    ui.lineEditServerIP->setText(m_adminUser->serverAddress());
+    ui.lineEditServerPort->setText(QString::number(m_adminUser->serverPort()));
+    ui.lineEditServerName->setText(m_adminUser->serverName());
+    ui.lineEditVersion->setText(m_adminUser->serverVersion());
 
 }
 

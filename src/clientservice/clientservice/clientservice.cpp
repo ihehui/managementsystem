@@ -531,7 +531,7 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
         systemInfo->getServicesInfo(socketID);
         break;
 
-    case quint8(MS::SYSINFO_USERS):
+    case quint8(MS::SYSINFO_OSUSERS):
         systemInfo->getUsersInfo(socketID);
         break;
 

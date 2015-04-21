@@ -222,12 +222,15 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     break;
     case quint8(MS::Announcement):
     {
-        QString computerName = "", userName = "", adminName = "", announcement = "";
+        QString assetNO = "", userName = "", adminName = "", announcement = "";
         quint32 announcementID = 0;
         quint8 confirmationRequired = 1;
         int validityPeriod = 60;
-        in >> computerName >> userName >> adminName >> announcementID >> announcement >> confirmationRequired >> validityPeriod;
+        in >> assetNO >> userName >> adminName >> announcementID >> announcement >> confirmationRequired >> validityPeriod;
 
+        if(assetNO != m_assetNO){
+            return;
+        }
 
         if(userName.trimmed().isEmpty()){
             foreach (SOCKETID sID, localUserSockets()) {
@@ -245,7 +248,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
         //emit signalServerAnnouncementPacketReceived(groupName, computerName, announcementID, announcement, adminName, userName, (mustRead == quint8(0))?false:true);
 
-        qDebug()<<"~~Announcement"<<"computerName:"<<computerName<<" announcement:"<<announcement<<" userName:"<<userName<<" mustRead:"<<confirmationRequired;
+        qDebug()<<"~~Announcement"<<"computerName:"<<assetNO<<" announcement:"<<announcement<<" userName:"<<userName<<" mustRead:"<<confirmationRequired;
         //qDebug()<<"~~Announcement";
 
     }

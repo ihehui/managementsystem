@@ -36,9 +36,7 @@
 
 #include <QWidget>
 
-#include "serverinfo.h"
 #include "serverinfomodel.h"
-//#include "../packetmanager/clientpacketsparser.h"
 
 
 namespace Ui {
@@ -65,7 +63,7 @@ private:
     
 signals:
     void signalLookForServer(const QString &targetAddress, quint16 targetPort);
-    void signalServerSelected(const QString &serverAddress, quint16 serverPort);
+    void signalServerSelected(const QString &serverAddress, quint16 serverPort, const QString &serverName, const QString &version);
     
 
 public slots:

@@ -77,7 +77,7 @@ private slots:
 
     void slotRemoteDesktop();
     void slotVNC();
-    void changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+    void changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
     void slotUpdateUserLogonPassword();
     void slotInformUserNewLogonPassword();
@@ -88,10 +88,10 @@ private slots:
 
     void startNetwork();
 
-    void serverFound(const QString &serverAddress, quint16 serverUDTListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
     void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType);
     void processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
+    void updateSystemInfoFromServer(const QByteArray &infoData, quint8 infoType);
 
     void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
 

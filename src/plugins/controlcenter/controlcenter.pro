@@ -33,7 +33,8 @@ INCLUDEPATH +=  $$UI_DIR \
                 servicesmanagement \
                 usersmanagement \
                 softwaremanagement \
-                processmonitor
+                processmonitor \
+                servermanagement
 
 # Input
 HEADERS += \
@@ -63,9 +64,10 @@ HEADERS += \
     processmonitor/processmonitorrulemodel.h \
     processmonitor/ruleinfowidget.h \
     servermanagement/serveraddressmanagerwindow.h \
-    servermanagement/serverinfo.h \
     servermanagement/serverinfomodel.h \
-    adminuser.h
+    adminuser.h \
+    servermanagement/adminsmanagementwidget.h \
+    servermanagement/admininfowidget.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -93,9 +95,10 @@ SOURCES += \
     processmonitor/processmonitorrulemodel.cpp \
     processmonitor/ruleinfowidget.cpp \
     servermanagement/serveraddressmanagerwindow.cpp \
-    servermanagement/serverinfo.cpp \
     servermanagement/serverinfomodel.cpp \
-    adminuser.cpp
+    adminuser.cpp \
+    servermanagement/adminsmanagementwidget.cpp \
+    servermanagement/admininfowidget.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -112,7 +115,9 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     remotedesktop/remotedesktopmonitor.ui \
     processmonitor/processmonitor.ui \
     processmonitor/ruleinfowidget.ui \
-    servermanagement/serveraddressmanagerwindow.ui
+    servermanagement/serveraddressmanagerwindow.ui \
+    servermanagement/adminsmanagementwidget.ui \
+    servermanagement/admininfowidget.ui
 
 RESOURCES += controlcenter.qrc
 

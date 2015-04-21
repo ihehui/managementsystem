@@ -733,7 +733,7 @@ void SystemManagementWidget::on_toolButtonRequestHardwareInfo_clicked(){
     //        return;
     //    }
 
-    bool ok = controlCenterPacketsParser->sendRequestClientInfoPacket(m_peerSocket, m_peerComputerName, quint8(MS::SYSINFO_HARDWARE));
+    bool ok = controlCenterPacketsParser->sendRequestClientInfoPacket(m_peerSocket, m_peerAssetNO, quint8(MS::SYSINFO_HARDWARE));
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
         return;
@@ -749,6 +749,7 @@ void SystemManagementWidget::on_toolButtonRequestHardwareInfo_clicked(){
 }
 
 void SystemManagementWidget::on_toolButtonSaveAs_clicked(){
+    return;
 
     QString path = QFileDialog::getSaveFileName(this, tr("File Save Path:"), QDir::homePath() + "/" + m_peerComputerName, tr("INI (*.ini);;All(*.*)"));
     if(path.isEmpty()){
@@ -809,7 +810,7 @@ void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
     if(remoteConsoleRunning){
         int rep = QMessageBox::question(this, tr("Confirm"), tr("Do you really want to terminate the process?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if(rep == QMessageBox::Yes){
-            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerComputerName, "", m_adminUser->getUserID(), false);
+            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerAssetNO, "", m_adminUser->getUserID(), false);
             if(!ok){
                 QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
                 return;
@@ -824,7 +825,7 @@ void SystemManagementWidget::on_toolButtonRunRemoteApplication_clicked(){
 
         QString remoteAPPPath = ui.comboBoxRemoteApplicationPath->currentText();
         if(!remoteAPPPath.trimmed().isEmpty()){
-            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerComputerName, remoteAPPPath, m_adminUser->getUserID(), true);
+            bool ok = controlCenterPacketsParser->sendAdminRequestRemoteConsolePacket(m_peerSocket, m_peerAssetNO, remoteAPPPath, m_adminUser->getUserID(), true);
             if(!ok){
                 QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
                 return;
@@ -848,7 +849,7 @@ void SystemManagementWidget::on_toolButtonSendCommand_clicked(){
     }
 
     QString cmd = ui.comboBoxCommand->currentText();
-    bool ok = controlCenterPacketsParser->sendRemoteConsoleCMDFromAdminPacket(m_peerSocket, m_peerComputerName, cmd);
+    bool ok = controlCenterPacketsParser->sendRemoteConsoleCMDFromAdminPacket(m_peerSocket, m_peerAssetNO, cmd);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!\n%1").arg(m_rtp->lastErrorString()));
         return;
@@ -883,10 +884,10 @@ void SystemManagementWidget::targetHostLookedUp(const QHostInfo &host){
 
 }
 
-void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online){
+void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &assetNO, bool online){
     qDebug()<<"--SystemManagementWidget::processClientOnlineStatusChangedPacket(...)";
 
-    if(socketID != m_peerSocket || computerName != this->m_peerComputerName){
+    if(socketID != m_peerSocket || assetNO != this->m_peerAssetNO){
         return;
     }
 
@@ -1016,7 +1017,7 @@ void SystemManagementWidget::clientMessageReceived(const QString &assetNO, const
 
 void SystemManagementWidget::requestClientInfo(quint8 infoType){
 
-    bool ok = controlCenterPacketsParser->sendRequestClientInfoPacket(m_peerSocket, m_peerComputerName, infoType);
+    bool ok = controlCenterPacketsParser->sendRequestClientInfoPacket(m_peerSocket, m_peerAssetNO, infoType);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
     }
@@ -1025,7 +1026,7 @@ void SystemManagementWidget::requestClientInfo(quint8 infoType){
 
 void SystemManagementWidget::clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType){
 
-    qDebug()<<"--SystemManagementWidget::clientInfoPacketReceived(...)"<<"  Asset NO.:"<<assetNO<<"  m_peerComputerName:"<<m_peerComputerName<<"  Type:"<<infoType;
+    qDebug()<<"--SystemManagementWidget::clientInfoPacketReceived(...)"<<"  Asset NO.:"<<assetNO<<"  Type:"<<infoType;
 
     if(m_peerAssetNO != assetNO){
         return;
@@ -1062,7 +1063,7 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &assetNO, co
         ui.tabServices->setData(data);
         break;
 
-    case quint8(MS::SYSINFO_USERS):
+    case quint8(MS::SYSINFO_OSUSERS):
         ui.tabUsers->setData(data);
         break;
 
@@ -1217,13 +1218,13 @@ void SystemManagementWidget::changServiceConfig(const QString &serviceName, bool
     }
 }
 
-void SystemManagementWidget::changProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName){
-    bool ok = controlCenterPacketsParser->sendRequestChangeProcessMonitorInfoPacket(m_peerSocket, rulesData, QByteArray(), enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, computerName);
+void SystemManagementWidget::changProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO){
+    bool ok = controlCenterPacketsParser->sendRequestChangeProcessMonitorInfoPacket(m_peerSocket, rulesData, QByteArray(), enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, assetNO);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
     }
 
-    emit signalSetProcessMonitorInfo(rulesData, QByteArray(), enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, m_peerComputerName);
+    emit signalSetProcessMonitorInfo(rulesData, QByteArray(), enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, m_peerAssetNO);
 
 }
 
@@ -1269,7 +1270,7 @@ void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
     int validityPeriod;
     wgt.getMessageInfo(&messageID, &message, &confirmationRequired, &validityPeriod);
 
-    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(m_peerSocket, m_peerComputerName, userName, m_adminUser->getUserID(), messageID, message, confirmationRequired, validityPeriod);
+    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(m_peerSocket, m_peerAssetNO, userName, m_adminUser->getUserID(), messageID, message, confirmationRequired, validityPeriod);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
     }
@@ -1392,7 +1393,7 @@ void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString
     }
 
     if(ui.tabUsers->isActive()){
-        requestClientInfo(MS::SYSINFO_USERS);
+        requestClientInfo(MS::SYSINFO_OSUSERS);
     }
 
 }

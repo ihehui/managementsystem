@@ -110,6 +110,29 @@ public slots:
         return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
+    bool sendServerMessagePacket(int adminSocketID, const QString &message, quint8 messageType = quint8(MS::MSG_Information)){
+
+        Packet *packet = PacketHandlerBase::getPacket(adminSocketID);
+
+        packet->setPacketType(quint8(MS::ServerMessage));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_serverName << message <<messageType;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(adminSocketID, &ba);
+    }
+
     bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0){
 
         QHostAddress targetAddress = QHostAddress(peerAddress);
@@ -305,6 +328,7 @@ signals:
     void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
     void signalClientInfoRequestedPacketReceived(SOCKETID socketID, const QString &assetNO, quint8 infoType);
+    void signalUpdateSysAdminInfoPacketReceived(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin = false);
 
 
     void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online, const QString &ip, quint16 port);

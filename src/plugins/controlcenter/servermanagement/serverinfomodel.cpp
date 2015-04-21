@@ -32,118 +32,138 @@
 namespace HEHUI {
 
 ServerInfoModel::ServerInfoModel(QObject *parent)
-	:QAbstractTableModel(parent)
+    :QAbstractTableModel(parent)
 {
-	// TODO Auto-generated constructor stub
+    // TODO Auto-generated constructor stub
 
 }
 
 ServerInfoModel::~ServerInfoModel() {
-	serversList.clear();
+    serversList.clear();
 }
 
 void ServerInfoModel::setServersList(QList<ServerInfo*> serversList)
 {
-	beginResetModel();
+    beginResetModel();
     this->serversList = serversList;
     endResetModel();
 }
 
 int ServerInfoModel::rowCount ( const QModelIndex & parent) const {
-	if(parent.isValid()){
-		return 0;
-	}
-	return serversList.size();
+    if(parent.isValid()){
+        return 0;
+    }
+    return serversList.size();
 
 }
 
 int	 ServerInfoModel::columnCount ( const QModelIndex & parent) const{
-	if(parent.isValid()){
-		return 0;
-	}
+    if(parent.isValid()){
+        return 0;
+    }
 
-	return 3;
+    return 5;
 
 
 }
 
 QVariant ServerInfoModel::data ( const QModelIndex & index, int role) const{
-	if(!index.isValid()){
-		return QVariant();
-	}
+    if(!index.isValid()){
+        return QVariant();
+    }
 
-	int row = index.row();
-	if((row < 0) || (row >= serversList.size())){
-		return QVariant();
-	}
+    int row = index.row();
+    if((row < 0) || (row >= serversList.size())){
+        return QVariant();
+    }
 
-	if(role == Qt::DisplayRole || role == Qt::EditRole){
-		ServerInfo *info = static_cast<ServerInfo *> (serversList.at(row));
-		switch (index.column()) {
-			case 0:
-				return info->getIp();
-				break;
-			case 1:
-				return info->getPort();
-				break;
-			case 2:
-			{
-				switch (info->getCurState()) {
-					case ServerInfo::NotTested:
-						return QString(tr("Unknown"));
-						break;
-					case ServerInfo::Testing :
-						return QString(tr("Testing"));
-						break;
-					case ServerInfo::TestOK :
-						return QString(tr("OK"));
-						break;
-					case ServerInfo::TestFailed :
-						return QString(tr("Failed"));
-						break;
-					default:
-						return QString(tr("Unknown"));
-						break;
-				}
-			}
-				break;
-			default:
-				return QVariant();
-				break;
-		}
-	}
+    if(role == Qt::DisplayRole || role == Qt::EditRole){
+        ServerInfo *info = static_cast<ServerInfo *> (serversList.at(row));
+        switch (index.column()) {
+        case 0:
+            return info->serverIP;
+            break;
+
+        case 1:
+            return info->serverPort;
+            break;
+        case 2:
+            return info->serverName;
+            break;
+        case 3:
+            return info->version;
+            break;
+
+        case 4:
+        {
+            switch (info->currentState) {
+            case ServerInfo::NotTested:
+                return QString(tr("Unknown"));
+                break;
+            case ServerInfo::Testing :
+                return QString(tr("Testing"));
+                break;
+            case ServerInfo::TestOK :
+                return QString(tr("OK"));
+                break;
+            case ServerInfo::TestFailed :
+                return QString(tr("Failed"));
+                break;
+            default:
+                return QString(tr("Unknown"));
+                break;
+            }
+        }
+            break;
 
 
-	return QVariant();
+        default:
+            return QVariant();
+            break;
+        }
+    }
 
 
+    return QVariant();
 
 }
 
 QVariant ServerInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-	if(role != Qt::DisplayRole){
-		return QVariant();
-	}
+    if(role != Qt::DisplayRole){
+        return QVariant();
+    }
 
-	if(orientation ==  Qt::Horizontal){
-		switch (section) {
-			case 0:
-				return QString(tr("IP"));
-				break;
-			case 1:
-				return QString(tr("Port"));
-				break;
-			case 2:
-				return QString(tr("State"));
-				break;
-			default:
-				return QVariant();
-				break;
-		}
+    if(orientation ==  Qt::Horizontal){
+        switch (section) {
+        case 0:
+            return QString(tr("IP"));
+            break;
 
-	}
+        case 1:
+            return QString(tr("Port"));
+            break;
 
-	return QVariant();
+        case 2:
+            return QString(tr("Name"));
+            break;
+
+        case 3:
+            return QString(tr("Version"));
+            break;
+
+        case 4:
+            return QString(tr("State"));
+            break;
+
+
+        default:
+            return QVariant();
+            break;
+        }
+
+    }
+
+    return QVariant();
 
 }
 

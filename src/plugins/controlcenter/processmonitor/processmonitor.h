@@ -32,7 +32,7 @@ protected:
 
 signals:
     void signalGetProcessMonitorInfo(quint8 infoType = MS::SYSINFO_PROCESSMONITOR);
-    void signalSetProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+    void signalSetProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
 
 public slots:

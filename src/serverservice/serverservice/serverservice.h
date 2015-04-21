@@ -36,6 +36,7 @@
 
 #include "../../sharedms/global_shared.h"
 #include "../../sharedms/clientinfo.h"
+#include "../../sharedms/adminuserinfo.h"
 
 #include "packetmanager/serverpacketsparser.h"
 #include "../resourcesmanagerinstance.h"
@@ -76,6 +77,7 @@ private slots:
     void processSoftwareInfo(ClientInfo *info, const QByteArray &data);
 
     void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
+    void processUpdateSysAdminInfoPacket(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin);
 
     void processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
 
@@ -86,6 +88,7 @@ private slots:
 //    void processHeartbeatPacket(const QString &clientAddress, const QString &computerName);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port);
+
     void processAdminLoginPacket(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
     void processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
@@ -101,10 +104,14 @@ private:
     bool openDatabase(bool reopen = false);
     bool execQuery(const QString &statement , QString *errorString = 0);
     void getAllClientsInfoFromDB();
+    void getAllAdminsInfoFromDB();
 
     void getOSInfo(SOCKETID socketID, const QString &assetNO);
     void getHardwareInfo(SOCKETID socketID, const QString &assetNO);
     void getSoftwareInfo(SOCKETID socketID, const QString &assetNO);
+
+    void sendAdminsInfo(SOCKETID socketID);
+
 
 
 protected:
@@ -138,7 +145,8 @@ private:
 
     QHash<QString/*Asset NO.*/, ClientInfo *> clientInfoHash;
     QHash<SOCKETID /*Socket ID*/, QString/*Asset NO.*/> clientSocketsHash;
-    QHash<SOCKETID /*Socket ID*/, QString/*Admin Name*/> adminSocketsHash;
+
+    QHash<QString /*Admin ID*/, AdminUserInfo *> adminsHash;
 
 
     int onlineAdminsCount;

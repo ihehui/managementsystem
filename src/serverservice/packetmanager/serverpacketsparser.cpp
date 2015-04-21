@@ -250,6 +250,19 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::UpdateSysAdminInfo):
+    {
+        QString sysAdminID = "";
+        QByteArray infoData;
+        quint8 deleteAdmin = 0;
+
+        in >> sysAdminID >> infoData >> deleteAdmin;
+
+        emit signalUpdateSysAdminInfoPacketReceived(socketID, sysAdminID, infoData, deleteAdmin);
+        qDebug()<<"~~UpdateSysAdminInfo";
+    }
+    break;
+
 
 
     default:

@@ -40,7 +40,7 @@ protected:
     
 signals:
     void updateTitle(SystemManagementWidget *wgt);
-    void signalSetProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+    void signalSetProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
 
 public slots:
@@ -78,7 +78,7 @@ private slots:
 
     void targetHostLookedUp(const QHostInfo &host);
 
-    void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &computerName, bool online);
+    void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &assetNO, bool online);
     void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP);
 
     void requestConnectionToClientTimeout();
@@ -95,7 +95,7 @@ private slots:
     void modifyAssetNOTimeout();
 
     void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);
-    void changProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &computerName);
+    void changProcessMonitorInfo(const QByteArray &rulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
 
 
 
@@ -119,7 +119,7 @@ private slots:
     void userResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
 
     void updateTemperatures(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
-    void replyMessageReceived(const QString &computerName, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
+    void replyMessageReceived(const QString &assetNO, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
 
     void serviceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType);
 
