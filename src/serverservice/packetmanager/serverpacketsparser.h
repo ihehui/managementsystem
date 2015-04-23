@@ -253,8 +253,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientInfoPacket(SOCKETID socketID, const QString &assetNO, const QByteArray &data, quint8 infoType){
-        //qWarning()<<"----sendClientInfoPacket(...)"<<" targetAddress:"<<targetAddress<<" targetPort:"<<targetPort;
+    bool sendSystemInfoPacket(SOCKETID socketID, const QString &assetNO, const QByteArray &data, quint8 infoType){
+        //qWarning()<<"----sendSystemInfoPacket(...)"<<" targetAddress:"<<targetAddress<<" targetPort:"<<targetPort;
 
         Packet *packet = PacketHandlerBase::getPacket();
 
@@ -335,6 +335,8 @@ signals:
 
     void signalAdminLogin(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
     void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
+
+    void signalSystemAlarmsRequested(SOCKETID adminSocketID, const QString &assetNO, QString type, QString acknowledged, const QString &startTime, const QString &endTime);
 
 private:
 

@@ -18,13 +18,6 @@ RemoteDesktopMonitor::RemoteDesktopMonitor(QWidget *parent) :
 RemoteDesktopMonitor::~RemoteDesktopMonitor()
 {
 
-
-
-    //    foreach (RemoteDesktopViewer *viewer, m_remoteDesktopHash.values()) {
-    //        viewer->close();
-    //    }
-
-
     foreach (QMdiSubWindow *window, ui->mdiArea->subWindowList()) {
         window->close();
     }

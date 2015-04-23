@@ -176,6 +176,19 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::ServerMessage):
+    {
+        QString message;
+        quint8 messageType = quint8(MS::MSG_Information);
+        in >> message >> messageType;
+
+        emit signalServerMessageReceived(message, messageType);
+
+        qDebug()<<"~~ServerMessage--"<<"   message:"<<message;
+
+    }
+    break;
+
     case quint8(MS::ClientOnlineStatusChanged):
     {
         quint8 online;

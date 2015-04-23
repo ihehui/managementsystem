@@ -39,6 +39,7 @@ RemoteDesktopViewer::RemoteDesktopViewer(QWidget *parent, Qt::WindowFlags flag)
 
 RemoteDesktopViewer::~RemoteDesktopViewer()
 {
+    qDebug()<<"RemoteDesktopViewer::~RemoteDesktopViewer()";
     //emit toBeDstroyed();
 
     stopRecord();

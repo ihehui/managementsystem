@@ -39,7 +39,7 @@
 
 #include "../app_constants.h"
 #include "../sharedms/settings.h"
-
+#include "../../sharedms/alarminfo.h"
 
 
 namespace HEHUI {
@@ -176,6 +176,9 @@ bool ServerService::startMainService(){
     connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool, const QString&, quint16)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool, const QString&, quint16)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminLogin(SOCKETID, const QString &, const QString &, const QString &, const QString &)), this, SLOT(processAdminLoginPacket(SOCKETID, const QString &, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
+
+    connect(serverPacketsParser, SIGNAL(signalSystemAlarmsRequested(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&)), this, SLOT(sendAlarmsInfo(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
+
 
     //Single Process Thread
     //QtConcurrent::run(serverPacketsParser, &ServerPacketsParser::run);
@@ -667,7 +670,7 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     QString alarmStatement ;
     quint8 alarmType = quint8(MS::ALARM_HARDWARECHANGE);
     foreach (QString change, changes) {
-        alarmStatement += QString("INSERT INTO Alarm(AssetNO, AlarmType, Message) VALUES('%1', %2, '%3' ); ")
+        alarmStatement += QString("call sp_Alarms_Insert('%1', %2, '%3' ); ")
                 .arg(assetNO)
                 .arg(alarmType)
                 .arg(change)
@@ -899,6 +902,9 @@ void ServerService::processRequestChangeProcessMonitorInfoPacket(SOCKETID socket
     if(!execQuery(statement)){
         QString error = QString("ERROR! An error occurred when saving process monitor info to database. Admin: %1.").arg(adminID);
         logMessage(error, QtServiceBase::Error);
+
+        QString message = QString("Failed to save process monitor info to database!");
+        serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
     }
 
 
@@ -1302,7 +1308,7 @@ void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO){
         data = info->getOSJsonData();
     }
 
-    serverPacketsParser->sendClientInfoPacket(socketID, assetNO, data, MS::SYSINFO_OS);
+    serverPacketsParser->sendSystemInfoPacket(socketID, assetNO, data, MS::SYSINFO_OS);
 
 }
 
@@ -1325,7 +1331,7 @@ void ServerService::getHardwareInfo(SOCKETID socketID, const QString &assetNO){
         data = info->getHardwareJsonData();
     }
 
-    serverPacketsParser->sendClientInfoPacket(socketID, assetNO, data, MS::SYSINFO_HARDWARE);
+    serverPacketsParser->sendSystemInfoPacket(socketID, assetNO, data, MS::SYSINFO_HARDWARE);
 
 }
 
@@ -1345,7 +1351,45 @@ void ServerService::sendAdminsInfo(SOCKETID socketID){
     QJsonDocument doc(object);
     QByteArray data = doc.toJson(QJsonDocument::Compact);
 
-    serverPacketsParser->sendClientInfoPacket(socketID, "", data, MS::SYSINFO_SYSADMINS);
+    serverPacketsParser->sendSystemInfoPacket(socketID, "", data, MS::SYSINFO_SYSADMINS);
+
+}
+
+void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime){
+
+    QString statement = QString("call sp_Alarms_Query('%1', %2, %3, '%4', '%5' ); ")
+            .arg(assetNO)
+            .arg(type)
+            .arg(acknowledged)
+            .arg(startTime)
+            .arg(endTime)
+            ;
+    if(!execQuery(statement)){
+        return;
+    }
+    QJsonArray jsonArray;
+    while(query->next()){
+        QJsonArray infoArray;
+        infoArray.append(query->value("ID").toString());
+        infoArray.append(query->value("AssetNO").toString());
+        infoArray.append(query->value("AlarmType").toString());
+        infoArray.append(query->value("Message").toString());
+        infoArray.append(query->value("UpdateTime").toString());
+        infoArray.append(query->value("Acknowledged").toString());
+        infoArray.append(query->value("AcknowledgedBy").toString());
+        infoArray.append(query->value("AcknowledgedTime").toString());
+
+        jsonArray.append(infoArray);
+    }
+    query->clear();
+
+
+    QJsonObject object;
+    object["Alarms"] = jsonArray;
+    QJsonDocument doc(object);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+    serverPacketsParser->sendSystemInfoPacket(socketID, "", data, MS::SYSINFO_SYSALARMS);
 
 }
 

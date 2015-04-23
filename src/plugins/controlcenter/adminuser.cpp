@@ -127,7 +127,7 @@ void AdminUser::modifyServerSettings(){
     ServerAddressManagerWindow smw(&dlg);
     connect(&smw, SIGNAL(signalLookForServer(const QString &, quint16 )), m_controlCenterPacketsParser, SLOT(sendClientLookForServerPacket(const QString &, quint16)));
     connect(m_controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), &smw, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
-    connect(&smw, SIGNAL(signalServerSelected(const QString &, quint16, const QString &, const QString &,)), this, SLOT(serverSelected(const QString &, quint16)));
+    connect(&smw, SIGNAL(signalServerSelected(const QString &, quint16, const QString &, const QString &)), this, SLOT(serverSelected(const QString &, quint16, const QString &, const QString &)));
 
     vbl.addWidget(&smw);
     dlg.setLayout(&vbl);

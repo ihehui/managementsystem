@@ -32,6 +32,9 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 {
     ui.setupUi(this);
 
+    setAttribute(Qt::WA_DeleteOnClose);
+
+
     ui.lineEditHost->setFocus();
 
     m_joinWorkgroupMenu = new QMenu(this);

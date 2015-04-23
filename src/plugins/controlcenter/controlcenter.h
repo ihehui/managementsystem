@@ -89,6 +89,8 @@ private slots:
     void startNetwork();
 
 
+    void showServerMessage(const QString &message, quint8 messageType);
+
     void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType);
     void processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
     void updateSystemInfoFromServer(const QByteArray &infoData, quint8 infoType);
@@ -109,15 +111,6 @@ private slots:
     void peerDisconnected(SOCKETID socketID);
 
     void adminVerified();
-
-//    bool isAdminVerified();
-//    void verifyUser();
-//    void modifyServerSettings();
-//    void serverSelected(const QString &serverAddress, quint16 serverPort);
-//    bool connectToServer(const QString &serverAddress, quint16 serverPort);
-//    bool login();
-//    void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
-
 
 private:
     bool openDatabase(bool reopen = false);
@@ -141,17 +134,11 @@ private:
     QMenu *searchClientsMenu;
 
     QString localComputerName;
-    //SystemManagementWidget *localSystemManagementWidget;
 
     QString databaseConnectionName;
     QSqlQuery *query;
     ClientInfoModel *clientInfoModel;
     ClientInfoSortFilterProxyModel *proxyModel;
-
-    //QWidget *m_progressWidget;
-    //QLayout* hlayout;
-    //QLabel *label;
-    //QProgressBar *progressBar;
 
     static bool running;
 
@@ -167,9 +154,7 @@ private:
     RTP *m_rtp;
     quint16 m_localRTPListeningPort;
     SOCKETID m_socketConnectedToServer;
-    //QString m_serverAddress;
-    //quint16 m_serverPort;
-    //LoginDlg *m_loginDlg;
+
 
     RemoteDesktopMonitor *m_remoteDesktopMonitor;
 //    QHash<int/*Socket ID*/, QHostAddress/*IP*/> clientSocketsHash;

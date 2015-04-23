@@ -41,6 +41,9 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
 {
     ui.setupUi(this);
     //setWindowFlags(Qt::Dialog);
+
+    //setAttribute(Qt::WA_DeleteOnClose);
+
     setWindowTitle(m_appName);
 
     ui.statusbar->hide();
@@ -72,9 +75,9 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
     ui.comboBoxUSBSD->addItem(tr("Disabled"), quint8(MS::USBSTOR_Disabled));
     ui.comboBoxUSBSD->addItem(tr("Unknown"), quint8(MS::USBSTOR_Unknown));
 
-    ui.comboBoxProcMon->addItem("All", QVariant(-1));
-    ui.comboBoxProcMon->addItem("Enabled", QVariant(1));
-    ui.comboBoxProcMon->addItem("Disabled", QVariant(0));
+    ui.comboBoxProcMon->addItem(tr("All"), QVariant(-1));
+    ui.comboBoxProcMon->addItem(tr("Enabled"), QVariant(1));
+    ui.comboBoxProcMon->addItem(tr("Disabled"), QVariant(0));
     ui.comboBoxProcMon->setCurrentIndex(0);
 
     searchClientsMenu = new QMenu();
@@ -184,10 +187,10 @@ ControlCenter::~ControlCenter()
 {
     qDebug()<<"--ControlCenter::~ControlCenter()";
 
-
-
     if(vncProcess){
         vncProcess->terminate();
+        delete vncProcess;
+        vncProcess = 0;
     }
 
     if(query){
@@ -202,10 +205,6 @@ ControlCenter::~ControlCenter()
     }
     QSqlDatabase::removeDatabase(databaseConnectionName);
 
-
-    delete m_adminUser;
-    m_adminUser = 0;
-
     delete controlCenterPacketsParser;
     controlCenterPacketsParser = 0;
 
@@ -213,7 +212,20 @@ ControlCenter::~ControlCenter()
     delete resourcesManager;
     resourcesManager = 0;
 
+    //TODO
     PacketHandlerBase::clean();
+
+
+    delete proxyModel;
+    proxyModel = 0;
+
+    delete clientInfoModel;
+    clientInfoModel = 0;
+
+    if(m_remoteDesktopMonitor){
+        delete m_remoteDesktopMonitor;
+        m_remoteDesktopMonitor = 0;
+    }
 
     delete m_adminUser;
     m_adminUser = 0;
@@ -418,7 +430,6 @@ void ControlCenter::slotNewTab(ClientInfo *info){
 
 void ControlCenter::slotcloseTab(){
 
-    //如果只有一页，则返回
     //   if(ui.tabWidget->count()==1){
     //        return;
     //   }
@@ -429,16 +440,11 @@ void ControlCenter::slotcloseTab(){
 
     SystemManagementWidget *systemManagementWidget = qobject_cast<SystemManagementWidget *>(ui.tabWidget->currentWidget());
     if(systemManagementWidget){
-//        if(systemManagementWidget == localSystemManagementWidget){
-//            return;
-//        }
         ui.tabWidget->removeTab(ui.tabWidget->currentIndex());
         systemManagementWidget->close();
-        systemManagementWidget->deleteLater();
+        //systemManagementWidget->deleteLater();
     }
 
-
-    //如果只有一页，则关闭按钮不可用
     //ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(ui.tabWidget->count() > 1);
 
 
@@ -1090,6 +1096,8 @@ void ControlCenter::startNetwork(){
 
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
+    connect(controlCenterPacketsParser, SIGNAL(signalServerMessageReceived(const QString &, quint8)), this, SLOT(showServerMessage(const QString &, quint8)));
+
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)));
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
     connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
@@ -1111,6 +1119,26 @@ void ControlCenter::startNetwork(){
 
     //controlCenterPacketsParser->sendClientLookForServerPacket("255.255.255.255");
 
+
+}
+
+void ControlCenter::showServerMessage(const QString &message, quint8 messageType){
+
+    QString msg = QString(tr("<p>Message From Server <b>%1</b> :</p>").arg(m_adminUser->serverName()));
+    msg += message;
+    switch(messageType){
+    case quint8(MS::MSG_Information):
+        QMessageBox::information(this, tr("Message"), msg);
+        break;
+    case quint8(MS::MSG_Warning):
+        QMessageBox::warning(this, tr("Warning"), msg);
+        break;
+    case quint8(MS::MSG_Critical):
+        QMessageBox::critical(this, tr("Error"), msg);
+        break;
+    default:
+        QMessageBox::information(this, tr("Message"), msg);
+    }
 
 }
 
@@ -1149,33 +1177,7 @@ void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QB
     qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO<<" infoType:"<<infoType;
 
     if(assetNO.isEmpty()){
-
         updateSystemInfoFromServer(infoData, infoType);
-
-//        QList<ClientInfo*> clientsList;
-//        if(infoData.isEmpty()){return;}
-
-//        QJsonParseError error;
-//        QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
-//        if(error.error != QJsonParseError::NoError){
-//            qCritical()<<error.errorString();
-//            return;
-//        }
-//        QJsonObject object = doc.object();
-//        if(object.isEmpty()){return;}
-
-//        QJsonArray infoArray = object["OS"].toArray();
-//        if(infoArray.isEmpty()){return;}
-
-//        for(int i=0;i<infoArray.size();i++){
-//            QByteArray data = infoArray.at(i).toString().toUtf8();
-//            ClientInfo *info = new ClientInfo("", this);
-//            info->setJsonData(data);
-//            clientsList.append(info);
-//        }
-
-//        clientInfoModel->setClientList(clientsList);
-
     }else{
         ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
         if(!info){
@@ -1243,6 +1245,12 @@ void ControlCenter::updateSystemInfoFromServer(const QByteArray &infoData, quint
     case quint8(MS::SYSINFO_SYSADMINS):
     {
         ui.tabAdministrators->setData(infoData);
+    }
+        break;
+
+    case quint8(MS::SYSINFO_SYSALARMS):
+    {
+        ui.tabAlarms->setData(infoData);
     }
         break;
 

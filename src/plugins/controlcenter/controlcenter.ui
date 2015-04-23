@@ -37,7 +37,7 @@
            <enum>QTabWidget::South</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tabClientsList">
            <attribute name="title">
@@ -131,7 +131,7 @@
             <string>Administrators</string>
            </attribute>
           </widget>
-          <widget class="QWidget" name="tabAlarms">
+          <widget class="HEHUI::AlarmsManagementWidget" name="tabAlarms">
            <attribute name="title">
             <string>Alarms</string>
            </attribute>
@@ -501,6 +501,12 @@
    <class>HEHUI::AdminsManagementWidget</class>
    <extends>QWidget</extends>
    <header location="global">adminsmanagementwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HEHUI::AlarmsManagementWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">alarmsmanagementwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

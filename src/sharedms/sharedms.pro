@@ -35,7 +35,8 @@ HEADERS += clientinfo.h \
     processmonitorrule.h \
     settings.h \
     adminuserinfo.h \
-    serverinfo.h
+    serverinfo.h \
+    alarminfo.h
 
 SOURCES += clientinfo.cpp \
     udtprotocol.cpp \
@@ -47,7 +48,8 @@ SOURCES += clientinfo.cpp \
     processmonitorrule.cpp \
     settings.cpp \
     adminuserinfo.cpp \
-    serverinfo.cpp
+    serverinfo.cpp \
+    alarminfo.cpp
 
 FORMS +=
 

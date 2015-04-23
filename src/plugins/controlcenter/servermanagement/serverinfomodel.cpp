@@ -87,14 +87,8 @@ QVariant ServerInfoModel::data ( const QModelIndex & index, int role) const{
         case 1:
             return info->serverPort;
             break;
-        case 2:
-            return info->serverName;
-            break;
-        case 3:
-            return info->version;
-            break;
 
-        case 4:
+        case 2:
         {
             switch (info->currentState) {
             case ServerInfo::NotTested:
@@ -116,6 +110,13 @@ QVariant ServerInfoModel::data ( const QModelIndex & index, int role) const{
         }
             break;
 
+        case 3:
+            return info->version;
+            break;
+
+        case 4:
+            return info->serverName;
+            break;
 
         default:
             return QVariant();
@@ -144,7 +145,7 @@ QVariant ServerInfoModel::headerData ( int section, Qt::Orientation orientation,
             break;
 
         case 2:
-            return QString(tr("Name"));
+            return QString(tr("State"));
             break;
 
         case 3:
@@ -152,7 +153,7 @@ QVariant ServerInfoModel::headerData ( int section, Qt::Orientation orientation,
             break;
 
         case 4:
-            return QString(tr("State"));
+            return QString(tr("Name"));
             break;
 
 

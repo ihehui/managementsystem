@@ -24,32 +24,33 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/ `managementsystem` /*!40100 DEFAULT CHA
 USE `managementsystem`;
 
 --
--- Table structure for table `Alarm`
+-- Table structure for table `Alarms`
 --
 
-DROP TABLE IF EXISTS `Alarm`;
+DROP TABLE IF EXISTS `Alarms`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Alarm` (
-  `ID` int(10) unsigned NOT NULL,
+CREATE TABLE `Alarms` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `AssetNO` varchar(32) NOT NULL,
-  `AlarmType` tinyint(1) unsigned NOT NULL,
+  `AlarmType` tinyint(1) unsigned NOT NULL COMMENT 'ALARM_UNKNOWN=0,\nALARM_HARDWARECHANGE=1,\nALARM_PROCESSMONITOR=2',
   `Message` varchar(255) NOT NULL,
   `UpdateTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `Acknowledged` tinyint(1) unsigned DEFAULT '0',
   `AcknowledgedBy` varchar(32) DEFAULT NULL,
   `AcknowledgedTime` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Alarm`
+-- Dumping data for table `Alarms`
 --
 
-LOCK TABLES `Alarm` WRITE;
-/*!40000 ALTER TABLE `Alarm` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Alarm` ENABLE KEYS */;
+LOCK TABLES `Alarms` WRITE;
+/*!40000 ALTER TABLE `Alarms` DISABLE KEYS */;
+INSERT INTO `Alarms` VALUES (1,'china1111',1,'A1','2015-04-22 18:34:48',0,NULL,NULL),(2,'china1111',2,'A2','2015-04-22 15:35:22',1,'hehui','2015-04-23 07:35:22'),(3,'china1111',2,'A3','2011-04-21 15:35:44',0,NULL,NULL),(4,'china1111',1,'A3','2014-04-23 15:36:00',0,NULL,NULL),(5,'dgpc02419',1,'A5','2015-03-23 15:36:15',0,NULL,NULL),(6,'dgpc02419',1,'A7','2015-04-19 18:36:35',1,'guest','2015-04-23 07:35:22'),(7,'dgpc02419',2,'A7','2015-04-23 05:36:40',0,NULL,NULL);
+/*!40000 ALTER TABLE `Alarms` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -84,6 +85,7 @@ CREATE TABLE `Hardware` (
 
 LOCK TABLES `Hardware` WRITE;
 /*!40000 ALTER TABLE `Hardware` DISABLE KEYS */;
+INSERT INTO `Hardware` VALUES ('china1111','Intel Pentium III Xeon 处理器 CPU 0',NULL,'(1GB,)','QEMU HARDDISK(29GB)',NULL,NULL,NULL,'Realtek RTL8139 Family PCI Fast Ethernet NIC(52:54:00:6D:43:EA)','2015-04-23 09:22:45',NULL),('dgpc02419','Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz LGA1155','ASUSTeK COMPUTER INC. P8H61-M LX3 PLUS R2.0','Kingston(4GB,1333)','ST3500413AS ATA Device(465GB);ST500DM002-1BC142 ATA Device(465GB)','DELF03D','GeForce 9400 GT','VIA High Definition Audio','Realtek PCIe GBE Family Controller(08:60:6E:C4:36:29);VirtualBox Host-Only Ethernet Adapter(08:00:27:00:C0:CB);VirtualBox Bridged Networking Driver Miniport(08:60:6E:C4:36:29)','2015-04-17 15:42:45',NULL);
 /*!40000 ALTER TABLE `Hardware` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -105,7 +107,7 @@ CREATE TABLE `InstalledSoftware` (
   UNIQUE KEY `ID_UNIQUE` (`ID`),
   KEY `FK_InstalledSoftware_AssetNO` (`AssetNO`),
   CONSTRAINT `FK_InstalledSoftware_AssetNO` FOREIGN KEY (`AssetNO`) REFERENCES `OS` (`AssetNO`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2060 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -114,6 +116,7 @@ CREATE TABLE `InstalledSoftware` (
 
 LOCK TABLES `InstalledSoftware` WRITE;
 /*!40000 ALTER TABLE `InstalledSoftware` DISABLE KEYS */;
+INSERT INTO `InstalledSoftware` VALUES (1840,'dgpc02419','Adobe Flash Player 17 ActiveX','17.0.0.169','','Adobe Systems Incorporated'),(1841,'dgpc02419','Adobe Flash Player 17 NPAPI','17.0.0.169','','Adobe Systems Incorporated'),(1842,'dgpc02419','支付宝安全控件 5.3.0.3807','5.3.0.3807','','Alipay.com Co., Ltd.'),(1843,'dgpc02419','百度安全控件 1.0.3.0','','',''),(1844,'dgpc02419','招行专业版','','',''),(1845,'dgpc02419','Colasoft Capsa 7 Enterprise','7.3','20150202','Colasoft'),(1846,'dgpc02419','Git version 1.9.5-preview20150319','1.9.5-preview20150319','20150416','The Git Development Community'),(1847,'dgpc02419','GNS3 1.2','1.2','',''),(1848,'dgpc02419','VIA 平台设备管理员','1.39','20140729','VIA Technologies, Inc.'),(1849,'dgpc02419','金山毒霸','2015.1.2','','Kingsoft Internet Security'),(1850,'dgpc02419','Microsoft Windows Driver Kit 7.1.0.7600','7.1.0.7600','','Microsoft Corporation'),(1851,'dgpc02419','快盘','4.12.16.17','','ShenZhen Xunlei Networking Technologies Ltd.'),(1852,'dgpc02419','猎豹安全浏览器','5.2.91.9718','','猎豹工作室'),(1853,'dgpc02419','Microsoft Document Explorer 2008','','','Microsoft Corporation'),(1854,'dgpc02419','向日葵 7.3 正式版','7.3.38.998','','上海贝锐信息科技有限公司'),(1855,'dgpc02419','TeamViewer 10','10.0.40798','','TeamViewer'),(1856,'dgpc02419','VisualDDK','1.0','','Bazis'),(1857,'dgpc02419','豌豆荚','2.80.0.7144','','豌豆实验室'),(1858,'dgpc02419','WinPcap 4.1.2','4.1.0.2001','','CACE Technologies'),(1859,'dgpc02419','Wireshark 1.12.1 (64-bit)','1.12.1','','The Wireshark developer community, http://www.wireshark.org'),(1860,'dgpc02419','Microsoft Visual C++ 2008 ATL Update kb973924 - x86 9.0.30729.4148','9.0.30729.4148','20140919','Microsoft Corporation'),(1861,'dgpc02419','sensorsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1862,'dgpc02419','vistalibs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1863,'dgpc02419','wdftools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1864,'dgpc02419','VMware vSphere Client 5.1','5.1.0.1557','20140804','VMware, Inc.'),(1865,'dgpc02419','networklibraries_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1866,'dgpc02419','toastermetadatapackagesample','1.1.6001.0','20150404','Microsoft Corporation'),(1867,'dgpc02419','infsample_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1868,'dgpc02419','networklibraries_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1869,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1870,'dgpc02419','dsfsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1871,'dgpc02419','setupsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1872,'dgpc02419','Microsoft Visual C++ 2013 x86 Minimum Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(1873,'dgpc02419','setuptools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1874,'dgpc02419','imagingtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1875,'dgpc02419','pnptools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1876,'dgpc02419','powermanagement_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1877,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.4148','9.0.30729.4148','20140804','Microsoft Corporation'),(1878,'dgpc02419','headers','1.1.6001.0','20150404','Microsoft Corporation'),(1879,'dgpc02419','Platform','1.39','20140729','VIA Technologies, Inc.'),(1880,'dgpc02419','Java 8 Update 31','8.0.310','20150213','Oracle Corporation'),(1881,'dgpc02419','bluetoothsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1882,'dgpc02419','audiosamples','1.1.6001.0','20150404','Microsoft Corporation'),(1883,'dgpc02419','Debugging Tools for Windows (x86)','6.11.1.404','20141016','Microsoft Corporation'),(1884,'dgpc02419','generaltools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1885,'dgpc02419','vistalibs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1886,'dgpc02419','buildtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1887,'dgpc02419','offreg_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1888,'dgpc02419','MSXML 4.0 SP3 Parser (KB2721691)','4.30.2114.0','20141112','Microsoft Corporation'),(1889,'dgpc02419','Microsoft Visual C++  Compilers 2010 Standard - enu - x86','10.0.30319','20141121','Microsoft Corporation'),(1890,'dgpc02419','tracingtool_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1891,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1892,'dgpc02419','tools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1893,'dgpc02419','printtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1894,'dgpc02419','printtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1895,'dgpc02419','toolindex','1.1.6001.0','20150404','Microsoft Corporation'),(1896,'dgpc02419','tracingtool_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1897,'dgpc02419','debugfiles_win7','1.1.6001.0','20150404','Microsoft Corporation'),(1898,'dgpc02419','tracingtool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1899,'dgpc02419','generalsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1900,'dgpc02419','toastersample','1.1.6001.0','20150404','Microsoft Corporation'),(1901,'dgpc02419','fireflysample','1.1.6001.0','20150404','Microsoft Corporation'),(1902,'dgpc02419','eventsample','1.1.6001.0','20150404','Microsoft Corporation'),(1903,'dgpc02419','biometricsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1904,'dgpc02419','Java Auto Updater','2.8.31.13','20150213','Oracle Corporation'),(1905,'dgpc02419','libs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1906,'dgpc02419','imagingtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1907,'dgpc02419','VMware vSphere Client 5.5','5.5.0.3838','20140815','VMware, Inc.'),(1908,'dgpc02419','pfd_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1909,'dgpc02419','wnetlibs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1910,'dgpc02419','cancelsample','1.1.6001.0','20150404','Microsoft Corporation'),(1911,'dgpc02419','bluetoothtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1912,'dgpc02419','chkinftool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1913,'dgpc02419','wdftools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1914,'dgpc02419','sideshowsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1915,'dgpc02419','readme','1.1.6001.0','20150404','Microsoft Corporation'),(1916,'dgpc02419','networksamples','1.1.6001.0','20150404','Microsoft Corporation'),(1917,'dgpc02419','SolarWinds Response Time Viewer','1.0.0.162','20141025','SolarWinds'),(1918,'dgpc02419','portiosample','1.1.6001.0','20150404','Microsoft Corporation'),(1919,'dgpc02419','biometrictools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1920,'dgpc02419','storagesamples','1.1.6001.0','20150404','Microsoft Corporation'),(1921,'dgpc02419','bussamples','1.1.6001.0','20150404','Microsoft Corporation'),(1922,'dgpc02419','smartcardsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1923,'dgpc02419','avstreamtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1924,'dgpc02419','wnetlibs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1925,'dgpc02419','irsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1926,'dgpc02419','pnptools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1927,'dgpc02419','Microsoft Document Explorer 2008','9.0.21022','20150404','Microsoft Corporation'),(1928,'dgpc02419','Hotfix for Microsoft Document Explorer 2008 (KB953196)','1','','Microsoft Corporation'),(1929,'dgpc02419','streammediasamples','1.1.6001.0','20150404','Microsoft Corporation'),(1930,'dgpc02419','offreg_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1931,'dgpc02419','Microsoft Visual C++ 2005 Redistributable','8.0.61001','20140729','Microsoft Corporation'),(1932,'dgpc02419','usbsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1933,'dgpc02419','drvtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1934,'dgpc02419','infsample_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1935,'dgpc02419','Microsoft Windows Driver Kit Documentation 7600.091201','6.0.7600.0','20150404','Microsoft'),(1936,'dgpc02419','dfx_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1937,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1938,'dgpc02419','evntdrvsample','1.1.6001.0','20150404','Microsoft Corporation'),(1939,'dgpc02419','pfd_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1940,'dgpc02419','Microsoft Visual C++ 2005 Redistributable','8.0.59193','20140919','Microsoft Corporation'),(1941,'dgpc02419','wpdtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1942,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729','9.0.30729','20140919','Microsoft Corporation'),(1943,'dgpc02419','dfx_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1944,'dgpc02419','Realtek Ethernet Controller Driver','7.86.508.2014','20140729','Realtek'),(1945,'dgpc02419','setuptools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1946,'dgpc02419','tools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1947,'dgpc02419','drvtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1948,'dgpc02419','hid_inputsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1949,'dgpc02419','ioctlsample','1.1.6001.0','20150404','Microsoft Corporation'),(1950,'dgpc02419','Security Update for Microsoft .NET Framework 4.5.2 (KB2972216)','1','','Microsoft Corporation'),(1951,'dgpc02419','hidsampleinput','1.1.6001.0','20150404','Microsoft Corporation'),(1952,'dgpc02419','dfx_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1953,'dgpc02419','powermanagement_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1954,'dgpc02419','buildsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1955,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.17','9.0.30729','20140912','Microsoft Corporation'),(1956,'dgpc02419','Microsoft Visual C++ 2012 Redistributable (x64) - 11.0.61030','11.0.61030.0','','Microsoft Corporation'),(1957,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161','9.0.30729.6161','20140729','Microsoft Corporation'),(1958,'dgpc02419','wxplibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1959,'dgpc02419','generaltools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1960,'dgpc02419','驱动精灵2014','8.1.108.1323','20150131','驱动精灵2014'),(1961,'dgpc02419','umdfsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1962,'dgpc02419','displaysamples','1.1.6001.0','20150404','Microsoft Corporation'),(1963,'dgpc02419','Microsoft Visual C++ 2012 Redistributable (x86) - 11.0.61030','11.0.61030.0','','Microsoft Corporation'),(1964,'dgpc02419','infsample_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1965,'dgpc02419','bluetoothtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1966,'dgpc02419','imagingtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1967,'dgpc02419','wsdtool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1968,'dgpc02419','drvtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1969,'dgpc02419','wpdsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1970,'dgpc02419','Microsoft Visual C++ 2012 x86 Additional Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(1971,'dgpc02419','setuptools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1972,'dgpc02419','powermanagement_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1973,'dgpc02419','printtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1974,'dgpc02419','libs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1975,'dgpc02419','wmisamples','1.1.6001.0','20150404','Microsoft Corporation'),(1976,'dgpc02419','avstreamtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1977,'dgpc02419','avstreamtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1978,'dgpc02419','Microsoft Visual C++ 2012 x86 Minimum Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(1979,'dgpc02419','pnpportssample','1.1.6001.0','20150404','Microsoft Corporation'),(1980,'dgpc02419','DSF-KitSetup','1.1.6001.0','20150404','Microsoft Corporation'),(1981,'dgpc02419','ifssamples','1.1.6001.0','20150404','Microsoft Corporation'),(1982,'dgpc02419','swtuner','1.1.6001.0','20150404','Microsoft Corporation'),(1983,'dgpc02419','hidsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1984,'dgpc02419','oacr_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1985,'dgpc02419','tools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1986,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1987,'dgpc02419','generaltools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1988,'dgpc02419','buildtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1989,'dgpc02419','libs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1990,'dgpc02419','sdv','1.1.6001.0','20150404','Microsoft Corporation'),(1991,'dgpc02419','wnetlibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1992,'dgpc02419','ManageEngine Firewall Analyzer 8','7','20150307','ZOHO Corp'),(1993,'dgpc02419','pfd_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1994,'dgpc02419','biometrictools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1995,'dgpc02419','pnptools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1996,'dgpc02419','printsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1997,'dgpc02419','avstreamsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1998,'dgpc02419','buildtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1999,'dgpc02419','installhelp','1.1.6001.0','20150404','Microsoft Corporation'),(2000,'dgpc02419','modemtools','1.1.6001.0','20150404','Microsoft Corporation'),(2001,'dgpc02419','bluetoothtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2002,'dgpc02419','offreg_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2003,'dgpc02419','wpdtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2004,'dgpc02419','wcoinstallers','1.1.6001.0','20150404','Microsoft Corporation'),(2005,'dgpc02419','wsdtool_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2006,'dgpc02419','wsdtool_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2007,'dgpc02419','Microsoft Visual C++ 2010  x86 Redistributable - 10.0.40219','10.0.40219','20150102','Microsoft Corporation'),(2008,'dgpc02419','networklibraries_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2009,'dgpc02419','wdftools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2010,'dgpc02419','Microsoft Visual C++ 2013 x86 Additional Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2011,'dgpc02419','Foxit Reader Pro 7.0.8','7.0.8.1216','20150131','三千院雨'),(2012,'dgpc02419','vistalibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(2013,'dgpc02419','wpdtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2014,'dgpc02419','pcidrvsample','1.1.6001.0','20150404','Microsoft Corporation'),(2015,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.21022','9.0.21022','20141027','Microsoft Corporation'),(2016,'dgpc02419','tools-windows','8.8.2.703057','20150406','VMware, Inc.'),(2017,'dgpc02419','天威诚信数字证书助手','2.6.0.1','','iTrusChina'),(2018,'dgpc02419','百度云管家','5.2.0','','百度在线网络技术（北京）有限公司'),(2019,'dgpc02419','金山卫士4.7正式版','4.7.0.4207 正式版','','金山卫士'),(2020,'dgpc02419','阿里旺旺2014Beta1','','20140926','阿里巴巴（中国）有限公司'),(2021,'dgpc02419','Microsoft Visual J# 2.0 Redistributable Package - SE (x64)','','','Microsoft Corporation'),(2022,'dgpc02419','WinRAR 4.10 (64-bit)','4.10.0','','win.rar GmbH'),(2023,'dgpc02419','TortoiseGit 1.8.14.0 (64 bit)','1.8.14.0','20150415','TortoiseGit'),(2024,'dgpc02419','Microsoft .NET Framework 4.5.2 (CHS)','4.5.51209','20140730','Microsoft Corporation'),(2025,'dgpc02419','Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219','10.0.40219','20140729','Microsoft Corporation'),(2026,'dgpc02419','Microsoft .NET Framework 4.5.2','4.5.51209','20140916','Microsoft Corporation'),(2027,'dgpc02419','Java 7 Update 45 (64-bit)','7.0.450','20140811','Oracle'),(2028,'dgpc02419','Java 8 (64-bit)','8.0.0','20140811','Oracle Corporation'),(2029,'dgpc02419','VmciSockets','9.1.54.1','20150406','VMware, Inc.'),(2030,'dgpc02419','Microsoft Visual C++ 2012 x64 Additional Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(2031,'dgpc02419','MSRedists64','2.00.0000','20140925','Ingres Corporation'),(2032,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x64 9.0.30729.4148','9.0.30729.4148','20140804','Microsoft Corporation'),(2033,'dgpc02419','Oracle VM VirtualBox 4.3.26','4.3.26','20150406','Oracle Corporation'),(2034,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x64 9.0.30729.6161','9.0.30729.6161','20140729','Microsoft Corporation'),(2035,'dgpc02419','Microsoft Visual C++  Compilers 2010 Standard - enu - x64','10.0.30319','20141121','Microsoft Corporation'),(2036,'dgpc02419','Microsoft Visual C++ 2013 x64 Additional Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2037,'dgpc02419','Microsoft Visual C++ 2013 x64 Minimum Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2038,'dgpc02419','Microsoft Visual C++ 2005 Redistributable (x64)','8.0.61000','20140729','Microsoft Corporation'),(2039,'dgpc02419','Microsoft Visual J# 2.0 Redistributable Package - SE (x64)','2.0.50728','20140804','Microsoft Corporation'),(2040,'dgpc02419','Microsoft SQL Server 2008 Native Client','10.0.1600.22','20141024','Microsoft Corporation'),(2041,'dgpc02419','Microsoft Visual C++ 2012 x64 Minimum Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(2042,'dgpc02419','TightVNC','2.7.10.0','20140812','GlavSoft LLC.'),(2043,'dgpc02419','Debugging Tools for Windows (x64)','6.12.2.633','20150404','Microsoft Corporation'),(2044,'dgpc02419','True Launch Bar','6.1','','Tordex'),(2059,'china1111','WebFldrs XP','9.50.7523','20150417','Microsoft Corporation');
 /*!40000 ALTER TABLE `InstalledSoftware` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -157,16 +160,17 @@ DROP TABLE IF EXISTS `OS`;
 CREATE TABLE `OS` (
   `AssetNO` varchar(32) NOT NULL,
   `ComputerName` varchar(32) NOT NULL,
-  `OSVersion` varchar(45) NOT NULL,
-  `InstallationDate` timestamp NULL DEFAULT NULL,
+  `OSVersion` varchar(128) NOT NULL,
+  `InstallationDate` date DEFAULT NULL,
   `OSKey` varchar(45) DEFAULT NULL,
   `Workgroup` varchar(32) NOT NULL,
-  `JoinedToDomain` tinyint(3) unsigned DEFAULT '0',
+  `JoinedToDomain` tinyint(1) unsigned DEFAULT '0',
   `Users` varchar(255) DEFAULT NULL,
   `Administrators` varchar(255) DEFAULT NULL,
   `IP` varchar(255) NOT NULL DEFAULT '',
   `ClientVersion` varchar(32) DEFAULT NULL,
-  `ProcessMonitorEnabled` tinyint(1) unsigned DEFAULT '0',
+  `ProcessMonitorEnabled` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0:Disabled\n1:Enabled',
+  `USB` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT 'USBSTOR_Disabled = 0, USBSTOR_ReadWrite = 1,\nUSBSTOR_ReadOnly = 2,\nUSBSTOR_Unknown = 3',
   `LastOnlineTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`AssetNO`) USING BTREE,
   UNIQUE KEY `Index_ComputerName` (`ComputerName`),
@@ -180,6 +184,7 @@ CREATE TABLE `OS` (
 
 LOCK TABLES `OS` WRITE;
 /*!40000 ALTER TABLE `OS` DISABLE KEYS */;
+INSERT INTO `OS` VALUES ('china1111','china-74d290c0d','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2014.12.23.1',0,0,'2015-04-23 09:22:45'),('dgpc02419','dgpc02419','Microsoft Windows 7 旗舰版  Service Pack 1 64-bi','2014-07-29','FJGCP-4DFJD-GJY49-VJBQ7-HYRR2','WORKGROUP',0,'hehui','administrator;hehui','','2014.12.23.1',0,0,'2015-04-17 15:42:45');
 /*!40000 ALTER TABLE `OS` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -258,10 +263,14 @@ DROP TABLE IF EXISTS `SystemAdministrators`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `SystemAdministrators` (
   `UserID` varchar(32) NOT NULL,
-  `UserName` varchar(24) NOT NULL,
-  `BusinessAddress` varchar(16) NOT NULL,
-  `PassWD` varchar(56) NOT NULL,
+  `UserName` varchar(24) DEFAULT NULL,
+  `UserPassword` varchar(64) NOT NULL COMMENT '密码两次MD5，小写',
+  `BusinessAddress` varchar(64) DEFAULT NULL,
+  `LastLoginIP` varchar(64) DEFAULT NULL,
+  `LastLoginPC` varchar(32) DEFAULT NULL,
   `LastLoginTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Readonly` tinyint(1) unsigned NOT NULL DEFAULT '1',
+  `Active` tinyint(1) unsigned NOT NULL DEFAULT '1',
   `Remark` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -273,7 +282,7 @@ CREATE TABLE `SystemAdministrators` (
 
 LOCK TABLES `SystemAdministrators` WRITE;
 /*!40000 ALTER TABLE `SystemAdministrators` DISABLE KEYS */;
-INSERT INTO `SystemAdministrators` VALUES ('admindg','','DG','c8HdVaYFOAXZ2oYjM4L6gqTIiFk=','0000-00-00 00:00:00',''),('adminhk','','HK','ImosDlUaBd8YyNUrX7pfHTuuI3A=','0000-00-00 00:00:00',''),('adminyd','','YD','MXuRPpxRE1xTPP/X4zO1bNkgy/0=','0000-00-00 00:00:00',''),('hehui','','DG','KlcsSsfmfp6B3ya+LliE2bHO2uc=','2015-03-12 10:17:01',''),('king','','DG','apJt8QFtRPAZaUawJkZZTVFEiOo=','0000-00-00 00:00:00',''),('lhc','','DG','es9NRQZZf2kbdGvMp/GrkV0+OV0=','0000-00-00 00:00:00',''),('lj','','DG','v+7twKPCWLNfk9pWrsDVB/CEQ1c=','0000-00-00 00:00:00',''),('ljf','','DG','RvhSIcEL1/AeICOvyeoCNMvXh3g=','0000-00-00 00:00:00',''),('zk','','DG','usJrQRUF6lLB0kUaoWJco3bFht8=','0000-00-00 00:00:00','');
+INSERT INTO `SystemAdministrators` VALUES ('guest','Guest','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-04-17 16:33:26',1,1,NULL),('hehui','He Hui','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-04-23 17:02:03',0,1,NULL),('test','NNNN1','ddf63c1a8f2492aa4e41b34e93a9d54e','AAA1','dgpc02419','200.200.200.17','2015-04-22 10:36:25',1,0,'RRRRRRR1');
 /*!40000 ALTER TABLE `SystemAdministrators` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -330,6 +339,212 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'managementsystem'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Admins_Query` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Admins_Query`()
+BEGIN
+
+###t查询所有管理员信息###
+
+    select * from SystemAdministrators;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Admin_Delete` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Admin_Delete`( in p_adminID varchar(32) )
+BEGIN
+
+###删除管理员###
+
+    delete from SystemAdministrators where UserID=p_adminID;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Admin_Login` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Admin_Login`(in p_adminID varchar(32), 
+                                                                in p_adminPassword varchar(64), 
+                                                                in p_adminIP varchar(64), 
+                                                                in p_adminPC varchar(32) 
+
+                                                                )
+BEGIN
+
+###t管理员登陆###
+
+	set @pswd= null;
+	select UserPassword into @pswd from SystemAdministrators where UserID=p_adminID;
+	if @pswd = p_adminPassword then
+        update SystemAdministrators set LastLoginIP=p_adminIP, LastLoginPC=p_adminPC, LastLoginTime=NULL where UserID=p_adminID;
+        select Readonly from SystemAdministrators where UserID=p_adminID;
+	end if;
+
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Admin_Update_Info` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Admin_Update_Info`(in p_UserID varchar(32), 
+                                                                in p_UserName varchar(32), 
+                                                                in p_UserPassword varchar(64), 
+                                                                in p_BusinessAddress varchar(64), 
+                                                                in p_Readonly tinyint, 
+                                                                in p_Active tinyint,
+                                                                in p_Remark varchar(255)
+
+                                                                )
+BEGIN
+
+###更新管理员信息###
+
+	set @pswd= null;
+	select UserPassword into @pswd from SystemAdministrators where UserID=p_UserID;
+	if @pswd is null then
+        insert into SystemAdministrators(UserID, UserName, UserPassword, BusinessAddress, Readonly, Active, Remark) 
+        values(p_UserID, p_UserName, p_UserPassword, p_BusinessAddress,  p_Readonly, p_Active, p_Remark) ;
+    else
+        update SystemAdministrators set
+        UserName=p_UserName, 
+        UserPassword=p_UserPassword, 
+        BusinessAddress=p_BusinessAddress ,
+        Readonly=p_Readonly,
+        Active=p_Active,
+        Remark=p_Remark
+        where UserID=p_UserID;
+	end if;
+
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Admin_Update_Login_Info` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Admin_Update_Login_Info`(in p_adminID varchar(32), 
+                                                                in p_adminIP varchar(64), 
+                                                                in p_adminPC varchar(32) 
+
+                                                                )
+BEGIN
+
+###t管理员登陆###
+
+        update SystemAdministrators set LastLoginIP=p_adminIP, LastLoginPC=p_adminPC, LastLoginTime=NULL where UserID=p_adminID;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Alarms_Insert` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Alarms_Insert`(
+ in p_AssetNO varchar(32),
+ in p_AlarmType tinyint,
+ in p_Message varchar(255)
+                                                                                    
+)
+BEGIN
+
+###新增报警信息###
+
+insert into Alarms(AssetNO, AlarmType, Message) values(p_AssetNO, p_AlarmType, p_Message);
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Hardware_Query` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Hardware_Query`(in p_AssetNO varchar(32)
+
+                                                                )
+BEGIN
+
+###查询硬件信息###
+
+select * from Hardware where AssetNO  like p_AssetNO;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `sp_Logs_Save` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -361,6 +576,84 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_OS_AssetNO_Update` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_OS_AssetNO_Update`(in p_newAssetNO varchar(32), 
+                                                                in p_oldAssetNO varchar(32)
+                                                                  
+                                                                )
+BEGIN
+
+###更新资产编号###
+
+        update OS set AssetNO=p_newAssetNO where AssetNO=p_oldAssetNO;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Alarms_Query` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Alarms_Query`(
+ in p_AssetNO varchar(32),
+ in p_AlarmType tinyint,
+ in p_Acknowledged tinyint,
+ in p_startTime DateTime,
+ in p_endTime DateTime
+                                                                                    
+)
+BEGIN
+
+###查询报警信息###
+
+declare whereStatement varchar(1024) default ' ';
+
+set whereStatement = CONCAT_WS(' ',  '  (UpdateTime  between \' ', p_startTime, ' \'and \'',p_endTime, '\' ) ');
+
+if CHAR_LENGTH(p_AssetNO) <> 0 then
+set whereStatement = CONCAT_WS('', whereStatement, ' and AssetNO  like \'%', p_AssetNO, '%\'');
+end if;
+
+if p_AlarmType >= 0 then
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and AlarmType=', p_AlarmType);
+end if;
+
+if p_Acknowledged >= 0 then
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and Acknowledged=', p_Acknowledged);
+end if;
+
+set @fullStatement = CONCAT_WS(' ', ' select * from Alarms where  ', whereStatement );
+
+#SET @sqlQuery=@fullStatement;
+PREPARE s1 FROM @fullStatement;
+EXECUTE s1;
+DEALLOCATE PREPARE s1;
+
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `sp_OS_Query` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -377,7 +670,8 @@ DELIMITER ;;
                                                                  in p_Workgroup varchar(32), 
                                                                  in p_User varchar(255), 
                                                                  in p_IP varchar(255), 
-                                                                 in p_ProcessMonitorEnabled tinyint 
+                                                                 in p_ProcessMonitorEnabled tinyint ,
+                                                                 in p_USB tinyint
                                                                   
                                                                 )
 BEGIN
@@ -410,10 +704,13 @@ if CHAR_LENGTH(p_IP) <> 0 then
 set whereStatement = CONCAT_WS('', whereStatement, ' and IP like \'%', p_IP, '%\'');
 end if;
 
-if p_ProcessMonitorEnabled <> -1 then
+if p_ProcessMonitorEnabled >= 0 then
 set whereStatement = CONCAT_WS(' ', whereStatement, ' and ProcessMonitorEnabled=', p_ProcessMonitorEnabled);
 end if;
 
+if p_USB >= 0 then
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and USB=', p_USB);
+end if;
 
 set @fullStatement = CONCAT_WS(' ', ' select * from OS where  ', whereStatement );
 
@@ -460,8 +757,8 @@ DELIMITER ;;
                                                                  in p_Users varchar(255), 
                                                                  in p_Admins varchar(255), 
                                                                  in p_IP varchar(255), 
-                                                                 in p_ClientVersion varchar(32)
-                                                                  
+                                                                 in p_ClientVersion varchar(32),
+                                                                  in p_USB tinyint
                                                                   
                                                                 )
 BEGIN
@@ -471,11 +768,12 @@ BEGIN
 	set @computerName= null;
 	select ComputerName into @computerName from OS where AssetNO=p_AssetNO;
 	if @computerName is null then
-        insert into OS values(p_AssetNO, p_ComputerName, p_OS, p_InstallationDate,  p_OSKey, p_Workgroup, p_JoinedToDomain, p_Users, p_Admins, p_IP, p_ClientVersion, 0, NULL) ;
+        insert into OS values(p_AssetNO, p_ComputerName, p_OS, p_InstallationDate,  p_OSKey, p_Workgroup, p_JoinedToDomain, p_Users, p_Admins, p_IP, p_ClientVersion, 0, 1,NULL) ;
         insert into Hardware(AssetNO) values(p_AssetNO);
     else
         update OS set 
-        ComputerName=p_ComputerName, OSVersion=p_OS, InstallationDate=p_InstallationDate,  OSKey=p_OSKey, Workgroup=p_Workgroup, JoinedToDomain=p_JoinedToDomain, Users=p_Users, Admins=p_Admins, IP=p_IP, ClientVersion=p_ClientVersion, LastOnlineTime=NULL;
+        ComputerName=p_ComputerName, OSVersion=p_OS, InstallationDate=p_InstallationDate,  OSKey=p_OSKey, Workgroup=p_Workgroup, JoinedToDomain=p_JoinedToDomain, Users=p_Users, Administrators=p_Admins, IP=p_IP, ClientVersion=p_ClientVersion, USB=p_USB, LastOnlineTime=NULL
+        where AssetNO=p_AssetNO;
 	end if;
 
 
@@ -508,7 +806,7 @@ DELIMITER ;;
                                                                 )
 BEGIN
 
-###新增或更新系统信息###
+###新增或更新进程监控信息###
 
 	set @admin= null, @rulesVersion = 0;
 	select RulesVersion, Admin into @rulesVersion, @admin from ProcessMonitorSettings where AssetNO=p_AssetNO;
@@ -516,7 +814,8 @@ BEGIN
 		insert into ProcessMonitorSettings values(NULL, p_AssetNO, p_ProcessMonitorEnabled, p_Rules, p_PassthroughEnabled,  p_LogAllowedProcess, p_LogBlockedProcess, p_UseGlobalRules, p_RulesVersion, p_Admin, NULL) ;
     else
         update ProcessMonitorSettings set 
-        AssetNO=p_AssetNO, ProcessMonitorEnabled=p_ProcessMonitorEnabled, Rules=p_Rules,  PassthroughEnabled=p_PassthroughEnabled, LogAllowedProcess=p_LogAllowedProcess, LogBlockedProcess=p_LogBlockedProcess, UseGlobalRules=p_UseGlobalRules, RulesVersion=(@rulesVersion+1),  Admin=p_Admin, UpdateTime=NULL;
+        ProcessMonitorEnabled=p_ProcessMonitorEnabled, Rules=p_Rules,  PassthroughEnabled=p_PassthroughEnabled, LogAllowedProcess=p_LogAllowedProcess, LogBlockedProcess=p_LogBlockedProcess, UseGlobalRules=p_UseGlobalRules, RulesVersion=(@rulesVersion+1),  Admin=p_Admin, UpdateTime=NULL
+        where AssetNO=p_AssetNO;
 	end if;
     
     if p_AssetNO is not null then
@@ -540,4 +839,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-04-13 10:06:32
+-- Dump completed on 2015-04-23 16:41:32

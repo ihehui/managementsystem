@@ -201,7 +201,9 @@ namespace HEHUI {
             ClientMessage,
             ServerMessage,
 
-
+            AdminLogin,
+            ServerResponseAdminLoginResult,
+            AdminOnlineStatusChanged,
 
             ClientInfoRequested,
             ClientInfo,
@@ -209,9 +211,10 @@ namespace HEHUI {
 
             UpdateSysAdminInfo,
 
-            AdminLogin,
-            ServerResponseAdminLoginResult,
-            AdminOnlineStatusChanged,
+            SystemAlarmsFromServer,
+            RequestSystemAlarms,
+
+
 
             AdminRequestRemoteConsole,
             ClientResponseRemoteConsoleStatus,
@@ -337,19 +340,21 @@ namespace HEHUI {
 
         enum SystemInfoType{
             SYSINFO_UNKNOWN = 0,
-            SYSINFO_OS,
-            SYSINFO_HARDWARE,
-            SYSINFO_SOFTWARE,
-            SYSINFO_SERVICES,
-            SYSINFO_OSUSERS,
-            SYSINFO_PROCESSMONITOR,
-            SYSINFO_SYSADMINS
+            SYSINFO_OS, //Client,Server
+            SYSINFO_HARDWARE,//Client,Server
+            SYSINFO_SOFTWARE,//Client,Server
+            SYSINFO_SERVICES,//Client
+            SYSINFO_OSUSERS,//Client
+            SYSINFO_PROCESSMONITOR,//Client,Server
+            SYSINFO_SYSADMINS, //Server
+            SYSINFO_SYSALARMS, //Server
+            SYSINFO_SYSLOGS //Server
         };
 
         enum AlarmType{
             ALARM_UNKNOWN = 0,
-            ALARM_HARDWARECHANGE,
-            ALARM_PROCESSMONITOR
+            ALARM_HARDWARECHANGE = 1,
+            ALARM_PROCESSMONITOR = 2
 
         };
 

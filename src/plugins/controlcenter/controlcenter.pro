@@ -67,7 +67,9 @@ HEADERS += \
     servermanagement/serverinfomodel.h \
     adminuser.h \
     servermanagement/adminsmanagementwidget.h \
-    servermanagement/admininfowidget.h
+    servermanagement/admininfowidget.h \
+    servermanagement/alarmsmanagementwidget.h \
+    servermanagement/alarminfomodel.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -98,7 +100,9 @@ SOURCES += \
     servermanagement/serverinfomodel.cpp \
     adminuser.cpp \
     servermanagement/adminsmanagementwidget.cpp \
-    servermanagement/admininfowidget.cpp
+    servermanagement/admininfowidget.cpp \
+    servermanagement/alarmsmanagementwidget.cpp \
+    servermanagement/alarminfomodel.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -117,7 +121,8 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     processmonitor/ruleinfowidget.ui \
     servermanagement/serveraddressmanagerwindow.ui \
     servermanagement/adminsmanagementwidget.ui \
-    servermanagement/admininfowidget.ui
+    servermanagement/admininfowidget.ui \
+    servermanagement/alarmsmanagementwidget.ui
 
 RESOURCES += controlcenter.qrc
 

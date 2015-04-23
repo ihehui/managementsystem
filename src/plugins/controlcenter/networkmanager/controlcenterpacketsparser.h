@@ -111,6 +111,30 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
+    bool sendRequestSysAlarmsPacket(SOCKETID serverSocketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime){
+        qDebug()<<"----sendRequestSysAlarmsPacket(...)";
+
+        Packet *packet = PacketHandlerBase::getPacket(serverSocketID);
+
+        packet->setPacketType(quint8(MS::RequestSystemAlarms));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << assetNO << type << acknowledged << startTime << endTime;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(serverSocketID, &ba);
+    }
+
     bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminName, quint8 online){
         qDebug()<<"----sendAdminOnlineStatusChangedPacket(...)";
 
@@ -1008,6 +1032,8 @@ signals:
     //    void signalClientOfflinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
 
     void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
+
+    void signalServerMessageReceived(const QString &message, quint8 messageType);
 
     void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online);
 

@@ -54,9 +54,13 @@ ServerAddressManagerWindow::ServerAddressManagerWindow(QWidget *parent)
 
     model = new ServerInfoModel(this);
     ui->tableViewServers->setModel(model);
-    ui->tableViewServers->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     connect(ui->tableViewServers, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(slotServerSelected(const QModelIndex &)));
 
+    QHeaderView *view = ui->tableViewServers->horizontalHeader();
+    view->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    //view->resizeSection(0, 100);
+    //view->resizeSection(2, 100);
+    view->setVisible(true);
 
     //    if(clientNetworkManager->getNetworkType() == ClientResourcesManager::LAN){
     ui->lineEditIP->setText(QString(IP_MULTICAST_GROUP_ADDRESS));

@@ -166,6 +166,16 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::RequestSystemAlarms):
+    {
+        QString assetNO = "", type = "-1", acknowledged = "-1", startTime = "", endTime = "";;
+        in >> assetNO >> type >> acknowledged >> startTime >> endTime;
+        emit signalSystemAlarmsRequested(socketID, assetNO, type, acknowledged, startTime, endTime);
+
+        qDebug()<<"~~RequestSystemAlarms--" <<" assetNO:"<<assetNO;
+    }
+    break;
+
     case quint8(MS::AdminOnlineStatusChanged):
     {
         QString peerComputerName = "", adminName = "";
