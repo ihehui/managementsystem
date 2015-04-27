@@ -4,7 +4,8 @@ CONFIG += qt \
     console
 QT += core \
     sql \
-    network
+    network \
+    concurrent
 QT -= gui
 
 # include config file
@@ -13,7 +14,8 @@ HHSharedLibs += HHSharedCore \
     HHSharedNetwork \
     HHSharedService \
     HHSharedENET \
-    HHSharedUDT
+    HHSharedUDT \
+    HHSharedSysUtilities
 include(../../HHSharedLibs.pri)
 HHSharedLibs += HHSharedMS
 include(../sharedms/sharedms.pri)
@@ -46,5 +48,5 @@ mac:ICON = ./resources/images/app.icns
 # define some usefull values
 # QMAKE_TARGET_COMPANY	= "He Hui Team"
 QMAKE_TARGET_PRODUCT = "Server Service Application For Management System"
-QMAKE_TARGET_DESCRIPTION = "Crossplatform Service Application Based On Qt"
+QMAKE_TARGET_DESCRIPTION = "Server Service Application"
 DEFINES *= "APP_NAME=\"\\\"$${QMAKE_TARGET_PRODUCT}\\\"\""

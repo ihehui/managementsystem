@@ -26,6 +26,8 @@ void AlarmInfoModel::setJsonData(const QByteArray &jsonData)
 
     clear();
 
+    if(jsonData.isEmpty()){return;}
+
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
     if(error.error != QJsonParseError::NoError){

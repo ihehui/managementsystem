@@ -35,7 +35,7 @@
 #include <QAbstractTableModel>
 #include <QSortFilterProxyModel>
 
-#include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedSystemUtilities/WinUtilities"
 
 
 namespace HEHUI {

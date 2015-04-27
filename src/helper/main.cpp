@@ -7,7 +7,7 @@
 #include "helper.h"
 
 #include "HHSharedCore/hlogdebug.h"
-#include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedSystemUtilities/WinUtilities"
 
 
 

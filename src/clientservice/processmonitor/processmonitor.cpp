@@ -64,6 +64,11 @@ bool ProcessMonitor::init(){
 
 
     //CreateThread(0,0,(LPTHREAD_START_ROUTINE)monitor,0,0,&dw);
+    QThreadPool * pool = QThreadPool::globalInstance();
+    int maxThreadCount = pool->maxThreadCount();
+    if(pool->activeThreadCount() == pool->maxThreadCount()){
+        pool->setMaxThreadCount(++maxThreadCount);
+    }
     QtConcurrent::run(this, &ProcessMonitor::monitor);
 
     //Open Device

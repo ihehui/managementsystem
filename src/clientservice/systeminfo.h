@@ -16,7 +16,7 @@ public:
     SystemInfo(QObject *parent = 0);
     ~SystemInfo();
 
-    static bool isRunning();
+//    static bool isRunning();
 
 
 
@@ -36,14 +36,19 @@ public slots:
 
     void getUsersInfo(SOCKETID socketID);
 
+    void startGetingRealTimeResourcesLoad(SOCKETID socketID);
+    void stopGetingRealTimeResourcesLoad();
 
-private:
+private slots:
     void getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView);
+    void getRealTimeResourcseLoad(SOCKETID socketID);
 
 
 private:
 
-    static bool running;
+//    static bool running;
+
+    bool m_getRealTimeResourcesLoad;
 
 
 };

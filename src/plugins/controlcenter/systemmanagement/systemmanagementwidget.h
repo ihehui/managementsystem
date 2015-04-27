@@ -89,6 +89,7 @@ private slots:
     void clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType);
     void updateOSInfo();
     void updateHardwareInfo();
+    void updateResourcesLoadInfo();
 
 
     void processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO, bool modified, const QString &message);

@@ -8,38 +8,44 @@
 #include <QNetworkInterface>
 #include <QNetworkAddressEntry>
 #include <QHostAddress>
+#include <QtConcurrent>
 
 #include "./systeminfo.h"
 #include "../sharedms/global_shared.h"
 
+
 #ifdef Q_OS_WIN32
-#include "HHSharedWindowsManagement/hhardwaremonitor.h"
-#include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedSystemUtilities/hhardwaremonitor.h"
+#include "HHSharedSystemUtilities/WinUtilities"
 #endif
+
+#include "HHSharedSystemUtilities/SystemUtilities"
 
 
 
 namespace HEHUI {
 
 
-bool SystemInfo::running = false;
+//bool SystemInfo::running = false;
 
 SystemInfo::SystemInfo(QObject *parent) :
     QObject(parent)
 {
-    running = true;
+    //running = true;
+
+    m_getRealTimeResourcesLoad = false;
 
 }
 
 SystemInfo::~SystemInfo() {
     qDebug()<<"SystemInfo::~SystemInfo()";
 
-    running = false;
+    //running = false;
 }
 
-bool SystemInfo::isRunning(){
-    return running;
-}
+//bool SystemInfo::isRunning(){
+//    return running;
+//}
 
 
 //void SystemInfo::run(){
@@ -245,6 +251,46 @@ void SystemInfo::getUsersInfo(SOCKETID socketID){
 
 }
 
+void SystemInfo::startGetingRealTimeResourcesLoad(SOCKETID socketID){
+    qDebug()<<"SystemInfo::startGetingRealTimeResourcesLoad(...)";
+
+    if(m_getRealTimeResourcesLoad){return;}
+    m_getRealTimeResourcesLoad = true;
+
+    QThreadPool * pool = QThreadPool::globalInstance();
+    int maxThreadCount = pool->maxThreadCount();
+    if(pool->activeThreadCount() == pool->maxThreadCount()){
+        pool->setMaxThreadCount(++maxThreadCount);
+    }
+    QtConcurrent::run(this, &SystemInfo::getRealTimeResourcseLoad, socketID);
+
+}
+
+void SystemInfo::stopGetingRealTimeResourcesLoad(){
+    m_getRealTimeResourcesLoad = false;
+}
+
+void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID){
+    qDebug()<<"--SystemInfo::getRealTimeResourcseLoad(...)";
+
+    while (m_getRealTimeResourcesLoad) {
+        int cpuLoad = SystemUtilities::getCPULoad();
+        int memLoad = 0;
+        SystemUtilities::getMemoryStatus(0, &memLoad);
+        qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
+
+        QJsonObject obj;
+        obj["CPULoad"] = QString::number(cpuLoad);
+        obj["MemLoad"] = QString::number(memLoad);
+
+
+        QJsonObject object;
+        object["ResourcsesLoad"] = obj;
+        QJsonDocument doc(object);
+        emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_REALTIME_INFO, socketID);
+    }
+
+}
 
 
 

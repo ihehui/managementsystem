@@ -37,7 +37,6 @@ AlarmsManagementWidget::AlarmsManagementWidget(QWidget *parent) :
     ui->comboBoxPeriod->addItem(tr("Custom Selection"), QVariant(quint8(Period_Custom)));
     ui->comboBoxPeriod->setCurrentIndex(0);
 
-
     m_model = new AlarmInfoModel(this);
     m_proxyModel = new AlarmInfoSortFilterProxyModel(this);
     m_proxyModel->setSourceModel(m_model);
@@ -61,6 +60,16 @@ AlarmsManagementWidget::AlarmsManagementWidget(QWidget *parent) :
 
 AlarmsManagementWidget::~AlarmsManagementWidget()
 {
+    qDebug()<<"--AlarmsManagementWidget::~AlarmsManagementWidget()";
+
+    QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
+    ui->tableView->setModel(0);
+    delete selectionModel;
+
+    delete m_proxyModel;
+    delete m_model;
+    m_selectedInfoList.clear();
+
     delete ui;
 }
 

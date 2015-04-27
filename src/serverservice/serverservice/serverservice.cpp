@@ -34,12 +34,15 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QtConcurrent>
 
 #include "serverservice.h"
 
 #include "../app_constants.h"
 #include "../sharedms/settings.h"
 #include "../../sharedms/alarminfo.h"
+
+#include "HHSharedSystemUtilities/SystemUtilities"
 
 
 namespace HEHUI {
@@ -58,6 +61,9 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
     //    databaseUtility = new DatabaseUtility(this);
     //    mainServiceStarted = false;
 
+    m_startupUTCTime = 0;
+
+
     resourcesManager = 0;
     serverPacketsParser = 0;
 
@@ -74,6 +80,8 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
     onlineAdminsCount = 0;
 
     m_isUsingMySQL = true;
+
+    m_getRealTimeResourcesLoad = false;
 
     processArguments(argc, argv);
 
@@ -183,8 +191,13 @@ bool ServerService::startMainService(){
     //Single Process Thread
     //QtConcurrent::run(serverPacketsParser, &ServerPacketsParser::run);
 
-    //IMPORTANT For Multi-thread
-    //QThreadPool::globalInstance()->setMaxThreadCount(MIN_THREAD_COUNT);
+    ////IMPORTANT For Multi-thread
+    ////QThreadPool::globalInstance()->setMaxThreadCount(MIN_THREAD_COUNT);
+    //QThreadPool * pool = QThreadPool::globalInstance();
+    //int maxThreadCount = pool->maxThreadCount();
+    //if(pool->activeThreadCount() == pool->maxThreadCount()){
+    //    pool->setMaxThreadCount(maxThreadCount+2);
+    //}
     //QtConcurrent::run(serverPacketsParser, &ServerPacketsParser::startparseIncomingPackets);
     //QtConcurrent::run(serverPacketsParser, &ServerPacketsParser::startprocessOutgoingPackets);
 
@@ -994,6 +1007,10 @@ void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &ad
         logMessage(error, QtServiceBase::Error);
     }
 
+    onlineAdminSockets.append(socketID);
+    sendServerInfo(socketID);
+    startGetingRealTimeResourcesLoad();
+
 }
 
 void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminID, bool online){
@@ -1014,6 +1031,11 @@ void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, con
             info->socketID = (online?socketID:0);
             return;
         }
+    }
+
+    onlineAdminSockets.removeAll(socketID);
+    if(!onlineAdminSockets.size()){
+        stopGetingRealTimeResourcesLoad();
     }
 
 }
@@ -1053,9 +1075,14 @@ void ServerService::peerDisconnected(SOCKETID socketID){
         clientSocketsHash.remove(socketID);
     }
 
+    onlineAdminSockets.removeAll(socketID);
+    if(!onlineAdminSockets.size()){
+        stopGetingRealTimeResourcesLoad();
+    }
+
     foreach (AdminUserInfo *info, adminsHash) {
         if(info->socketID == socketID){
-            info->socketID = 0;
+            info->socketID = INVALID_SOCK_ID;
             return;
         }
     }
@@ -1355,6 +1382,83 @@ void ServerService::sendAdminsInfo(SOCKETID socketID){
 
 }
 
+void ServerService::sendServerInfo(SOCKETID adminSocketID){
+
+    QString cpu = SystemUtilities::getCPUName();
+    quint64 memory = 0;
+    SystemUtilities::getMemoryStatus(&memory, 0);
+    qDebug()<<"CPU:"<<cpu<<" Memory:"<<memory;
+
+    QJsonObject obj;
+    obj["Version"] = APP_VERSION;
+    obj["OS"] = SystemUtilities::getOSVersionInfo();
+
+
+    obj["CPU"] = cpu;
+    obj["Memory"] = QString::number(memory);
+    obj["StartupUTCTime"] = QString::number(m_startupUTCTime);
+
+
+    QJsonObject object;
+    object["ServerInfo"] = obj;
+    QJsonDocument doc(object);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+
+    serverPacketsParser->sendSystemInfoPacket(adminSocketID, "", data, MS::SYSINFO_SERVER_INFO);
+
+}
+
+void ServerService::startGetingRealTimeResourcesLoad(){
+    qDebug()<<"ServerService::startGetingRealTimeResourcesLoad(...)";
+
+    if(m_getRealTimeResourcesLoad){return;}
+    m_getRealTimeResourcesLoad = true;
+
+    connect(this, SIGNAL(signalSendRealtimeInfo(int,int)), this, SLOT(sendRealtimeInfo(int,int)), Qt::QueuedConnection);
+
+    QThreadPool * pool = QThreadPool::globalInstance();
+    int maxThreadCount = pool->maxThreadCount();
+    if(pool->activeThreadCount() == pool->maxThreadCount()){
+        pool->setMaxThreadCount(++maxThreadCount);
+    }
+    QtConcurrent::run(this, &ServerService::getRealTimeResourcseLoad);
+
+}
+
+void ServerService::stopGetingRealTimeResourcesLoad(){
+    m_getRealTimeResourcesLoad = false;
+}
+
+void ServerService::getRealTimeResourcseLoad(){
+    qDebug()<<"--SystemInfo::getRealTimeResourcseLoad(...)";
+
+    while (m_getRealTimeResourcesLoad) {
+        int cpuLoad = SystemUtilities::getCPULoad();
+        int memLoad = 0;
+        SystemUtilities::getMemoryStatus(0, &memLoad);
+        qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
+
+        emit signalSendRealtimeInfo(cpuLoad, memLoad);
+
+//        QJsonObject obj;
+//        obj["CPULoad"] = QString::number(cpuLoad);
+//        obj["MemLoad"] = QString::number(memLoad);
+
+
+//        QJsonObject object;
+//        object["ResourcsesLoad"] = obj;
+//        QJsonDocument doc(object);
+//        QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+
+//        foreach (SOCKETID socketID, onlineAdminSockets) {
+//            serverPacketsParser->sendSystemInfoPacket(socketID, "", data, MS::SYSINFO_RESOURCESLOAD);
+//        }
+    }
+
+}
+
 void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime){
 
     QString statement = QString("call sp_Alarms_Query('%1', %2, %3, '%4', '%5' ); ")
@@ -1393,12 +1497,33 @@ void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, co
 
 }
 
+void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad){
+
+    QJsonObject obj;
+    obj["CPULoad"] = QString::number(cpuLoad);
+    obj["MemLoad"] = QString::number(memoryLoad);
+
+
+    QJsonObject object;
+    object["Realtime"] = obj;
+    QJsonDocument doc(object);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+
+    foreach (SOCKETID socketID, onlineAdminSockets) {
+        serverPacketsParser->sendSystemInfoPacket(socketID, "", data, MS::SYSINFO_REALTIME_INFO);
+    }
+
+
+}
+
 void ServerService::start()
 {
-
-    //return;
-
     qDebug()<<"----ServerService::start()";
+
+    m_startupUTCTime = QDateTime::currentDateTime().toTime_t();
+
+
 
     resourcesManager = ResourcesManagerInstance::instance();
     serverPacketsParser = 0;
@@ -1413,6 +1538,9 @@ void ServerService::start()
 
 void ServerService::stop()
 {
+
+    onlineAdminSockets.clear();
+    stopGetingRealTimeResourcesLoad();
 
     if(serverPacketsParser){
         serverPacketsParser->sendServerOnlineStatusChangedPacket(false);

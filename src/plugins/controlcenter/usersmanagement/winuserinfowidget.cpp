@@ -8,7 +8,7 @@
 
 #include "winuserinfowidget.h"
 
-#include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedSystemUtilities/WinUtilities"
 
 
 

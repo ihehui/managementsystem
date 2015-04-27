@@ -25,8 +25,8 @@
 #include "HHSharedNetwork/hnetworkutilities.h"
 
 #ifdef Q_OS_WIN
-#include "HHSharedWindowsManagement/hwindowsmanagement.h"
-#include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedSystemUtilities/hwindowsmanagement.h"
+#include "HHSharedSystemUtilities/WinUtilities"
 #endif
 
 

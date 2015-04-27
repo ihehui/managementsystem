@@ -44,6 +44,9 @@ ClientInfo::ClientInfo(const QString &assetNO, QObject *parent)
     network = "";
     usbSDStatus = MS::USBSTOR_Unknown;
 
+    cpuLoad = 0;
+    memoryLoad = 0;
+
 
 
     online = false;
@@ -85,6 +88,9 @@ ClientInfo & ClientInfo::operator = (const ClientInfo &clientInfo){
     storage = clientInfo.getStorage();
     network = clientInfo.getNetwork();
     usbSDStatus = clientInfo.getUsbSDStatus();
+
+    //cpu = clientInfo.getCPULoad();
+    //memoryLoad = clientInfo.getMemoryLoad();
 
     online = clientInfo.isOnline();
 
@@ -144,6 +150,12 @@ void ClientInfo::setJsonData(const QByteArray &data){
         audio = hwObj.value("SoundDevice").toString();
         storage = hwObj.value("DiskDrive").toString();
         network = hwObj.value("NetworkAdapter").toString();
+    }
+
+    QJsonObject resLoadObj = object["ResourcsesLoad"].toObject();
+    if(!resLoadObj.isEmpty()){
+        cpuLoad = resLoadObj.value("CPULoad").toString().toUInt();
+        memoryLoad = resLoadObj.value("MemLoad").toString().toUInt();
     }
 
 }

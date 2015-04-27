@@ -59,6 +59,7 @@ public:
 
 
 signals:
+    void signalSendRealtimeInfo(int cpuLoad, int memoryLoad);
 
 
 private slots:
@@ -79,6 +80,7 @@ private slots:
     void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
     void processUpdateSysAdminInfoPacket(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin);
     void sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
+    void sendRealtimeInfo(int cpuLoad, int memoryLoad);
 
     void processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
 
@@ -94,7 +96,6 @@ private slots:
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
     void signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort);
     void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
-
     void peerDisconnected(SOCKETID socketID);
 
 
@@ -110,6 +111,11 @@ private:
 
     void sendAdminsInfo(SOCKETID socketID);
 
+    void sendServerInfo(SOCKETID adminSocketID);
+
+    void startGetingRealTimeResourcesLoad();
+    void stopGetingRealTimeResourcesLoad();
+    void getRealTimeResourcseLoad();
 
 
 protected:
@@ -124,6 +130,7 @@ protected:
 
 
 private:
+    unsigned int m_startupUTCTime;
 
     ResourcesManagerInstance *resourcesManager;
     ServerPacketsParser *serverPacketsParser;
@@ -145,13 +152,16 @@ private:
     QHash<SOCKETID /*Socket ID*/, QString/*Asset NO.*/> clientSocketsHash;
 
     QHash<QString /*Admin ID*/, AdminUserInfo *> adminsHash;
+    QList<SOCKETID /*Admin SOCKETID ID*/> onlineAdminSockets;
 
 
     int onlineAdminsCount;
     bool m_isUsingMySQL;
 
-
     QStringList logs;
+
+    bool m_getRealTimeResourcesLoad;
+
 
 
 };

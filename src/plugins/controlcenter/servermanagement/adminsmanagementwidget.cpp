@@ -27,6 +27,24 @@ AdminUserInfoModel::~AdminUserInfoModel() {
     clearUsers();
 }
 
+void AdminUserInfoModel::clearUsers(){
+
+    if(usersList.isEmpty()){
+        return;
+    }
+
+    beginResetModel();
+
+    foreach (AdminUserInfo *user, usersList) {
+        delete user;
+        user = 0;
+    }
+    usersList.clear();
+
+    endResetModel();
+
+}
+
 void AdminUserInfoModel::setJsonData(const QByteArray &data){
     qDebug()<<"--AdminUserInfoModel::setJsonData(...)";
 
@@ -204,23 +222,6 @@ QVariant AdminUserInfoModel::headerData ( int section, Qt::Orientation orientati
 }
 
 
-void AdminUserInfoModel::clearUsers(){
-
-    if(usersList.isEmpty()){
-        return;
-    }
-
-    beginResetModel();
-
-    foreach (AdminUserInfo *user, usersList) {
-        delete user;
-        user = 0;
-    }
-    usersList.clear();
-
-    endResetModel();
-
-}
 
 /////////////////////////////////////////////////////////////////////
 
@@ -258,6 +259,15 @@ AdminsManagementWidget::AdminsManagementWidget(QWidget *parent) :
 
 AdminsManagementWidget::~AdminsManagementWidget()
 {
+    qDebug()<<"--AdminsManagementWidget::~AdminsManagementWidget()";
+
+
+    QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
+    ui->tableView->setModel(0);
+    delete selectionModel;
+
+    delete m_userInfoModel;
+
     delete ui;
 }
 

@@ -290,9 +290,22 @@ public:
     bool isProcessMonitorEnabled() const{
         return processMonitorEnabled;
     }
-
     void setProcessMonitorEnabled(bool enable){
         this->processMonitorEnabled = enable;
+    }
+
+    void setCPULoad(int cpuLoad){
+        this->cpuLoad = cpuLoad;
+    }
+    int getCPULoad(){
+        return this->cpuLoad;
+    }
+
+    void setMemoryLoad(int memoryLoad){
+        this->memoryLoad = memoryLoad;
+    }
+    int getMemoryLoad(){
+        return memoryLoad;
     }
 
 private:
@@ -321,6 +334,9 @@ private:
     QString storage;
     QString network;
     MS::USBSTORStatus usbSDStatus;
+
+    int cpuLoad;
+    int memoryLoad;
 
 
 

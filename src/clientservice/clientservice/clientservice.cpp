@@ -163,6 +163,7 @@ ClientService::~ClientService(){
     }
 
     if(systemInfo){
+        systemInfo->stopGetingRealTimeResourcesLoad();
         delete systemInfo;
         systemInfo = 0;
     }
@@ -535,6 +536,10 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
         systemInfo->getUsersInfo(socketID);
         break;
 
+    case quint8(MS::SYSINFO_REALTIME_INFO):
+        systemInfo->stopGetingRealTimeResourcesLoad();
+        systemInfo->startGetingRealTimeResourcesLoad(socketID);
+        break;
 
     default:
         qCritical()<<"ERROR! Unknown info type:"<<infoType;
@@ -571,7 +576,10 @@ void ClientService::systemInfoResultReady(const QByteArray &data, quint8 infoTyp
         qCritical()<<tr("ERROR! Can not upload system info to peer! %3").arg(m_rtp->lastErrorString());
     }
 
-    if( (m_socketConnectedToServer != INVALID_SOCK_ID) && (socketID != m_socketConnectedToServer) ){
+    if( (m_socketConnectedToServer != INVALID_SOCK_ID)
+            && (socketID != m_socketConnectedToServer)
+            && infoType != quint8(MS::SYSINFO_REALTIME_INFO)
+            ){
         bool ret = clientPacketsParser->sendClientInfoPacket(m_socketConnectedToServer, data, infoType);
         if(!ret){
             qCritical()<<tr("ERROR! Can not upload system info to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
@@ -862,6 +870,8 @@ void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSo
 
         //uploadClientSummaryInfo(m_socketConnectedToAdmin);
         processClientInfoRequestedPacket(m_socketConnectedToAdmin, m_localAssetNO, MS::SYSINFO_OS);
+
+        processClientInfoRequestedPacket(m_socketConnectedToAdmin, m_localAssetNO, MS::SYSINFO_REALTIME_INFO);
 
     }else{
         m_rtp->closeSocket(adminSocketID);
@@ -1842,6 +1852,12 @@ void ClientService::peerDisconnected(SOCKETID socketID){
 
     }else if(socketID == m_socketConnectedToAdmin){
         qWarning()<<"Admin Offline!";
+
+        if(systemInfo){
+            systemInfo->stopGetingRealTimeResourcesLoad();
+        }
+
+
         m_socketConnectedToAdmin = INVALID_SOCK_ID;
         clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, "");
         m_adminAddress = "";
@@ -2361,6 +2377,10 @@ void ClientService::stop()
     qDebug()<<"ClientService::stop()";
 
     lookForServerTimer->stop();
+
+    if(systemInfo){
+        systemInfo->stopGetingRealTimeResourcesLoad();
+    }
 
     if(clientPacketsParser){
         clientPacketsParser->sendClientOnlineStatusChangedPacket(m_socketConnectedToServer, false);

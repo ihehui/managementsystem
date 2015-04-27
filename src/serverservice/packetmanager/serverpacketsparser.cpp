@@ -34,7 +34,7 @@
 
 //#ifdef Q_CC_MSVC
 //#include <windows.h>
-//#include "HHSharedWindowsManagement/hwindowsmanagement.h"
+//#include "HHSharedSystemUtilities/hwindowsmanagement.h"
 //#define msleep(x) Sleep(x)
 //#endif
 

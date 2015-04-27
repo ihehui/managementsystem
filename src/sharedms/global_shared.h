@@ -346,9 +346,12 @@ namespace HEHUI {
             SYSINFO_SERVICES,//Client
             SYSINFO_OSUSERS,//Client
             SYSINFO_PROCESSMONITOR,//Client,Server
+            SYSINFO_SERVER_INFO,//Server
             SYSINFO_SYSADMINS, //Server
             SYSINFO_SYSALARMS, //Server
-            SYSINFO_SYSLOGS //Server
+            SYSINFO_SYSLOGS, //Server
+            SYSINFO_REALTIME_INFO//Client,Server
+
         };
 
         enum AlarmType{

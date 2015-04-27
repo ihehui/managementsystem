@@ -301,7 +301,6 @@ void ControlCenter::languageChange() {
 
 void ControlCenter::closeEvent(QCloseEvent *e) {
 
-    //关闭所有相关的TabPage
     //Close all related TabPage
     int tabPages = ui.tabWidget->count();
     for(int i = tabPages; i >= 0; --i){
@@ -375,6 +374,7 @@ void ControlCenter::slotInitTabWidget(){
     QObject::connect(closeTabButton, SIGNAL(clicked()), this, SLOT(slotcloseTab()));
     closeTabButton->setToolTip(tr("Close Page"));
     closeTabButton->setEnabled(false);
+
 
 
 //    ClientInfo localInfo("");
@@ -1244,13 +1244,25 @@ void ControlCenter::updateSystemInfoFromServer(const QByteArray &infoData, quint
 
     case quint8(MS::SYSINFO_SYSADMINS):
     {
-        ui.tabAdministrators->setData(infoData);
+        ui.tabServer->setAdminsData(infoData);
     }
         break;
 
     case quint8(MS::SYSINFO_SYSALARMS):
     {
-        ui.tabAlarms->setData(infoData);
+        ui.tabServer->setAlarmsData(infoData);
+    }
+        break;
+
+    case quint8(MS::SYSINFO_SERVER_INFO):
+    {
+        ui.tabServer->updateServerInfo(infoData);
+    }
+        break;
+
+    case quint8(MS::SYSINFO_REALTIME_INFO):
+    {
+        ui.tabServer->updateRealtimeInfo(infoData);
     }
         break;
 
@@ -1412,126 +1424,7 @@ void ControlCenter::peerDisconnected(SOCKETID socketID){
 
 void ControlCenter::adminVerified(){
     m_socketConnectedToServer = m_adminUser->socketConnectedToServer();
-
-    ui.lineEditServerIP->setText(m_adminUser->serverAddress());
-    ui.lineEditServerPort->setText(QString::number(m_adminUser->serverPort()));
-    ui.lineEditServerName->setText(m_adminUser->serverName());
-    ui.lineEditVersion->setText(m_adminUser->serverVersion());
-
 }
-
-//bool ControlCenter::isAdminVerified(){
-//    if(!m_adminUser->isVerified()){
-//        verifyUser();
-//    }
-
-//    return m_adminUser->isVerified();
-//}
-
-//void ControlCenter::verifyUser(){
-
-//    if(m_serverAddress.isEmpty() || (m_serverPort == 0) ){
-//        modifyServerSettings();
-//    }
-//    if(m_serverAddress.isEmpty() || (m_serverPort == 0) ){
-//        return;
-//    }
-
-//    if(!m_loginDlg){
-//        m_loginDlg = new  LoginDlg(m_adminUser, APP_NAME, true, this);
-//        connect(m_loginDlg, SIGNAL(signalModifySettings()), this, SLOT(modifyServerSettings()));
-//        connect(m_loginDlg, SIGNAL(signalLogin()), this, SLOT(login()));
-//    }
-
-//    m_loginDlg->exec();
-
-//}
-
-//void ControlCenter::modifyServerSettings(){
-
-//    QDialog dlg(this);
-//    QVBoxLayout vbl(&dlg);
-//    vbl.setContentsMargins(0, 0, 0, 0);
-
-//    ServerAddressManagerWindow smw(&dlg);
-//    connect(&smw, SIGNAL(signalLookForServer(const QString &, quint16 )), controlCenterPacketsParser, SLOT(sendClientLookForServerPacket(const QString &, quint16)));
-//    connect(controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), &smw, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
-//    //        connect(&smw, SIGNAL(signalServersUpdated()), this, SLOT(slotServersUpdated()));
-//    connect(&smw, SIGNAL(signalServerSelected(const QString &, quint16)), this, SLOT(serverSelected(const QString &, quint16)));
-
-//    vbl.addWidget(&smw);
-//    dlg.setLayout(&vbl);
-//    dlg.updateGeometry();
-//    dlg.setWindowTitle(tr("Servers"));
-//    dlg.exec();
-
-//}
-
-//void ControlCenter::serverSelected(const QString &serverAddress, quint16 serverPort){
-//    m_serverAddress = serverAddress;
-//    m_serverPort = serverPort;
-//}
-
-//bool ControlCenter::connectToServer(const QString &serverAddress, quint16 serverPort){
-
-//    if(m_socketConnectedToServer != INVALID_SOCK_ID){
-//        m_rtp->closeSocket(m_socketConnectedToServer);
-//    }
-
-//    QString errorMessage;
-//    m_socketConnectedToServer = m_rtp->connectToHost(QHostAddress(serverAddress), serverPort, 10000, &errorMessage);
-//    if(m_socketConnectedToServer == INVALID_SOCK_ID){
-//        m_loginDlg->setErrorMessage(errorMessage);
-//        qCritical()<<tr("ERROR! Can not connect to server %1:%2 ! %3").arg(serverAddress).arg(serverPort).arg(errorMessage);
-//        return false;
-//    }
-//    m_serverAddress = serverAddress;
-//    m_serverPort = serverPort;
-
-//    Settings settings(SETTINGS_FILE_NAME, "./");
-//    settings.setLastUsedAppServer(m_serverAddress + ":" + QString::number(m_serverPort));
-
-//    qWarning()<<"Server Connected!"<<" Address:"<<serverAddress<<" Port:"<<m_serverPort;
-
-//    return true;
-//}
-
-//bool ControlCenter::login(){
-
-//    if(m_socketConnectedToServer == INVALID_SOCK_ID){
-//        connectToServer(m_serverAddress, m_serverPort);
-//    }
-
-//    m_adminName = m_adminUser->getUserID();
-
-//    bool ok = controlCenterPacketsParser->sendAdminLoginPacket(m_socketConnectedToServer, m_adminName, m_adminUser->getPassword());
-//    if(!ok){
-//        m_loginDlg->setErrorMessage(tr("Can not send data to server!"));
-//    }
-
-//    return ok;
-
-//}
-
-//void ControlCenter::processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly){
-
-//    if(result){
-//        m_loginDlg->accept();
-//        delete m_loginDlg;
-//        m_loginDlg = 0;
-//    }else{
-//        m_loginDlg->setErrorMessage(message);
-//    }
-
-//    m_adminUser->setVerified(result);
-//    m_readonly = readonly;
-//}
-
-
-
-
-
-
 
 
 

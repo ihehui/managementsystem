@@ -15,8 +15,8 @@
 #include "../../sharedms/settings.h"
 
 #ifdef Q_OS_WIN32
-#include "HHSharedWindowsManagement/hwindowsmanagement.h"
-#include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedSystemUtilities/hwindowsmanagement.h"
+#include "HHSharedSystemUtilities/WinUtilities"
 //#include "../../sharedms/global_shared.h"
 #endif
 
@@ -1074,7 +1074,10 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &assetNO, co
         ui.tabProcessMonitor->setJsonData(data);
         break;
 
-
+    case quint8(MS::SYSINFO_REALTIME_INFO):
+        m_clientInfo.setJsonData(data);
+        updateResourcesLoadInfo();
+        break;
 
     default:
         break;
@@ -1184,6 +1187,12 @@ void SystemManagementWidget::updateHardwareInfo(){
     ui.toolButtonRequestHardwareInfo->setEnabled(true);
 
 }
+
+void SystemManagementWidget::updateResourcesLoadInfo(){
+    ui.progressBarCPU->setValue(m_clientInfo.getCPULoad());
+    ui.progressBarMemory->setValue(m_clientInfo.getMemoryLoad());
+}
+
 
 void SystemManagementWidget::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
 

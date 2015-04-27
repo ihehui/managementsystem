@@ -19,7 +19,7 @@ HHSharedLibs += HHSharedCore \
     HHSharedNetwork \
     HHSharedENET \
     HHSharedUDT
-win32:HHSharedLibs += HHSharedWindowsManagement
+win32:HHSharedLibs += HHSharedSysUtilities
 include(../../../HHSharedLibs.pri)
 HHSharedLibs += HHSharedMS
 include(../../sharedms/sharedms.pri)
@@ -69,7 +69,8 @@ HEADERS += \
     servermanagement/adminsmanagementwidget.h \
     servermanagement/admininfowidget.h \
     servermanagement/alarmsmanagementwidget.h \
-    servermanagement/alarminfomodel.h
+    servermanagement/alarminfomodel.h \
+    servermanagement/servermanagementwidget.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -102,7 +103,8 @@ SOURCES += \
     servermanagement/adminsmanagementwidget.cpp \
     servermanagement/admininfowidget.cpp \
     servermanagement/alarmsmanagementwidget.cpp \
-    servermanagement/alarminfomodel.cpp
+    servermanagement/alarminfomodel.cpp \
+    servermanagement/servermanagementwidget.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
@@ -122,7 +124,8 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     servermanagement/serveraddressmanagerwindow.ui \
     servermanagement/adminsmanagementwidget.ui \
     servermanagement/admininfowidget.ui \
-    servermanagement/alarmsmanagementwidget.ui
+    servermanagement/alarmsmanagementwidget.ui \
+    servermanagement/servermanagementwidget.ui
 
 RESOURCES += controlcenter.qrc
 

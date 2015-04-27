@@ -24,6 +24,8 @@ public:
     AdminUserInfoModel(QObject *parent = 0);
     virtual ~AdminUserInfoModel();
 
+    void clearUsers();
+
     void setJsonData(const QByteArray &data);
     AdminUserInfo * getUser(const QModelIndex & index);
 
@@ -35,7 +37,6 @@ public:
 
 
 private:
-    void clearUsers();
 
 private:
     QList<AdminUserInfo *> usersList;

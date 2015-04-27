@@ -1,6 +1,6 @@
 
 #include <QThreadPool>
-#include <QtConcurrentRun>
+//#include <QtConcurrentRun>
 #include <QMessageBox>
 #include <QScreen>
 #include <QBuffer>
@@ -9,7 +9,7 @@
 #include "helper.h"
 
 #ifdef Q_OS_WIN32
-#include "HHSharedWindowsManagement/WinUtilities"
+#include "HHSharedSystemUtilities/WinUtilities"
 #endif
 
 

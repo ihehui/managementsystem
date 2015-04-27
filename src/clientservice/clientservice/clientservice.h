@@ -29,8 +29,8 @@
 //#include "HHSharedUDT/hudtprotocolforfiletransmission.h"
 
 #ifdef Q_OS_WIN32
-    #include "HHSharedWindowsManagement/hhardwaremonitor.h"
-    #include "HHSharedWindowsManagement/WinUtilities"
+    #include "HHSharedSystemUtilities//hhardwaremonitor.h"
+    #include "HHSharedSystemUtilities/WinUtilities"
 #endif
 
 

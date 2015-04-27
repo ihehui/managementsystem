@@ -254,7 +254,7 @@ public slots:
     }
 
     bool sendSystemInfoPacket(SOCKETID socketID, const QString &assetNO, const QByteArray &data, quint8 infoType){
-        //qWarning()<<"----sendSystemInfoPacket(...)"<<" targetAddress:"<<targetAddress<<" targetPort:"<<targetPort;
+        qWarning()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
 
         Packet *packet = PacketHandlerBase::getPacket();
 
