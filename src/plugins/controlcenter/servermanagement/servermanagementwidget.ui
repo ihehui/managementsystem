@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>817</width>
-    <height>595</height>
+    <width>768</width>
+    <height>572</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,9 +30,6 @@
        <string>Status</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <property name="topMargin">
-        <number>1</number>
-       </property>
        <property name="verticalSpacing">
         <number>12</number>
        </property>
@@ -308,7 +305,7 @@
            </widget>
           </item>
           <item row="8" column="0">
-           <widget class="QLabel" name="labelCurrentTime0">
+           <widget class="QLabel" name="labelDatabaseServerIP0">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -325,19 +322,19 @@
              <enum>QFrame::StyledPanel</enum>
             </property>
             <property name="text">
-             <string>Current Time:</string>
+             <string>Database Server:</string>
             </property>
            </widget>
           </item>
           <item row="8" column="1">
-           <widget class="QLabel" name="labelCurrentTime">
+           <widget class="QLabel" name="labelDatabaseServerIP">
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
             </property>
            </widget>
           </item>
           <item row="9" column="0">
-           <widget class="QLabel" name="labelDatabaseTime0">
+           <widget class="QLabel" name="labelDatabaseDriver0">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -354,12 +351,12 @@
              <enum>QFrame::StyledPanel</enum>
             </property>
             <property name="text">
-             <string>Database Time:</string>
+             <string>Database Driver:</string>
             </property>
            </widget>
           </item>
           <item row="9" column="1">
-           <widget class="QLabel" name="labelDatabaseTime">
+           <widget class="QLabel" name="labelDatabaseDriver">
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
             </property>
@@ -447,7 +444,7 @@
            </layout>
           </item>
           <item row="2" column="0">
-           <widget class="QLabel" name="labelDiskUsage">
+           <widget class="QLabel" name="labelDiskUsage0">
             <property name="font">
              <font>
               <weight>75</weight>
@@ -459,25 +456,15 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <item>
-             <widget class="QProgressBar" name="progressBarDiskUsage"/>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
+          <item row="3" column="0" colspan="2">
+           <widget class="QLabel" name="labelDiskUsage">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -503,83 +490,7 @@
           <property name="spacing">
            <number>0</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="labelHardwareChanged0">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="text">
-             <string>Hardware Changed:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="labelHardwareChanged">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="labelProcessMonitor0">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="font">
-             <font>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="text">
-             <string>Process Monitor:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="labelProcessMonitor">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
            <widget class="QLabel" name="label_7">
             <property name="minimumSize">
              <size>
@@ -601,7 +512,7 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="1" column="1">
            <widget class="QLabel" name="labelClients">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -617,67 +528,43 @@
             </property>
            </widget>
           </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QGroupBox" name="groupBoxTop">
-         <property name="title">
-          <string notr="true"/>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <property name="spacing">
-           <number>12</number>
-          </property>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelAlarms0">
+            <property name="minimumSize">
              <size>
-              <width>517</width>
-              <height>17</height>
+              <width>0</width>
+              <height>30</height>
              </size>
             </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="labelWelcome">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
             <property name="text">
-             <string>Welcome</string>
+             <string>Alarms:</string>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QLabel" name="labelAdminName">
+          <item row="2" column="1">
+           <widget class="QLabel" name="labelAlarms">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
             <property name="text">
              <string/>
             </property>
            </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="labelLogin">
-            <property name="text">
-             <string>[Login]</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_5">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Preferred</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>50</width>
-              <height>17</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>
@@ -707,6 +594,31 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="labelTop">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="text">
+          <string>Welcome</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

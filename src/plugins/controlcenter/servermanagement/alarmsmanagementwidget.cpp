@@ -4,6 +4,7 @@
 #include <QMenu>
 #include <QDebug>
 #include <QMessageBox>
+#include <QTimer>
 
 #include "HHSharedGUI/hdataoutputdialog.h"
 
@@ -123,6 +124,13 @@ void AlarmsManagementWidget::on_actionRefresh_triggered(){
 
 }
 
+void AlarmsManagementWidget::on_comboBoxPeriod_currentIndexChanged(int index){
+    periodString(0, 0);
+    Period period = Period(ui->comboBoxPeriod->currentData().toUInt());
+    ui->dateTimeEditStartTime->setReadOnly((period != Period_Custom));
+    ui->dateTimeEditEndTime->setReadOnly((period != Period_Custom));
+}
+
 void AlarmsManagementWidget::on_actionExport_triggered(){
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::EXPORT, this);
     dlg.exec();
@@ -136,12 +144,27 @@ void AlarmsManagementWidget::on_actionPrint_triggered(){
 #endif
 }
 
-void AlarmsManagementWidget::on_comboBoxPeriod_currentIndexChanged(int index){
-    periodString(0, 0);
-    Period period = Period(ui->comboBoxPeriod->currentData().toUInt());
-    ui->dateTimeEditStartTime->setReadOnly((period != Period_Custom));
-    ui->dateTimeEditEndTime->setReadOnly((period != Period_Custom));
+void AlarmsManagementWidget::on_actionAcknowledge_triggered(){
+    requestAcknowledgeAlarms(false);
 }
+
+void AlarmsManagementWidget::on_actionDelete_triggered(){
+    requestAcknowledgeAlarms(true);
+}
+
+void AlarmsManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms){
+
+    if(!verifyPrivilege()){
+        return;
+    }
+
+    m_myself->packetsParser()->sendAcknowledgeSysAlarmsPacket(m_myself->socketConnectedToServer(), m_myself->getUserID(), m_selectedInfoList, deleteAlarms);
+
+    QTimer::singleShot(3000, this, SLOT(on_actionRefresh_triggered()));
+
+}
+
+
 
 void AlarmsManagementWidget::slotShowCustomContextMenu(const QPoint & pos){
 
@@ -185,7 +208,7 @@ void AlarmsManagementWidget::getSelectedInfo(const QModelIndex &index){
         return;
     }
 
-    QModelIndexList indexList =  ui->tableView->selectionModel()->selectedIndexes();
+    QModelIndexList indexList =  ui->tableView->selectionModel()->selectedRows(0);
     if(indexList.isEmpty()){return;}
     foreach (QModelIndex idx, indexList) {
         m_selectedInfoList.append(m_model->getAlarmInfoID(idx));
@@ -197,7 +220,7 @@ void AlarmsManagementWidget::getSelectedInfo(const QModelIndex &index){
 
     bool enableModify = false;
     if(!m_myself->isReadonly()){
-        enableModify = false;
+        enableModify = true;
     }
 
     ui->actionAcknowledge->setEnabled(enableModify);

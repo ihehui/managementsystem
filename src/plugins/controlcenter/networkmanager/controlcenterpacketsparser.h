@@ -135,7 +135,31 @@ public slots:
         return m_rtp->sendReliableData(serverSocketID, &ba);
     }
 
-    bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminName, quint8 online){
+    bool sendAcknowledgeSysAlarmsPacket(SOCKETID serverSocketID, const QString &adminID, const QStringList &alarms, bool deleteAlarms = false){
+        qDebug()<<"----sendAcknowledgeSysAlarmsPacket(...)";
+
+        Packet *packet = PacketHandlerBase::getPacket(serverSocketID);
+
+        packet->setPacketType(quint8(MS::AcknowledgeSystemAlarms));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << adminID << alarms.join(",") << quint8(deleteAlarms) ;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(serverSocketID, &ba);
+    }
+
+    bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminID, quint8 online){
         qDebug()<<"----sendAdminOnlineStatusChangedPacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -145,7 +169,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << m_localComputerName << adminName << online;
+        out << m_localID << m_localComputerName << adminID << online;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -256,7 +280,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendSetupUSBSDPacket(SOCKETID socketID, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName){
+    bool sendSetupUSBSDPacket(SOCKETID socketID, quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminID){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::AdminRequestSetupUSBSD));
@@ -265,7 +289,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << usbSTORStatus << temporarilyAllowed << adminName;
+        out << m_localID << usbSTORStatus << temporarilyAllowed << adminID;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -301,7 +325,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendModifyAdminGroupUserPacket(SOCKETID socketID, const QString &assetNO, const QString &userName, bool addToAdminGroup, const QString &adminName){
+    bool sendModifyAdminGroupUserPacket(SOCKETID socketID, const QString &assetNO, const QString &userName, bool addToAdminGroup, const QString &adminID){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::ModifyAdminGroupUser));
@@ -309,7 +333,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << assetNO << userName << addToAdminGroup  << adminName;
+        out << m_localID << assetNO << userName << addToAdminGroup  << adminID;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -323,7 +347,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName){
+    bool sendModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminID){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::ModifyAssetNO));
@@ -331,7 +355,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << newAssetNO << oldAssetNO << adminName;
+        out << m_localID << newAssetNO << oldAssetNO << adminID;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -345,7 +369,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendRenameComputerPacket(SOCKETID socketID, const QString &assetNO, const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
+    bool sendRenameComputerPacket(SOCKETID socketID, const QString &assetNO, const QString &newComputerName, const QString &adminID, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::RenameComputer));
@@ -353,7 +377,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << assetNO << newComputerName << adminName << domainAdminName << domainAdminPassword;
+        out << m_localID << assetNO << newComputerName << adminID << domainAdminName << domainAdminPassword;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -367,7 +391,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendJoinOrUnjoinDomainPacket(SOCKETID socketID, const QString &assetNO, const QString &adminName, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
+    bool sendJoinOrUnjoinDomainPacket(SOCKETID socketID, const QString &assetNO, const QString &adminID, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::JoinOrUnjoinDomain));
@@ -375,7 +399,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << assetNO << adminName << join << domainOrWorkgroupName << domainAdminName << domainAdminPassword;
+        out << m_localID << assetNO << adminID << join << domainOrWorkgroupName << domainAdminName << domainAdminPassword;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -390,7 +414,7 @@ public slots:
     }
 
 
-    bool sendAdminRequestConnectionToClientPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName){
+    bool sendAdminRequestConnectionToClientPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminID){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
         packet->setPacketType(quint8(MS::AdminRequestConnectionToClient));
@@ -398,7 +422,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << adminComputerName << adminName ;
+        out << m_localID << adminComputerName << adminID ;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -412,7 +436,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
     
-    bool sendAdminSearchClientPacket(const QHostAddress &targetAddress, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName){
+    bool sendAdminSearchClientPacket(const QHostAddress &targetAddress, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminID){
 
         Packet *packet = PacketHandlerBase::getPacket();
 
@@ -421,7 +445,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << computerName << userName << workgroup << macAddress << ipAddress << osVersion << adminName;
+        out << m_localID << computerName << userName << workgroup << macAddress << ipAddress << osVersion << adminID;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -1124,14 +1148,14 @@ private:
     QHostAddress ipmcGroupAddress;
     quint16 ipmcListeningPort;
 
-    PacketHandlerBase *m_packetHandlerBase;
+    //PacketHandlerBase *m_packetHandlerBase;
     //NetworkManagerInstance *networkManager;
 
 
     QString m_localComputerName;
     QString m_localID;
 
-    QMultiHash<QString /*Peer ID*/, QPair<quint16 /*Packet Serial Number*/, QDateTime/*Received Time*/> > m_receivedPacketsHash;
+    //QMultiHash<QString /*Peer ID*/, QPair<quint16 /*Packet Serial Number*/, QDateTime/*Received Time*/> > m_receivedPacketsHash;
 
 
 

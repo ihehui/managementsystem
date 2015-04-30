@@ -13,6 +13,7 @@ class SHAREDMSLIB_API TCPServer : public TCPBase
     Q_OBJECT
 public:
     explicit TCPServer(QObject *parent = 0);
+    ~TCPServer();
 
     quint16 getTCPServerListeningPort();
 

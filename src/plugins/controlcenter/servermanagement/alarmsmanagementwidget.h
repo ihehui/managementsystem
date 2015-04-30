@@ -30,11 +30,14 @@ private slots:
     void on_actionRefresh_triggered();
     void filter();
 
+    void on_comboBoxPeriod_currentIndexChanged(int index);
 
     void on_actionExport_triggered();
     void on_actionPrint_triggered();
 
-    void on_comboBoxPeriod_currentIndexChanged(int index);
+    void on_actionAcknowledge_triggered();
+    void on_actionDelete_triggered();
+    void requestAcknowledgeAlarms(bool deleteAlarms = false);
 
 
     void slotShowCustomContextMenu(const QPoint & pos);

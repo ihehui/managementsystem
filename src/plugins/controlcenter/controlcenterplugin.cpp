@@ -161,6 +161,13 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
     ControlCenter *wgt = new ControlCenter(name(), parentWidget);
     //connect(controlCenter, SIGNAL(destroyed(QObject *)), SLOT(slotControlCenterWidgetDestoryed(QObject *)));
 
+    AdminUser *m_myself = AdminUser::instance();
+    if(!m_myself->isAdminVerified()){
+        wgt->close();
+        wgt->deleteLater();
+        return;
+    }
+
     QMdiArea *mdiArea = 0;
     if(parentWidget){
         mdiArea = qobject_cast<QMdiArea *>(parentWidget);

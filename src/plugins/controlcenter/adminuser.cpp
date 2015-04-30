@@ -43,6 +43,7 @@ AdminUser::AdminUser()
 
 AdminUser::~AdminUser()
 {
+    qDebug()<<"--AdminUser::~AdminUser()";
     adminUserInstance = 0;
 }
 

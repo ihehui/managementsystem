@@ -213,6 +213,7 @@ namespace HEHUI {
 
             SystemAlarmsFromServer,
             RequestSystemAlarms,
+            AcknowledgeSystemAlarms,
 
 
 

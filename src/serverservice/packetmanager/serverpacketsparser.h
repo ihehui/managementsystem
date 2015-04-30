@@ -254,7 +254,7 @@ public slots:
     }
 
     bool sendSystemInfoPacket(SOCKETID socketID, const QString &assetNO, const QByteArray &data, quint8 infoType){
-        qWarning()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
+        //qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
 
         Packet *packet = PacketHandlerBase::getPacket();
 
@@ -336,7 +336,8 @@ signals:
     void signalAdminLogin(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
     void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
-    void signalSystemAlarmsRequested(SOCKETID adminSocketID, const QString &assetNO, QString type, QString acknowledged, const QString &startTime, const QString &endTime);
+    void signalSystemAlarmsRequested(SOCKETID adminSocketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
+    void signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms);
 
 private:
 

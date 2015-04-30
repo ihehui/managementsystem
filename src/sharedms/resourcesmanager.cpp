@@ -55,7 +55,6 @@ ResourcesManager::~ResourcesManager() {
         m_ipmcServer = 0;
     }
 
-
     if(m_udpServer){
         m_udpServer->close();
         delete m_udpServer;
@@ -63,10 +62,10 @@ ResourcesManager::~ResourcesManager() {
     }
 
     if(m_rtp){
+        m_rtp->stopServers();
         delete m_rtp;
         m_rtp = 0;
     }
-
 
     if(m_fileManager){
         m_fileManager->exit();

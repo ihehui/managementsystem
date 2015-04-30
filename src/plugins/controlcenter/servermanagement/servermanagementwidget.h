@@ -50,7 +50,8 @@ private slots:
     bool verifyPrivilege();
     void adminVerified();
 
-
+private:
+    QString convertDisksInfoToHTML(const QString &disksInfo);
 
 
 

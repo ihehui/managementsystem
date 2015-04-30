@@ -83,6 +83,10 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
 
     m_getRealTimeResourcesLoad = false;
 
+    m_totalAlarmsCount = 0;
+    m_unacknowledgedAlarmsCount = 0;
+
+
     processArguments(argc, argv);
 
 }
@@ -138,6 +142,7 @@ bool ServerService::startMainService(){
 
     getAllClientsInfoFromDB();
     getAllAdminsInfoFromDB();
+    getSystemAlarmsCount();
 
     QString errorMessage = "";
     //    m_udpServer = resourcesManager->startIPMCServer(QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16(IP_MULTICAST_GROUP_PORT), &errorMessage);
@@ -186,6 +191,7 @@ bool ServerService::startMainService(){
     connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalSystemAlarmsRequested(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&)), this, SLOT(sendAlarmsInfo(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID, const QString& , const QString&, bool)), this, SLOT(acknowledgeSystemAlarms(SOCKETID, const QString& , const QString&, bool)), Qt::QueuedConnection);
 
 
     //Single Process Thread
@@ -995,6 +1001,9 @@ void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &ad
     }
     serverPacketsParser->sendAdminLoginResultPacket(socketID, verified, message, readonly);
 
+    if(!verified){
+        return;
+    }
 
     QString statement = QString("call sp_Admin_Update_Login_Info('%1', '%2', '%3' );")
             .arg(adminID)
@@ -1203,6 +1212,7 @@ bool ServerService::execQuery(const QString &statement, QString *errorString ){
         }else{
             getAllClientsInfoFromDB();
             getAllAdminsInfoFromDB();
+            getSystemAlarmsCount();
         }
         query->clear();
 
@@ -1315,6 +1325,43 @@ void ServerService::getAllAdminsInfoFromDB(){
 }
 
 
+void ServerService::getSystemAlarmsCount(){
+    QString statement = QString("call sp_Alarms_GetCount(); ");
+    if(!execQuery(statement)){
+        return;
+    }
+    if(!query->first()){
+        return;
+    }
+
+    m_totalAlarmsCount = query->value(0).toUInt();
+    m_unacknowledgedAlarmsCount = query->value(1).toUInt();
+
+    query->clear();
+
+}
+
+unsigned int ServerService::getCurrentDBUTCTime(){
+
+    QString statement = QString("call sp_CurrentUTCTimestamp(); ");
+    if(!execQuery(statement)){
+        return 0;
+    }
+    if(!query->first()){
+        return 0;
+    }
+    QString timeStr = query->value(0).toString();
+    query->clear();
+
+    QDateTime utcTime;
+    utcTime.setTimeSpec(Qt::UTC);
+    utcTime =  QDateTime::fromString(timeStr, Qt::ISODate);
+
+    return abs(utcTime.secsTo(QDateTime::fromString("1970-01-01T00:00:00", Qt::ISODate)));
+
+}
+
+
 void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO){
 
     QByteArray data;
@@ -1384,19 +1431,31 @@ void ServerService::sendAdminsInfo(SOCKETID socketID){
 
 void ServerService::sendServerInfo(SOCKETID adminSocketID){
 
-    QString cpu = SystemUtilities::getCPUName();
-    quint64 memory = 0;
-    SystemUtilities::getMemoryStatus(&memory, 0);
-    qDebug()<<"CPU:"<<cpu<<" Memory:"<<memory;
-
     QJsonObject obj;
     obj["Version"] = APP_VERSION;
     obj["OS"] = SystemUtilities::getOSVersionInfo();
 
-
+    QString cpu = SystemUtilities::getCPUName();
+    quint64 memory = 0;
+    SystemUtilities::getMemoryStatus(&memory, 0);
+    //qDebug()<<"CPU:"<<cpu<<" Memory:"<<memory;
     obj["CPU"] = cpu;
     obj["Memory"] = QString::number(memory);
+
     obj["StartupUTCTime"] = QString::number(m_startupUTCTime);
+    obj["CurrentServerUTCTime"] = QString::number(QDateTime::currentDateTime().toTime_t());
+    obj["CurrentDBUTCTime"] = QString::number(getCurrentDBUTCTime());
+
+
+
+    Settings settings(SERVICE_NAME, "./");
+    obj["DBServerIP"] = settings.getDBServerHost();
+    obj["DBDriver"] = settings.getDBDriver();
+
+
+
+
+
 
 
     QJsonObject object;
@@ -1437,7 +1496,7 @@ void ServerService::getRealTimeResourcseLoad(){
         int cpuLoad = SystemUtilities::getCPULoad();
         int memLoad = 0;
         SystemUtilities::getMemoryStatus(0, &memLoad);
-        qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
+        //qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
 
         emit signalSendRealtimeInfo(cpuLoad, memLoad);
 
@@ -1497,11 +1556,52 @@ void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, co
 
 }
 
+void ServerService::acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms){
+
+    QString statement = QString("call sp_Alarms_Acknowledge('%1', '%2', %3); ")
+            .arg(adminID)
+            .arg(alarms)
+            .arg(deleteAlarms?1:0)
+            ;
+    if(!execQuery(statement)){
+        QString error = QString("ERROR! An error occurred when saving acknowledged alarms info to database. Admin: %1.").arg(adminID);
+        logMessage(error, QtServiceBase::Error);
+
+        QString message = QString("Failed to acknowledge alarms!");
+        serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
+    }
+
+    query->clear();
+
+    getSystemAlarmsCount();
+
+}
+
 void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad){
 
     QJsonObject obj;
     obj["CPULoad"] = QString::number(cpuLoad);
     obj["MemLoad"] = QString::number(memoryLoad);
+
+    static quint8 count = 0;
+    if(!count){
+        m_disksInfo = SystemUtilities::getDisksInfo();;
+    }
+    obj["Disks"] = m_disksInfo;
+
+    count++;
+    if(count == 300){
+        count = 0;
+    }
+
+    obj["TotalClients"] = QString::number(clientInfoHash.size());
+    obj["OnlineClients"] = QString::number(clientSocketsHash.size());
+
+    obj["TotalAlarms"] = QString::number(m_totalAlarmsCount);
+    obj["UnacknowledgedAlarms"] = QString::number(m_unacknowledgedAlarmsCount);
+
+
+
 
 
     QJsonObject object;

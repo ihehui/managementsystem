@@ -300,6 +300,7 @@ void ControlCenter::languageChange() {
 }
 
 void ControlCenter::closeEvent(QCloseEvent *e) {
+    qDebug()<<"--ControlCenter::closeEvent(...)";
 
     //Close all related TabPage
     int tabPages = ui.tabWidget->count();
@@ -1174,7 +1175,7 @@ void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteAr
 }
 
 void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType){
-    qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO<<" infoType:"<<infoType;
+    //qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO<<" infoType:"<<infoType;
 
     if(assetNO.isEmpty()){
         updateSystemInfoFromServer(infoData, infoType);

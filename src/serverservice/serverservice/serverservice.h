@@ -80,12 +80,12 @@ private slots:
     void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
     void processUpdateSysAdminInfoPacket(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin);
     void sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
+    void acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms);
     void sendRealtimeInfo(int cpuLoad, int memoryLoad);
 
     void processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
 
     void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
-
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port);
 
@@ -104,6 +104,9 @@ private:
     bool execQuery(const QString &statement , QString *errorString = 0);
     void getAllClientsInfoFromDB();
     void getAllAdminsInfoFromDB();
+    void getSystemAlarmsCount();
+
+    unsigned int getCurrentDBUTCTime();
 
     void getOSInfo(SOCKETID socketID, const QString &assetNO);
     void getHardwareInfo(SOCKETID socketID, const QString &assetNO);
@@ -158,11 +161,11 @@ private:
     int onlineAdminsCount;
     bool m_isUsingMySQL;
 
-    QStringList logs;
-
     bool m_getRealTimeResourcesLoad;
 
-
+    uint m_unacknowledgedAlarmsCount;
+    uint m_totalAlarmsCount;
+    QString m_disksInfo;
 
 };
 

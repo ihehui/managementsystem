@@ -31,6 +31,7 @@ RTP::RTP(QObject *parent) :
 }
 
 RTP::~RTP(){
+    qDebug()<<"--RTP::~RTP()";
 
     if(m_udtProtocol){
         //m_udtProtocol->close();
@@ -201,7 +202,7 @@ quint16 RTP::getENETProtocolPort(){
 
 
 SOCKETID RTP::connectToHost( const QHostAddress & hostAddress, quint16 port, int waitMsecs, QString *errorMessage, Protocol protocol){
-    qDebug()<<"--RTP::connectToHost(...)";
+    qDebug()<<"--RTP::connectToHost(...) " <<" Protocol:"<<protocol;
 
     SOCKETID socketID = INVALID_SOCK_ID;
     QString err;

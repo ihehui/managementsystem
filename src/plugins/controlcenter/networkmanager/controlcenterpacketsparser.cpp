@@ -212,7 +212,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::SystemInfoFromServer):
     {
-        qDebug()<<"SystemInfoFromServer";
+        //qDebug()<<"SystemInfoFromServer";
 
         QString assetNO = "";
         QByteArray systemInfo;

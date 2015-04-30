@@ -21,7 +21,7 @@ ServerManagementWidget::ServerManagementWidget(QWidget *parent) :
     initTabWidget();
 
     installEventFilter(this);
-    ui->groupBoxTop->installEventFilter(this);
+    ui->labelTop->installEventFilter(this);
     ui->groupBoxSystemInfo->installEventFilter(this);
     ui->groupBoxResources->installEventFilter(this);
     ui->groupBoxStatistics->installEventFilter(this);
@@ -115,6 +115,30 @@ void ServerManagementWidget::updateServerInfo(const QByteArray &infoData){
     QDateTime time = QDateTime::fromTime_t(startupUTCTime);
     ui->labelStartupTime->setText(time.toString("yyyy-MM-dd hh:mm:ss"));
 
+    unsigned int curServerUTCTime = resLoadObj.value("CurrentServerUTCTime").toString().toUInt();
+    unsigned int curDBUTCTime = resLoadObj.value("CurrentDBUTCTime").toString().toUInt();
+    QDateTime curLocalTime = QDateTime::currentDateTime();
+    unsigned int curLocalUTCTime = curLocalTime.toTime_t();
+    if(abs((long)curServerUTCTime - (long)curLocalUTCTime) > 600
+            || abs((long)curDBUTCTime - (long)curLocalUTCTime) > 600
+            ){
+        QString message = tr("The server time and local time are too different!<br>Application Server Time: %1<br>Database Server Time: %2<br>Local Time: %3")
+                .arg(QDateTime::fromTime_t(startupUTCTime).toString("yyyy-MM-dd hh:mm"))
+                .arg(QDateTime::fromTime_t(curDBUTCTime).toString("yyyy-MM-dd hh:mm"))
+                .arg(curLocalTime.toString("yyyy-MM-dd hh:mm"))
+                ;
+        QMessageBox::warning(0, tr("Warning"), message);
+    }
+
+    ui->labelDatabaseServerIP->setText(resLoadObj.value("DBServerIP").toString());
+
+    QString driver = resLoadObj.value("DBDriver").toString().toUpper();
+    if(driver.startsWith("Q")){
+        driver = driver.remove(0, 1);
+        ui->labelDatabaseDriver->setText(driver);
+    }
+
+
 }
 
 void ServerManagementWidget::updateRealtimeInfo(const QByteArray &infoData){
@@ -128,10 +152,26 @@ void ServerManagementWidget::updateRealtimeInfo(const QByteArray &infoData){
     }
     QJsonObject object = doc.object();
 
-    QJsonObject resLoadObj = object["Realtime"].toObject();
-    if(!resLoadObj.isEmpty()){
-        ui->progressBarCPUUsage->setValue(resLoadObj.value("CPULoad").toString().toUInt());
-        ui->progressBarMemoryUsage->setValue(resLoadObj.value("MemLoad").toString().toUInt());
+    QJsonObject realtimeInfoObj = object["Realtime"].toObject();
+    if(!realtimeInfoObj.isEmpty()){
+        ui->progressBarCPUUsage->setValue(realtimeInfoObj.value("CPULoad").toString().toUInt());
+        ui->progressBarMemoryUsage->setValue(realtimeInfoObj.value("MemLoad").toString().toUInt());
+
+        if(realtimeInfoObj.contains("Disks")){
+            QString html = convertDisksInfoToHTML(realtimeInfoObj.value("Disks").toString());
+            ui->labelDiskUsage->setText(html);
+        }
+
+        uint totalClients = realtimeInfoObj.value("TotalClients").toString().toUInt();
+        uint onlineClients = realtimeInfoObj.value("OnlineClients").toString().toUInt();
+        QString clientsInfo = tr("Total: %1, Online: %2").arg(totalClients).arg(onlineClients);
+        ui->labelClients->setText(clientsInfo);
+
+        uint totalAlarms = realtimeInfoObj.value("TotalAlarms").toString().toUInt();
+        uint unacknowledgedAlarms = realtimeInfoObj.value("UnacknowledgedAlarms").toString().toUInt();
+        QString alarmsInfo = tr("Total: %1, Unacknowledged: %2").arg(totalAlarms).arg(unacknowledgedAlarms);
+        ui->labelAlarms->setText(alarmsInfo);
+
     }
 
 }
@@ -264,6 +304,63 @@ void ServerManagementWidget::adminVerified(){
     ui->labelServerIP->setText(m_myself->serverAddress());
     ui->labelServerPort->setText(QString::number(m_myself->serverPort()));
     ui->labelServerName->setText(m_myself->serverName());
+
+}
+
+QString ServerManagementWidget::convertDisksInfoToHTML(const QString &disksInfo){
+
+    //// disksInfo Sample:
+    /// WIN
+    // Partion	Type	Size	Available	Usage%
+    // C:\	NTFS	30.08GB	3.25GB	89.16
+    // D:\	NTFS	150.1GB	4.94GB	96.7
+    // E:\	NTFS	150.1GB	0.46GB	99.68
+    // F:\	NTFS	90.41GB	12.83GB	85.8
+    // G:\	NTFS	463.75GB    119.8GB	74.16
+    // H:\           0           0	0
+    // J:\	CDFS	0.01GB	0	100
+    /// LINUX
+    // Filesystem     Type   Size  Used Avail Use% Mounted on
+    // /dev/sda1      ext3    15G  5.1G  9.0G  37% /
+    // udev           tmpfs  1.5G  144K  1.5G   1% /dev
+    // tmpfs          tmpfs  1.5G     0  1.5G   0% /dev/shm
+    // /dev/sda5      ext3   9.9G  152M  9.2G   2% /home
+    // /dev/sdb1      ext3    50G   42G  5.1G  90% /opt
+    // /dev/sda6      ext3    20G   16G  3.0G  85% /mnt/temp
+
+
+    QString html = "<html><head><meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\"><title>Disks</title>"
+           "<style type=\"text/css\">"
+            "table{ background-color: #b2b2b2; margin-top: 1px; margin-bottom: 1px; margin-left: 1px; margin-right: 1px; width: 100%; font-size: 16px;}"
+            "table tr{background-color: #FFFFFF;}"
+            "</style>"
+            "</head><body>"
+            ;
+
+    html += "<table  border=\"0\" cellpadding=\"5\" cellspacing=\"1\"  >";
+
+    QStringList list = disksInfo.split("\n");
+    foreach (QString row, list) {
+        if(row.isEmpty()){continue;}
+        html += "<tr>";
+        QString sep = "\t";
+        if(row.contains(" ")){
+            sep = " ";
+        }
+        QStringList infoList = row.split(sep);
+        infoList.removeAll(" ");
+        //if(infoList.size() != 5){continue;}
+        foreach (QString item, infoList) {
+            html += "<td>";
+            html += item;
+            html += "</td>";
+        }
+        html += "</tr>";
+    }
+
+    html += "</table></body></html>";
+
+    return html;
 
 }
 

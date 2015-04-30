@@ -14,6 +14,10 @@ TCPServer::TCPServer(QObject *parent) :
 
 }
 
+TCPServer::~TCPServer(){
+    qDebug()<<"--TCPServer::~TCPServer()";
+}
+
 quint16 TCPServer::getTCPServerListeningPort(){
     quint16 port = 0;
     serverAddressInfo(0, &port);
