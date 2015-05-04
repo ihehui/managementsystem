@@ -187,6 +187,26 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::RequestAnnouncement):
+    {
+        QString id = "0", keyword = "", validity = "-1",  assetNO = "", userName = "", target = "-1", startTime = "", endTime = "";
+        in >> id >> keyword >> validity >> assetNO >> userName >> target >> startTime >> endTime;
+        emit signalAnnouncementsRequested(socketID, id, keyword, validity, assetNO, userName, target, startTime, endTime);
+
+        qDebug()<<"~~RequestAnnouncement--";
+    }
+    break;
+
+    case quint8(MS::RequestAnnouncementTargets):
+    {
+        QString announcementID = "0";
+        in >> announcementID ;
+        emit signalAnnouncementTargetsRequested(socketID, announcementID);
+
+        qDebug()<<"~~RequestAnnouncementTargets--";
+    }
+    break;
+
     case quint8(MS::AdminOnlineStatusChanged):
     {
         QString peerComputerName = "", adminName = "";

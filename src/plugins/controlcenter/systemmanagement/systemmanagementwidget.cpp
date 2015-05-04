@@ -11,7 +11,7 @@
 
 #include "constants.h"
 #include "shutdowndialog.h"
-#include "../announcement/announcement.h"
+#include "../announcementmanagement/announcementinfowidget.h"
 #include "../../sharedms/settings.h"
 
 #ifdef Q_OS_WIN32
@@ -1263,7 +1263,7 @@ void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
     layout.setContentsMargins(1, 1, 1, 1);
     layout.setSizeConstraint(QLayout::SetFixedSize);
 
-    Announcement wgt(&dlg);
+    AnnouncementInfoWidget wgt(&dlg);
     //connect(&wgt, SIGNAL(signalSendMessage(quint32, const QString &, bool, int)), this, SLOT(sendMessageToUser(quint32, const QString &, bool, int)));
     connect(&wgt, SIGNAL(signalCloseWidget()), &dlg, SLOT(accept()));
 

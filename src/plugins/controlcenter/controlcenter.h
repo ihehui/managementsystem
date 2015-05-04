@@ -14,7 +14,7 @@
 #include "networkmanager/controlcenterpacketsparser.h"
 #include "networkmanager/resourcesmanagerinstance.h"
 
-#include "../clientinfomodel/clientinfomodel.h"
+#include "../clientmanagement//clientinfomodel.h"
 
 #include "../../sharedms/clientinfo.h"
 #include "../../sharedms/rtp.h"
@@ -81,8 +81,6 @@ private slots:
 
     void slotUpdateUserLogonPassword();
     void slotInformUserNewLogonPassword();
-    void slotSendAnnouncement();
-    void slotSendAnnouncement(quint32 messageID, const QString &message, bool confirmationRequired,  int validityPeriod);
 
     void slotShowCustomContextMenu(const QPoint & pos);
 

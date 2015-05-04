@@ -339,6 +339,9 @@ signals:
     void signalSystemAlarmsRequested(SOCKETID adminSocketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
     void signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms);
 
+    void signalAnnouncementsRequested(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
+    void signalAnnouncementTargetsRequested(SOCKETID socketID, const QString &announcementID);
+
 private:
 
 private:

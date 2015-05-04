@@ -225,6 +225,7 @@ QVariant ClientInfoModel::data ( const QModelIndex & index, int role) const{
         return index.data(Qt::DisplayRole);
     }
 
+
 	return QVariant();
 
 }

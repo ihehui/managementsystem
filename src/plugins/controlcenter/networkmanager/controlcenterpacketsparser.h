@@ -159,6 +159,54 @@ public slots:
         return m_rtp->sendReliableData(serverSocketID, &ba);
     }
 
+    bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime){
+        qDebug()<<"----sendRequestAnnouncementsPacket(...)";
+
+        Packet *packet = PacketHandlerBase::getPacket(serverSocketID);
+
+        packet->setPacketType(quint8(MS::RequestAnnouncement));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << id << keyword << validity << assetNO << userName << target << startTime << endTime;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(serverSocketID, &ba);
+    }
+
+    bool sendRequestAnnouncementTargetsPacket(SOCKETID serverSocketID, const QString &announcementID){
+        qDebug()<<"----sendRequestAnnouncementTargetsPacket(...)";
+
+        Packet *packet = PacketHandlerBase::getPacket(serverSocketID);
+
+        packet->setPacketType(quint8(MS::RequestAnnouncementTargets));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << announcementID ;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(serverSocketID, &ba);
+    }
+
     bool sendAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminID, quint8 online){
         qDebug()<<"----sendAdminOnlineStatusChangedPacket(...)";
 

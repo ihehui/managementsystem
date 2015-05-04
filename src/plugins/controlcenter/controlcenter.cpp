@@ -19,7 +19,6 @@
 
 #include "constants.h"
 #include "controlcenter.h"
-#include "announcement/announcement.h"
 #include "servermanagement/serveraddressmanagerwindow.h"
 
 #include "../../sharedms/settings.h"
@@ -97,7 +96,6 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
 
     connect(ui.actionUpdatePassword, SIGNAL(triggered()), this, SLOT(slotUpdateUserLogonPassword()));
     connect(ui.actionInformNewPassword, SIGNAL(triggered()), this, SLOT(slotInformUserNewLogonPassword()));
-    connect(ui.actionAnnouncement, SIGNAL(triggered()), this, SLOT(slotSendAnnouncement()));
 
 
     connect(ui.tableViewClientList, SIGNAL(clicked(const QModelIndex &)), this, SLOT(slotShowClientInfo(const QModelIndex &)));
@@ -590,6 +588,7 @@ bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *e
 
     *database = QSqlDatabase::database(DB_CONNECTION_NAME);
 
+    return true;
 }
 
 
@@ -983,58 +982,6 @@ void ControlCenter::slotInformUserNewLogonPassword(){
     
 }
 
-void ControlCenter::slotSendAnnouncement(){
-
-//    if(m_adminName != "hehui"){
-//        QMessageBox::critical(this, tr("Error"), tr("You dont have the access permissions!"));
-//        return;
-//    }
-
-    QDialog dlg(this);
-    QVBoxLayout layout(&dlg);
-    layout.setContentsMargins(1, 1, 1, 1);
-    layout.setSizeConstraint(QLayout::SetFixedSize);
-
-    Announcement wgt(&dlg);
-    connect(&wgt, SIGNAL(signalSendMessage(quint32, const QString &, bool, int)), this, SLOT(slotSendAnnouncement(quint32, const QString &, bool, int)));
-    connect(&wgt, SIGNAL(signalCloseWidget()), &dlg, SLOT(accept()));
-
-    layout.addWidget(&wgt);
-    dlg.setLayout(&layout);
-    dlg.updateGeometry();
-    dlg.setWindowTitle(tr("Announcement"));
-
-    dlg.exec();
-
-    
-} 
-
-void ControlCenter::slotSendAnnouncement(quint32 messageID, const QString &message, bool confirmationRequired,  int validityPeriod){
-
-    QModelIndexList selectedIndexes = ui.tableViewClientList->selectionModel()->selectedRows();
-
-    int selectedIndexesCount = selectedIndexes.count();
-
-
-    for (int j = 0; j < selectedIndexesCount; j++) {
-        QModelIndex index = selectedIndexes.at(j);
-        int row = index.row();
-
-        QString assetNO = index.sibling(row,0).data().toString();
-        QStringList networkInfoList = index.sibling(row,2).data().toString().split(",");
-        foreach (QString info, networkInfoList) {
-            if(info.trimmed().isEmpty()){continue;}
-            controlCenterPacketsParser->sendAnnouncementPacket(info.split("/").at(0), IP_MULTICAST_GROUP_PORT, assetNO, "", m_adminUser->getUserID(), messageID, message, confirmationRequired, validityPeriod);
-        }
-
-
-        qApp->processEvents();
-
-    }
-
-}
-
-
 void ControlCenter::slotShowCustomContextMenu(const QPoint & pos){
 
     QTableView *tableView = qobject_cast<QTableView*> (sender());
@@ -1267,6 +1214,17 @@ void ControlCenter::updateSystemInfoFromServer(const QByteArray &infoData, quint
     }
         break;
 
+    case quint8(MS::SYSINFO_ANNOUNCEMENTS):
+    {
+        ui.tabServer->setAnnouncementsData(infoData);
+    }
+        break;
+
+    case quint8(MS::SYSINFO_ANNOUNCEMENTTARGETS):
+    {
+        ui.tabServer->setAnnouncementTargetsData(infoData);
+    }
+        break;
 
     default:
         qCritical()<<"ERROR! Invalid info from server!";

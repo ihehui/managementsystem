@@ -41,7 +41,6 @@ HEADERS += \
     networkmanager/controlcenterpacketsparser.h \
     taskmanagement/taskinfoviewwidget.h \
     taskmanagement/taskmanagement.h \
-    announcement/announcement.h \
     systemmanagement/systemmanagementwidget.h \
     controlcenter.h \
     controlcenterplugin.h \
@@ -50,7 +49,7 @@ HEADERS += \
     filemanagement/filemanagement.h \
     servicesmanagement/servicesmanagement.h \
     servicesmanagement/serviceinfomodel.h \
-    clientinfomodel/clientinfomodel.h \
+    clientmanagement/clientinfomodel.h \
     systemmanagement/shutdowndialog.h \
     usersmanagement/winuserinfomodel.h \
     usersmanagement/winuserinfowidget.h \
@@ -70,13 +69,16 @@ HEADERS += \
     servermanagement/admininfowidget.h \
     servermanagement/alarmsmanagementwidget.h \
     servermanagement/alarminfomodel.h \
-    servermanagement/servermanagementwidget.h
+    servermanagement/servermanagementwidget.h \
+    announcementmanagement/announcementinfowidget.h \
+    announcementmanagement/announcementmanagementwidget.h \
+    announcementmanagement/announcementinfo.h \
+    announcementmanagement/announcementinfomodel.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
     taskmanagement/taskinfoviewwidget.cpp \
     taskmanagement/taskmanagement.cpp \
-    announcement/announcement.cpp \
     systemmanagement/systemmanagementwidget.cpp \
     controlcenter.cpp \
     controlcenterplugin.cpp \
@@ -84,7 +86,7 @@ SOURCES += \
     filemanagement/filemanagement.cpp \
     servicesmanagement/servicesmanagement.cpp \
     servicesmanagement/serviceinfomodel.cpp \
-    clientinfomodel/clientinfomodel.cpp \
+    clientmanagement/clientinfomodel.cpp \
     systemmanagement/shutdowndialog.cpp \
     usersmanagement/winuserinfomodel.cpp \
     usersmanagement/winuserinfowidget.cpp \
@@ -104,12 +106,15 @@ SOURCES += \
     servermanagement/admininfowidget.cpp \
     servermanagement/alarmsmanagementwidget.cpp \
     servermanagement/alarminfomodel.cpp \
-    servermanagement/servermanagementwidget.cpp
+    servermanagement/servermanagementwidget.cpp \
+    announcementmanagement/announcementinfowidget.cpp \
+    announcementmanagement/announcementmanagementwidget.cpp \
+    announcementmanagement/announcementinfo.cpp \
+    announcementmanagement/announcementinfomodel.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \
     taskmanagement/taskmanagement.ui \
-    announcement/announcement.ui \
     systemmanagement/systemmanagementwidget.ui \
     controlcenter.ui \
     filemanagement/filemanagement.ui \
@@ -125,7 +130,9 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     servermanagement/adminsmanagementwidget.ui \
     servermanagement/admininfowidget.ui \
     servermanagement/alarmsmanagementwidget.ui \
-    servermanagement/servermanagementwidget.ui
+    servermanagement/servermanagementwidget.ui \
+    announcementmanagement/announcementinfowidget.ui \
+    announcementmanagement/announcementmanagementwidget.ui
 
 RESOURCES += controlcenter.qrc
 

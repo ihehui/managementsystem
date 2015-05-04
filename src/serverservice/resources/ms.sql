@@ -54,6 +54,71 @@ INSERT INTO `Alarms` VALUES (1,'china1111',1,'A1','2015-04-22 18:34:48',0,'',NUL
 UNLOCK TABLES;
 
 --
+-- Table structure for table `AnnouncementTargets`
+--
+
+DROP TABLE IF EXISTS `AnnouncementTargets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `AnnouncementTargets` (
+  `ID` int(11) unsigned NOT NULL,
+  `Announcement` int(10) unsigned NOT NULL,
+  `AssetNO` varchar(32) DEFAULT NULL,
+  `UserName` varchar(32) DEFAULT NULL,
+  `Acknowledged` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `ACKTime` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `FK_AnnouncementTargets_Announcement` (`Announcement`),
+  KEY `FK_AnnouncementTargets_AssetNO` (`AssetNO`),
+  CONSTRAINT `FK_AnnouncementTargets_Announcement` FOREIGN KEY (`Announcement`) REFERENCES `Announcements` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_AnnouncementTargets_AssetNO` FOREIGN KEY (`AssetNO`) REFERENCES `OS` (`AssetNO`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `AnnouncementTargets`
+--
+
+LOCK TABLES `AnnouncementTargets` WRITE;
+/*!40000 ALTER TABLE `AnnouncementTargets` DISABLE KEYS */;
+/*!40000 ALTER TABLE `AnnouncementTargets` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `Announcements`
+--
+
+DROP TABLE IF EXISTS `Announcements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Announcements` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `AnnouncementType` tinyint(1) unsigned NOT NULL COMMENT '1:Normal Message\n2:Critical Message',
+  `Content` text NOT NULL,
+  `ACKRequired` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Admin` varchar(32) NOT NULL,
+  `PublishDate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ValidityPeriod` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'How long the bulletin will expires, in minutes\n0:Never Expires',
+  `TargetType` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0:Everyone\n1:Computers\n2:Users',
+  `DisplayTimes` int(10) unsigned NOT NULL DEFAULT '1' COMMENT '0:Always Display',
+  `Active` tinyint(1) unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`ID`),
+  KEY `FK_Announcements_Admin` (`Admin`),
+  CONSTRAINT `FK_Announcements_Admin` FOREIGN KEY (`Admin`) REFERENCES `SystemAdministrators` (`UserID`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Announcements`
+--
+
+LOCK TABLES `Announcements` WRITE;
+/*!40000 ALTER TABLE `Announcements` DISABLE KEYS */;
+INSERT INTO `Announcements` VALUES (1,1,'Test1',1,'hehui','2015-05-03 06:19:00',0,1,10,1),(2,2,'Test2',0,'hehui','2015-05-03 06:19:00',0,1,10,1),(3,2,'Test3',1,'hehui','2015-05-03 06:19:00',600,2,100,0);
+/*!40000 ALTER TABLE `Announcements` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `Hardware`
 --
 
@@ -282,7 +347,7 @@ CREATE TABLE `SystemAdministrators` (
 
 LOCK TABLES `SystemAdministrators` WRITE;
 /*!40000 ALTER TABLE `SystemAdministrators` DISABLE KEYS */;
-INSERT INTO `SystemAdministrators` VALUES ('guest','Guest','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-04-17 16:33:26',1,1,NULL),('hehui','He Hui','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-04-29 09:55:33',0,1,NULL),('test','NNNN111','ddf63c1a8f2492aa4e41b34e93a9d54e','AAA111','dgpc02419','200.200.200.17','2015-04-24 10:25:37',1,0,'RRRRRRR111');
+INSERT INTO `SystemAdministrators` VALUES ('guest','Guest','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-04-17 16:33:26',1,1,NULL),('hehui','He Hui','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-05-04 02:29:27',0,1,NULL),('test','NNNN111','ddf63c1a8f2492aa4e41b34e93a9d54e','AAA111','dgpc02419','200.200.200.17','2015-04-24 10:25:37',1,0,'RRRRRRR111');
 /*!40000 ALTER TABLE `SystemAdministrators` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -641,6 +706,174 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Announcements_Insert` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Announcements_Insert`(
+ out p_ID int unsigned,
+ in p_Type tinyint,
+ in p_Content text,
+ in p_ACKRequired tinyint,
+ in p_Admin varchar(32),
+ in p_ValidityPeriod int unsigned,
+ in p_TargetType tinyint,
+ in p_DisplayTimes int unsigned
+
+)
+BEGIN
+
+###新增公告信息###
+
+insert into Announcements(AnnouncementType, Content, ACKRequired, Admin, ValidityPeriod, TargetType, DisplayTimes) 
+values(p_Type, p_Content, p_ACKRequired, p_Admin, p_ValidityPeriod, p_TargetType, p_DisplayTimes);
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Announcements_Query` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Announcements_Query`(
+ in p_IDs varchar(255),
+ in p_Keyword varchar(32),
+ in p_Validity tinyint,
+ in p_AssetNO varchar(32),
+ in p_UserName varchar(32),
+ in p_Target tinyint,
+ in p_startTime DateTime,
+ in p_endTime DateTime
+                                                                                    
+)
+BEGIN
+
+###查询公告信息###
+
+declare whereStatement varchar(1024) default ' ';
+
+set whereStatement = CONCAT_WS(' ',  '  (PublishDate  between \' ', p_startTime, ' \'and \'',p_endTime, '\' ) ');
+
+if CHAR_LENGTH(p_IDs) <> 0 then
+#逗号分隔的ID列表
+set whereStatement = CONCAT_WS('', whereStatement, ' and ID in (', p_IDs, ')');
+end if;
+
+if CHAR_LENGTH(p_Keyword) <> 0 then
+set whereStatement = CONCAT_WS('', whereStatement, ' and Content  like \'%', p_Keyword, '%\'');
+end if;
+
+
+if p_Validity >= 0 then
+
+if p_Validity = 0 then
+#Already Expire
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and (select ( PublishDate + INTERVAL ValidityPeriod  MINUTE)  < now()  ) ');
+elseif p_Validity = 1 then
+#Not Expired
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and (select ( PublishDate + INTERVAL ValidityPeriod  MINUTE)  > now()  )  ');
+end if;
+
+end if;
+
+
+if CHAR_LENGTH(p_AssetNO) <> 0 then
+set whereStatement = CONCAT_WS('', whereStatement, ' and (select *  from AnnouncementTargets where AssetNO  like \'%', p_AssetNO, '%\' and Announcement=', ID, ')');
+end if;
+
+if CHAR_LENGTH(p_UserName) <> 0 then
+set whereStatement = CONCAT_WS('', whereStatement, ' and (select *  from AnnouncementTargets where UserName  like \'%', p_UserName, '%\' and Announcement=', ID, ')');
+end if;
+
+if p_Target >= 0 then
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and TargetType=', p_Target);
+end if;
+
+
+set @fullStatement = CONCAT_WS(' ', ' select * from Announcements where  ', whereStatement );
+
+#SET @sqlQuery=@fullStatement;
+PREPARE s1 FROM @fullStatement;
+EXECUTE s1;
+DEALLOCATE PREPARE s1;
+
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementTargets_Insert` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementTargets_Insert`(
+ in p_AnnouncementID int unsigned,
+ in p_AssetNO varchar(32),
+ in p_UserName varchar(32)
+
+)
+BEGIN
+
+###新增公告目标###
+
+INSERT INTO AnnouncementTargets (Announcement, AssetNO, UserName)
+VALUES(p_AnnouncementID, p_AssetNO, p_UserName);
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementTargets_Query` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementTargets_Query`(
+ in p_AnnouncementID int unsigned
+
+)
+BEGIN
+
+###新增公告目标###
+
+SELECT * FROM AnnouncementTargets WHERE Announcement=p_AnnouncementID;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `sp_CurrentUTCTimestamp` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -736,6 +969,43 @@ BEGIN
 ###更新资产编号###
 
         update OS set AssetNO=p_newAssetNO where AssetNO=p_oldAssetNO;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Test` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Test`(
+ in p_Validity tinyint,
+ in p_AssetNO varchar(32),
+ in p_UserName varchar(32)
+
+                                                                                    
+)
+BEGIN
+
+###查询公告信息###
+
+
+
+
+
+
+select * from Announcements where  (select ( PublishDate + INTERVAL ValidityPeriod  MINUTE)  < now() );
+
+
+
 
 END */;;
 DELIMITER ;
@@ -928,4 +1198,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-04-30 10:32:54
+-- Dump completed on 2015-05-04 19:12:38

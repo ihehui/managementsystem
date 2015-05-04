@@ -29,6 +29,7 @@ ServerManagementWidget::ServerManagementWidget(QWidget *parent) :
     connect(ui->actionLogin, SIGNAL(triggered()), this, SLOT(verifyPrivilege()));
     connect(ui->actionAdministrators, SIGNAL(triggered()), this, SLOT(manageAdmins()));
     connect(ui->actionAlarms, SIGNAL(triggered()), this, SLOT(manageAlarms()));
+    connect(ui->actionAnnouncement, SIGNAL(triggered()), this, SLOT(manageAnnouncements()));
 
 
     m_myself = AdminUser::instance();
@@ -37,6 +38,7 @@ ServerManagementWidget::ServerManagementWidget(QWidget *parent) :
 
     m_adminsWidget = 0;
     m_alarmsWidget = 0;
+    m_announcementManagementWidget = 0;
 }
 
 ServerManagementWidget::~ServerManagementWidget()
@@ -85,6 +87,16 @@ void ServerManagementWidget::setAdminsData(const QByteArray &infoData){
 void ServerManagementWidget::setAlarmsData(const QByteArray &infoData){
     manageAlarms();
     m_alarmsWidget->setData(infoData);
+}
+
+void ServerManagementWidget::setAnnouncementsData(const QByteArray &infoData){
+    manageAnnouncements();
+    m_announcementManagementWidget->setAnnouncementsData(infoData);
+}
+
+void ServerManagementWidget::setAnnouncementTargetsData(const QByteArray &infoData){
+    manageAnnouncements();
+    m_announcementManagementWidget->setAnnouncementTargetsData(infoData);
 }
 
 void ServerManagementWidget::updateServerInfo(const QByteArray &infoData){
@@ -235,6 +247,11 @@ void ServerManagementWidget::slotcloseTab(){
         m_alarmsWidget = 0;
     }
 
+    if(currentWidget == m_announcementManagementWidget){
+        delete m_announcementManagementWidget;
+        m_announcementManagementWidget = 0;
+    }
+
 }
 
 void ServerManagementWidget::showTabMenu(){
@@ -255,6 +272,7 @@ void ServerManagementWidget::showMenu(const QPoint & pos){
     }else{
         menu.addAction(ui->actionAdministrators);
         menu.addAction(ui->actionAlarms);
+        menu.addAction(ui->actionAnnouncement);
     }
 
     menu.exec(pos);
@@ -282,6 +300,16 @@ void ServerManagementWidget::manageAlarms(){
     }
 
     ui->tabWidgetServer->setCurrentIndex(ui->tabWidgetServer->indexOf(m_alarmsWidget));
+
+}
+
+void ServerManagementWidget::manageAnnouncements(){
+    if(!m_announcementManagementWidget){
+        m_announcementManagementWidget = new AnnouncementManagementWidget(this);
+        ui->tabWidgetServer->addTab(m_announcementManagementWidget, tr("Announcements"));
+    }
+
+    ui->tabWidgetServer->setCurrentIndex(ui->tabWidgetServer->indexOf(m_announcementManagementWidget));
 
 }
 

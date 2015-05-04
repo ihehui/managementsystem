@@ -6,7 +6,7 @@
 
 #include "adminsmanagementwidget.h"
 #include "alarmsmanagementwidget.h"
-
+#include "../announcementmanagement/announcementmanagementwidget.h"
 
 
 namespace Ui {
@@ -31,6 +31,9 @@ protected:
 public slots:
     void setAdminsData(const QByteArray &infoData);
     void setAlarmsData(const QByteArray &infoData);
+    void setAnnouncementsData(const QByteArray &infoData);
+    void setAnnouncementTargetsData(const QByteArray &infoData);
+
 
     void updateServerInfo(const QByteArray &infoData);
     void updateRealtimeInfo(const QByteArray &infoData);
@@ -46,6 +49,8 @@ private slots:
 
     void manageAdmins();
     void manageAlarms();
+    void manageAnnouncements();
+
 
     bool verifyPrivilege();
     void adminVerified();
@@ -63,6 +68,7 @@ private:
 
     AdminsManagementWidget *m_adminsWidget;
     AlarmsManagementWidget *m_alarmsWidget;
+    AnnouncementManagementWidget *m_announcementManagementWidget;
 
 
 };

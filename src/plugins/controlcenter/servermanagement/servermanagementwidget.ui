@@ -652,6 +652,15 @@
     <string>Login</string>
    </property>
   </action>
+  <action name="actionAnnouncement">
+   <property name="icon">
+    <iconset resource="../controlcenter.qrc">
+     <normaloff>:/icon/resources/images/announcement.png</normaloff>:/icon/resources/images/announcement.png</iconset>
+   </property>
+   <property name="text">
+    <string>Announcement</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../controlcenter.qrc"/>

@@ -215,7 +215,10 @@ namespace HEHUI {
             RequestSystemAlarms,
             AcknowledgeSystemAlarms,
 
-
+            AnnouncementFromServer,
+            RequestAnnouncement,
+            AnnouncementTargetsFromServer,
+            RequestAnnouncementTargets,
 
             AdminRequestRemoteConsole,
             ClientResponseRemoteConsoleStatus,
@@ -351,7 +354,9 @@ namespace HEHUI {
             SYSINFO_SYSADMINS, //Server
             SYSINFO_SYSALARMS, //Server
             SYSINFO_SYSLOGS, //Server
-            SYSINFO_REALTIME_INFO//Client,Server
+            SYSINFO_REALTIME_INFO, //Client,Server
+            SYSINFO_ANNOUNCEMENTS, //Server
+            SYSINFO_ANNOUNCEMENTTARGETS //Server
 
         };
 
@@ -360,6 +365,19 @@ namespace HEHUI {
             ALARM_HARDWARECHANGE = 1,
             ALARM_PROCESSMONITOR = 2
 
+        };
+
+        enum AnnouncementType{
+            ANNOUNCEMENT_UNKNOWN = 0,
+            ANNOUNCEMENT_NORMAL = 1,
+            ANNOUNCEMENT_CRITICAL = 2
+        };
+
+        enum AnnouncementTarget{
+            ANNOUNCEMENT_TARGET_EVERYONE = 0,
+            ANNOUNCEMENT_TARGET_COMPUTERS = 1,
+            ANNOUNCEMENT_TARGET_USERS = 2,
+            ANNOUNCEMENT_TARGET_ALL = 255
         };
 
 

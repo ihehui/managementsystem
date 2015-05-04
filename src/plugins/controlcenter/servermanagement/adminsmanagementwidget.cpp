@@ -394,7 +394,7 @@ void AdminsManagementWidget::slotDeleteAdmin(){
 void AdminsManagementWidget::showUserInfoWidget(AdminUserInfo *adminUser, bool readonly){
     qDebug()<<"--AdminsManagementWidget::showADUserInfoWidget(...)";
 
-    if(readonly && !verifyPrivilege()){
+    if(readonly && (!verifyPrivilege()) ){
         return;
     }
 
