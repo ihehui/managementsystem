@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include "announcementinfomodel.h"
+#include "announcementinfowidget.h"
 
 #include "../adminuser.h"
 
@@ -25,7 +26,7 @@ public:
     ~AnnouncementManagementWidget();
 
     void setAnnouncementsData(const QByteArray &data);
-    void setAnnouncementTargetsData(const QByteArray &data);
+    void setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data);
 
 
 private slots:
@@ -39,8 +40,10 @@ private slots:
     void on_actionExport_triggered();
     void on_actionPrint_triggered();
 
-    void on_actionAcknowledge_triggered();
-    void on_actionDelete_triggered();
+    void on_actionCreate_triggered();
+    void on_actionClone_triggered();
+    void on_actionDisable_triggered();
+
     void requestAcknowledgeAlarms(bool deleteAlarms = false);
 
     void showAnnouncementInfo(const QModelIndex &index);
@@ -61,13 +64,6 @@ private:
 private:
     Ui::AnnouncementManagementWidget *ui;
 
-    AnnouncementInfoModel *m_model;
-    SortFilterProxyModel *m_proxyModel;
-
-    AdminUser *m_myself;
-
-    QStringList m_selectedInfoList;
-
     enum Period{
         Period_Custom = 0,
         Period_Today,
@@ -76,6 +72,16 @@ private:
         Period_This_Week,
         Period_This_Month,
     };
+
+    AnnouncementInfoModel *m_model;
+    SortFilterProxyModel *m_proxyModel;
+    AnnouncementInfoWidget *m_infoWidget;
+
+    AdminUser *m_myself;
+
+    QStringList m_selectedInfoList;
+
+
 
 
 

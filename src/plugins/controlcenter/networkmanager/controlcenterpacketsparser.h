@@ -631,8 +631,8 @@ public slots:
     }
 
 
-    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, const QString &assetNO, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
-        qDebug()<<"--sendAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" computerName:"<<assetNO;
+    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired = true, int validityPeriod = 60, quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE), const QString &targets = ""){
+        qDebug()<<"--sendAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" content:"<<content;
         Packet *packet = PacketHandlerBase::getPacket();
         QHostAddress targetAddress = QHostAddress(peerAddress);
         if(targetAddress.isNull()){
@@ -644,7 +644,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << assetNO << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
+        out << m_localID << localTempID << adminName << type << content << quint8(confirmationRequired) << validityPeriod << targetType << targets;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -658,7 +658,7 @@ public slots:
         return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
     }
 
-    bool sendAnnouncementPacket(SOCKETID socketID, const QString &assetNO, const QString &userName, const QString &adminName, quint32 messageID, const QString &message, bool confirmationRequired = true, int validityPeriod = 60){
+    bool sendAnnouncementPacket(SOCKETID socketID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired = true, int validityPeriod = 60, quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE), const QString &targets = ""){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -667,7 +667,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << assetNO << userName << adminName << messageID << message << (confirmationRequired?quint8(1):quint8(0)) << validityPeriod;
+        out << m_localID << localTempID << adminName << type << content << quint8(confirmationRequired) << validityPeriod << targetType << targets;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -680,6 +680,30 @@ public slots:
 
         return m_rtp->sendReliableData(socketID, &ba);
     }
+
+    bool sendUpdateAnnouncementPacket(SOCKETID socketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets){
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::UpdateAnnouncement));
+        packet->setTransmissionProtocol(TP_RUDP);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << adminName << announcementID << targetType << quint8(active) << addedTargets << deletedTargets;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
 
     bool sendRequestTemperaturesPacket(SOCKETID socketID, bool cpu = true, bool harddisk = false){
 
@@ -1118,7 +1142,7 @@ signals:
 
 
     void signalClientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
-    void signalSystemInfoFromServerReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
+    void signalSystemInfoFromServerReceived(const QString &extraInfo, const QByteArray &clientInfo, quint8 infoType);
 
     void signalClientResponseUSBInfoPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &usbInfo);
 
@@ -1144,7 +1168,7 @@ signals:
 
     void signalTemperaturesPacketReceived(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
 
-    void signalUserReplyMessagePacketReceived(const QString &assetNO, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
+    void signalUserReplyMessagePacketReceived(const QString &announcementID, const QString &sender, const QString &receiver, const QString &replyMessage);
 
     void signalDesktopInfoPacketReceived(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight,int  blockWidth, int blockHeight);
     void signalScreenshotPacketReceived(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);

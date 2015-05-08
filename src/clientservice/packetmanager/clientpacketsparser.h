@@ -65,6 +65,7 @@ public slots:
 
 
     void requestScreenshot(SOCKETID adminSocketID, const QString &userName, const QString &adminAddress, quint16 adminPort);
+    void setSocketConnectedToServer(SOCKETID serverSocketID);
     void setSocketConnectedToAdmin(SOCKETID socketID, const QString &adminName);
     void setAssetNO(const QString &assetNO);
 
@@ -126,6 +127,35 @@ public slots:
 
         return m_rtp->sendReliableData(socketID, &ba);
 
+    }
+
+    bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &userName){
+        qDebug()<<"----sendRequestAnnouncementsPacket(...)";
+        return sendRequestAnnouncementsPacket(serverSocketID, "", "", "1", m_assetNO, userName, "-1", "1970-01-01", "2099-01-01");
+    }
+
+    bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime){
+        qDebug()<<"----sendRequestAnnouncementsPacket(...)";
+
+        Packet *packet = PacketHandlerBase::getPacket(serverSocketID);
+
+        packet->setPacketType(quint8(MS::RequestAnnouncement));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_assetNO << id << keyword << validity << assetNO << userName << target << startTime << endTime;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(serverSocketID, &ba);
     }
 
     bool sendClientResponseRemoteConsoleStatusPacket(int adminSocketID, bool running, const QString &extraMessage, quint8 messageType = quint8(MS::MSG_Information)){
@@ -468,17 +498,42 @@ public slots:
 
 //    }
     
-    bool sendServerAnnouncementPacket(SOCKETID userSocketID, const QString &adminName, quint32 announcementID, const QString &serverAnnouncement, quint8 confirmationRequired, int validityPeriod){
-        qDebug()<<"--sendServerAnnouncementPacket(...)"<<" userSocketID:"<<userSocketID<<" adminName:"<<adminName<<" serverAnnouncement:"<<serverAnnouncement;
+//    bool sendServerAnnouncementPacket(SOCKETID userSocketID, const QString &adminName, quint32 announcementID, const QString &serverAnnouncement, quint8 confirmationRequired, int validityPeriod){
+//        qDebug()<<"--sendServerAnnouncementPacket(...)"<<" userSocketID:"<<userSocketID<<" adminName:"<<adminName<<" serverAnnouncement:"<<serverAnnouncement;
         
-        Packet *packet = PacketHandlerBase::getPacket(userSocketID);
+//        Packet *packet = PacketHandlerBase::getPacket(userSocketID);
         
-        packet->setPacketType(quint8(MS::Announcement));
-        packet->setTransmissionProtocol(TP_UDT);
+//        packet->setPacketType(quint8(MS::Announcement));
+//        packet->setTransmissionProtocol(TP_UDT);
+//        QByteArray ba;
+//        QDataStream out(&ba, QIODevice::WriteOnly);
+//        out.setVersion(QDataStream::Qt_4_8);
+
+//        out << m_assetNO << announcementID << adminName << serverAnnouncement << confirmationRequired << validityPeriod;
+//        packet->setPacketData(ba);
+
+//        ba.clear();
+//        out.device()->seek(0);
+//        QVariant v;
+//        v.setValue(*packet);
+//        out << v;
+
+//        PacketHandlerBase::recylePacket(packet);
+
+//        return m_rtp->sendReliableData(userSocketID, &ba);
+//    }
+
+    bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType){
+        //qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
+
+        Packet *packet = PacketHandlerBase::getPacket();
+
+        packet->setPacketType(quint8(MS::SystemInfoFromServer));
+        packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_assetNO << adminName << announcementID << serverAnnouncement << confirmationRequired << validityPeriod;
+        out << m_assetNO << extraInfo << data << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -489,7 +544,7 @@ public slots:
 
         PacketHandlerBase::recylePacket(packet);
 
-        return m_rtp->sendReliableData(userSocketID, &ba);
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
 
@@ -588,7 +643,7 @@ public slots:
         return m_rtp->sendReliableData(userSocketID, &ba);
     }
 
-    bool sendUserReplyMessagePacket(SOCKETID socketID, const QString &userName, quint32 originalMessageID, const QString &replyMessage){
+    bool sendUserReplyMessagePacket(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver, const QString &replyMessage){
         qWarning()<<"----sendUserReplyMessagePacket(...):";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -598,7 +653,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_assetNO << userName << originalMessageID << replyMessage;
+        out << m_assetNO << announcementID << sender << receiver  << replyMessage;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -900,6 +955,8 @@ signals:
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
     void signalServerResponseSoftwareVersionPacketReceived(const QString &softwareName, const QString &version);
 
+    void signalSystemInfoFromServerReceived(const QString &extraInfo, const QByteArray &clientInfo, quint8 infoType);
+
     //void signalServerAnnouncementPacketReceived(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead);
 
     void signalUpdateClientSoftwarePacketReceived();
@@ -975,6 +1032,7 @@ private:
     QMutex m_localUserSocketsHashMutex;
     QHash<SOCKETID /*Socket ID*/, QString /*User Name*/> m_localUserSocketsHash;
 
+    SOCKETID m_socketConnectedToServer;
     SOCKETID m_socketConnectedToAdmin;
     QString m_adminName;
 

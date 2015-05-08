@@ -120,7 +120,7 @@ private slots:
     void userResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
 
     void updateTemperatures(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
-    void replyMessageReceived(const QString &assetNO, const QString &userName, quint32 originalMessageID, const QString &replyMessage);
+    void replyMessageReceived(const QString &announcementID, const QString &sender, const QString &receiver, const QString &replyMessage);
 
     void serviceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType);
 

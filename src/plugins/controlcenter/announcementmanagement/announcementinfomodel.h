@@ -5,7 +5,7 @@
 #include <QSortFilterProxyModel>
 #include <QObject>
 
-#include "announcementinfo.h"
+#include "../../sharedms/announcementinfo.h"
 
 
 namespace HEHUI {
@@ -17,9 +17,18 @@ public:
     ~AnnouncementTargetModel();
 
     void setJsonData(const QByteArray &jsonData);
+    void addComputerTargets(const QStringList &targets);
+    void addUserTargets(const QStringList &targets);
+    QString getNewTargetsStringForSQL();
+    QString getDeletedTargetsStringForSQL();
+
     void clear();
-    AnnouncementTarget *getInfo(const QModelIndex & index);
-    QString getInfoID(const QModelIndex & index);
+    AnnouncementTarget *getTarget(const QModelIndex & index);
+    void deleteTarget(const QModelIndex & index);
+    QString getTargetID(const QModelIndex & index);
+
+    void switchToCloneMode();
+
 
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
     int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
@@ -30,6 +39,8 @@ public:
 private:
     QString m_announcementID;
     QList<AnnouncementTarget *> infolist;
+
+    QStringList deletedTargets;
 
 };
 

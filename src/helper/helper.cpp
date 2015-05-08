@@ -140,9 +140,11 @@ void Helper::startNetwork(){
     if(!bulletinBoardPacketsParser){
         bulletinBoardPacketsParser = new BulletinBoardPacketsParser(resourcesManager, m_userName, m_localComputerName, this);
 
+        connect(bulletinBoardPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
+
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), this, SLOT(adminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), Qt::QueuedConnection);
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), this, SLOT(AdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
-        connect(bulletinBoardPacketsParser, SIGNAL(signalAnnouncementPacketReceived(const QString&, quint32, const QString&, bool, int)), this, SLOT(serverAnnouncementPacketReceived(const QString&, quint32, const QString&, bool, int)), Qt::QueuedConnection);
+//        connect(bulletinBoardPacketsParser, SIGNAL(signalAnnouncementPacketReceived(const QString &, const QString &, quint8, const QString &, bool, int)), this, SLOT(serverAnnouncementPacketReceived(const QString &, const QString &, quint8, const QString &, bool, int)), Qt::QueuedConnection);
 
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestScreenshotPacketReceived(SOCKETID, const QString&, const QString&, quint16)), this, SLOT(adminRequestScreenshotPacketReceived(SOCKETID, const QString&, const QString&, quint16)), Qt::QueuedConnection);
 
@@ -150,6 +152,33 @@ void Helper::startNetwork(){
 
     connectToLocalServer();
 
+}
+
+void Helper::processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType){
+
+    switch (infoType) {
+    case quint8(MS::SYSINFO_ANNOUNCEMENTS):
+    {
+        processAnnouncementsInfo(extraInfo, infoData);
+    }
+        break;
+
+    default:
+        break;
+    }
+
+}
+
+void Helper::processAnnouncementsInfo(const QString &userName, const QByteArray &infoData){
+    if(m_userName != userName){return;}
+
+    if(!bulletinBoardWidget){
+        bulletinBoardWidget = new BulletinBoardWidget(m_userName);
+        connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(quint32, const QString &)), this, SLOT(sendReplyMessage(quint32, const QString &)));
+    }
+    bulletinBoardWidget->processAnnouncementsInfo(infoData);
+    bulletinBoardWidget->showNormal();
+    bulletinBoardWidget->raise();
 }
 
 void Helper::adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName ){
@@ -163,10 +192,7 @@ void Helper::adminRequestRemoteAssistancePacketReceived(const QString &adminAddr
     
     remoteAssistance->show();
     remoteAssistance->raise();
-    
-    
-    
-    
+        
 }
 
 void Helper::AdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword ){
@@ -184,21 +210,21 @@ void Helper::AdminInformUserNewPasswordPacketReceived(const QString &adminAddres
     
 }
 
-void Helper::serverAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement, bool confirmationRequired, int validityPeriod){
+void Helper::serverAnnouncementPacketReceived(const QString &id, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod){
     qWarning()<<"Helper::serverAnnouncementPacketReceived(...)";
     
-    if(!bulletinBoardWidget){
-        bulletinBoardWidget = new BulletinBoardWidget(m_userName);
-        connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(quint32, const QString &)), this, SLOT(sendReplyMessage(quint32, const QString &)));
-    }
+//    if(!bulletinBoardWidget){
+//        bulletinBoardWidget = new BulletinBoardWidget(m_userName);
+//        connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(quint32, const QString &)), this, SLOT(sendReplyMessage(quint32, const QString &)));
+//    }
 
-    bulletinBoardWidget->showServerAnnouncement(adminName, announcementID, announcement);
-    bulletinBoardWidget->showNormal();
-    bulletinBoardWidget->raise();
+//    bulletinBoardWidget->processAnnouncementsInfo(infoData);
+//    bulletinBoardWidget->showNormal();
+//    bulletinBoardWidget->raise();
 }
 
-void Helper::sendReplyMessage(quint32 originalMessageID, const QString &replyMessage){
-    bulletinBoardPacketsParser->sendUserReplyMessagePacket(m_socketConnectedToLocalServer, originalMessageID, replyMessage);
+void Helper::sendReplyMessage(const QString&announcementID, const QString &replyMessage){
+    bulletinBoardPacketsParser->sendUserReplyMessagePacket(m_socketConnectedToLocalServer, announcementID, "", replyMessage);
 }
 
 void Helper::newPasswordRetreved(){

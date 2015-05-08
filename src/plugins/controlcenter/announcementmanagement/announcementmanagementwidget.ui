@@ -259,6 +259,11 @@
     <string>Print</string>
    </property>
   </action>
+  <action name="actionCreate">
+   <property name="text">
+    <string>Create</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../controlcenter.qrc"/>

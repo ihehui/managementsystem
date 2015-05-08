@@ -215,6 +215,9 @@ namespace HEHUI {
             RequestSystemAlarms,
             AcknowledgeSystemAlarms,
 
+            Announcement,
+            UpdateAnnouncement,
+            ReplyMessage,
             AnnouncementFromServer,
             RequestAnnouncement,
             AnnouncementTargetsFromServer,
@@ -228,8 +231,7 @@ namespace HEHUI {
             ClientRequestSoftwareVersion,
             ServerResponseSoftwareVersion,
 
-            Announcement,
-            ReplyMessage,
+
 
             ClientLog,
 
@@ -375,8 +377,7 @@ namespace HEHUI {
 
         enum AnnouncementTarget{
             ANNOUNCEMENT_TARGET_EVERYONE = 0,
-            ANNOUNCEMENT_TARGET_COMPUTERS = 1,
-            ANNOUNCEMENT_TARGET_USERS = 2,
+            ANNOUNCEMENT_TARGET_SPECIFIC = 1,
             ANNOUNCEMENT_TARGET_ALL = 255
         };
 

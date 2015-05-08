@@ -5,7 +5,7 @@
 #include <QTableView>
 
 #include "ui_announcementinfowidget.h"
-#include "announcementinfo.h"
+#include "../../sharedms/announcementinfo.h"
 #include "announcementinfomodel.h"
 
 #include "networkmanager/controlcenterpacketsparser.h"
@@ -26,26 +26,28 @@ public:
 
     void setAnnouncementInfo(const AnnouncementInfo *info);
     void getAnnouncementInfo(AnnouncementInfo *info);
-
     void setReadonly(bool readonly);
+    bool isReadonly();
 
-    void setComputerTargets(const QStringList &targets);
+    void setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data);
 
-
-
-    void getMessageInfo(quint32 *messageID, QString *message, bool *confirmationRequired, int *validityPeriod);
+    void addComputerTargets(const QStringList &targets);
     
 signals:
     //void signalSendMessage(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod);
     void signalCloseWidget();
 
 private slots:
-    void on_pushButtonSend_clicked();
+    void on_pushButtonClone_clicked();
+    void on_pushButtonEdit_clicked();
+    void on_pushButtonSave_clicked();
 
     void on_actionRefresh_triggered();
-    
     void on_actionExport_triggered();
     void on_actionPrint_triggered();
+    void on_actionAddComputer_triggered();
+    void on_actionAddUser_triggered();
+    void on_actionDeleteTarget_triggered();
 
     void slotShowCustomContextMenu(const QPoint & pos);
     void getSelectedInfo(const QModelIndex &index);
@@ -58,9 +60,11 @@ private:
     AdminUser *m_myself;
 
     AnnouncementTargetModel *m_model;
-    QStringList m_selectedInfoList;
+    AnnouncementInfo m_info;
 
     unsigned int m_localTempID;
+    bool m_readonly;
+    bool m_targetsTouched;
 
 
 };

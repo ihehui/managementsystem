@@ -110,6 +110,8 @@ private slots:
 
 //    void uploadClientDetailedInfoToServer();
 
+    void processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
+
     void update();
     bool updateAdministratorPassword(const QString &newPassword);
     void setWinAdminPassword(const QString &userPassword);

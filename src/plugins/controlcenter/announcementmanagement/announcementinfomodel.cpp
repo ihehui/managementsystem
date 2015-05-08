@@ -66,6 +66,59 @@ void AnnouncementTargetModel::setJsonData(const QByteArray &jsonData)
     endResetModel();
 }
 
+void AnnouncementTargetModel::addComputerTargets(const QStringList &targets){
+    if(targets.isEmpty()){return;}
+
+    beginResetModel();
+
+    foreach (QString assetNO, targets) {
+        AnnouncementTarget *info = new AnnouncementTarget();
+        info->AssetNO = assetNO.trimmed();
+        infolist.append(info);
+    }
+
+    endResetModel();
+}
+
+void AnnouncementTargetModel::addUserTargets(const QStringList &targets){
+
+    if(targets.isEmpty()){return;}
+
+    beginResetModel();
+
+    foreach (QString target, targets) {
+        AnnouncementTarget *info = new AnnouncementTarget();
+        QStringList list = target.split("\\");
+        if(list.size() == 2){
+            info->AssetNO = list.at(0);
+            info->UserName = list.at(1);
+        }else{
+            info->UserName = list.at(0);
+        }
+
+        infolist.append(info);
+    }
+
+    endResetModel();
+}
+
+QString AnnouncementTargetModel::getNewTargetsStringForSQL(){
+    QStringList targets;
+    foreach (AnnouncementTarget *info, infolist) {
+        if(!info->ID.isEmpty()){continue;}
+        QString assetNO = info->AssetNO, userName = info->UserName;
+        assetNO = "'" + assetNO + "'";
+        userName = "'" + userName + "'";
+        targets.append(assetNO + "," + userName);
+    }
+    targets.removeDuplicates();
+    return targets.join(";");
+}
+
+QString AnnouncementTargetModel::getDeletedTargetsStringForSQL(){
+    return deletedTargets.join(",");
+}
+
 void AnnouncementTargetModel::clear(){
     beginResetModel();
 
@@ -78,7 +131,7 @@ void AnnouncementTargetModel::clear(){
     endResetModel();
 }
 
-AnnouncementTarget * AnnouncementTargetModel::getInfo(const QModelIndex &index){
+AnnouncementTarget * AnnouncementTargetModel::getTarget(const QModelIndex &index){
     if(!index.isValid()){
         return 0;
     }
@@ -86,12 +139,35 @@ AnnouncementTarget * AnnouncementTargetModel::getInfo(const QModelIndex &index){
     return infolist.at(index.data(Qt::UserRole).toInt());
 }
 
-QString AnnouncementTargetModel::getInfoID(const QModelIndex & index){
+void AnnouncementTargetModel::deleteTarget(const QModelIndex & index){
+    if(!index.isValid()){
+        return;
+    }
+
+    beginResetModel();
+
+    AnnouncementTarget *target = infolist.takeAt(index.data(Qt::UserRole).toInt());
+    if(!target){return;}
+    if(!target->ID.isEmpty()){
+        deletedTargets.append(target->ID);
+    }
+    delete target;
+
+    endResetModel();
+}
+
+QString AnnouncementTargetModel::getTargetID(const QModelIndex & index){
     if(!index.isValid()){
         return "0";
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt())->ID;
+}
+
+void AnnouncementTargetModel::switchToCloneMode(){
+    foreach (AnnouncementTarget *info, infolist) {
+        info->ID = "";
+    }
 }
 
 int AnnouncementTargetModel::rowCount ( const QModelIndex & parent) const {
@@ -353,19 +429,15 @@ QVariant AnnouncementInfoModel::data ( const QModelIndex & index, int role) cons
         {
             switch (info->TargetType) {
             case quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE):
-                return QString(tr("Any Type"));
+                return QString(tr("All"));
                 break;
 
-            case quint8(MS::ANNOUNCEMENT_TARGET_COMPUTERS):
-                return QString(tr("Computers"));
-                break;
-
-            case quint8(MS::ANNOUNCEMENT_TARGET_USERS):
-                return QString(tr("Users"));
+            case quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC):
+                return QString(tr("Specific"));
                 break;
 
             default:
-                return QString(tr("Unknown"));
+                return QString(tr("All"));
                 break;
             }
 

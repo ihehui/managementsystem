@@ -211,9 +211,9 @@ SOCKETID RTP::connectToHost( const QHostAddress & hostAddress, quint16 port, int
     switch (protocol) {
     case AUTO:
     {
-        socketID = connectToHost(hostAddress, port, waitMsecs, &err, TCP);
+        socketID = connectToHost(hostAddress, port, waitMsecs, &err, ENET);
         if(INVALID_SOCK_ID == socketID){
-            socketID = connectToHost(hostAddress, port, waitMsecs, &err, ENET);
+            socketID = connectToHost(hostAddress, port, waitMsecs, &err, TCP);
         }
         if(INVALID_SOCK_ID != socketID){
             connected = true;

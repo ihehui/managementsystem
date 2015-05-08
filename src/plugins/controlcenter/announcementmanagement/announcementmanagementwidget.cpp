@@ -28,8 +28,7 @@ AnnouncementManagementWidget::AnnouncementManagementWidget(QWidget *parent) :
 
     ui->comboBoxTarget->addItem(tr(""), QVariant(quint8(MS::ANNOUNCEMENT_TARGET_ALL)));
     ui->comboBoxTarget->addItem(tr("Everyone"), QVariant(quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE)));
-    ui->comboBoxTarget->addItem(tr("Computers"), QVariant(quint8(MS::ANNOUNCEMENT_TARGET_COMPUTERS)));
-    ui->comboBoxTarget->addItem(tr("Users"), QVariant(quint8(MS::ANNOUNCEMENT_TARGET_USERS)));
+    ui->comboBoxTarget->addItem(tr("Specific Targets"), QVariant(quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC)));
     ui->comboBoxTarget->setCurrentIndex(0);
 
     ui->comboBoxPeriod->addItem(tr("Today"), QVariant(quint8(Period_Today)));
@@ -56,6 +55,8 @@ AnnouncementManagementWidget::AnnouncementManagementWidget(QWidget *parent) :
     //view->resizeSection(3, 200);
     view->setVisible(true);
 
+    m_infoWidget = 0;
+
     m_myself = AdminUser::instance();
 
 }
@@ -63,6 +64,16 @@ AnnouncementManagementWidget::AnnouncementManagementWidget(QWidget *parent) :
 AnnouncementManagementWidget::~AnnouncementManagementWidget()
 {
     delete ui;
+
+    m_selectedInfoList.clear();
+
+    if(m_infoWidget){
+        delete m_infoWidget;
+    }
+
+    delete m_proxyModel;
+    delete m_model;
+
 }
 
 void AnnouncementManagementWidget::setAnnouncementsData(const QByteArray &data){
@@ -70,8 +81,12 @@ void AnnouncementManagementWidget::setAnnouncementsData(const QByteArray &data){
     m_model->setJsonData(data);
 }
 
-void AnnouncementManagementWidget::setAnnouncementTargetsData(const QByteArray &data){
-//TODO
+void AnnouncementManagementWidget::setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data){
+    if(!m_infoWidget){
+        return;
+    }
+
+    m_infoWidget->setAnnouncementTargetsData(announcementID, data);
 }
 
 void AnnouncementManagementWidget::on_toolButtonQuery_clicked(){
@@ -116,16 +131,12 @@ void AnnouncementManagementWidget::on_actionRefresh_triggered(){
     QString assetNOs = ui->lineEditAssetNO->text().trimmed();
     QString userNames = ui->lineEditUserName->text().trimmed();
     MS::AnnouncementTarget tp = MS::AnnouncementTarget(ui->comboBoxTarget->currentData().toUInt());
-    if(tp == MS::ANNOUNCEMENT_TARGET_COMPUTERS){
-        userNames = "";
-    }else if(tp == MS::ANNOUNCEMENT_TARGET_USERS){
-        assetNOs = "";
-    }else if(tp == MS::ANNOUNCEMENT_TARGET_EVERYONE){
+    if(tp == MS::ANNOUNCEMENT_TARGET_EVERYONE){
         assetNOs = "";
         userNames = "";
     }
 
-    QString startTime = "1970-01:01", endTime = "2099-01-01";
+    QString startTime = "1970-01-01", endTime = "2099-01-01";
     periodString(&startTime, &endTime);
 
     m_myself->packetsParser()->sendRequestAnnouncementsPacket(m_myself->socketConnectedToServer(),
@@ -161,12 +172,32 @@ void AnnouncementManagementWidget::on_actionPrint_triggered(){
 #endif
 }
 
-void AnnouncementManagementWidget::on_actionAcknowledge_triggered(){
-    requestAcknowledgeAlarms(false);
+void AnnouncementManagementWidget::on_actionCreate_triggered(){
+    AnnouncementInfo info;
+    showAnnouncementInfoWidget(&info, false);
 }
 
-void AnnouncementManagementWidget::on_actionDelete_triggered(){
-    requestAcknowledgeAlarms(true);
+void AnnouncementManagementWidget::on_actionClone_triggered(){
+
+    QModelIndexList indexList =  ui->tableView->selectionModel()->selectedRows(0);
+    if(indexList.isEmpty()){return;}
+    QModelIndex index = indexList.first();
+    if(!index.isValid()){
+        return;
+    }
+
+    //AnnouncementInfo *info = m_model->getInfo(index);
+
+    AnnouncementInfo info(*(m_model->getInfo(index)));
+    info.ID = "";
+    info.Admin = m_myself->getUserID();
+    info.Active = true;
+
+    showAnnouncementInfoWidget(&info, false);
+}
+
+void AnnouncementManagementWidget::on_actionDisable_triggered(){
+
 }
 
 void AnnouncementManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms){
@@ -197,25 +228,17 @@ void AnnouncementManagementWidget::showAnnouncementInfoWidget(AnnouncementInfo *
         return;
     }
 
-    QDialog dlg(this);
-    QVBoxLayout vbl(&dlg);
-    vbl.setContentsMargins(1, 1, 1, 1);
 
-    AnnouncementInfoWidget wgt(readonly, &dlg);
-    connect(&wgt, SIGNAL(signalOK()), &dlg, SLOT(accept()));
-    connect(&wgt, SIGNAL(signalCancel()), &dlg, SLOT(reject()));
-
-    vbl.addWidget(&wgt);
-    dlg.setLayout(&vbl);
-    dlg.updateGeometry();
-    if(readonly){
-        dlg.setWindowTitle(tr("Announcement Info"));
-    }else if(info->ID.isEmpty()){
-        dlg.setWindowTitle(tr("Create New Announcement"));
-    }else{
-        dlg.setWindowTitle(tr("Modify Announcement Info"));
+    if(!m_infoWidget){
+        m_infoWidget = new AnnouncementInfoWidget(readonly);
+        //connect(&m_infoWidget, SIGNAL(signalOK()), &dlg, SLOT(accept()));
+        //connect(&m_infoWidget, SIGNAL(signalCancel()), &dlg, SLOT(reject()));
     }
-    dlg.exec();
+
+    m_infoWidget->setAnnouncementInfo(info);
+    m_infoWidget->setReadonly(readonly);
+
+    m_infoWidget->showNormal();
 
 }
 
@@ -226,6 +249,7 @@ void AnnouncementManagementWidget::slotShowCustomContextMenu(const QPoint & pos)
         return;
     }
 
+    getSelectedInfo(ui->tableView->selectionModel()->currentIndex());
 
     QMenu menu(this);
     menu.addAction(ui->actionRefresh);
@@ -245,6 +269,7 @@ void AnnouncementManagementWidget::slotShowCustomContextMenu(const QPoint & pos)
 #endif
 
     menu.addSeparator();
+    menu.addAction(ui->actionCreate);
     menu.addAction(ui->actionClone);
     menu.addAction(ui->actionDisable);
 
@@ -276,8 +301,9 @@ void AnnouncementManagementWidget::getSelectedInfo(const QModelIndex &index){
         enableModify = true;
     }
 
-    ui->actionClone->setEnabled(enableModify);
-    ui->actionDisable->setEnabled(enableModify);
+    ui->actionCreate->setEnabled(enableModify);
+    ui->actionClone->setEnabled( enableModify && (!m_selectedInfoList.isEmpty()) );
+    ui->actionDisable->setEnabled( enableModify && (!m_selectedInfoList.isEmpty()) );
 
 }
 

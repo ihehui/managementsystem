@@ -3,15 +3,15 @@
 
 #include <QObject>
 
+#include "sharedmslib.h"
 
 namespace HEHUI {
 
-class AnnouncementTarget : public QObject
+class SHAREDMSLIB_API AnnouncementTarget
 {
-    Q_OBJECT
-public:
-    explicit AnnouncementTarget(QObject *parent = 0);
 
+public:
+    explicit AnnouncementTarget();
 
 public:
     QString ID;
@@ -22,14 +22,31 @@ public:
     QString ACKTime;
 
 };
+/////////////////////////////////////
 
 
-
-class AnnouncementInfo : public QObject
+class SHAREDMSLIB_API AnnouncementReply
 {
-    Q_OBJECT
+
 public:
-    explicit AnnouncementInfo(QObject *parent = 0);
+    explicit AnnouncementReply();
+
+public:
+    QString ID;
+    QString AnnouncementID;
+    QString Sender;
+    QString Receiver;
+    QString Message;
+    QString PublishTime;
+
+};
+/////////////////////////////////////
+
+
+class SHAREDMSLIB_API AnnouncementInfo
+{
+public:
+    explicit AnnouncementInfo();
     ~AnnouncementInfo();
 
 
@@ -44,6 +61,9 @@ public:
     quint8 TargetType;
     quint32 DisplayTimes;
     bool Active;
+    QString Targets;
+
+    unsigned int TempID;
 
 
 

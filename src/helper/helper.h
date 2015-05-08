@@ -34,10 +34,13 @@ public slots:
 private slots:
     void startNetwork();
 
+    void processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
+    void processAnnouncementsInfo(const QString &userName, const QByteArray &infoData);
+
     void adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName);
     void AdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword );
-    void serverAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement, bool confirmationRequired, int validityPeriod);
-    void sendReplyMessage(quint32 originalMessageID, const QString &replyMessage);
+    void serverAnnouncementPacketReceived(const QString &id, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod);
+    void sendReplyMessage(const QString &announcementID, const QString &replyMessage);
 
 
     void newPasswordRetreved();

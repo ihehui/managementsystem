@@ -134,6 +134,19 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
     }
         break;
 
+    case quint8(MS::SystemInfoFromServer):
+    {
+
+        QString extraInfo = "";
+        QByteArray systemInfo;
+        quint8 infoType = 0;
+        in >> extraInfo >> systemInfo >> infoType;
+        emit signalSystemInfoFromServerReceived(extraInfo, systemInfo, infoType);
+
+        //qDebug()<<"SystemInfoFromServer";
+    }
+    break;
+
     case quint8(MS::AdminRequestRemoteAssistance):
     {
         
@@ -160,18 +173,19 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
     }
         break;
 
-    case quint8(MS::Announcement):
-    {
-        QString adminName = "", announcement = "";
-        quint32 announcementID = 0;
-        quint8 confirmationRequired = 0;
-        int validityPeriod = 60;
-        in >> adminName >> announcementID >> announcement >> confirmationRequired >> validityPeriod;
-        emit signalAnnouncementPacketReceived(adminName, announcementID, announcement, confirmationRequired, validityPeriod);
-        qDebug()<<"~~Announcement"<<" Admin:"<<adminName<<" Msg:"<<announcement;
+//    case quint8(MS::Announcement):
+//    {
+//        QString id = "", adminName = "";
+//        quint8 type = quint8(MS::ANNOUNCEMENT_NORMAL);
+//        QString content = "";
+//        bool confirmationRequired = true;
+//        int validityPeriod = 60;
 
-    }
-        break;
+//        in >> id >> adminName >> type >> content >> confirmationRequired >> validityPeriod >> targetType >> targets;
+//        emit signalAnnouncementPacketReceived(id, adminName, type, content, confirmationRequired, validityPeriod);
+
+//    }
+//        break;
 
     case quint8(MS::RequestScreenshot):
     {

@@ -319,7 +319,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
 
     connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &, const QString &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, quint32 , const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, quint32 , const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, const QString &, const QString &)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalServiceConfigChangedPacketReceived(QString,QString,quint64,quint64)), this, SLOT(serviceConfigChangedPacketReceived(QString,QString,quint64,quint64)));
 
@@ -1276,13 +1276,21 @@ void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
         return;
     }
 
-    quint32 messageID;
-    QString message;
-    bool confirmationRequired;
-    int validityPeriod;
-    wgt.getMessageInfo(&messageID, &message, &confirmationRequired, &validityPeriod);
+    AnnouncementInfo info;
+    wgt.getAnnouncementInfo(&info);
 
-    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(m_peerSocket, m_peerAssetNO, userName, m_adminUser->getUserID(), messageID, message, confirmationRequired, validityPeriod);
+    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(
+                m_peerSocket,
+                info.TempID,
+                m_adminUser->getUserID(),
+                info.Type,
+                info.Content,
+                info.ACKRequired,
+                info.ValidityPeriod,
+                info.TargetType,
+                info.Targets
+                );
+
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
     }
@@ -1433,12 +1441,10 @@ void SystemManagementWidget::updateTemperatures(const QString &assetNO, const QS
     ui.labelHarddiskTemperature->setText(temperatures.join(" "));
 }
 
-void SystemManagementWidget::replyMessageReceived(const QString &assetNO, const QString &userName, quint32 originalMessageID, const QString &replyMessage){
-    if(assetNO != m_peerAssetNO){
-        return;
-    }
+void SystemManagementWidget::replyMessageReceived(const QString &announcementID, const QString &sender, const QString &receiver, const QString &replyMessage){
 
-    QMessageBox::information(this, tr("Message"), QString("Message received from '%1':\r\n%2").arg(userName).arg(replyMessage));
+//TODO
+    QMessageBox::information(this, tr("Message"), QString("Message received from '%1':\r\n%2").arg(sender).arg(replyMessage));
 
 }
 

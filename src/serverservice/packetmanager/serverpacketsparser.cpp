@@ -197,6 +197,39 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::Announcement):
+    {
+        unsigned int localTempID = 0;
+        QString adminName = "";
+        quint8 type = quint8(MS::ANNOUNCEMENT_NORMAL);
+        QString content = "";
+        bool confirmationRequired = true;
+        int validityPeriod = 60;
+        quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
+        QString targets = "";
+
+        in >> localTempID >> adminName >> type >> content >> confirmationRequired >> validityPeriod >> targetType >> targets;
+        emit signalAnnouncementPacketReceived(socketID, localTempID, adminName, type, content, confirmationRequired, validityPeriod, targetType, targets);
+
+        qDebug()<<"~~Announcement--";
+    }
+    break;
+
+    case quint8(MS::UpdateAnnouncement):
+    {
+        QString adminName = "";
+        unsigned int announcementID = 0;
+        quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
+        quint8 active = 1;
+        QString addedTargets = "", deletedTargets = "";
+
+        in >> adminName >> announcementID >> targetType >> active >> addedTargets >> deletedTargets;
+        emit signalUpdateAnnouncementRequested(socketID, adminName, announcementID, targetType, active, addedTargets, deletedTargets);
+
+        qDebug()<<"~~UpdateAnnouncement--";
+    }
+    break;
+
     case quint8(MS::RequestAnnouncementTargets):
     {
         QString announcementID = "0";
@@ -204,6 +237,16 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
         emit signalAnnouncementTargetsRequested(socketID, announcementID);
 
         qDebug()<<"~~RequestAnnouncementTargets--";
+    }
+    break;
+
+    case quint8(MS::ReplyMessage):
+    {
+        QString announcementID = "", sender = "", receiver = "", replyMessage = "";
+        in >> announcementID >> sender >> receiver >> replyMessage ;
+
+        emit signalReplyMessagePacketReceived(socketID, announcementID, sender, receiver, replyMessage);
+        qDebug()<<"~~ReplyMessage--";
     }
     break;
 

@@ -90,8 +90,9 @@ private slots:
     void showServerMessage(const QString &message, quint8 messageType);
 
     void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType);
-    void processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
-    void updateSystemInfoFromServer(const QByteArray &infoData, quint8 infoType);
+    void processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
+    void updateSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
+    void updateClientInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
 
     void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
 

@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>423</width>
+    <width>460</width>
     <height>348</height>
    </rect>
   </property>
@@ -171,9 +171,9 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButtonClose">
+      <widget class="QPushButton" name="pushButtonACK">
        <property name="text">
-        <string>&amp;Close</string>
+        <string>OK, I know it.</string>
        </property>
       </widget>
      </item>
@@ -201,22 +201,5 @@
  <resources>
   <include location="../resources.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>pushButtonClose</sender>
-   <signal>clicked()</signal>
-   <receiver>SystemManagementWidgetClass</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>312</x>
-     <y>197</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>179</x>
-     <y>109</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

@@ -253,7 +253,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendSystemInfoPacket(SOCKETID socketID, const QString &assetNO, const QByteArray &data, quint8 infoType){
+    bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType){
         //qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
 
         Packet *packet = PacketHandlerBase::getPacket();
@@ -263,7 +263,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << assetNO << data << infoType;
+        out << m_serverName << extraInfo << data << infoType;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -340,7 +340,11 @@ signals:
     void signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms);
 
     void signalAnnouncementsRequested(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
-    void signalAnnouncementTargetsRequested(SOCKETID socketID, const QString &announcementID);
+    void signalAnnouncementPacketReceived(SOCKETID adminSocketID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
+    void signalUpdateAnnouncementRequested(SOCKETID adminSocketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
+    void signalAnnouncementTargetsRequested(SOCKETID adminSocketID, const QString &announcementID);
+    void signalReplyMessagePacketReceived(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver, const QString &message);
+
 
 private:
 

@@ -81,6 +81,7 @@ ClientPacketsParser::ClientPacketsParser(const QString &assetNO, ClientResources
     m_localENETListeningPort = m_rtp->getENETProtocolPort();
 
 
+    m_socketConnectedToServer = INVALID_SOCK_ID;
     m_socketConnectedToAdmin = INVALID_SOCK_ID;
     
 }
@@ -170,9 +171,6 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::AdminRequestRemoteConsole):
     {
-
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
         QString assetNO = "", applicationPath = "", adminID = "";
         bool startProcess = true;
         in >> assetNO >> applicationPath >> adminID >> startProcess;
@@ -212,7 +210,6 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     //        break;
     case quint8(MS::ServerResponseSoftwareVersion):
     {
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
 
         QString softwareName, version;
         in >> softwareName >> version;
@@ -220,43 +217,83 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ServerResponseSoftwareVersion";
     }
     break;
-    case quint8(MS::Announcement):
-    {
-        QString assetNO = "", userName = "", adminName = "", announcement = "";
-        quint32 announcementID = 0;
-        quint8 confirmationRequired = 1;
-        int validityPeriod = 60;
-        in >> assetNO >> userName >> adminName >> announcementID >> announcement >> confirmationRequired >> validityPeriod;
 
-        if(assetNO != m_assetNO){
+    case quint8(MS::SystemInfoFromServer):
+    {
+        //qDebug()<<"SystemInfoFromServer";
+
+        QString extraInfo = "";
+        QByteArray systemInfo;
+        quint8 infoType = 0;
+        in >> extraInfo >> systemInfo >> infoType;
+
+        if(infoType == quint8(MS::SYSINFO_ANNOUNCEMENTS)){
+            if(extraInfo.isEmpty()){return;}
+            SOCKETID sID = socketIDOfUser(extraInfo);
+            if(INVALID_SOCK_ID == sID){
+                qCritical()<<QString("ERROR! No online user named '%1'.").arg(extraInfo);
+                return;
+            }
+            sendSystemInfoPacket(sID, extraInfo, systemInfo, MS::SYSINFO_ANNOUNCEMENTS);
             return;
         }
 
-        if(userName.trimmed().isEmpty()){
-            foreach (SOCKETID sID, localUserSockets()) {
-                sendServerAnnouncementPacket(sID, adminName, announcementID, announcement, confirmationRequired, validityPeriod);
-            }
-        }else{
-            SOCKETID sID = socketIDOfUser(userName);
-            if(INVALID_SOCK_ID == sID){
-                qCritical()<<QString("ERROR! No online user named '%1'.").arg(userName);
-                return;
-            }
-            sendServerAnnouncementPacket(sID, adminName, announcementID, announcement, confirmationRequired, validityPeriod);
-        }
-
-
-        //emit signalServerAnnouncementPacketReceived(groupName, computerName, announcementID, announcement, adminName, userName, (mustRead == quint8(0))?false:true);
-
-        qDebug()<<"~~Announcement"<<"computerName:"<<assetNO<<" announcement:"<<announcement<<" userName:"<<userName<<" mustRead:"<<confirmationRequired;
-        //qDebug()<<"~~Announcement";
-
+        emit signalSystemInfoFromServerReceived(extraInfo, systemInfo, infoType);
     }
     break;
+
+//    case quint8(MS::Announcement):
+//    {
+//        unsigned int announcementID = 0;
+//        QString adminName = "";
+//        quint8 type = quint8(MS::ANNOUNCEMENT_NORMAL);
+//        QString content = "";
+//        bool confirmationRequired = true;
+//        int validityPeriod = 60;
+//        quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
+//        QString targets = "";
+
+//        in >> announcementID >> adminName >> type >> content >> confirmationRequired >> validityPeriod >> targetType >> targets;
+
+
+//        if(targets.trimmed().isEmpty()){
+//            foreach (SOCKETID sID, localUserSockets()) {
+//                sendServerAnnouncementPacket(sID, adminName, announcementID, content, confirmationRequired, validityPeriod);
+//            }
+//        }else{
+
+//            QStringList targetList = targets.split(";");
+//            if(targetList.isEmpty()){return;}
+//            foreach (QString targetInfo, targets) {
+//                QStringList list = targetInfo.split(",");
+//                if(list.size() != 2){continue;}
+
+//                QString userName = list.at(1);
+//                SOCKETID sID = socketIDOfUser(userName);
+//                if(INVALID_SOCK_ID == sID){
+//                    qCritical()<<QString("ERROR! No online user named '%1'.").arg(userName);
+//                    return;
+//                }
+//                sendServerAnnouncementPacket(sID, adminName, announcementID, content, confirmationRequired, validityPeriod);
+
+//            }
+
+//        }
+
+
+//        //emit signalServerAnnouncementPacketReceived(groupName, computerName, announcementID, announcement, adminName, userName, (mustRead == quint8(0))?false:true);
+
+//        qDebug()<<"~~Announcement"<<" adminName:"<<adminName<<" content:"<<content<<" targets:"<<targets<<" mustRead:"<<confirmationRequired;
+//        //qDebug()<<"~~Announcement";
+
+//    }
+//    break;
+
     case quint8(MS::Update):
         emit signalUpdateClientSoftwarePacketReceived();
         qDebug()<<"~~Update";
         break;
+
     case quint8(MS::AdminRequestSetupUSBSD):
     {
         quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown);
@@ -281,6 +318,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         qDebug()<<"~~ShowAdmin";
     }
     break;
+
     case quint8(MS::ModifyAdminGroupUser):
     {
 
@@ -477,11 +515,10 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::ReplyMessage):
     {
         //From local user
-        quint32 originalMessageID;
-        QString replyMessage;
-        in >> originalMessageID >> replyMessage ;
+        QString announcementID = "", receiver = "", replyMessage = "";
+        in >> announcementID >> receiver >> replyMessage ;
 
-        sendUserReplyMessagePacket(m_socketConnectedToAdmin, userNameOfSocket(socketID), originalMessageID, replyMessage);
+        sendUserReplyMessagePacket(m_socketConnectedToAdmin, announcementID, userNameOfSocket(socketID), receiver, replyMessage);
         qDebug()<<"~~ReplyMessage";
     }
     break;
@@ -697,6 +734,9 @@ void ClientPacketsParser::changeLocalUserOnlineStatus(SOCKETID userSocketID, boo
 
     if(online){
         m_localUserSocketsHash.insert(userSocketID, name);
+        if(m_socketConnectedToServer != INVALID_SOCK_ID){
+            sendRequestAnnouncementsPacket(m_socketConnectedToServer, name);
+        }
     }else{
         m_localUserSocketsHash.remove(userSocketID);
     }
@@ -736,6 +776,10 @@ void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QStrin
 
     sendAdminRequestScreenshotPacket(userSocketID, adminAddress, adminPort);
 
+}
+
+void ClientPacketsParser::setSocketConnectedToServer(SOCKETID serverSocketID){
+    m_socketConnectedToServer = serverSocketID;
 }
 
 void ClientPacketsParser::setSocketConnectedToAdmin(SOCKETID socketID, const QString &adminName){

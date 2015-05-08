@@ -94,9 +94,9 @@ void ServerManagementWidget::setAnnouncementsData(const QByteArray &infoData){
     m_announcementManagementWidget->setAnnouncementsData(infoData);
 }
 
-void ServerManagementWidget::setAnnouncementTargetsData(const QByteArray &infoData){
+void ServerManagementWidget::setAnnouncementTargetsData(const QString &extraInfo, const QByteArray &infoData){
     manageAnnouncements();
-    m_announcementManagementWidget->setAnnouncementTargetsData(infoData);
+    m_announcementManagementWidget->setAnnouncementTargetsData(extraInfo ,infoData);
 }
 
 void ServerManagementWidget::updateServerInfo(const QByteArray &infoData){

@@ -1,9 +1,9 @@
 #include "announcementinfo.h"
-#include "../../sharedms/global_shared.h"
+#include "global_shared.h"
 
 namespace HEHUI {
 
-AnnouncementTarget::AnnouncementTarget(QObject *parent) : QObject(parent)
+AnnouncementTarget::AnnouncementTarget()
 {
 
     ID = "";
@@ -13,9 +13,24 @@ AnnouncementTarget::AnnouncementTarget(QObject *parent) : QObject(parent)
     Acknowledged = false;
 
 }
+/////////////////////////////////////
 
 
-AnnouncementInfo::AnnouncementInfo(QObject *parent) : QObject(parent)
+AnnouncementReply::AnnouncementReply()
+{
+
+    ID = "";
+    AnnouncementID = "";
+    Sender = "";
+    Receiver = "";
+    Message = "";
+    PublishTime = "";
+
+}
+/////////////////////////////////////
+
+
+AnnouncementInfo::AnnouncementInfo()
 {
 
     ID = "";
@@ -24,10 +39,13 @@ AnnouncementInfo::AnnouncementInfo(QObject *parent) : QObject(parent)
     ACKRequired = true;
     Admin = "";
     PublishDate = "";
-    ValidityPeriod = 0;
+    ValidityPeriod = 30;
     TargetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
     DisplayTimes = 1;
     Active = 1;
+    Targets = "";
+
+    TempID = 0;
 
 }
 
@@ -35,6 +53,8 @@ AnnouncementInfo::~AnnouncementInfo()
 {
 
 }
+
+
 
 
 } //namespace HEHUI

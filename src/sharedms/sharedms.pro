@@ -36,7 +36,8 @@ HEADERS += clientinfo.h \
     settings.h \
     adminuserinfo.h \
     serverinfo.h \
-    alarminfo.h
+    alarminfo.h \
+    announcementinfo.h
 
 SOURCES += clientinfo.cpp \
     udtprotocol.cpp \
@@ -49,7 +50,8 @@ SOURCES += clientinfo.cpp \
     settings.cpp \
     adminuserinfo.cpp \
     serverinfo.cpp \
-    alarminfo.cpp
+    alarminfo.cpp \
+    announcementinfo.cpp
 
 FORMS +=
 

@@ -214,11 +214,11 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     {
         //qDebug()<<"SystemInfoFromServer";
 
-        QString assetNO = "";
+        QString extraInfo = "";
         QByteArray systemInfo;
         quint8 infoType = 0;
-        in >> assetNO >> systemInfo >> infoType;
-        emit signalSystemInfoFromServerReceived(assetNO, systemInfo, infoType);
+        in >> extraInfo >> systemInfo >> infoType;
+        emit signalSystemInfoFromServerReceived(extraInfo, systemInfo, infoType);
     }
     break;
 
@@ -360,12 +360,10 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ReplyMessage):
     {
-        QString userName = "";
-        quint32 originalMessageID;
-        QString replyMessage;
-        in >> userName >> originalMessageID >> replyMessage ;
+        QString announcementID = "", sender = "", receiver = "", replyMessage = "";
+        in >> announcementID >> sender >> receiver >> replyMessage ;
 
-        emit signalUserReplyMessagePacketReceived(peerName, userName, originalMessageID, replyMessage);
+        emit signalUserReplyMessagePacketReceived(announcementID, sender, receiver, replyMessage);
 
     }
     break;

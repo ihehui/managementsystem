@@ -72,7 +72,6 @@ HEADERS += \
     servermanagement/servermanagementwidget.h \
     announcementmanagement/announcementinfowidget.h \
     announcementmanagement/announcementmanagementwidget.h \
-    announcementmanagement/announcementinfo.h \
     announcementmanagement/announcementinfomodel.h
 
 SOURCES += \
@@ -109,7 +108,6 @@ SOURCES += \
     servermanagement/servermanagementwidget.cpp \
     announcementmanagement/announcementinfowidget.cpp \
     announcementmanagement/announcementmanagementwidget.cpp \
-    announcementmanagement/announcementinfo.cpp \
     announcementmanagement/announcementinfomodel.cpp
 
 

@@ -7,6 +7,7 @@
 
 #include "clientservice.h"
 #include "../sharedms/global_shared.h"
+#include "../sharedms/announcementinfo.h"
 
 #include "HHSharedNetwork/hnetworkutilities.h"
 #include "HHSharedCore/hutilities.h"
@@ -243,6 +244,8 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), this, SLOT(serverFound(const QString& ,quint16, quint16, const QString&, const QString&, int)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalUpdateClientSoftwarePacketReceived()), this, SLOT(update()), Qt::QueuedConnection);
 
+    connect(clientPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
+
     connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(quint8, bool, const QString & )), this, SLOT(processSetupUSBSDPacket(quint8, bool, const QString &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalShowAdminPacketReceived(bool)), this, SLOT(processShowAdminPacket(bool)), Qt::QueuedConnection);
 
@@ -436,6 +439,8 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverRTPL
         return;
     }
 
+    clientPacketsParser->setSocketConnectedToServer(m_socketConnectedToServer);
+
     if(!clientPacketsParser->sendClientOnlineStatusChangedPacket(m_socketConnectedToServer, true)){
         QString err = m_rtp->lastErrorString();
         m_rtp->closeSocket(m_socketConnectedToServer);
@@ -459,9 +464,19 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverRTPL
     qWarning();
 
 
+    //clientPacketsParser->sendClientOnlinePacket(networkManager->localTCPListeningAddress(), networkManager->localTCPListeningPort(), QHostInfo::localHostName(), false);
+    //QTimer::singleShot(60*msec, this, SLOT(uploadClientSummaryInfo()));
+    //uploadClientInfo();
+    //uploadClientSummaryInfo(m_socketConnectedToServer);
+
+    processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_OS);
+    processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_HARDWARE);
+
+    uploadSoftwareInfo();
+
 
 #ifdef Q_OS_WIN
-    if(Utilities::versionCompare(version, QString(APP_VERSION)) == 1){       
+    if(Utilities::versionCompare(version, QString(APP_VERSION)) == 1){
         QTimer::singleShot(60*msec, this, SLOT(update()));
         //update();
     }
@@ -473,17 +488,17 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverRTPL
         }
     }
 
+    QStringList onlineUsers;
+    WinUtilities::getAllUsersLoggedOn(&onlineUsers);
+    foreach (QString user, onlineUsers) {
+        clientPacketsParser->sendRequestAnnouncementsPacket(m_socketConnectedToServer, user);
+    }
+
+
 #endif
 
-    //clientPacketsParser->sendClientOnlinePacket(networkManager->localTCPListeningAddress(), networkManager->localTCPListeningPort(), QHostInfo::localHostName(), false);
-    //QTimer::singleShot(60*msec, this, SLOT(uploadClientSummaryInfo()));
-    //uploadClientInfo();
-    //uploadClientSummaryInfo(m_socketConnectedToServer);
 
-    processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_OS);
-    processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_HARDWARE);
 
-    uploadSoftwareInfo();
 
 }
 
@@ -1836,6 +1851,8 @@ void ClientService::peerDisconnected(SOCKETID socketID){
         qWarning()<<"Server Offline!";
         //m_rtp->closeSocket(m_socketConnectedToServer);
         m_socketConnectedToServer = INVALID_SOCK_ID;
+        clientPacketsParser->setSocketConnectedToServer(m_socketConnectedToServer);
+
         m_serverAddress = QHostAddress::Null;
         m_serverUDTListeningPort = 0;
         m_serverName = "";
@@ -2219,8 +2236,6 @@ bool ClientService::getLocalFilesInfo(const QString &parentDirPath, QByteArray *
 
     return true;
 
-
-
 }
 
 void ClientService::getLocalAssetNO(QString *newAssetNOToBeUsed){
@@ -2337,6 +2352,21 @@ void ClientService::update(){
 
 }
 
+void ClientService::processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType){
+
+    switch (infoType) {
+    case quint8(MS::SYSINFO_UNKNOWN):
+    {
+
+    }
+        break;
+
+    default:
+        qCritical()<<QString("ERROR! Unknown info!");
+        break;
+    }
+
+}
 
 void ClientService::start(){
     qWarning()<<"----ClientService::start()";

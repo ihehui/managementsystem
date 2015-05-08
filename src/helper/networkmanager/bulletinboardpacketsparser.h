@@ -148,7 +148,7 @@ public slots:
     }
 
     
-    bool sendUserReplyMessagePacket(SOCKETID socketID, quint32 originalMessageID, const QString &replyMessage){
+    bool sendUserReplyMessagePacket(SOCKETID socketID, const QString &announcementID, const QString &receiver, const QString &replyMessage){
         qWarning()<<"----sendUserReplyMessagePacket(...):";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -158,7 +158,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << originalMessageID << replyMessage;
+        out << m_localID << announcementID << receiver << replyMessage;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -239,9 +239,11 @@ signals:
 
     void signalLocalServiceServerDeclarePacketReceived(const QString &localComputerName);
 
+    void signalSystemInfoFromServerReceived(const QString &extraInfo, const QByteArray &clientInfo, quint8 infoType);
+
     void signalAdminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName );
     void signalAdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword);
-    void signalAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement, bool confirmationRequired, int validityPeriod);
+//    void signalAnnouncementPacketReceived(const QString &id, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod);
 
     void signalAdminRequestScreenshotPacketReceived(SOCKETID adminSocketID, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 

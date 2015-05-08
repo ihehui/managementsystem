@@ -1091,7 +1091,7 @@ void ControlCenter::showServerMessage(const QString &message, quint8 messageType
 }
 
 void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType){
-    qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...) "<< " Asset NO.:"<<assetNO;
+    //qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...) "<< " Asset NO.:"<<assetNO;
     
     ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
     if(!info){
@@ -1111,7 +1111,7 @@ void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteAr
 //        updateServicesInfo(object);
 //        break;
     default:
-        qCritical()<<"ERROR! Invalid client info!";
+        qCritical()<<"ERROR! Unknown client info type!";
         break;
     }
 
@@ -1121,44 +1121,33 @@ void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteAr
 
 }
 
-void ControlCenter::processSystemInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType){
-    //qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " Asset NO.:"<<assetNO<<" infoType:"<<infoType;
+void ControlCenter::processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType){
+    //qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " extraInfo:"<<extraInfo<<" infoType:"<<infoType;
 
-    if(assetNO.isEmpty()){
-        updateSystemInfoFromServer(infoData, infoType);
-    }else{
-        ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
-        if(!info){
-            info = new ClientInfo(assetNO, this);
-            clientInfoModel->addClientInfo(info);
+
+    switch (infoType) {
+    case quint8(MS::SYSINFO_OS):
+    case quint8(MS::SYSINFO_HARDWARE):
+    {
+        if(!extraInfo.isEmpty()){
+            updateClientInfoFromServer(extraInfo, infoData, infoType);
+            return;
         }
-
-        switch (infoType) {
-        case quint8(MS::SYSINFO_OS):
-        case quint8(MS::SYSINFO_HARDWARE):
-            info->setJsonData(infoData);
-            break;
-
-    //    case quint8(MS::SYSINFO_SOFTWARE):
-    //        processSoftwareInfo(info, clientInfo);
-    //        break;
-    //    case quint8(MS::SYSINFO_SERVICES):
-    //        updateServicesInfo(object);
-    //        break;
-        default:
-            qCritical()<<"ERROR! Invalid client info!";
-            break;
-        }
-
-        clientInfoModel->updateClientInfo(info);
-
     }
+        break;
+
+    default:
+        break;
+    }
+
+    updateSystemInfoFromServer(extraInfo, infoData, infoType);
 
     qApp->processEvents();
 
 }
 
-void ControlCenter::updateSystemInfoFromServer(const QByteArray &infoData, quint8 infoType){
+void ControlCenter::updateSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType){
+    //qDebug()<<"--ControlCenter::updateSystemInfoFromServer(...)"<<" infoType:"<<infoType;
 
     switch (infoType) {
     case quint8(MS::SYSINFO_OS):
@@ -1222,7 +1211,7 @@ void ControlCenter::updateSystemInfoFromServer(const QByteArray &infoData, quint
 
     case quint8(MS::SYSINFO_ANNOUNCEMENTTARGETS):
     {
-        ui.tabServer->setAnnouncementTargetsData(infoData);
+        ui.tabServer->setAnnouncementTargetsData(extraInfo,infoData);
     }
         break;
 
@@ -1234,6 +1223,35 @@ void ControlCenter::updateSystemInfoFromServer(const QByteArray &infoData, quint
 
 }
 
+void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType){
+    qDebug()<<"--ControlCenter::updateClientInfoFromServer(...)"<<" assetNO:"<<assetNO<<" infoType:"<<infoType;
+
+    ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
+    if(!info){
+        info = new ClientInfo(assetNO, this);
+        clientInfoModel->addClientInfo(info);
+    }
+
+    switch (infoType) {
+    case quint8(MS::SYSINFO_OS):
+    case quint8(MS::SYSINFO_HARDWARE):
+        info->setJsonData(infoData);
+        break;
+
+//    case quint8(MS::SYSINFO_SOFTWARE):
+//        processSoftwareInfo(info, clientInfo);
+//        break;
+//    case quint8(MS::SYSINFO_SERVICES):
+//        updateServicesInfo(object);
+//        break;
+    default:
+        qCritical()<<"ERROR! Unknown client info type!";
+        break;
+    }
+
+    clientInfoModel->updateClientInfo(info);
+
+}
 
 void ControlCenter::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
     if(!modified){return;}

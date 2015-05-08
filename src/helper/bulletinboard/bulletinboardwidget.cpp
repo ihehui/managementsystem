@@ -4,6 +4,9 @@
 #include <QDesktopWidget>
 #include <QTime>
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 
 
 
@@ -37,10 +40,16 @@ BulletinBoardWidget::BulletinBoardWidget(const QString &userName, QWidget *paren
     ui.groupBoxReply->setVisible(false);
 
     curAnnouncementIndex = -1;
-    totalCount = 0;
+    m_curAnnouncementID = "";
 
-    m_curMessageID = 0;
-
+    m_settings = new QSettings("HKEY_CURRENT_USER\\Software\\HEHUI\\MS", QSettings::NativeFormat, this);
+    m_settings->beginGroup("AcknowledgedAnnouncements");
+    QStringList announcementIDs = m_settings->allKeys();
+    foreach (QString id, announcementIDs) {
+        int times = m_settings->value(id, 1).toInt();
+        acknowledgedAnnouncements.insert(id, times);
+    }
+    m_settings->endGroup();
 
 }
 
@@ -49,82 +58,144 @@ BulletinBoardWidget::~BulletinBoardWidget()
 
     //qWarning()<<"BulletinBoardWidget::~BulletinBoardWidget()";
 
+    clearAnnouncements();
+
+    delete m_settings;
+
 }
 
 void BulletinBoardWidget::closeEvent(QCloseEvent *event){
+
+    foreach (AnnouncementInfo *info, infolist) {
+        if(acknowledgedAnnouncements.contains(info->ID)){}
+        delete info;
+        infolist.removeAll(info);
+    }
+
+    curAnnouncementIndex = 0;
+    if(infolist.size()){
+        showAnnouncements();
+    }
 
     event->accept();
     
 }
 
-void BulletinBoardWidget::showServerAnnouncement(const QString &adminName, quint32 announcementID, const QString &serverAnnouncement){
+void BulletinBoardWidget::showAnnouncements(){
+    int totalCount = infolist.size();
 
-    if(announcements.contains(announcementID)){
+    //if(index >= totalCount ){return;}
+    AnnouncementInfo *info = infolist.at(curAnnouncementIndex);
+    if(!info){return;}
+    m_curAnnouncementID = info->ID;
+
+    QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(info->Admin).arg(info->PublishDate);
+    QString msg = remark + info->Content;
+
+    ui.textBrowser->setText(msg);
+    ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
+
+    ui.toolButtonPrevious->setEnabled(curAnnouncementIndex>0);
+    ui.toolButtonNext->setEnabled(curAnnouncementIndex<(totalCount-1));
+
+}
+
+void BulletinBoardWidget::processAnnouncementsInfo(const QByteArray &infoData){
+    if(infoData.isEmpty()){return;}
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+    QJsonObject object = doc.object();
+    QJsonArray jsonArray = object["Announcements"].toArray();
+
+    for(int i=0;i<jsonArray.size(); i++){
+        QJsonArray infoArray = jsonArray.at(i).toArray();
+        if(infoArray.size() != 10){
+            qCritical()<<"ERROR! Invalid JSON array.";
+            continue;
+        }
+
+        int index = 0;
+        QString id = infoArray.at(index++).toString();
+        if(isAnnouncementInfoExists(id)){continue;}
+
+        AnnouncementInfo *info = new AnnouncementInfo();
+        info->ID = id;
+        info->Type = infoArray.at(index++).toString().toUShort();
+        info->Content = infoArray.at(index++).toString();
+        info->ACKRequired = infoArray.at(index++).toString().toUShort();
+        info->Admin = infoArray.at(index++).toString();
+        info->PublishDate = infoArray.at(index++).toString();
+        info->ValidityPeriod = infoArray.at(index++).toString().toUInt();
+        info->TargetType = infoArray.at(index++).toString().toUShort();
+        info->DisplayTimes = infoArray.at(index++).toString().toUInt();
+        info->Active = infoArray.at(index++).toString().toUInt();
+
+
+        if(acknowledgedAnnouncements.contains(id)){
+            if(info->DisplayTimes > 0 && (info->DisplayTimes <= acknowledgedAnnouncements.value(id, 1)) ){
+                delete info;
+                continue;
+            }
+        }else{
+            acknowledgedAnnouncements.insert(id, 0);
+        }
+
+        if(!info->ACKRequired){
+            saveAnnouncementInfo(id);
+        }
+
+        infolist.append(info);
+
+    }
+
+    if(!infolist.size()){
         return;
     }
 
-    m_curMessageID = announcementID;
+    curAnnouncementIndex = infolist.size() -1;
+    showAnnouncements();
 
-    
-    curAnnouncementIndex = totalCount;
-    totalCount++;
-    
-    //    ui.textBrowser->append(QString("-------- %1 --------").arg(adminName + "  " + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")));
-    //    ui.textBrowser->append(QString(" <p align=\"center\"><span style=\" font-size:12pt;color:#068ec8;\">-------- %1 --------</span></p> ").arg(adminName + "  " + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")));
-    //        ui.textBrowser->append(QString(" <p align=\"center\" style=\" font-size:12pt;color:#068ec8;\">-------- %1 --------</p> ").arg(adminName + "  " + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")));
+}
 
-    //    ui.textBrowser->append(serverAnnouncement);
-    //    ui.textBrowser->append("\n");
-    
-    //    ui.labelCount->setText(QString("%1 %2").arg(QString::number(count)).arg(count>1?tr("Messages"):tr("Message")));
+void BulletinBoardWidget::clearAnnouncements(){
+    foreach (AnnouncementInfo *info, infolist) {
+        delete info;
+    }
+    infolist.clear();
+}
 
-    
-    //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Message sent by %1. Received at %2 --</span></p> ").arg(adminName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-    QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(adminName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-    QString msg = remark + serverAnnouncement;
-    
-    ui.textBrowser->setText(msg);
-    ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
-    
-    announcements.insert(announcementID, msg);
-    
-    
-    ui.toolButtonPrevious->setEnabled(curAnnouncementIndex>0);
-    ui.toolButtonNext->setEnabled(false);
-    
-    
+void BulletinBoardWidget::saveAnnouncementInfo(const QString &announcementID){
+
+    m_settings->beginGroup("AcknowledgedAnnouncements");
+    if(!acknowledgedAnnouncements.contains(announcementID)){return;}
+    m_settings->setValue(announcementID, (acknowledgedAnnouncements.value(announcementID) + 1) );
+    m_settings->endGroup();
+
+}
+
+bool BulletinBoardWidget::isAnnouncementInfoExists(const QString &announcementID){
+    foreach (AnnouncementInfo *info, infolist) {
+        if(info->ID == announcementID){return true;}
+    }
+
+    return false;
 }
 
 void BulletinBoardWidget::on_toolButtonPrevious_clicked(){
+    if(curAnnouncementIndex == 0){return;}
     curAnnouncementIndex--;
-    
-    //if(curAnnouncementIndex ==0){
-    ui.toolButtonPrevious->setEnabled(curAnnouncementIndex>0);
-    ui.toolButtonNext->setEnabled(curAnnouncementIndex<(totalCount-1));
-    //}
-    
-    QList<quint32> keys = announcements.keys();
-    qSort(keys);
-
-    m_curMessageID = keys.at(curAnnouncementIndex);
-    ui.textBrowser->setText(announcements.value(m_curMessageID));
-    ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
-
+    showAnnouncements();
 }
 
 void BulletinBoardWidget::on_toolButtonNext_clicked(){
-
+    if(curAnnouncementIndex == (infolist.size() -1 )){return;}
     curAnnouncementIndex++;
-    
-    ui.toolButtonPrevious->setEnabled(curAnnouncementIndex>0);
-    ui.toolButtonNext->setEnabled(curAnnouncementIndex<(totalCount-1));
-    
-    QList<quint32> keys = announcements.keys();
-    qSort(keys);
-    m_curMessageID = keys.at(curAnnouncementIndex);
-    ui.textBrowser->setText(announcements.value(m_curMessageID));
-    ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
-    
+    showAnnouncements();
 }
 
 void BulletinBoardWidget::on_pushButtonReply_clicked(){
@@ -133,19 +204,24 @@ void BulletinBoardWidget::on_pushButtonReply_clicked(){
         return;
     }else{
         QString reply = ui.textEditReply->toPlainText();
-        emit sendReplyMessage(m_curMessageID, reply);
+        emit sendReplyMessage(m_curAnnouncementID.toUInt(), reply);
+
+        AnnouncementInfo *info = infolist.at(curAnnouncementIndex);
+        if(!info){return;}
 
         //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Reply message sent at %1 --</span></p> ").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-        QString msg = announcements.value(m_curMessageID) + reply + remark;
-        announcements[m_curMessageID] = msg;
+        QString msg = info->Content + reply + remark;
+        info->Content = msg;
         ui.textBrowser->setText(msg);
         ui.textEditReply->clear();
 
     }
 
+}
 
-
+void BulletinBoardWidget::on_pushButtonACK_clicked(){
+    saveAnnouncementInfo(m_curAnnouncementID);
 }
 
 
