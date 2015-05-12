@@ -198,7 +198,7 @@ bool ServerService::startMainService(){
     connect(serverPacketsParser, SIGNAL(signalUpdateAnnouncementRequested(SOCKETID, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), this, SLOT(updateAnnouncement(SOCKETID, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalAnnouncementTargetsRequested(SOCKETID, const QString&)), this, SLOT(sendAnnouncementTargetsInfo(SOCKETID, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalReplyMessagePacketReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &)));
+    connect(serverPacketsParser, SIGNAL(signalReplyMessagePacketReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)));
 
 
 
@@ -1783,12 +1783,14 @@ bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, const QString
 
 }
 
-void ServerService::replyMessageReceived(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &message){
+void ServerService::replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message){
 
-    QString statement = QString("call sp_AnnouncementReplys_Insert(@ID, %1, '%2', %3, '%4' ); ")
+    QString statement = QString("call sp_AnnouncementReplies_Insert(@ID, %1, '%2', %3, '%4', '%5', '%6' ); ")
             .arg(announcementID)
             .arg(sender)
+            .arg(senderAssetNO)
             .arg(receiver)
+            .arg(receiversAssetNO)
             .arg(message)
             ;
     if(!execQuery(statement)){
@@ -1811,28 +1813,70 @@ void ServerService::replyMessageReceived(SOCKETID socketID, const QString &annou
     }
 
 
-//    QJsonArray jsonArray;
-//    while(query->next()){
-//        QJsonArray infoArray;
-//        infoArray.append(query->value("ID").toString());
-//        infoArray.append(query->value("AssetNO").toString());
-//        infoArray.append(query->value("UserName").toString());
-//        infoArray.append(query->value("Acknowledged").toString());
-//        infoArray.append(query->value("ACKTime").toString());
+    QJsonArray jsonArray;
+    QJsonArray infoArray;
+    infoArray.append(query->value("ID").toString());
+    infoArray.append(query->value("Announcement").toString());
+    infoArray.append(query->value("Sender").toString());
+    infoArray.append(query->value("SendersAssetNO").toString());
+    infoArray.append(query->value("Receiver").toString());
+    infoArray.append(query->value("ReceiversAssetNO").toString());
+    infoArray.append(query->value("Message").toString());
+    infoArray.append(query->value("PublishTime").toString());
+    jsonArray.append(infoArray);
 
-//        jsonArray.append(infoArray);
-//    }
-//    query->clear();
+    QJsonObject object;
+    object["AnnouncementID"] = announcementID;
+    object["AnnouncementReplies"] = jsonArray;
+    QJsonDocument doc(object);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+    if(receiversAssetNO.isEmpty()){
+        //Send Message to Admin
+        foreach (SOCKETID sid, onlineAdminSockets) {
+            serverPacketsParser->sendSystemInfoPacket(sid, "", data, MS::SYSINFO_ANNOUNCEMENTREPLIES);
+        }
+    }else{
+        SOCKETID sid = clientSocketsHash.key(receiversAssetNO);
+        if(!sid){return;}
+        serverPacketsParser->sendSystemInfoPacket(sid, receiver, data, MS::SYSINFO_ANNOUNCEMENTREPLIES);
+    }
+
+}
+
+bool ServerService::sendAnnouncementRepliesInfo(SOCKETID socketID, const QString &announcementID, const QString &receiver){
+
+    QString statement = QString("call sp_AnnouncementReplies_Query(%1, '%2'); ").arg(announcementID).arg(receiver);
+    if(!execQuery(statement)){
+        QString message = QString("Failed to query announcement replies! Announcement ID: %1").arg(announcementID);
+        serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
+        return false;
+    }
+
+    QJsonArray jsonArray;
+    while(query->next()){
+        QJsonArray infoArray;
+        infoArray.append(query->value("ID").toString());
+        infoArray.append(query->value("Announcement").toString());
+        infoArray.append(query->value("Sender").toString());
+        infoArray.append(query->value("SendersAssetNO").toString());
+        infoArray.append(query->value("Receiver").toString());
+        infoArray.append(query->value("ReceiversAssetNO").toString());
+        infoArray.append(query->value("Message").toString());
+        infoArray.append(query->value("PublishTime").toString());
+
+        jsonArray.append(infoArray);
+    }
+    query->clear();
 
 
-//    QJsonObject object;
-//    object["AnnouncementID"] = announcementID;
-//    object["AnnouncementTargets"] = jsonArray;
-//    QJsonDocument doc(object);
-//    QByteArray data = doc.toJson(QJsonDocument::Compact);
+    QJsonObject object;
+    object["AnnouncementID"] = announcementID;
+    object["AnnouncementReplies"] = jsonArray;
+    QJsonDocument doc(object);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
 
-//    return serverPacketsParser->sendSystemInfoPacket(socketID, announcementID, data, MS::SYSINFO_ANNOUNCEMENTTARGETS);
-
+    return serverPacketsParser->sendSystemInfoPacket(socketID, receiver, data, MS::SYSINFO_ANNOUNCEMENTREPLIES);
 
 }
 

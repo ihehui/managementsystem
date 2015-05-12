@@ -172,13 +172,21 @@ void Helper::processSystemInfoFromServer(const QString &extraInfo, const QByteAr
 void Helper::processAnnouncementsInfo(const QString &userName, const QByteArray &infoData){
     if(m_userName != userName){return;}
 
-    if(!bulletinBoardWidget){
-        bulletinBoardWidget = new BulletinBoardWidget(m_userName);
-        connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(quint32, const QString &)), this, SLOT(sendReplyMessage(quint32, const QString &)));
-    }
+    setupBulletinBoardWidget();
     bulletinBoardWidget->processAnnouncementsInfo(infoData);
     bulletinBoardWidget->showNormal();
     bulletinBoardWidget->raise();
+}
+
+void Helper::processAnnouncementRepliesInfo(const QString &userName, const QByteArray &infoData){
+    if(m_userName != userName){return;}
+
+    setupBulletinBoardWidget();
+
+    bulletinBoardWidget->processAnnouncementReplies(infoData);
+    bulletinBoardWidget->showNormal();
+    bulletinBoardWidget->raise();
+
 }
 
 void Helper::adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName ){
@@ -416,7 +424,12 @@ void Helper::connectToLocalServer(){
 
 }
 
+void Helper::setupBulletinBoardWidget(){
+    if(bulletinBoardWidget){return;}
 
+    bulletinBoardWidget = new BulletinBoardWidget(m_userName);
+    connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(quint32, const QString &)), this, SLOT(sendReplyMessage(quint32, const QString &)));
+}
 
 
 

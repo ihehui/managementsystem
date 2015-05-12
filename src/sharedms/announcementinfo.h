@@ -35,7 +35,9 @@ public:
     QString ID;
     QString AnnouncementID;
     QString Sender;
+    QString SendersAssetNO;
     QString Receiver;
+    QString ReceiversAssetNO;
     QString Message;
     QString PublishTime;
 
@@ -64,6 +66,8 @@ public:
     QString Targets;
 
     unsigned int TempID;
+
+    QString Replies;
 
 
 

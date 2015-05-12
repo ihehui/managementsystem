@@ -358,15 +358,15 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
-    case quint8(MS::ReplyMessage):
-    {
-        QString announcementID = "", sender = "", receiver = "", replyMessage = "";
-        in >> announcementID >> sender >> receiver >> replyMessage ;
+//    case quint8(MS::ReplyMessage):
+//    {
+//        QString announcementID = "", sender = "", sendersAssetNO = "", receiver = "", receiversAssetNO = "", replyMessage = "";
+//        in >> announcementID >> sender >> sendersAssetNO >> receiver >> receiversAssetNO >> replyMessage ;
 
-        emit signalUserReplyMessagePacketReceived(announcementID, sender, receiver, replyMessage);
+//        emit signalUserReplyMessagePacketReceived(announcementID, sender, sendersAssetNO, receiver, receiversAssetNO, replyMessage);
 
-    }
-    break;
+//    }
+//    break;
 
     case quint8(MS::DesktopInfo):
     {

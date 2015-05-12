@@ -222,6 +222,9 @@ namespace HEHUI {
             RequestAnnouncement,
             AnnouncementTargetsFromServer,
             RequestAnnouncementTargets,
+            AnnouncementRepliesFromServer,
+            RequestAnnouncementReplies,
+
 
             AdminRequestRemoteConsole,
             ClientResponseRemoteConsoleStatus,
@@ -358,7 +361,8 @@ namespace HEHUI {
             SYSINFO_SYSLOGS, //Server
             SYSINFO_REALTIME_INFO, //Client,Server
             SYSINFO_ANNOUNCEMENTS, //Server
-            SYSINFO_ANNOUNCEMENTTARGETS //Server
+            SYSINFO_ANNOUNCEMENTTARGETS, //Server
+            SYSINFO_ANNOUNCEMENTREPLIES //Server
 
         };
 

@@ -54,17 +54,19 @@ INSERT INTO `Alarms` VALUES (1,'china1111',1,'A1','2015-04-22 18:34:48',0,'',NUL
 UNLOCK TABLES;
 
 --
--- Table structure for table `AnnouncementReplys`
+-- Table structure for table `AnnouncementReplyies`
 --
 
-DROP TABLE IF EXISTS `AnnouncementReplys`;
+DROP TABLE IF EXISTS `AnnouncementReplyies`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `AnnouncementReplys` (
+CREATE TABLE `AnnouncementReplyies` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Announcement` int(10) unsigned NOT NULL,
   `Sender` varchar(32) NOT NULL,
+  `SendersAssetNO` varchar(32) DEFAULT NULL,
   `Receiver` varchar(32) DEFAULT NULL,
+  `ReceiversAssetNO` varchar(32) DEFAULT NULL,
   `Message` text NOT NULL,
   `PublishTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ID`),
@@ -74,12 +76,12 @@ CREATE TABLE `AnnouncementReplys` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `AnnouncementReplys`
+-- Dumping data for table `AnnouncementReplyies`
 --
 
-LOCK TABLES `AnnouncementReplys` WRITE;
-/*!40000 ALTER TABLE `AnnouncementReplys` DISABLE KEYS */;
-/*!40000 ALTER TABLE `AnnouncementReplys` ENABLE KEYS */;
+LOCK TABLES `AnnouncementReplyies` WRITE;
+/*!40000 ALTER TABLE `AnnouncementReplyies` DISABLE KEYS */;
+/*!40000 ALTER TABLE `AnnouncementReplyies` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -736,7 +738,7 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementReplys_Insert` */;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementReplies_Insert` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -746,11 +748,13 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementReplys_Insert`(
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementReplies_Insert`(
  out p_ID int unsigned,
  in p_AnnouncementID int unsigned,
  in p_Sender varchar(32),
+  in p_SendersAssetNO varchar(32),
  in p_Receiver varchar(32),
+  in p_ReceiversAssetNO varchar(32),
  in p_Message text
 
 )
@@ -758,10 +762,42 @@ BEGIN
 
 ###新增公告信息###
 
-insert into AnnouncementReplys(Announcement, Sender, Receiver, Message) 
-values(p_AnnouncementID, p_Sender, p_Receiver, p_Message);
+insert into AnnouncementReplys(Announcement, Sender, SendersAssetNO, Receiver, ReceiversAssetNO, Message) 
+values(p_AnnouncementID, p_Sender, p_SendersAssetNO, p_Receiver, p_ReceiversAssetNO, p_Message);
 
 select last_insert_id() into p_ID;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementReplies_Query` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementReplies_Query`(
+ in p_AnnouncementID int unsigned,
+ in p_Receiver varchar(32)
+
+)
+BEGIN
+
+###查询公告回复信息###
+
+if CHAR_LENGTH(p_Receiver) <> 0 then
+    SELECT * FROM AnnouncementReplys WHERE Announcement=p_AnnouncementID and Receiver=p_Receiver;
+else
+    SELECT * FROM AnnouncementReplys WHERE Announcement=p_AnnouncementID;
+end if;
+
 
 END */;;
 DELIMITER ;
@@ -968,56 +1004,6 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementTargets_Update` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = '' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementTargets_Update`(
- in p_AnnouncementID int unsigned,
-  in p_addedTargets text,
- in p_deletedTargets text
-
-)
-BEGIN
-
-###更新公告目标###
-#p_addedTargets Format: 'PC1','User1';'PC2','User2';'','User3'
-#p_deletedTargets Format: Announcement1,Announcement2,Announcement3
-
-declare statement varchar(1024) default ' ';
-
-set @announcementTargetType=0;
-select TargetType into @announcementTargetType from Announcements where ID=p_AnnouncementID;
-if @announcementTargetType=1 then
-
-    if CHAR_LENGTH(p_deletedTargets) <> 0 then
-        set statement = CONCAT_WS(' ',  ' delete from AnnouncementTargets where ID in( ', p_deletedTargets, ' ) ;');
-    end if;
-    
-set @tempstr = concat("),(", p_AnnouncementID, ",");
-set @statement = concat(statement, concat("insert into AnnouncementTargets(Announcement,AssetNO,UserName) values(", p_AnnouncementID, ",", replace(p_addedTargets,';',@tempstr)), ");" );
-#select @statement;
-
-PREPARE s1 FROM @statement;
-EXECUTE s1;
-DEALLOCATE PREPARE s1;
-
-else
-    delete from AnnouncementTargets where ID=p_ID;
-end if;
-
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `sp_CurrentUTCTimestamp` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1150,6 +1136,56 @@ select * from Announcements where  (select ( PublishDate + INTERVAL ValidityPeri
 
 
 
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementTargets_Update` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementTargets_Update`(
+ in p_AnnouncementID int unsigned,
+  in p_addedTargets text,
+ in p_deletedTargets text
+
+)
+BEGIN
+
+###更新公告目标###
+#p_addedTargets Format: 'PC1','User1';'PC2','User2';'','User3'
+#p_deletedTargets Format: Announcement1,Announcement2,Announcement3
+
+declare statement varchar(1024) default ' ';
+
+set @announcementTargetType=0;
+select TargetType into @announcementTargetType from Announcements where ID=p_AnnouncementID;
+if @announcementTargetType=1 then
+
+    if CHAR_LENGTH(p_deletedTargets) <> 0 then
+        set statement = CONCAT_WS(' ',  ' delete from AnnouncementTargets where ID in( ', p_deletedTargets, ' ) ;');
+    end if;
+    
+set @tempstr = concat("),(", p_AnnouncementID, ",");
+set @statement = concat(statement, concat("insert into AnnouncementTargets(Announcement,AssetNO,UserName) values(", p_AnnouncementID, ",", replace(p_addedTargets,';',@tempstr)), ");" );
+#select @statement;
+
+PREPARE s1 FROM @statement;
+EXECUTE s1;
+DEALLOCATE PREPARE s1;
+
+else
+    delete from AnnouncementTargets where ID=p_ID;
+end if;
 
 END */;;
 DELIMITER ;
@@ -1342,4 +1378,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-05-08 20:29:43
+-- Dump completed on 2015-05-12 11:47:02

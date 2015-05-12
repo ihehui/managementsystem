@@ -1168,7 +1168,7 @@ signals:
 
     void signalTemperaturesPacketReceived(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
 
-    void signalUserReplyMessagePacketReceived(const QString &announcementID, const QString &sender, const QString &receiver, const QString &replyMessage);
+//    void signalUserReplyMessagePacketReceived(const QString &announcementID, const QString &sender, const QString &sendersAssetNO, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage);
 
     void signalDesktopInfoPacketReceived(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight,int  blockWidth, int blockHeight);
     void signalScreenshotPacketReceived(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);

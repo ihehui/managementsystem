@@ -27,6 +27,7 @@ public:
 
     void setAnnouncementsData(const QByteArray &data);
     void setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data);
+    void setAnnouncementReplies(const QByteArray &data);
 
 
 private slots:

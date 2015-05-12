@@ -55,6 +55,10 @@ public:
     AnnouncementInfo *getInfo(const QModelIndex & index);
     QString getInfoID(const QModelIndex & index);
 
+    void setAnnouncementRepliesData(const QByteArray &jsonData);
+    QList<AnnouncementReply *> getAnnouncementReplies(const QString &announcementID) const;
+    AnnouncementReply * getReply(const QString &replyID) const;
+
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
     int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
     QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
@@ -63,6 +67,8 @@ public:
 
 private:
     QList<AnnouncementInfo *> infolist;
+    QMap<QString /*Reply ID*/, AnnouncementReply *> replies;
+
 
 };
 

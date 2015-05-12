@@ -36,6 +36,7 @@ private slots:
 
     void processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
     void processAnnouncementsInfo(const QString &userName, const QByteArray &infoData);
+    void processAnnouncementRepliesInfo(const QString &userName, const QByteArray &infoData);
 
     void adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName);
     void AdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword );
@@ -54,6 +55,10 @@ private slots:
     void peerDisconnected(SOCKETID socketID);
     void connectToLocalServer();
     
+
+private slots:
+    void setupBulletinBoardWidget();
+
 private:
 
     //bool m_networkReady;

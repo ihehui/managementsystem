@@ -81,6 +81,20 @@ void BulletinBoardWidget::closeEvent(QCloseEvent *event){
     
 }
 
+void BulletinBoardWidget::showAnnouncements(const QString &announcementID){
+
+    for(int i=0; i<infolist.size(); i++){
+        AnnouncementInfo *info = infolist.at(curAnnouncementIndex);
+        if(!info){continue;}
+        if(info->ID == announcementID){
+            curAnnouncementIndex = i;
+            showAnnouncements();
+            return;
+        }
+    }
+
+}
+
 void BulletinBoardWidget::showAnnouncements(){
     int totalCount = infolist.size();
 
@@ -91,12 +105,62 @@ void BulletinBoardWidget::showAnnouncements(){
 
     QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(info->Admin).arg(info->PublishDate);
     QString msg = remark + info->Content;
+    if(!info->Replies.isEmpty()){
+        msg += QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">---- Replies ----</span></p> ");
+        msg += info->Replies;
+    }
 
     ui.textBrowser->setText(msg);
     ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
 
     ui.toolButtonPrevious->setEnabled(curAnnouncementIndex>0);
     ui.toolButtonNext->setEnabled(curAnnouncementIndex<(totalCount-1));
+
+}
+
+void BulletinBoardWidget::processAnnouncementReplies(const QByteArray &infoData){
+
+    if(infoData.isEmpty()){return;}
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+    QJsonObject object = doc.object();
+
+    QString announcementID = object["AnnouncementID"].toString();
+    if(isAnnouncementInfoExists(announcementID)){return;}
+    AnnouncementInfo *info = getAnnouncementInfo(announcementID);
+    if(!info){return;}
+
+    QJsonArray jsonArray = object["AnnouncementReplies"].toArray();
+    for(int i=0;i<jsonArray.size(); i++){
+        QJsonArray infoArray = jsonArray.at(i).toArray();
+        if(infoArray.size() != 10){
+            qCritical()<<"ERROR! Invalid JSON array.";
+            continue;
+        }
+
+        int index = 0;
+        QString id = infoArray.at(index++).toString();
+        AnnouncementReply replyinfo;
+        replyinfo.ID = id;
+        replyinfo.AnnouncementID = infoArray.at(index++).toString().toUShort();
+        replyinfo.Sender = infoArray.at(index++).toString();
+        replyinfo.SendersAssetNO = infoArray.at(index++).toString();
+        replyinfo.Receiver = infoArray.at(index++).toString();
+        replyinfo.ReceiversAssetNO = infoArray.at(index++).toString();
+        replyinfo.Message = infoArray.at(index++).toString();
+        replyinfo.PublishTime = infoArray.at(index++).toString();
+
+        QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(replyinfo.Sender).arg(replyinfo.PublishTime);
+        info->Replies += remark + replyinfo.Message;
+
+    }
+
+    showAnnouncements(announcementID);
 
 }
 
@@ -186,6 +250,14 @@ bool BulletinBoardWidget::isAnnouncementInfoExists(const QString &announcementID
     return false;
 }
 
+AnnouncementInfo * BulletinBoardWidget::getAnnouncementInfo(const QString &announcementID){
+    foreach (AnnouncementInfo *info, infolist) {
+        if(info->ID == announcementID){return info;}
+    }
+
+    return 0;
+}
+
 void BulletinBoardWidget::on_toolButtonPrevious_clicked(){
     if(curAnnouncementIndex == 0){return;}
     curAnnouncementIndex--;
@@ -211,11 +283,8 @@ void BulletinBoardWidget::on_pushButtonReply_clicked(){
 
         //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Reply message sent at %1 --</span></p> ").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-        QString msg = info->Content + reply + remark;
-        info->Content = msg;
-        ui.textBrowser->setText(msg);
-        ui.textEditReply->clear();
-
+        info->Replies = remark + reply;
+        showAnnouncements();
     }
 
 }

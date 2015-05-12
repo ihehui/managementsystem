@@ -319,7 +319,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
 
     connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &, const QString &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, const QString &, const QString &)));
+//    connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalServiceConfigChangedPacketReceived(QString,QString,quint64,quint64)), this, SLOT(serviceConfigChangedPacketReceived(QString,QString,quint64,quint64)));
 
@@ -1441,12 +1441,10 @@ void SystemManagementWidget::updateTemperatures(const QString &assetNO, const QS
     ui.labelHarddiskTemperature->setText(temperatures.join(" "));
 }
 
-void SystemManagementWidget::replyMessageReceived(const QString &announcementID, const QString &sender, const QString &receiver, const QString &replyMessage){
-
-//TODO
-    QMessageBox::information(this, tr("Message"), QString("Message received from '%1':\r\n%2").arg(sender).arg(replyMessage));
-
-}
+//void SystemManagementWidget::replyMessageReceived(const QString &announcementID, const QString &sender, const QString &sendersAssetNO, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage){
+////TODO
+//    QMessageBox::information(this, tr("Message"), QString("Message received from '%1':\r\n%2").arg(sender).arg(replyMessage));
+//}
 
 void SystemManagementWidget::serviceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType){
     if(assetNO != m_peerAssetNO){

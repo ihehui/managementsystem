@@ -22,7 +22,9 @@ AnnouncementReply::AnnouncementReply()
     ID = "";
     AnnouncementID = "";
     Sender = "";
+    SendersAssetNO = "";
     Receiver = "";
+    ReceiversAssetNO = "";
     Message = "";
     PublishTime = "";
 
@@ -46,6 +48,8 @@ AnnouncementInfo::AnnouncementInfo()
     Targets = "";
 
     TempID = 0;
+
+    Replies = "";
 
 }
 

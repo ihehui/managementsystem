@@ -281,6 +281,7 @@ AnnouncementInfoModel::AnnouncementInfoModel(QObject *parent)
 AnnouncementInfoModel::~AnnouncementInfoModel()
 {
     clear();
+    qDeleteAll(replies);
 }
 
 void AnnouncementInfoModel::setJsonData(const QByteArray &jsonData)
@@ -355,6 +356,77 @@ QString AnnouncementInfoModel::getInfoID(const QModelIndex & index){
 
     return infolist.at(index.data(Qt::UserRole).toInt())->ID;
 }
+
+void AnnouncementInfoModel::setAnnouncementRepliesData(const QByteArray &jsonData){
+
+    if(jsonData.isEmpty()){return;}
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
+    if(error.error != QJsonParseError::NoError){
+        qCritical()<<error.errorString();
+        return;
+    }
+    QJsonObject object = doc.object();
+
+    QString announcementID = object["AnnouncementID"].toString();
+    AnnouncementInfo *info = 0;
+    foreach (AnnouncementInfo *info, infolist) {
+        if(info->ID == announcementID){break;};
+    }
+
+    QJsonArray jsonArray = object["AnnouncementReplies"].toArray();
+    for(int i=0;i<jsonArray.size(); i++){
+        QJsonArray infoArray = jsonArray.at(i).toArray();
+        if(infoArray.size() != 10){
+            qCritical()<<"ERROR! Invalid JSON array.";
+            continue;
+        }
+
+        int index = 0;
+        QString id = infoArray.at(index++).toString();
+        AnnouncementReply *replyinfo = 0;
+        if(replies.contains(id)){
+            replyinfo = replies.value(id);
+            if(info){
+                info->Replies = "";
+            }
+        }else{
+            replyinfo = new AnnouncementReply();
+            replyinfo->ID = id;
+            replies.insert(id, replyinfo);
+        }
+        replyinfo->AnnouncementID = infoArray.at(index++).toString().toUShort();
+        replyinfo->Sender = infoArray.at(index++).toString();
+        replyinfo->SendersAssetNO = infoArray.at(index++).toString();
+        replyinfo->Receiver = infoArray.at(index++).toString();
+        replyinfo->ReceiversAssetNO = infoArray.at(index++).toString();
+        replyinfo->Message = infoArray.at(index++).toString();
+        replyinfo->PublishTime = infoArray.at(index++).toString();
+
+        if(info){
+            QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(replyinfo->Sender).arg(replyinfo->PublishTime);
+            info->Replies += remark + replyinfo->Message;
+        }
+
+    }
+
+}
+
+QList<AnnouncementReply *> AnnouncementInfoModel::getAnnouncementReplies(const QString &announcementID) const{
+    QList<AnnouncementReply *> results;
+    foreach (AnnouncementReply *reply, replies.values()) {
+        if(reply->AnnouncementID == announcementID){
+            results.append(reply);
+        }
+    }
+    return results;
+}
+
+AnnouncementReply * AnnouncementInfoModel::getReply(const QString &replyID) const{
+    return replies.value(replyID);
+}
+
 
 int AnnouncementInfoModel::rowCount ( const QModelIndex & parent) const {
     if(parent.isValid()){

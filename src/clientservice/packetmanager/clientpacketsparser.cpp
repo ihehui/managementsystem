@@ -227,14 +227,14 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         quint8 infoType = 0;
         in >> extraInfo >> systemInfo >> infoType;
 
-        if(infoType == quint8(MS::SYSINFO_ANNOUNCEMENTS)){
+        if(infoType == quint8(MS::SYSINFO_ANNOUNCEMENTS) || infoType == quint8(MS::SYSINFO_ANNOUNCEMENTREPLIES)){
             if(extraInfo.isEmpty()){return;}
             SOCKETID sID = socketIDOfUser(extraInfo);
             if(INVALID_SOCK_ID == sID){
                 qCritical()<<QString("ERROR! No online user named '%1'.").arg(extraInfo);
                 return;
             }
-            sendSystemInfoPacket(sID, extraInfo, systemInfo, MS::SYSINFO_ANNOUNCEMENTS);
+            sendSystemInfoPacket(sID, extraInfo, systemInfo, infoType);
             return;
         }
 
@@ -518,7 +518,7 @@ void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
         QString announcementID = "", receiver = "", replyMessage = "";
         in >> announcementID >> receiver >> replyMessage ;
 
-        sendUserReplyMessagePacket(m_socketConnectedToAdmin, announcementID, userNameOfSocket(socketID), receiver, replyMessage);
+        sendUserReplyMessagePacket(m_socketConnectedToServer, announcementID, userNameOfSocket(socketID), receiver, "", replyMessage);
         qDebug()<<"~~ReplyMessage";
     }
     break;

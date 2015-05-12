@@ -88,7 +88,8 @@ private slots:
     bool updateAnnouncement(SOCKETID adminSocketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
     bool updateAnnouncementTargets(unsigned int announcementID, const QString &addedTargets, const QString &deletedTargets);
     bool sendAnnouncementTargetsInfo(SOCKETID socketID, const QString &announcementID);
-    void replyMessageReceived(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver, const QString &message);
+    void replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
+    bool sendAnnouncementRepliesInfo(SOCKETID socketID, const QString &announcementID, const QString &receiver);
 
     void processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
 

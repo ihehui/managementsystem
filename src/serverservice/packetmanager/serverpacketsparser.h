@@ -304,6 +304,7 @@ public slots:
 
 
 
+
 private slots:
 
 
@@ -343,7 +344,7 @@ signals:
     void signalAnnouncementPacketReceived(SOCKETID adminSocketID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
     void signalUpdateAnnouncementRequested(SOCKETID adminSocketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
     void signalAnnouncementTargetsRequested(SOCKETID adminSocketID, const QString &announcementID);
-    void signalReplyMessagePacketReceived(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver, const QString &message);
+    void signalReplyMessagePacketReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
 
 
 private:

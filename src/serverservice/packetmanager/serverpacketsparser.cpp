@@ -242,10 +242,10 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::ReplyMessage):
     {
-        QString announcementID = "", sender = "", receiver = "", replyMessage = "";
+        QString announcementID = "", sender = "", receiver = "", receiverAssetNO = "", replyMessage = "";
         in >> announcementID >> sender >> receiver >> replyMessage ;
 
-        emit signalReplyMessagePacketReceived(socketID, announcementID, sender, receiver, replyMessage);
+        emit signalReplyMessagePacketReceived(socketID, peerID, announcementID, sender, receiver, receiverAssetNO, replyMessage);
         qDebug()<<"~~ReplyMessage--";
     }
     break;

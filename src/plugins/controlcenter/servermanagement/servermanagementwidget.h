@@ -33,6 +33,7 @@ public slots:
     void setAlarmsData(const QByteArray &infoData);
     void setAnnouncementsData(const QByteArray &infoData);
     void setAnnouncementTargetsData(const QString &extraInfo, const QByteArray &infoData);
+    void setAnnouncementReplies(const QByteArray &infoData);
 
 
     void updateServerInfo(const QByteArray &infoData);

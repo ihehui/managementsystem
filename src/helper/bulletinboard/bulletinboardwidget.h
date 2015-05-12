@@ -23,8 +23,10 @@ public:
     BulletinBoardWidget(const QString &userName, QWidget *parent = 0);
     ~BulletinBoardWidget();
 
-    void processAnnouncementsInfo(const QByteArray &infoData);
+    void showAnnouncements(const QString &announcementID);
     void showAnnouncements();
+    void processAnnouncementsInfo(const QByteArray &infoData);
+    void processAnnouncementReplies(const QByteArray &infoData);
 
     void deleteAnnouncementsInfo(const QString &announcementID);
 
@@ -39,6 +41,7 @@ private slots:
     void clearAnnouncements();
     void saveAnnouncementInfo(const QString &announcementID);
     bool isAnnouncementInfoExists(const QString &announcementID);
+    AnnouncementInfo * getAnnouncementInfo(const QString &announcementID);
 
 
     void on_toolButtonPrevious_clicked();

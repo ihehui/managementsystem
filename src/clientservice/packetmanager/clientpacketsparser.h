@@ -643,7 +643,7 @@ public slots:
         return m_rtp->sendReliableData(userSocketID, &ba);
     }
 
-    bool sendUserReplyMessagePacket(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver, const QString &replyMessage){
+    bool sendUserReplyMessagePacket(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage){
         qWarning()<<"----sendUserReplyMessagePacket(...):";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
@@ -653,7 +653,7 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_assetNO << announcementID << sender << receiver  << replyMessage;
+        out << m_assetNO << announcementID << sender << receiver << receiversAssetNO << replyMessage;
         packet->setPacketData(ba);
 
         ba.clear();

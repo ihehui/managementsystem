@@ -1215,6 +1215,12 @@ void ControlCenter::updateSystemInfoFromServer(const QString &extraInfo, const Q
     }
         break;
 
+    case quint8(MS::SYSINFO_ANNOUNCEMENTREPLIES):
+    {
+        ui.tabServer->setAnnouncementReplies(infoData);
+    }
+        break;
+
     default:
         qCritical()<<"ERROR! Invalid info from server!";
         break;

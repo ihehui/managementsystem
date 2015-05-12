@@ -82,11 +82,12 @@ void AnnouncementManagementWidget::setAnnouncementsData(const QByteArray &data){
 }
 
 void AnnouncementManagementWidget::setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data){
-    if(!m_infoWidget){
-        return;
-    }
-
+    if(!m_infoWidget){return;}
     m_infoWidget->setAnnouncementTargetsData(announcementID, data);
+}
+
+void AnnouncementManagementWidget::setAnnouncementReplies(const QByteArray &data){
+    m_model->setAnnouncementRepliesData(data);
 }
 
 void AnnouncementManagementWidget::on_toolButtonQuery_clicked(){
