@@ -191,8 +191,10 @@ namespace HEHUI {
     namespace MS {
 
         enum Command{
+            CMD_UNUSED = UserDefinedPacket + 1, //6
+            CMD_JobFinished,
 
-            ClientLookForServer = UserDefinedPacket + 1, //6
+            ClientLookForServer,
             ServerDeclare,
             Update,
 
@@ -215,7 +217,7 @@ namespace HEHUI {
             RequestSystemAlarms,
             AcknowledgeSystemAlarms,
 
-            Announcement,
+            Announcement_Create,
             UpdateAnnouncement,
             ReplyMessage,
             AnnouncementFromServer,

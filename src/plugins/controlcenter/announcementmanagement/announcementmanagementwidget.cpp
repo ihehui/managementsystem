@@ -232,6 +232,7 @@ void AnnouncementManagementWidget::showAnnouncementInfoWidget(AnnouncementInfo *
 
     if(!m_infoWidget){
         m_infoWidget = new AnnouncementInfoWidget(readonly);
+        connect(m_infoWidget, SIGNAL(signalAnnouncementUpdated()), this, SLOT(on_toolButtonQuery_clicked()));
         //connect(&m_infoWidget, SIGNAL(signalOK()), &dlg, SLOT(accept()));
         //connect(&m_infoWidget, SIGNAL(signalCancel()), &dlg, SLOT(reject()));
     }

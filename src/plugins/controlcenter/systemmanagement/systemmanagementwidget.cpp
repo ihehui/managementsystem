@@ -1276,24 +1276,24 @@ void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
         return;
     }
 
-    AnnouncementInfo info;
-    wgt.getAnnouncementInfo(&info);
+//    AnnouncementInfo info;
+//    wgt.getAnnouncementInfo(&info);
 
-    bool ok = controlCenterPacketsParser->sendAnnouncementPacket(
-                m_peerSocket,
-                info.TempID,
-                m_adminUser->getUserID(),
-                info.Type,
-                info.Content,
-                info.ACKRequired,
-                info.ValidityPeriod,
-                info.TargetType,
-                info.Targets
-                );
+//    bool ok = controlCenterPacketsParser->sendCreateAnnouncementPacket(
+//                m_peerSocket,
+//                info.TempID,
+//                m_adminUser->getUserID(),
+//                info.Type,
+//                info.Content,
+//                info.ACKRequired,
+//                info.ValidityPeriod,
+//                info.TargetType,
+//                info.Targets
+//                );
 
-    if(!ok){
-        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
-    }
+//    if(!ok){
+//        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+//    }
 
 }
 

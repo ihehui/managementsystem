@@ -1044,6 +1044,8 @@ void ControlCenter::startNetwork(){
 
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
+    connect(controlCenterPacketsParser, SIGNAL(signalJobFinished(quint32, quint8, const QVariant &)), JobMonitor::instance(), SLOT(finishJob(quint32, quint8, const QVariant &)), Qt::QueuedConnection);
+
     connect(controlCenterPacketsParser, SIGNAL(signalServerMessageReceived(const QString &, quint8)), this, SLOT(showServerMessage(const QString &, quint8)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)));

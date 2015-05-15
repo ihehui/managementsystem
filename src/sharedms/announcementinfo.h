@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#define URLScheme_Reply "Reply"
+
 #include "sharedmslib.h"
 
 namespace HEHUI {

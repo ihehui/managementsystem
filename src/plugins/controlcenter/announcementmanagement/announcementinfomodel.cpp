@@ -107,8 +107,8 @@ QString AnnouncementTargetModel::getNewTargetsStringForSQL(){
     foreach (AnnouncementTarget *info, infolist) {
         if(!info->ID.isEmpty()){continue;}
         QString assetNO = info->AssetNO, userName = info->UserName;
-        assetNO = "'" + assetNO + "'";
-        userName = "'" + userName + "'";
+        assetNO = "\\'" + assetNO + "\\'";
+        userName = "\\'" + userName + "\\'";
         targets.append(assetNO + "," + userName);
     }
     targets.removeDuplicates();
@@ -405,8 +405,10 @@ void AnnouncementInfoModel::setAnnouncementRepliesData(const QByteArray &jsonDat
         replyinfo->PublishTime = infoArray.at(index++).toString();
 
         if(info){
-            QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(replyinfo->Sender).arg(replyinfo->PublishTime);
-            info->Replies += remark + replyinfo->Message;
+            //URL: Reply://sender
+            QString title = QString("<span><a title=\"%1\" href=\"%2://%1:%3\">%1</a> %4</span>").arg(replyinfo->Sender).arg(URLScheme_Reply).arg(replyinfo->SendersAssetNO).arg(replyinfo->PublishTime);
+            //QString title = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(replyinfo->Sender).arg(replyinfo->PublishTime);
+            info->Replies += title + replyinfo->Message;
         }
 
     }

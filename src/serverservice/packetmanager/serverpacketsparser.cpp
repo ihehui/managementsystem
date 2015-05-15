@@ -197,8 +197,9 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
-    case quint8(MS::Announcement):
+    case quint8(MS::Announcement_Create):
     {
+        quint32 jobID = 0;
         unsigned int localTempID = 0;
         QString adminName = "";
         quint8 type = quint8(MS::ANNOUNCEMENT_NORMAL);
@@ -208,8 +209,8 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
         quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
         QString targets = "";
 
-        in >> localTempID >> adminName >> type >> content >> confirmationRequired >> validityPeriod >> targetType >> targets;
-        emit signalAnnouncementPacketReceived(socketID, localTempID, adminName, type, content, confirmationRequired, validityPeriod, targetType, targets);
+        in >> jobID >> localTempID >> adminName >> type >> content >> confirmationRequired >> validityPeriod >> targetType >> targets;
+        emit signalCreateAnnouncementPacketReceived(socketID, jobID, localTempID, adminName, type, content, confirmationRequired, validityPeriod, targetType, targets);
 
         qDebug()<<"~~Announcement--";
     }
@@ -217,14 +218,15 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
 
     case quint8(MS::UpdateAnnouncement):
     {
+        quint32 jobID = 0;
         QString adminName = "";
         unsigned int announcementID = 0;
         quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
         quint8 active = 1;
         QString addedTargets = "", deletedTargets = "";
 
-        in >> adminName >> announcementID >> targetType >> active >> addedTargets >> deletedTargets;
-        emit signalUpdateAnnouncementRequested(socketID, adminName, announcementID, targetType, active, addedTargets, deletedTargets);
+        in >> jobID >> adminName >> announcementID >> targetType >> active >> addedTargets >> deletedTargets;
+        emit signalUpdateAnnouncementRequested(socketID, jobID, adminName, announcementID, targetType, active, addedTargets, deletedTargets);
 
         qDebug()<<"~~UpdateAnnouncement--";
     }
@@ -243,7 +245,7 @@ void ServerPacketsParser::parseIncomingPacketData(Packet *packet){
     case quint8(MS::ReplyMessage):
     {
         QString announcementID = "", sender = "", receiver = "", receiverAssetNO = "", replyMessage = "";
-        in >> announcementID >> sender >> receiver >> replyMessage ;
+        in >> announcementID >> sender >> receiver >> receiverAssetNO >> replyMessage ;
 
         emit signalReplyMessagePacketReceived(socketID, peerID, announcementID, sender, receiver, receiverAssetNO, replyMessage);
         qDebug()<<"~~ReplyMessage--";

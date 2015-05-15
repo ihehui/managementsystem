@@ -170,6 +170,8 @@ void Helper::processSystemInfoFromServer(const QString &extraInfo, const QByteAr
 }
 
 void Helper::processAnnouncementsInfo(const QString &userName, const QByteArray &infoData){
+    qDebug()<<"--Helper::processAnnouncementsInfo(...)";
+
     if(m_userName != userName){return;}
 
     setupBulletinBoardWidget();

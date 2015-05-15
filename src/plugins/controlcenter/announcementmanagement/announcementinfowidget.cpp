@@ -9,7 +9,6 @@
 
 #include "HHSharedGUI/hdataoutputdialog.h"
 
-
 namespace HEHUI {
 
 
@@ -30,6 +29,9 @@ AnnouncementInfoWidget::AnnouncementInfoWidget(bool readonly, QWidget *parent)
     ui.pushButtonEdit->setEnabled(!readonlyUser);
     ui.pushButtonSave->setEnabled(!readonlyUser);
 
+    ui.tabReplies->setEnabled(false);
+    ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabReplies));
+
     m_model = new AnnouncementTargetModel(this);
     ui.tableView->setModel(m_model);
     m_model->setJsonData(QByteArray());
@@ -37,6 +39,7 @@ AnnouncementInfoWidget::AnnouncementInfoWidget(bool readonly, QWidget *parent)
     connect(ui.tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotShowCustomContextMenu(QPoint)));
     connect(ui.tableView, SIGNAL(clicked(const QModelIndex &)), this, SLOT(getSelectedInfo(const QModelIndex &)));
     //connect(ui->tableView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(slotViewAdminInfo(const QModelIndex &)));
+    connect(ui.textBrowserReplies, SIGNAL(anchorClicked(QUrl)), this, SLOT(linkClicked(QUrl)));
 
     QHeaderView *view = ui.tableView->horizontalHeader();
     view->setSectionResizeMode(QHeaderView::Stretch);
@@ -52,10 +55,16 @@ AnnouncementInfoWidget::AnnouncementInfoWidget(bool readonly, QWidget *parent)
 
     m_targetsTouched = false;
 
+    m_jobMonitor = JobMonitor::instance();
+    connect(m_jobMonitor, SIGNAL(jobFinished(quint32)), this, SLOT(jobFinished(quint32)));
+    m_jobID = 0;
+
 }
 
 AnnouncementInfoWidget::~AnnouncementInfoWidget()
 {
+    m_jobMonitor->deleteJob(m_jobID);
+
     m_model->clear();
     delete m_model;
 }
@@ -77,9 +86,19 @@ void AnnouncementInfoWidget::setAnnouncementInfo(const AnnouncementInfo *info){
 
     ui.textEdit->setText(info->Content);
 
-    if(!info->ID.isEmpty()){
+    if(info->ID.isEmpty()){
+        ui.tabReplies->setEnabled(false);
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabReplies));
+    }else{
         on_actionRefresh_triggered();
         m_localTempID = info->ID.toUInt();
+
+        if(!info->Replies.isEmpty()){
+            if(ui.tabWidget->indexOf(ui.tabReplies) < 0){
+                ui.textBrowserReplies->setText(info->Replies);
+                ui.tabWidget->addTab(ui.tabReplies, tr("Replies"));
+            }
+        }
     }
 
 }
@@ -173,6 +192,8 @@ void AnnouncementInfoWidget::on_pushButtonClone_clicked(){
     ui.lineEditAdmin->setText(m_myself->getUserID());
     ui.checkBoxActive->setChecked(true);
 
+    ui.pushButtonSave->setEnabled(true);
+
     setReadonly(false);
 
     m_model->switchToCloneMode();
@@ -181,13 +202,17 @@ void AnnouncementInfoWidget::on_pushButtonClone_clicked(){
 void AnnouncementInfoWidget::on_pushButtonEdit_clicked(){
     //setReadonly(false);
 
+    ui.pushButtonClone->setEnabled(false);
+    ui.pushButtonClone->setVisible(false);
+    ui.pushButtonEdit->setEnabled(false);
+    ui.pushButtonEdit->setVisible(false);
+    ui.pushButtonSave->setEnabled(true);
+    ui.pushButtonSave->setVisible(true);
+
     ui.checkBoxActive->setEnabled(true);
 
     ui.groupBoxTargets->setCheckable(true);
     ui.groupBoxTargets->setChecked(m_info.Type == quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC));
-
-    ui.pushButtonSave->setEnabled(true);
-    ui.pushButtonSave->setVisible(true);
 
 }
 
@@ -198,6 +223,17 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
         QMessageBox::critical(this, tr("Error"), tr("Invalid Content!"));
         return;
     }
+
+    if(ui.groupBoxTargets->isChecked() && (!m_model->rowCount())){
+        int ret = QMessageBox::question(this, tr("Question"),
+                                        tr("You chose to send the announcement to specific targets, but no target has been appointed!<br>Do you want to specify the targets?"),
+                                        QMessageBox::Yes|QMessageBox::No,
+                                        QMessageBox::Yes);
+        if(ret == QMessageBox::Yes){
+            ui.tabWidget->setCurrentWidget(ui.tabTargets);
+            return;
+        }
+    }
     
     int ret = QMessageBox::question(this, tr("Confirm"),
                                     tr("Do you really want to save the content?"),
@@ -206,15 +242,15 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
     if(ret == QMessageBox::Cancel){
         return;
     }
-    
+
     ui.pushButtonSave->setEnabled(false);
 
     bool ok = false;
     unsigned int announcementID = m_info.ID.toUInt();
-
     if(!announcementID){
-        ok = m_myself->packetsParser()->sendAnnouncementPacket(
+        ok = m_myself->packetsParser()->sendCreateAnnouncementPacket(
                     m_myself->socketConnectedToServer(),
+                    newJob(CreateAnnouncement, tr("Creating Announcement")),
                     m_localTempID,
                     m_myself->getUserID(),
                     ui.comboBoxAnnouncementType->currentData().toUInt(),
@@ -227,6 +263,7 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
     }else{
         ok = m_myself->packetsParser()->sendUpdateAnnouncementPacket(
                     m_myself->socketConnectedToServer(),
+                    newJob(ModifyAnnouncement, tr("Modifying Announcement")),
                     m_myself->getUserID(),
                     announcementID,
                     ui.groupBoxTargets->isChecked()?quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC):quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE),
@@ -240,6 +277,8 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
         QMessageBox::critical(this, tr("Error"), tr("Failed to send data!"));
         return;
     }
+
+    m_jobMonitor->startJobMonitoring(m_jobID, 5000);
 
     setEnabled(false);
     ui.pushButtonSave->setEnabled(false);
@@ -370,6 +409,122 @@ void AnnouncementInfoWidget::getSelectedInfo(const QModelIndex &index){
     ui.actionAddUser->setEnabled(enableModify);
     ui.actionDelete->setEnabled(enableModify);
 
+}
+
+void AnnouncementInfoWidget::linkClicked(const QUrl & url){
+    QString scheme = url.scheme();
+
+    if(scheme == URLScheme_Reply){
+        QString sender = url.userInfo();
+        QString sendersAssetNO = url.host();
+
+        bool ok;
+        QString text = QInputDialog::getMultiLineText(this, tr("Reply to %1").arg(sender),
+                                                      tr("Message:"), "", &ok);
+        if (!ok || text.isEmpty()){
+            return;
+        }
+
+        ok = m_myself->packetsParser()->sendAdminReplyMessagePacket(m_myself->socketConnectedToServer(), m_info.ID, m_myself->getUserID(), sender, sendersAssetNO, text);
+        if(!ok){
+            QMessageBox::critical(this, tr("Error"), tr("Failed to send data!"));
+            return;
+        }
+
+        QString title = QString("<span>%1 %2</span>").arg(m_myself->getUserID()).arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+        m_info.Replies += title;
+
+    }
+
+    qDebug()<<"URL scheme:"<<scheme<<" host:"<<url.host()<<" userInfo:"<<url.userInfo();
+
+}
+
+void AnnouncementInfoWidget::jobFinished(quint32 jobID){
+    Job *job = m_jobMonitor->getJob(jobID);
+    if(!job){return;}
+    if(jobID != m_jobID){return;}
+
+    QMessageBox msgbox(this);
+    bool createAnnouncement = (job->Type == quint32(CreateAnnouncement));
+    QString message = "";
+    Job::JobResult result = Job::JobResult(job->Result);
+    switch (result) {
+    case Job::FinishedWithError:
+    {
+        if(createAnnouncement){
+            unsigned int id = job->ExtraData.toUInt();
+            if(id){
+                m_info.ID = QString::number(id);
+                m_info.Admin = m_myself->getUserID();
+                m_info.PublishDate = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+                AnnouncementInfo info = m_info;
+                setAnnouncementInfo(&info);
+            }
+        }
+        setReadonly(true);
+        emit signalAnnouncementUpdated();
+
+        message = tr("Error occured when %1 the announcement!<br>%2").arg(createAnnouncement?tr("creating"):tr("modifying"));
+        msgbox.setIcon(QMessageBox::Warning);
+
+    }
+        break;
+
+    case Job::Failed:
+    {
+        message = tr("Failed to %1 the announcement!<br>%2").arg(createAnnouncement?tr("creat"):tr("modify"));
+        msgbox.setIcon(QMessageBox::Critical);
+    }
+        break;
+
+    case Job::Timeout:
+    {
+        message = tr("Timed out when %1 the announcement!<br>%2").arg(createAnnouncement?tr("creating"):tr("modifying"));
+        msgbox.setIcon(QMessageBox::Critical);
+    }
+        break;
+
+    case Job::Finished:
+    {
+        if(createAnnouncement){
+            unsigned int id = job->ExtraData.toUInt();
+            if(id){
+                m_info.ID = QString::number(id);
+                m_info.Admin = m_myself->getUserID();
+                m_info.PublishDate = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+                AnnouncementInfo info = m_info;
+                setAnnouncementInfo(&info);
+            }
+        }
+        setReadonly(true);
+        emit signalAnnouncementUpdated();
+
+    }
+        break;
+
+
+    default:
+        break;
+    }
+
+    m_jobID = 0;
+    m_jobMonitor->deleteJob(jobID);
+
+    if(!message.isEmpty()){
+        msgbox.setText(message);
+        msgbox.exec();
+    }
+
+    setEnabled(true);
+
+}
+
+quint32 AnnouncementInfoWidget::newJob(AnnouncementJobType jobType, const QString &jobTitle){
+    m_jobMonitor->deleteJob(m_jobID);
+    return (m_jobID = m_jobMonitor->newJob(quint32(jobType), jobTitle));
 }
 
 bool AnnouncementInfoWidget::verifyPrivilege(){

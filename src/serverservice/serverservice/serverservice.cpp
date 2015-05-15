@@ -43,7 +43,7 @@
 #include "../../sharedms/alarminfo.h"
 
 #include "HHSharedSystemUtilities/SystemUtilities"
-
+#include "HHSharedCore/JobMonitor"
 
 namespace HEHUI {
 
@@ -194,8 +194,8 @@ bool ServerService::startMainService(){
     connect(serverPacketsParser, SIGNAL(signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID, const QString& , const QString&, bool)), this, SLOT(acknowledgeSystemAlarms(SOCKETID, const QString& , const QString&, bool)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalAnnouncementsRequested(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&, const QString&, const QString&, const QString&)), this, SLOT(sendAnnouncementsInfo(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalAnnouncementPacketReceived(SOCKETID, unsigned int, const QString &, quint8, const QString &, bool, int, quint8, const QString &)), this, SLOT(saveAnnouncement(SOCKETID, unsigned int, const QString &, quint8, const QString &, bool, int, quint8, const QString &)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalUpdateAnnouncementRequested(SOCKETID, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), this, SLOT(updateAnnouncement(SOCKETID, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalCreateAnnouncementPacketReceived(SOCKETID, quint32, unsigned int, const QString &, quint8, const QString &, bool, int, quint8, const QString &)), this, SLOT(createAnnouncement(SOCKETID, quint32, unsigned int, const QString &, quint8, const QString &, bool, int, quint8, const QString &)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalUpdateAnnouncementRequested(SOCKETID, quint32, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), this, SLOT(updateAnnouncement(SOCKETID, quint32, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalAnnouncementTargetsRequested(SOCKETID, const QString&)), this, SLOT(sendAnnouncementTargetsInfo(SOCKETID, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalReplyMessagePacketReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)));
@@ -1349,6 +1349,51 @@ void ServerService::getSystemAlarmsCount(){
 
 }
 
+bool ServerService::getAnnouncementsInfo(QByteArray *data, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime){
+    if(!data){return false;}
+
+    QString statement = QString("call sp_Announcements_Query('%1', '%2', %3, '%4', '%5', %6, '%7', '%8' ); ")
+            .arg(id)
+            .arg(keyword)
+            .arg(validity)
+            .arg(assetNO)
+            .arg(userName)
+            .arg(target)
+            .arg(startTime)
+            .arg(endTime)
+            ;
+    if(!execQuery(statement)){
+        return false;
+    }
+
+    QJsonArray jsonArray;
+    while(query->next()){
+        QJsonArray infoArray;
+        infoArray.append(query->value("ID").toString());
+        infoArray.append(query->value("AnnouncementType").toString());
+        infoArray.append(query->value("Content").toString());
+        infoArray.append(query->value("ACKRequired").toString());
+        infoArray.append(query->value("Admin").toString());
+        infoArray.append(query->value("PublishDate").toString());
+        infoArray.append(query->value("ValidityPeriod").toString());
+        infoArray.append(query->value("TargetType").toString());
+        infoArray.append(query->value("DisplayTimes").toString());
+        infoArray.append(query->value("Active").toString());
+
+        jsonArray.append(infoArray);
+    }
+    query->clear();
+
+
+    QJsonObject object;
+    object["Announcements"] = jsonArray;
+    QJsonDocument doc(object);
+    *data = doc.toJson(QJsonDocument::Compact);
+
+    return true;
+
+}
+
 unsigned int ServerService::getCurrentDBUTCTime(){
 
     QString statement = QString("call sp_CurrentUTCTimestamp(); ");
@@ -1627,52 +1672,62 @@ void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad){
 
 bool ServerService::sendAnnouncementsInfo(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime){
 
-    QString statement = QString("call sp_Announcements_Query('%1', '%2', %3, '%4', '%5', %6, '%7', '%8' ); ")
-            .arg(id)
-            .arg(keyword)
-            .arg(validity)
-            .arg(assetNO)
-            .arg(userName)
-            .arg(target)
-            .arg(startTime)
-            .arg(endTime)
-            ;
-    if(!execQuery(statement)){
+//    QString statement = QString("call sp_Announcements_Query('%1', '%2', %3, '%4', '%5', %6, '%7', '%8' ); ")
+//            .arg(id)
+//            .arg(keyword)
+//            .arg(validity)
+//            .arg(assetNO)
+//            .arg(userName)
+//            .arg(target)
+//            .arg(startTime)
+//            .arg(endTime)
+//            ;
+//    if(!execQuery(statement)){
+//        QString message = QString("Failed to query announcements!");
+//        serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
+
+//        return false;
+//    }
+
+//    QJsonArray jsonArray;
+//    while(query->next()){
+//        QJsonArray infoArray;
+//        infoArray.append(query->value("ID").toString());
+//        infoArray.append(query->value("AnnouncementType").toString());
+//        infoArray.append(query->value("Content").toString());
+//        infoArray.append(query->value("ACKRequired").toString());
+//        infoArray.append(query->value("Admin").toString());
+//        infoArray.append(query->value("PublishDate").toString());
+//        infoArray.append(query->value("ValidityPeriod").toString());
+//        infoArray.append(query->value("TargetType").toString());
+//        infoArray.append(query->value("DisplayTimes").toString());
+//        infoArray.append(query->value("Active").toString());
+
+//        jsonArray.append(infoArray);
+//    }
+//    query->clear();
+
+
+//    QJsonObject object;
+//    object["Announcements"] = jsonArray;
+//    QJsonDocument doc(object);
+//    QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+//    return serverPacketsParser->sendSystemInfoPacket(socketID, userName, data, MS::SYSINFO_ANNOUNCEMENTS);
+
+    QByteArray data;
+    if(getAnnouncementsInfo(&data, id, keyword, validity, assetNO, userName, target, startTime, endTime)){
+        return serverPacketsParser->sendSystemInfoPacket(socketID, userName, data, MS::SYSINFO_ANNOUNCEMENTS);
+    }else{
         QString message = QString("Failed to query announcements!");
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
-
-        return false;
     }
 
-    QJsonArray jsonArray;
-    while(query->next()){
-        QJsonArray infoArray;
-        infoArray.append(query->value("ID").toString());
-        infoArray.append(query->value("AnnouncementType").toString());
-        infoArray.append(query->value("Content").toString());
-        infoArray.append(query->value("ACKRequired").toString());
-        infoArray.append(query->value("Admin").toString());
-        infoArray.append(query->value("PublishDate").toString());
-        infoArray.append(query->value("ValidityPeriod").toString());
-        infoArray.append(query->value("TargetType").toString());
-        infoArray.append(query->value("DisplayTimes").toString());
-        infoArray.append(query->value("Active").toString());
-
-        jsonArray.append(infoArray);
-    }
-    query->clear();
-
-
-    QJsonObject object;
-    object["Announcements"] = jsonArray;
-    QJsonDocument doc(object);
-    QByteArray data = doc.toJson(QJsonDocument::Compact);
-
-    return serverPacketsParser->sendSystemInfoPacket(socketID, userName, data, MS::SYSINFO_ANNOUNCEMENTS);
+    return false;
 
 }
 
-bool ServerService::saveAnnouncement(SOCKETID adminSocketID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets){
+bool ServerService::createAnnouncement(SOCKETID adminSocketID, quint32 jobID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets){
 
     QString statement = QString("call sp_Announcements_Insert(@ID, %1, '%2', %3, '%4', %5, %6, %7 ); ")
             .arg(type)
@@ -1684,36 +1739,57 @@ bool ServerService::saveAnnouncement(SOCKETID adminSocketID, unsigned int tempID
             .arg(1)
             ;
     if(!execQuery(statement)){
-        QString message = QString("Failed to save announcement!");
-        serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
+        QString message = QString("Database operation failed!");
+        serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
+        //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         return false;
     }
 
     statement = QString("select @ID;");
     if( !execQuery(statement) || (!query->first()) ){
-        QString message = QString("Failed to query announcement id!");
-        serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
+        QString message = QString("Database operation failed!");
+        serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
+        //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         return false;
     }
     unsigned int id = query->value(0).toUInt();
     if(!id){
-        QString message = QString("Failed to query announcement id!");
+        QString message = QString("Database operation failed!");
+        serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
         serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         return false;
     }
 
-    if(targetType == quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE)){return false;}
+    if(targetType == quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE) || targets.isEmpty()){
+        serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Finished), id);
+        return true;
+    }
 
-    if(!updateAnnouncementTargets(id, targets, "")){
-        QString message = QString("Failed to update announcement targets! Announcement ID: %1").arg(id);
-        serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
+    if(!updateAnnouncementTargets(id, targets, "")){       
+        //QString message = QString("Failed to update announcement targets! Announcement ID: %1").arg(id);
+        serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::FinishedWithError), id);
+        //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         return false;
     }
+
+
+    if(targetType == quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE)){
+        QByteArray data;
+        if(!getAnnouncementsInfo(&data, QString::number(id), "", "-1", "", "", "-1", "1970-01-01", "2039-12-31")){
+            return false;
+        }
+
+        foreach (SOCKETID sid, clientSocketsHash.keys()) {
+            serverPacketsParser->sendSystemInfoPacket(sid, "", data, MS::SYSINFO_ANNOUNCEMENTS);
+        }
+    }
+
+
 
     return true;
 }
 
-bool ServerService::updateAnnouncement(SOCKETID adminSocketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets){
+bool ServerService::updateAnnouncement(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets){
 
     QString statement = QString("call sp_Announcements_Update(%1, %2 %3); ")
             .arg(announcementID)
@@ -1721,14 +1797,16 @@ bool ServerService::updateAnnouncement(SOCKETID adminSocketID, const QString &ad
             .arg(quint8(active))
             ;
     if(!execQuery(statement)){
-        QString message = QString("Failed to update announcement! Announcement ID: %1").arg(announcementID);
-        serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
+        QString message = QString("Database operation failed!");
+        serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
+        //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         //return false;
     }
 
     if(!updateAnnouncementTargets(announcementID, addedTargets, deletedTargets)){
         QString message = QString("Failed to update announcement targets! Announcement ID: %1").arg(announcementID);
-        serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
+        serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::FinishedWithError), message);
+        //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         return false;
     }
 
@@ -1750,6 +1828,13 @@ bool ServerService::updateAnnouncementTargets(unsigned int announcementID, const
 }
 
 bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, const QString &announcementID){
+
+    unsigned int id = announcementID.toUInt();
+    if(!id){
+        QString message = QString("Failed to query announcement targets! Invalid announcement ID!");
+        serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
+        return false;
+    }
 
     QString statement = QString("call sp_AnnouncementTargets_Query(%1); ").arg(announcementID);
     if(!execQuery(statement)){

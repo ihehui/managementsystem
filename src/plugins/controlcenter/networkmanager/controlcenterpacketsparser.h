@@ -631,20 +631,20 @@ public slots:
     }
 
 
-    bool sendAnnouncementPacket(const QString &peerAddress, quint16 peerPort, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired = true, int validityPeriod = 60, quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE), const QString &targets = ""){
-        qDebug()<<"--sendAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" content:"<<content;
+    bool sendCreateAnnouncementPacket(quint32 jobID, const QString &peerAddress, quint16 peerPort, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired = true, int validityPeriod = 60, quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE), const QString &targets = ""){
+        qDebug()<<"--sendCreateAnnouncementPacket(...) "<<" peerAddress:"<<peerAddress<<" content:"<<content;
         Packet *packet = PacketHandlerBase::getPacket();
         QHostAddress targetAddress = QHostAddress(peerAddress);
         if(targetAddress.isNull()){
             targetAddress = ipmcGroupAddress;
         }
         
-        packet->setPacketType(quint8(MS::Announcement));
+        packet->setPacketType(quint8(MS::Announcement_Create));
         packet->setTransmissionProtocol(TP_UDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << localTempID << adminName << type << content << quint8(confirmationRequired) << validityPeriod << targetType << targets;
+        out << m_localID << jobID << localTempID << adminName << type << content << quint8(confirmationRequired) << validityPeriod << targetType << targets;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -658,16 +658,16 @@ public slots:
         return m_udpServer->sendDatagram(ba, targetAddress, peerPort);
     }
 
-    bool sendAnnouncementPacket(SOCKETID socketID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired = true, int validityPeriod = 60, quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE), const QString &targets = ""){
+    bool sendCreateAnnouncementPacket(SOCKETID socketID, quint32 jobID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired = true, int validityPeriod = 60, quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE), const QString &targets = ""){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
-        packet->setPacketType(quint8(MS::Announcement));
+        packet->setPacketType(quint8(MS::Announcement_Create));
         packet->setTransmissionProtocol(TP_RUDP);
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << localTempID << adminName << type << content << quint8(confirmationRequired) << validityPeriod << targetType << targets;
+        out << m_localID << jobID << localTempID << adminName << type << content << quint8(confirmationRequired) << validityPeriod << targetType << targets;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -681,7 +681,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendUpdateAnnouncementPacket(SOCKETID socketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets){
+    bool sendUpdateAnnouncementPacket(SOCKETID socketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets){
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -690,7 +690,31 @@ public slots:
         QByteArray ba;
         QDataStream out(&ba, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << adminName << announcementID << targetType << quint8(active) << addedTargets << deletedTargets;
+        out << m_localID << jobID << adminName << announcementID << targetType << quint8(active) << addedTargets << deletedTargets;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
+    bool sendAdminReplyMessagePacket(SOCKETID socketID, const QString &announcementID, const QString &sender, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage){
+        qWarning()<<"----sendAdminReplyMessagePacket(...):";
+
+        Packet *packet = PacketHandlerBase::getPacket(socketID);
+
+        packet->setPacketType(quint8(MS::ReplyMessage));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_localID << announcementID << sender << receiver << receiversAssetNO << replyMessage;
         packet->setPacketData(ba);
 
         ba.clear();
@@ -1128,7 +1152,7 @@ signals:
     //    void signalClientOfflinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
 
     void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
-
+    void signalJobFinished(quint32 jobID, quint8 result, const QVariant &extraData);
     void signalServerMessageReceived(const QString &message, quint8 messageType);
 
     void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online);

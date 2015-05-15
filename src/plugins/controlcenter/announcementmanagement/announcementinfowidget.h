@@ -12,6 +12,8 @@
 
 #include "../adminuser.h"
 
+#include "HHSharedCore/JobMonitor"
+
 
 
 namespace HEHUI {
@@ -21,6 +23,7 @@ class AnnouncementInfoWidget : public QWidget
     Q_OBJECT
 
 public:
+    enum AnnouncementJobType{CreateAnnouncement, ModifyAnnouncement};
     AnnouncementInfoWidget(bool readonly = true, QWidget *parent = 0);
     ~AnnouncementInfoWidget();
 
@@ -36,6 +39,7 @@ public:
 signals:
     //void signalSendMessage(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod);
     void signalCloseWidget();
+    void signalAnnouncementUpdated();
 
 private slots:
     void on_pushButtonClone_clicked();
@@ -51,6 +55,10 @@ private slots:
 
     void slotShowCustomContextMenu(const QPoint & pos);
     void getSelectedInfo(const QModelIndex &index);
+    void linkClicked(const QUrl & url);
+    void jobFinished(quint32 jobID);
+    quint32 newJob(AnnouncementJobType jobType, const QString &jobTitle);
+
 
     bool verifyPrivilege();
     
@@ -65,6 +73,9 @@ private:
     unsigned int m_localTempID;
     bool m_readonly;
     bool m_targetsTouched;
+
+    JobMonitor *m_jobMonitor;
+    quint32 m_jobID;
 
 
 };

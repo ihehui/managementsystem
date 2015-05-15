@@ -84,8 +84,8 @@ private slots:
     void sendRealtimeInfo(int cpuLoad, int memoryLoad);
 
     bool sendAnnouncementsInfo(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
-    bool saveAnnouncement(SOCKETID adminSocketID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
-    bool updateAnnouncement(SOCKETID adminSocketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
+    bool createAnnouncement(SOCKETID adminSocketID, quint32 jobID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
+    bool updateAnnouncement(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
     bool updateAnnouncementTargets(unsigned int announcementID, const QString &addedTargets, const QString &deletedTargets);
     bool sendAnnouncementTargetsInfo(SOCKETID socketID, const QString &announcementID);
     void replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
@@ -113,6 +113,8 @@ private:
     void getAllClientsInfoFromDB();
     void getAllAdminsInfoFromDB();
     void getSystemAlarmsCount();
+    bool getAnnouncementsInfo(QByteArray *data, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
+
 
     unsigned int getCurrentDBUTCTime();
 

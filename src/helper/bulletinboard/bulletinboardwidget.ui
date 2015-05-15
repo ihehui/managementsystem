@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>460</width>
-    <height>348</height>
+    <width>559</width>
+    <height>349</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -58,22 +58,6 @@
           <bool>true</bool>
          </property>
         </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QGroupBox" name="groupBoxReply">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>1</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="title">
-       <string>Reply</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QTextEdit" name="textEditReply"/>
        </item>
       </layout>
      </widget>

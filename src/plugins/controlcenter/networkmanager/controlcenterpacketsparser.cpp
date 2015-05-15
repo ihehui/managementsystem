@@ -176,6 +176,19 @@ void ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet){
     }
     break;
 
+    case quint8(MS::CMD_JobFinished):
+    {
+        quint32 jobID = 0;
+        quint8 result = 0;
+        QVariant extraData = QVariant("");
+        in >> jobID >> result >> extraData;
+        emit signalJobFinished(jobID, result, extraData);
+
+        qDebug()<<"~~CMD_JobFinished--"<<"   jobID:"<<jobID;
+
+    }
+    break;
+
     case quint8(MS::ServerMessage):
     {
         QString message;

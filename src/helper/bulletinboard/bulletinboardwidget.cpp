@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QInputDialog>
 
 
 
@@ -36,8 +37,6 @@ BulletinBoardWidget::BulletinBoardWidget(const QString &userName, QWidget *paren
     //qWarning()<<"gw:"<<geometry().width()<<" gh:"<<geometry().height();
     //qWarning()<<"fsw:"<<frameSize().width()<<" fsh:"<<frameSize().height();
 
-
-    ui.groupBoxReply->setVisible(false);
 
     curAnnouncementIndex = -1;
     m_curAnnouncementID = "";
@@ -271,21 +270,23 @@ void BulletinBoardWidget::on_toolButtonNext_clicked(){
 }
 
 void BulletinBoardWidget::on_pushButtonReply_clicked(){
-    if(!ui.groupBoxReply->isVisible()){
-        ui.groupBoxReply->setVisible(true);
+
+    bool ok;
+    QString reply = QInputDialog::getMultiLineText(this, tr("Reply"),
+                                                  tr("Message:"), "", &ok);
+    if (!ok || reply.isEmpty()){
         return;
-    }else{
-        QString reply = ui.textEditReply->toPlainText();
-        emit sendReplyMessage(m_curAnnouncementID.toUInt(), reply);
-
-        AnnouncementInfo *info = infolist.at(curAnnouncementIndex);
-        if(!info){return;}
-
-        //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Reply message sent at %1 --</span></p> ").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-        QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-        info->Replies = remark + reply;
-        showAnnouncements();
     }
+
+    emit sendReplyMessage(m_curAnnouncementID.toUInt(), reply);
+
+    AnnouncementInfo *info = infolist.at(curAnnouncementIndex);
+    if(!info){return;}
+
+    //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Reply message sent at %1 --</span></p> ").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    info->Replies = remark + reply;
+    showAnnouncements();
 
 }
 

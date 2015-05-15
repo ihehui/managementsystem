@@ -133,6 +133,30 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
+    bool sendJobFinishedPacket(int adminSocketID, quint32 jobID, quint8 result, const QVariant &extraData){
+
+        Packet *packet = PacketHandlerBase::getPacket(adminSocketID);
+
+        packet->setPacketType(quint8(MS::CMD_JobFinished));
+        packet->setTransmissionProtocol(TP_UDT);
+        QByteArray ba;
+        QDataStream out(&ba, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_8);
+        out << m_serverName << jobID << result << extraData;
+        packet->setPacketData(ba);
+
+        ba.clear();
+        out.device()->seek(0);
+        QVariant v;
+        v.setValue(*packet);
+        out << v;
+
+        PacketHandlerBase::recylePacket(packet);
+
+        return m_rtp->sendReliableData(adminSocketID, &ba);
+    }
+
+
     bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0){
 
         QHostAddress targetAddress = QHostAddress(peerAddress);
@@ -341,8 +365,8 @@ signals:
     void signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms);
 
     void signalAnnouncementsRequested(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
-    void signalAnnouncementPacketReceived(SOCKETID adminSocketID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
-    void signalUpdateAnnouncementRequested(SOCKETID adminSocketID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
+    void signalCreateAnnouncementPacketReceived(SOCKETID adminSocketID, quint32 jobID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
+    void signalUpdateAnnouncementRequested(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
     void signalAnnouncementTargetsRequested(SOCKETID adminSocketID, const QString &announcementID);
     void signalReplyMessagePacketReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
 

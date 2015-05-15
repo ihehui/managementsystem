@@ -524,7 +524,7 @@ public slots:
 //    }
 
     bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType){
-        //qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
+        qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
 
         Packet *packet = PacketHandlerBase::getPacket();
 

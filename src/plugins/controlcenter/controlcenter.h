@@ -27,7 +27,6 @@
 
 #include "HHSharedCore/huser.h"
 #include "HHSharedCore/hmysharedlib_global.h"
-#include "HHSharedGUI/hprogressdlg.h"
 #include "HHSharedGUI/hlogindlg.h"
 
 
