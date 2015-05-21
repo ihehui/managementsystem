@@ -149,6 +149,7 @@ void AnnouncementInfoWidget::setReadonly(bool readonly){
     ui.pushButtonClone->setVisible(readonly);
     ui.pushButtonEdit->setVisible(readonly);
     ui.pushButtonSave->setVisible(!readonly);
+    ui.pushButtonSave->setEnabled(!readonly);
 
     QHeaderView *view = ui.tableView->horizontalHeader();
     if(readonly){
@@ -245,8 +246,18 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
 
     ui.pushButtonSave->setEnabled(false);
 
-    bool ok = false;
     unsigned int announcementID = m_info.ID.toUInt();
+    if(!announcementID){
+        m_info.Active = ui.checkBoxActive->isChecked();
+        m_info.Type = ui.comboBoxAnnouncementType->currentData().toUInt();
+        m_info.ValidityPeriod = ui.spinBoxValidityPeriod->value();
+        m_info.DisplayTimes = ui.spinBoxDisplayTimes->value();
+        m_info.ACKRequired = ui.checkBoxConfirmationRequired->isChecked();
+
+        m_info.Content = ui.textEdit->toPlainText();
+    }
+
+    bool ok = false;
     if(!announcementID){
         ok = m_myself->packetsParser()->sendCreateAnnouncementPacket(
                     m_myself->socketConnectedToServer(),

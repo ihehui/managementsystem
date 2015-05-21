@@ -81,6 +81,7 @@ void BulletinBoardWidget::closeEvent(QCloseEvent *event){
 }
 
 void BulletinBoardWidget::showAnnouncements(const QString &announcementID){
+    qDebug()<<"--BulletinBoardWidget::showAnnouncements(...)";
 
     for(int i=0; i<infolist.size(); i++){
         AnnouncementInfo *info = infolist.at(curAnnouncementIndex);
@@ -102,14 +103,30 @@ void BulletinBoardWidget::showAnnouncements(){
     if(!info){return;}
     m_curAnnouncementID = info->ID;
 
-    QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(info->Admin).arg(info->PublishDate);
-    QString msg = remark + info->Content;
-    if(!info->Replies.isEmpty()){
-        msg += QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">---- Replies ----</span></p> ");
-        msg += info->Replies;
-    }
+    //ui.groupBoxMessage->setTitle(QString("%1(%2 %3)").arg(info->ID).arg(info->Admin).arg(info->PublishDate) );
 
-    ui.textBrowser->setText(msg);
+    QString colorString = "style=\"background-color: #ffffff;\" ";
+    QString html = "<html><head><meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\"><title>Announcement</title>"
+           "<style type=\"text/css\">"
+            "table{ background-color: #b2b2b2; margin-top: 1px; margin-bottom: 1px; margin-left: 1px; margin-right: 1px; width: 100%; font-size: 16px;}"
+            "table tr{background-color: #f3f8fb;}"
+            "</style>"
+            "</head><body>"
+            ;
+    html += "<table width=\"100%\" border=\"0\" cellpadding=\"2\" cellspacing=\"1\"  >";
+    //html += QString("<tr %1><td align=\"center\" colspan=\"2\">%2</td></tr>").arg(colorString).arg(tr("Announcement"));
+    //html += QString("<tr %1><td align=\"center\" colspan=\"2\">ID:%2 Admin:%3 Time:%4</td></tr>").arg(colorString).arg(info->ID).arg(info->Admin).arg(info->PublishDate);
+    html += QString("<tr %1><td height=\"100%\" align=\"center\" colspan=\"2\">%2</td></tr>").arg(colorString).arg(info->Content);
+    html += QString("<tr %1><td align=\"right\" colspan=\"2\">ID:%2 Admin:%3 Time:%4</td></tr>").arg(colorString).arg(info->ID).arg(info->Admin).arg(info->PublishDate);
+
+    if(!info->Replies.isEmpty()){
+        html += QString("<tr><td align=\"center\" colspan=\"2\">%1</td></tr>").arg(tr("Replies"));
+        html += info->Replies;
+    }
+    html += "</table></body></html>";
+    ui.textBrowser->setText(html);
+    qDebug()<<"html:"<<html;
+
     ui.labelCount->setText(QString::number(curAnnouncementIndex+1)+"/"+QString::number(totalCount));
 
     ui.toolButtonPrevious->setEnabled(curAnnouncementIndex>0);
@@ -154,8 +171,8 @@ void BulletinBoardWidget::processAnnouncementReplies(const QByteArray &infoData)
         replyinfo.Message = infoArray.at(index++).toString();
         replyinfo.PublishTime = infoArray.at(index++).toString();
 
-        QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(replyinfo.Sender).arg(replyinfo.PublishTime);
-        info->Replies += remark + replyinfo.Message;
+        QString html = QString("<tr><td valign=\"middle\">%1<p>%2</p></td><td>%3</td></tr>").arg(replyinfo.Sender).arg(replyinfo.PublishTime).arg(replyinfo.Message);
+        info->Replies += html;
 
     }
 
@@ -163,14 +180,16 @@ void BulletinBoardWidget::processAnnouncementReplies(const QByteArray &infoData)
 
 }
 
-void BulletinBoardWidget::processAnnouncementsInfo(const QByteArray &infoData){
-    if(infoData.isEmpty()){return;}
+bool BulletinBoardWidget::processAnnouncementsInfo(const QByteArray &infoData){
+    qDebug()<<"--BulletinBoardWidget::processAnnouncementsInfo(...)";
+
+    if(infoData.isEmpty()){return false;}
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
     if(error.error != QJsonParseError::NoError){
         qCritical()<<error.errorString();
-        return;
+        return false;
     }
     QJsonObject object = doc.object();
     QJsonArray jsonArray = object["Announcements"].toArray();
@@ -198,7 +217,6 @@ void BulletinBoardWidget::processAnnouncementsInfo(const QByteArray &infoData){
         info->DisplayTimes = infoArray.at(index++).toString().toUInt();
         info->Active = infoArray.at(index++).toString().toUInt();
 
-
         if(acknowledgedAnnouncements.contains(id)){
             if(info->DisplayTimes > 0 && (info->DisplayTimes <= acknowledgedAnnouncements.value(id, 1)) ){
                 delete info;
@@ -213,16 +231,16 @@ void BulletinBoardWidget::processAnnouncementsInfo(const QByteArray &infoData){
         }
 
         infolist.append(info);
-
     }
 
     if(!infolist.size()){
-        return;
+        return false;
     }
 
     curAnnouncementIndex = infolist.size() -1;
     showAnnouncements();
 
+    return true;
 }
 
 void BulletinBoardWidget::clearAnnouncements(){
@@ -278,14 +296,19 @@ void BulletinBoardWidget::on_pushButtonReply_clicked(){
         return;
     }
 
-    emit sendReplyMessage(m_curAnnouncementID.toUInt(), reply);
+    emit sendReplyMessage(m_curAnnouncementID, reply);
 
     AnnouncementInfo *info = infolist.at(curAnnouncementIndex);
     if(!info){return;}
 
     //QString remark = QString(" <p align=\"center\"><span style=\" font-size:9pt;color:#068ec8;\">-- Reply message sent at %1 --</span></p> ").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-    QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-    info->Replies = remark + reply;
+    //QString remark = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    //info->Replies = remark + reply;
+
+    QString html = QString("<tr><td valign=\"middle\">%1<p>%2</p></td><td>%3</td></tr>").arg(m_userName).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")).arg(reply);
+    info->Replies += html;
+
+
     showAnnouncements();
 
 }

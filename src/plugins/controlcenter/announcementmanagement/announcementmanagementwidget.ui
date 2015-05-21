@@ -121,6 +121,9 @@
       </item>
       <item row="2" column="8">
        <widget class="QToolButton" name="toolButtonFilter">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="toolTip">
          <string>Filter</string>
         </property>

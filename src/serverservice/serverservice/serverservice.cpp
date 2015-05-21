@@ -1194,6 +1194,10 @@ bool ServerService::openDatabase(bool reopen){
 
 bool ServerService::execQuery(const QString &statement, QString *errorString ){
 
+    qCritical()<<"statement:";
+    qCritical()<<statement;
+    qCritical()<<"";
+
     if(!query){
         if(!openDatabase()){
             return false;
@@ -1210,9 +1214,6 @@ bool ServerService::execQuery(const QString &statement, QString *errorString ){
         }
 
         qCritical()<<msg;
-        qCritical()<<"statement:";
-        qCritical()<<statement;
-        qCritical()<<"";
         //MySQL数据库重启，重新连接
         if(error.number() == 2006){
             query->clear();
@@ -1226,7 +1227,6 @@ bool ServerService::execQuery(const QString &statement, QString *errorString ){
 
         return false;
     }
-
 
     return true;
 

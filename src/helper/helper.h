@@ -41,7 +41,7 @@ private slots:
     void adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName);
     void AdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword );
     void serverAnnouncementPacketReceived(const QString &id, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod);
-    void sendReplyMessage(const QString &announcementID, const QString &replyMessage);
+    void sendReplyMessage(const QString &originalMessageID, const QString &replyMessage);
 
 
     void newPasswordRetreved();

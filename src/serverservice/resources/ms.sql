@@ -94,16 +94,16 @@ DROP TABLE IF EXISTS `AnnouncementTargets`;
 CREATE TABLE `AnnouncementTargets` (
   `ID` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `Announcement` int(10) unsigned NOT NULL,
-  `AssetNO` varchar(32) DEFAULT NULL,
-  `UserName` varchar(32) DEFAULT NULL,
+  `AssetNO` varchar(32) NOT NULL DEFAULT '',
+  `UserName` varchar(32) NOT NULL DEFAULT '',
   `Acknowledged` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `ACKTime` datetime DEFAULT NULL,
   PRIMARY KEY (`ID`),
   KEY `FK_AnnouncementTargets_Announcement` (`Announcement`),
   KEY `FK_AnnouncementTargets_AssetNO` (`AssetNO`),
-  CONSTRAINT `FK_AnnouncementTargets_Announcement` FOREIGN KEY (`Announcement`) REFERENCES `Announcements` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_AnnouncementTargets_AssetNO` FOREIGN KEY (`AssetNO`) REFERENCES `OS` (`AssetNO`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+  CONSTRAINT `FK_AnnouncementTargets_AssetNO` FOREIGN KEY (`AssetNO`) REFERENCES `OS` (`AssetNO`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_AnnouncementTargets_Announcement` FOREIGN KEY (`Announcement`) REFERENCES `Announcements` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -112,7 +112,6 @@ CREATE TABLE `AnnouncementTargets` (
 
 LOCK TABLES `AnnouncementTargets` WRITE;
 /*!40000 ALTER TABLE `AnnouncementTargets` DISABLE KEYS */;
-INSERT INTO `AnnouncementTargets` VALUES (1,3,'china1111','',0,NULL),(2,5,'china1111','User1',0,NULL),(3,4,'china1111','User3',0,NULL),(4,3,'PC1',NULL,0,NULL),(5,1,'china1111',NULL,0,NULL),(6,2,'china1111','User2',0,NULL),(7,12,'china1111','',0,NULL),(8,14,'PC1','',0,NULL),(9,14,'PC2','',0,NULL),(10,14,'PC3','User3',0,NULL);
 /*!40000 ALTER TABLE `AnnouncementTargets` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -137,7 +136,7 @@ CREATE TABLE `Announcements` (
   PRIMARY KEY (`ID`),
   KEY `FK_Announcements_Admin` (`Admin`),
   CONSTRAINT `FK_Announcements_Admin` FOREIGN KEY (`Admin`) REFERENCES `SystemAdministrators` (`UserID`) ON DELETE NO ACTION ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -146,7 +145,7 @@ CREATE TABLE `Announcements` (
 
 LOCK TABLES `Announcements` WRITE;
 /*!40000 ALTER TABLE `Announcements` DISABLE KEYS */;
-INSERT INTO `Announcements` VALUES (1,1,'Test1',1,'hehui','2015-05-13 06:19:00',900,1,10,1),(2,2,'Test2',0,'hehui','2015-05-03 06:19:00',0,1,10,1),(3,2,'Test3',1,'hehui','2015-05-13 06:19:00',600,2,100,0),(4,1,'QQQQQQQQQQQQQQQQQQQ',1,'hehui','2015-05-06 11:18:13',30,1,1,1),(5,1,'QQQQQQQQQQQQQ',1,'hehui','2015-05-13 11:29:57',300000,1,1,1),(6,1,'QQQQQQQQQQQ',1,'hehui','2015-05-06 11:34:56',30,1,1,1),(7,1,'EEEEEEEEEE',1,'hehui','2015-05-06 11:38:24',30,1,1,1),(8,1,'EEEEEEEEEE',1,'hehui','2015-05-06 12:05:27',30,1,1,1),(9,1,'TTTTBBBB',0,'hehui','2015-05-13 00:34:14',600,0,2,1),(10,1,'2222222',1,'hehui','2015-05-12 08:24:53',30,1,1,1),(11,1,'2222222222222',1,'hehui','2015-05-12 08:56:24',30,1,1,1),(12,1,'44444444444444',1,'hehui','2015-05-13 06:58:01',3000,1,1,1),(13,1,'sdddd',1,'hehui','2015-05-13 07:12:06',30,1,1,1),(14,1,'555555555555',1,'hehui','2015-05-13 07:22:00',30,1,1,1),(15,1,'1111111',1,'hehui','2015-05-14 09:32:31',30,0,1,1),(16,1,'2222222222222222',1,'hehui','2015-05-14 09:36:44',30,0,1,1),(17,1,'222222222222',1,'hehui','2015-05-14 09:41:06',3000,0,1,1),(18,1,'33333333333333333',1,'hehui','2015-05-14 09:49:31',30,0,1,1),(19,1,'4444444444444',1,'hehui','2015-05-14 09:54:00',30,0,1,1),(20,1,'4444444444444444',1,'hehui','2015-05-14 09:55:48',30,0,1,1),(21,1,'11111111111111111',1,'hehui','2015-05-14 10:03:38',30,0,1,1),(22,1,'222222222222222222222',1,'hehui','2015-05-14 10:06:06',30,0,1,1),(23,1,'QQQQQQQQQQQQQQQQQQQ',1,'hehui','2015-05-14 11:12:29',30,0,1,1),(24,1,'555555555555555555',1,'hehui','2015-05-15 06:21:48',30,0,1,1),(25,1,'44444444444444',1,'hehui','2015-05-15 07:24:28',30,0,1,1),(26,1,'fffffffff',1,'hehui','2015-05-15 07:27:25',30,0,1,1);
+INSERT INTO `Announcements` VALUES (27,1,'11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n11111111111111111111111\n\n',1,'hehui','2015-05-20 06:04:33',0,0,1,1),(28,1,'2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222\n2222222222222222222',1,'hehui','2015-05-20 08:16:35',30,1,1,1),(29,1,'333333333333333333333',0,'hehui','2015-05-20 08:36:11',0,0,1,1),(30,1,'444444444444444',1,'hehui','2015-05-20 08:49:22',30,0,1,1);
 /*!40000 ALTER TABLE `Announcements` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -182,7 +181,7 @@ CREATE TABLE `Hardware` (
 
 LOCK TABLES `Hardware` WRITE;
 /*!40000 ALTER TABLE `Hardware` DISABLE KEYS */;
-INSERT INTO `Hardware` VALUES ('china1111','Intel Pentium III Xeon 处理器 CPU 0',NULL,'(1GB,)','QEMU HARDDISK(29GB)',NULL,NULL,NULL,'Realtek RTL8139 Family PCI Fast Ethernet NIC(52:54:00:6D:43:EA)','2015-05-15 07:38:11',NULL),('dgpc02419','Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz LGA1155','ASUSTeK COMPUTER INC. P8H61-M LX3 PLUS R2.0','Kingston(4GB,1333)','ST3500413AS ATA Device(465GB);ST500DM002-1BC142 ATA Device(465GB)','DELF03D','GeForce 9400 GT','VIA High Definition Audio','Realtek PCIe GBE Family Controller(08:60:6E:C4:36:29);VirtualBox Host-Only Ethernet Adapter(08:00:27:00:C0:CB);VirtualBox Bridged Networking Driver Miniport(08:60:6E:C4:36:29)','2015-04-17 15:42:45',NULL);
+INSERT INTO `Hardware` VALUES ('china1111','Intel Pentium III Xeon 处理器 CPU 0',NULL,'(1GB,)','QEMU HARDDISK(29GB)',NULL,NULL,NULL,'Realtek RTL8139 Family PCI Fast Ethernet NIC(52:54:00:6D:43:EA)','2015-05-20 09:32:50',NULL),('dgpc02419','Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz LGA1155','ASUSTeK COMPUTER INC. P8H61-M LX3 PLUS R2.0','Kingston(4GB,1333)','ST3500413AS ATA Device(465GB);ST500DM002-1BC142 ATA Device(465GB)','DELF03D','GeForce 9400 GT','VIA High Definition Audio','Realtek PCIe GBE Family Controller(08:60:6E:C4:36:29);VirtualBox Host-Only Ethernet Adapter(08:00:27:00:C0:CB);VirtualBox Bridged Networking Driver Miniport(08:60:6E:C4:36:29)','2015-04-17 15:42:45',NULL);
 /*!40000 ALTER TABLE `Hardware` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -204,7 +203,7 @@ CREATE TABLE `InstalledSoftware` (
   UNIQUE KEY `ID_UNIQUE` (`ID`),
   KEY `FK_InstalledSoftware_AssetNO` (`AssetNO`),
   CONSTRAINT `FK_InstalledSoftware_AssetNO` FOREIGN KEY (`AssetNO`) REFERENCES `OS` (`AssetNO`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2111 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2127 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -213,7 +212,7 @@ CREATE TABLE `InstalledSoftware` (
 
 LOCK TABLES `InstalledSoftware` WRITE;
 /*!40000 ALTER TABLE `InstalledSoftware` DISABLE KEYS */;
-INSERT INTO `InstalledSoftware` VALUES (1840,'dgpc02419','Adobe Flash Player 17 ActiveX','17.0.0.169','','Adobe Systems Incorporated'),(1841,'dgpc02419','Adobe Flash Player 17 NPAPI','17.0.0.169','','Adobe Systems Incorporated'),(1842,'dgpc02419','支付宝安全控件 5.3.0.3807','5.3.0.3807','','Alipay.com Co., Ltd.'),(1843,'dgpc02419','百度安全控件 1.0.3.0','','',''),(1844,'dgpc02419','招行专业版','','',''),(1845,'dgpc02419','Colasoft Capsa 7 Enterprise','7.3','20150202','Colasoft'),(1846,'dgpc02419','Git version 1.9.5-preview20150319','1.9.5-preview20150319','20150416','The Git Development Community'),(1847,'dgpc02419','GNS3 1.2','1.2','',''),(1848,'dgpc02419','VIA 平台设备管理员','1.39','20140729','VIA Technologies, Inc.'),(1849,'dgpc02419','金山毒霸','2015.1.2','','Kingsoft Internet Security'),(1850,'dgpc02419','Microsoft Windows Driver Kit 7.1.0.7600','7.1.0.7600','','Microsoft Corporation'),(1851,'dgpc02419','快盘','4.12.16.17','','ShenZhen Xunlei Networking Technologies Ltd.'),(1852,'dgpc02419','猎豹安全浏览器','5.2.91.9718','','猎豹工作室'),(1853,'dgpc02419','Microsoft Document Explorer 2008','','','Microsoft Corporation'),(1854,'dgpc02419','向日葵 7.3 正式版','7.3.38.998','','上海贝锐信息科技有限公司'),(1855,'dgpc02419','TeamViewer 10','10.0.40798','','TeamViewer'),(1856,'dgpc02419','VisualDDK','1.0','','Bazis'),(1857,'dgpc02419','豌豆荚','2.80.0.7144','','豌豆实验室'),(1858,'dgpc02419','WinPcap 4.1.2','4.1.0.2001','','CACE Technologies'),(1859,'dgpc02419','Wireshark 1.12.1 (64-bit)','1.12.1','','The Wireshark developer community, http://www.wireshark.org'),(1860,'dgpc02419','Microsoft Visual C++ 2008 ATL Update kb973924 - x86 9.0.30729.4148','9.0.30729.4148','20140919','Microsoft Corporation'),(1861,'dgpc02419','sensorsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1862,'dgpc02419','vistalibs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1863,'dgpc02419','wdftools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1864,'dgpc02419','VMware vSphere Client 5.1','5.1.0.1557','20140804','VMware, Inc.'),(1865,'dgpc02419','networklibraries_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1866,'dgpc02419','toastermetadatapackagesample','1.1.6001.0','20150404','Microsoft Corporation'),(1867,'dgpc02419','infsample_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1868,'dgpc02419','networklibraries_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1869,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1870,'dgpc02419','dsfsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1871,'dgpc02419','setupsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1872,'dgpc02419','Microsoft Visual C++ 2013 x86 Minimum Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(1873,'dgpc02419','setuptools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1874,'dgpc02419','imagingtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1875,'dgpc02419','pnptools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1876,'dgpc02419','powermanagement_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1877,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.4148','9.0.30729.4148','20140804','Microsoft Corporation'),(1878,'dgpc02419','headers','1.1.6001.0','20150404','Microsoft Corporation'),(1879,'dgpc02419','Platform','1.39','20140729','VIA Technologies, Inc.'),(1880,'dgpc02419','Java 8 Update 31','8.0.310','20150213','Oracle Corporation'),(1881,'dgpc02419','bluetoothsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1882,'dgpc02419','audiosamples','1.1.6001.0','20150404','Microsoft Corporation'),(1883,'dgpc02419','Debugging Tools for Windows (x86)','6.11.1.404','20141016','Microsoft Corporation'),(1884,'dgpc02419','generaltools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1885,'dgpc02419','vistalibs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1886,'dgpc02419','buildtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1887,'dgpc02419','offreg_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1888,'dgpc02419','MSXML 4.0 SP3 Parser (KB2721691)','4.30.2114.0','20141112','Microsoft Corporation'),(1889,'dgpc02419','Microsoft Visual C++  Compilers 2010 Standard - enu - x86','10.0.30319','20141121','Microsoft Corporation'),(1890,'dgpc02419','tracingtool_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1891,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1892,'dgpc02419','tools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1893,'dgpc02419','printtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1894,'dgpc02419','printtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1895,'dgpc02419','toolindex','1.1.6001.0','20150404','Microsoft Corporation'),(1896,'dgpc02419','tracingtool_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1897,'dgpc02419','debugfiles_win7','1.1.6001.0','20150404','Microsoft Corporation'),(1898,'dgpc02419','tracingtool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1899,'dgpc02419','generalsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1900,'dgpc02419','toastersample','1.1.6001.0','20150404','Microsoft Corporation'),(1901,'dgpc02419','fireflysample','1.1.6001.0','20150404','Microsoft Corporation'),(1902,'dgpc02419','eventsample','1.1.6001.0','20150404','Microsoft Corporation'),(1903,'dgpc02419','biometricsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1904,'dgpc02419','Java Auto Updater','2.8.31.13','20150213','Oracle Corporation'),(1905,'dgpc02419','libs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1906,'dgpc02419','imagingtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1907,'dgpc02419','VMware vSphere Client 5.5','5.5.0.3838','20140815','VMware, Inc.'),(1908,'dgpc02419','pfd_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1909,'dgpc02419','wnetlibs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1910,'dgpc02419','cancelsample','1.1.6001.0','20150404','Microsoft Corporation'),(1911,'dgpc02419','bluetoothtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1912,'dgpc02419','chkinftool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1913,'dgpc02419','wdftools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1914,'dgpc02419','sideshowsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1915,'dgpc02419','readme','1.1.6001.0','20150404','Microsoft Corporation'),(1916,'dgpc02419','networksamples','1.1.6001.0','20150404','Microsoft Corporation'),(1917,'dgpc02419','SolarWinds Response Time Viewer','1.0.0.162','20141025','SolarWinds'),(1918,'dgpc02419','portiosample','1.1.6001.0','20150404','Microsoft Corporation'),(1919,'dgpc02419','biometrictools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1920,'dgpc02419','storagesamples','1.1.6001.0','20150404','Microsoft Corporation'),(1921,'dgpc02419','bussamples','1.1.6001.0','20150404','Microsoft Corporation'),(1922,'dgpc02419','smartcardsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1923,'dgpc02419','avstreamtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1924,'dgpc02419','wnetlibs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1925,'dgpc02419','irsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1926,'dgpc02419','pnptools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1927,'dgpc02419','Microsoft Document Explorer 2008','9.0.21022','20150404','Microsoft Corporation'),(1928,'dgpc02419','Hotfix for Microsoft Document Explorer 2008 (KB953196)','1','','Microsoft Corporation'),(1929,'dgpc02419','streammediasamples','1.1.6001.0','20150404','Microsoft Corporation'),(1930,'dgpc02419','offreg_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1931,'dgpc02419','Microsoft Visual C++ 2005 Redistributable','8.0.61001','20140729','Microsoft Corporation'),(1932,'dgpc02419','usbsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1933,'dgpc02419','drvtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1934,'dgpc02419','infsample_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1935,'dgpc02419','Microsoft Windows Driver Kit Documentation 7600.091201','6.0.7600.0','20150404','Microsoft'),(1936,'dgpc02419','dfx_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1937,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1938,'dgpc02419','evntdrvsample','1.1.6001.0','20150404','Microsoft Corporation'),(1939,'dgpc02419','pfd_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1940,'dgpc02419','Microsoft Visual C++ 2005 Redistributable','8.0.59193','20140919','Microsoft Corporation'),(1941,'dgpc02419','wpdtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1942,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729','9.0.30729','20140919','Microsoft Corporation'),(1943,'dgpc02419','dfx_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1944,'dgpc02419','Realtek Ethernet Controller Driver','7.86.508.2014','20140729','Realtek'),(1945,'dgpc02419','setuptools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1946,'dgpc02419','tools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1947,'dgpc02419','drvtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1948,'dgpc02419','hid_inputsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1949,'dgpc02419','ioctlsample','1.1.6001.0','20150404','Microsoft Corporation'),(1950,'dgpc02419','Security Update for Microsoft .NET Framework 4.5.2 (KB2972216)','1','','Microsoft Corporation'),(1951,'dgpc02419','hidsampleinput','1.1.6001.0','20150404','Microsoft Corporation'),(1952,'dgpc02419','dfx_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1953,'dgpc02419','powermanagement_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1954,'dgpc02419','buildsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1955,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.17','9.0.30729','20140912','Microsoft Corporation'),(1956,'dgpc02419','Microsoft Visual C++ 2012 Redistributable (x64) - 11.0.61030','11.0.61030.0','','Microsoft Corporation'),(1957,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161','9.0.30729.6161','20140729','Microsoft Corporation'),(1958,'dgpc02419','wxplibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1959,'dgpc02419','generaltools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1960,'dgpc02419','驱动精灵2014','8.1.108.1323','20150131','驱动精灵2014'),(1961,'dgpc02419','umdfsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1962,'dgpc02419','displaysamples','1.1.6001.0','20150404','Microsoft Corporation'),(1963,'dgpc02419','Microsoft Visual C++ 2012 Redistributable (x86) - 11.0.61030','11.0.61030.0','','Microsoft Corporation'),(1964,'dgpc02419','infsample_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1965,'dgpc02419','bluetoothtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1966,'dgpc02419','imagingtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1967,'dgpc02419','wsdtool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1968,'dgpc02419','drvtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1969,'dgpc02419','wpdsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1970,'dgpc02419','Microsoft Visual C++ 2012 x86 Additional Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(1971,'dgpc02419','setuptools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1972,'dgpc02419','powermanagement_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1973,'dgpc02419','printtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1974,'dgpc02419','libs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1975,'dgpc02419','wmisamples','1.1.6001.0','20150404','Microsoft Corporation'),(1976,'dgpc02419','avstreamtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1977,'dgpc02419','avstreamtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1978,'dgpc02419','Microsoft Visual C++ 2012 x86 Minimum Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(1979,'dgpc02419','pnpportssample','1.1.6001.0','20150404','Microsoft Corporation'),(1980,'dgpc02419','DSF-KitSetup','1.1.6001.0','20150404','Microsoft Corporation'),(1981,'dgpc02419','ifssamples','1.1.6001.0','20150404','Microsoft Corporation'),(1982,'dgpc02419','swtuner','1.1.6001.0','20150404','Microsoft Corporation'),(1983,'dgpc02419','hidsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1984,'dgpc02419','oacr_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1985,'dgpc02419','tools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1986,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1987,'dgpc02419','generaltools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1988,'dgpc02419','buildtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1989,'dgpc02419','libs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1990,'dgpc02419','sdv','1.1.6001.0','20150404','Microsoft Corporation'),(1991,'dgpc02419','wnetlibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1992,'dgpc02419','ManageEngine Firewall Analyzer 8','7','20150307','ZOHO Corp'),(1993,'dgpc02419','pfd_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1994,'dgpc02419','biometrictools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1995,'dgpc02419','pnptools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1996,'dgpc02419','printsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1997,'dgpc02419','avstreamsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1998,'dgpc02419','buildtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1999,'dgpc02419','installhelp','1.1.6001.0','20150404','Microsoft Corporation'),(2000,'dgpc02419','modemtools','1.1.6001.0','20150404','Microsoft Corporation'),(2001,'dgpc02419','bluetoothtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2002,'dgpc02419','offreg_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2003,'dgpc02419','wpdtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2004,'dgpc02419','wcoinstallers','1.1.6001.0','20150404','Microsoft Corporation'),(2005,'dgpc02419','wsdtool_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2006,'dgpc02419','wsdtool_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2007,'dgpc02419','Microsoft Visual C++ 2010  x86 Redistributable - 10.0.40219','10.0.40219','20150102','Microsoft Corporation'),(2008,'dgpc02419','networklibraries_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2009,'dgpc02419','wdftools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2010,'dgpc02419','Microsoft Visual C++ 2013 x86 Additional Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2011,'dgpc02419','Foxit Reader Pro 7.0.8','7.0.8.1216','20150131','三千院雨'),(2012,'dgpc02419','vistalibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(2013,'dgpc02419','wpdtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2014,'dgpc02419','pcidrvsample','1.1.6001.0','20150404','Microsoft Corporation'),(2015,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.21022','9.0.21022','20141027','Microsoft Corporation'),(2016,'dgpc02419','tools-windows','8.8.2.703057','20150406','VMware, Inc.'),(2017,'dgpc02419','天威诚信数字证书助手','2.6.0.1','','iTrusChina'),(2018,'dgpc02419','百度云管家','5.2.0','','百度在线网络技术（北京）有限公司'),(2019,'dgpc02419','金山卫士4.7正式版','4.7.0.4207 正式版','','金山卫士'),(2020,'dgpc02419','阿里旺旺2014Beta1','','20140926','阿里巴巴（中国）有限公司'),(2021,'dgpc02419','Microsoft Visual J# 2.0 Redistributable Package - SE (x64)','','','Microsoft Corporation'),(2022,'dgpc02419','WinRAR 4.10 (64-bit)','4.10.0','','win.rar GmbH'),(2023,'dgpc02419','TortoiseGit 1.8.14.0 (64 bit)','1.8.14.0','20150415','TortoiseGit'),(2024,'dgpc02419','Microsoft .NET Framework 4.5.2 (CHS)','4.5.51209','20140730','Microsoft Corporation'),(2025,'dgpc02419','Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219','10.0.40219','20140729','Microsoft Corporation'),(2026,'dgpc02419','Microsoft .NET Framework 4.5.2','4.5.51209','20140916','Microsoft Corporation'),(2027,'dgpc02419','Java 7 Update 45 (64-bit)','7.0.450','20140811','Oracle'),(2028,'dgpc02419','Java 8 (64-bit)','8.0.0','20140811','Oracle Corporation'),(2029,'dgpc02419','VmciSockets','9.1.54.1','20150406','VMware, Inc.'),(2030,'dgpc02419','Microsoft Visual C++ 2012 x64 Additional Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(2031,'dgpc02419','MSRedists64','2.00.0000','20140925','Ingres Corporation'),(2032,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x64 9.0.30729.4148','9.0.30729.4148','20140804','Microsoft Corporation'),(2033,'dgpc02419','Oracle VM VirtualBox 4.3.26','4.3.26','20150406','Oracle Corporation'),(2034,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x64 9.0.30729.6161','9.0.30729.6161','20140729','Microsoft Corporation'),(2035,'dgpc02419','Microsoft Visual C++  Compilers 2010 Standard - enu - x64','10.0.30319','20141121','Microsoft Corporation'),(2036,'dgpc02419','Microsoft Visual C++ 2013 x64 Additional Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2037,'dgpc02419','Microsoft Visual C++ 2013 x64 Minimum Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2038,'dgpc02419','Microsoft Visual C++ 2005 Redistributable (x64)','8.0.61000','20140729','Microsoft Corporation'),(2039,'dgpc02419','Microsoft Visual J# 2.0 Redistributable Package - SE (x64)','2.0.50728','20140804','Microsoft Corporation'),(2040,'dgpc02419','Microsoft SQL Server 2008 Native Client','10.0.1600.22','20141024','Microsoft Corporation'),(2041,'dgpc02419','Microsoft Visual C++ 2012 x64 Minimum Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(2042,'dgpc02419','TightVNC','2.7.10.0','20140812','GlavSoft LLC.'),(2043,'dgpc02419','Debugging Tools for Windows (x64)','6.12.2.633','20150404','Microsoft Corporation'),(2044,'dgpc02419','True Launch Bar','6.1','','Tordex'),(2109,'china1111','Internet Explorer 7 (200806)','20070813.185237','20150426','Microsoft Corporation'),(2110,'china1111','WebFldrs XP','9.50.7523','20150417','Microsoft Corporation');
+INSERT INTO `InstalledSoftware` VALUES (1840,'dgpc02419','Adobe Flash Player 17 ActiveX','17.0.0.169','','Adobe Systems Incorporated'),(1841,'dgpc02419','Adobe Flash Player 17 NPAPI','17.0.0.169','','Adobe Systems Incorporated'),(1842,'dgpc02419','支付宝安全控件 5.3.0.3807','5.3.0.3807','','Alipay.com Co., Ltd.'),(1843,'dgpc02419','百度安全控件 1.0.3.0','','',''),(1844,'dgpc02419','招行专业版','','',''),(1845,'dgpc02419','Colasoft Capsa 7 Enterprise','7.3','20150202','Colasoft'),(1846,'dgpc02419','Git version 1.9.5-preview20150319','1.9.5-preview20150319','20150416','The Git Development Community'),(1847,'dgpc02419','GNS3 1.2','1.2','',''),(1848,'dgpc02419','VIA 平台设备管理员','1.39','20140729','VIA Technologies, Inc.'),(1849,'dgpc02419','金山毒霸','2015.1.2','','Kingsoft Internet Security'),(1850,'dgpc02419','Microsoft Windows Driver Kit 7.1.0.7600','7.1.0.7600','','Microsoft Corporation'),(1851,'dgpc02419','快盘','4.12.16.17','','ShenZhen Xunlei Networking Technologies Ltd.'),(1852,'dgpc02419','猎豹安全浏览器','5.2.91.9718','','猎豹工作室'),(1853,'dgpc02419','Microsoft Document Explorer 2008','','','Microsoft Corporation'),(1854,'dgpc02419','向日葵 7.3 正式版','7.3.38.998','','上海贝锐信息科技有限公司'),(1855,'dgpc02419','TeamViewer 10','10.0.40798','','TeamViewer'),(1856,'dgpc02419','VisualDDK','1.0','','Bazis'),(1857,'dgpc02419','豌豆荚','2.80.0.7144','','豌豆实验室'),(1858,'dgpc02419','WinPcap 4.1.2','4.1.0.2001','','CACE Technologies'),(1859,'dgpc02419','Wireshark 1.12.1 (64-bit)','1.12.1','','The Wireshark developer community, http://www.wireshark.org'),(1860,'dgpc02419','Microsoft Visual C++ 2008 ATL Update kb973924 - x86 9.0.30729.4148','9.0.30729.4148','20140919','Microsoft Corporation'),(1861,'dgpc02419','sensorsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1862,'dgpc02419','vistalibs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1863,'dgpc02419','wdftools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1864,'dgpc02419','VMware vSphere Client 5.1','5.1.0.1557','20140804','VMware, Inc.'),(1865,'dgpc02419','networklibraries_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1866,'dgpc02419','toastermetadatapackagesample','1.1.6001.0','20150404','Microsoft Corporation'),(1867,'dgpc02419','infsample_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1868,'dgpc02419','networklibraries_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1869,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1870,'dgpc02419','dsfsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1871,'dgpc02419','setupsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1872,'dgpc02419','Microsoft Visual C++ 2013 x86 Minimum Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(1873,'dgpc02419','setuptools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1874,'dgpc02419','imagingtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1875,'dgpc02419','pnptools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1876,'dgpc02419','powermanagement_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1877,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.4148','9.0.30729.4148','20140804','Microsoft Corporation'),(1878,'dgpc02419','headers','1.1.6001.0','20150404','Microsoft Corporation'),(1879,'dgpc02419','Platform','1.39','20140729','VIA Technologies, Inc.'),(1880,'dgpc02419','Java 8 Update 31','8.0.310','20150213','Oracle Corporation'),(1881,'dgpc02419','bluetoothsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1882,'dgpc02419','audiosamples','1.1.6001.0','20150404','Microsoft Corporation'),(1883,'dgpc02419','Debugging Tools for Windows (x86)','6.11.1.404','20141016','Microsoft Corporation'),(1884,'dgpc02419','generaltools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1885,'dgpc02419','vistalibs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1886,'dgpc02419','buildtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1887,'dgpc02419','offreg_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1888,'dgpc02419','MSXML 4.0 SP3 Parser (KB2721691)','4.30.2114.0','20141112','Microsoft Corporation'),(1889,'dgpc02419','Microsoft Visual C++  Compilers 2010 Standard - enu - x86','10.0.30319','20141121','Microsoft Corporation'),(1890,'dgpc02419','tracingtool_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1891,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1892,'dgpc02419','tools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1893,'dgpc02419','printtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1894,'dgpc02419','printtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1895,'dgpc02419','toolindex','1.1.6001.0','20150404','Microsoft Corporation'),(1896,'dgpc02419','tracingtool_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1897,'dgpc02419','debugfiles_win7','1.1.6001.0','20150404','Microsoft Corporation'),(1898,'dgpc02419','tracingtool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1899,'dgpc02419','generalsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1900,'dgpc02419','toastersample','1.1.6001.0','20150404','Microsoft Corporation'),(1901,'dgpc02419','fireflysample','1.1.6001.0','20150404','Microsoft Corporation'),(1902,'dgpc02419','eventsample','1.1.6001.0','20150404','Microsoft Corporation'),(1903,'dgpc02419','biometricsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1904,'dgpc02419','Java Auto Updater','2.8.31.13','20150213','Oracle Corporation'),(1905,'dgpc02419','libs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1906,'dgpc02419','imagingtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1907,'dgpc02419','VMware vSphere Client 5.5','5.5.0.3838','20140815','VMware, Inc.'),(1908,'dgpc02419','pfd_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1909,'dgpc02419','wnetlibs_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1910,'dgpc02419','cancelsample','1.1.6001.0','20150404','Microsoft Corporation'),(1911,'dgpc02419','bluetoothtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1912,'dgpc02419','chkinftool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1913,'dgpc02419','wdftools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1914,'dgpc02419','sideshowsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1915,'dgpc02419','readme','1.1.6001.0','20150404','Microsoft Corporation'),(1916,'dgpc02419','networksamples','1.1.6001.0','20150404','Microsoft Corporation'),(1917,'dgpc02419','SolarWinds Response Time Viewer','1.0.0.162','20141025','SolarWinds'),(1918,'dgpc02419','portiosample','1.1.6001.0','20150404','Microsoft Corporation'),(1919,'dgpc02419','biometrictools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1920,'dgpc02419','storagesamples','1.1.6001.0','20150404','Microsoft Corporation'),(1921,'dgpc02419','bussamples','1.1.6001.0','20150404','Microsoft Corporation'),(1922,'dgpc02419','smartcardsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1923,'dgpc02419','avstreamtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1924,'dgpc02419','wnetlibs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1925,'dgpc02419','irsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1926,'dgpc02419','pnptools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1927,'dgpc02419','Microsoft Document Explorer 2008','9.0.21022','20150404','Microsoft Corporation'),(1928,'dgpc02419','Hotfix for Microsoft Document Explorer 2008 (KB953196)','1','','Microsoft Corporation'),(1929,'dgpc02419','streammediasamples','1.1.6001.0','20150404','Microsoft Corporation'),(1930,'dgpc02419','offreg_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1931,'dgpc02419','Microsoft Visual C++ 2005 Redistributable','8.0.61001','20140729','Microsoft Corporation'),(1932,'dgpc02419','usbsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1933,'dgpc02419','drvtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1934,'dgpc02419','infsample_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1935,'dgpc02419','Microsoft Windows Driver Kit Documentation 7600.091201','6.0.7600.0','20150404','Microsoft'),(1936,'dgpc02419','dfx_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1937,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x64) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1938,'dgpc02419','evntdrvsample','1.1.6001.0','20150404','Microsoft Corporation'),(1939,'dgpc02419','pfd_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1940,'dgpc02419','Microsoft Visual C++ 2005 Redistributable','8.0.59193','20140919','Microsoft Corporation'),(1941,'dgpc02419','wpdtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1942,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729','9.0.30729','20140919','Microsoft Corporation'),(1943,'dgpc02419','dfx_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1944,'dgpc02419','Realtek Ethernet Controller Driver','7.86.508.2014','20140729','Realtek'),(1945,'dgpc02419','setuptools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1946,'dgpc02419','tools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1947,'dgpc02419','drvtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1948,'dgpc02419','hid_inputsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1949,'dgpc02419','ioctlsample','1.1.6001.0','20150404','Microsoft Corporation'),(1950,'dgpc02419','Security Update for Microsoft .NET Framework 4.5.2 (KB2972216)','1','','Microsoft Corporation'),(1951,'dgpc02419','hidsampleinput','1.1.6001.0','20150404','Microsoft Corporation'),(1952,'dgpc02419','dfx_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1953,'dgpc02419','powermanagement_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1954,'dgpc02419','buildsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1955,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.17','9.0.30729','20140912','Microsoft Corporation'),(1956,'dgpc02419','Microsoft Visual C++ 2012 Redistributable (x64) - 11.0.61030','11.0.61030.0','','Microsoft Corporation'),(1957,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.30729.6161','9.0.30729.6161','20140729','Microsoft Corporation'),(1958,'dgpc02419','wxplibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1959,'dgpc02419','generaltools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1960,'dgpc02419','驱动精灵2014','8.1.108.1323','20150131','驱动精灵2014'),(1961,'dgpc02419','umdfsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1962,'dgpc02419','displaysamples','1.1.6001.0','20150404','Microsoft Corporation'),(1963,'dgpc02419','Microsoft Visual C++ 2012 Redistributable (x86) - 11.0.61030','11.0.61030.0','','Microsoft Corporation'),(1964,'dgpc02419','infsample_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1965,'dgpc02419','bluetoothtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1966,'dgpc02419','imagingtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1967,'dgpc02419','wsdtool_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1968,'dgpc02419','drvtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1969,'dgpc02419','wpdsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1970,'dgpc02419','Microsoft Visual C++ 2012 x86 Additional Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(1971,'dgpc02419','setuptools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1972,'dgpc02419','powermanagement_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1973,'dgpc02419','printtools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1974,'dgpc02419','libs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1975,'dgpc02419','wmisamples','1.1.6001.0','20150404','Microsoft Corporation'),(1976,'dgpc02419','avstreamtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1977,'dgpc02419','avstreamtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1978,'dgpc02419','Microsoft Visual C++ 2012 x86 Minimum Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(1979,'dgpc02419','pnpportssample','1.1.6001.0','20150404','Microsoft Corporation'),(1980,'dgpc02419','DSF-KitSetup','1.1.6001.0','20150404','Microsoft Corporation'),(1981,'dgpc02419','ifssamples','1.1.6001.0','20150404','Microsoft Corporation'),(1982,'dgpc02419','swtuner','1.1.6001.0','20150404','Microsoft Corporation'),(1983,'dgpc02419','hidsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1984,'dgpc02419','oacr_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1985,'dgpc02419','tools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1986,'dgpc02419','Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.21005','12.0.21005.1','','Microsoft Corporation'),(1987,'dgpc02419','generaltools_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1988,'dgpc02419','buildtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1989,'dgpc02419','libs_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1990,'dgpc02419','sdv','1.1.6001.0','20150404','Microsoft Corporation'),(1991,'dgpc02419','wnetlibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(1992,'dgpc02419','ManageEngine Firewall Analyzer 8','7','20150307','ZOHO Corp'),(1993,'dgpc02419','pfd_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1994,'dgpc02419','biometrictools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1995,'dgpc02419','pnptools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1996,'dgpc02419','printsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1997,'dgpc02419','avstreamsamples','1.1.6001.0','20150404','Microsoft Corporation'),(1998,'dgpc02419','buildtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(1999,'dgpc02419','installhelp','1.1.6001.0','20150404','Microsoft Corporation'),(2000,'dgpc02419','modemtools','1.1.6001.0','20150404','Microsoft Corporation'),(2001,'dgpc02419','bluetoothtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2002,'dgpc02419','offreg_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2003,'dgpc02419','wpdtools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2004,'dgpc02419','wcoinstallers','1.1.6001.0','20150404','Microsoft Corporation'),(2005,'dgpc02419','wsdtool_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2006,'dgpc02419','wsdtool_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2007,'dgpc02419','Microsoft Visual C++ 2010  x86 Redistributable - 10.0.40219','10.0.40219','20150102','Microsoft Corporation'),(2008,'dgpc02419','networklibraries_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2009,'dgpc02419','wdftools_x64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2010,'dgpc02419','Microsoft Visual C++ 2013 x86 Additional Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2011,'dgpc02419','Foxit Reader Pro 7.0.8','7.0.8.1216','20150131','三千院雨'),(2012,'dgpc02419','vistalibs_x86fre','1.1.6001.0','20150404','Microsoft Corporation'),(2013,'dgpc02419','wpdtools_ia64fre','1.1.6001.0','20150404','Microsoft Corporation'),(2014,'dgpc02419','pcidrvsample','1.1.6001.0','20150404','Microsoft Corporation'),(2015,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x86 9.0.21022','9.0.21022','20141027','Microsoft Corporation'),(2016,'dgpc02419','tools-windows','8.8.2.703057','20150406','VMware, Inc.'),(2017,'dgpc02419','天威诚信数字证书助手','2.6.0.1','','iTrusChina'),(2018,'dgpc02419','百度云管家','5.2.0','','百度在线网络技术（北京）有限公司'),(2019,'dgpc02419','金山卫士4.7正式版','4.7.0.4207 正式版','','金山卫士'),(2020,'dgpc02419','阿里旺旺2014Beta1','','20140926','阿里巴巴（中国）有限公司'),(2021,'dgpc02419','Microsoft Visual J# 2.0 Redistributable Package - SE (x64)','','','Microsoft Corporation'),(2022,'dgpc02419','WinRAR 4.10 (64-bit)','4.10.0','','win.rar GmbH'),(2023,'dgpc02419','TortoiseGit 1.8.14.0 (64 bit)','1.8.14.0','20150415','TortoiseGit'),(2024,'dgpc02419','Microsoft .NET Framework 4.5.2 (CHS)','4.5.51209','20140730','Microsoft Corporation'),(2025,'dgpc02419','Microsoft Visual C++ 2010  x64 Redistributable - 10.0.40219','10.0.40219','20140729','Microsoft Corporation'),(2026,'dgpc02419','Microsoft .NET Framework 4.5.2','4.5.51209','20140916','Microsoft Corporation'),(2027,'dgpc02419','Java 7 Update 45 (64-bit)','7.0.450','20140811','Oracle'),(2028,'dgpc02419','Java 8 (64-bit)','8.0.0','20140811','Oracle Corporation'),(2029,'dgpc02419','VmciSockets','9.1.54.1','20150406','VMware, Inc.'),(2030,'dgpc02419','Microsoft Visual C++ 2012 x64 Additional Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(2031,'dgpc02419','MSRedists64','2.00.0000','20140925','Ingres Corporation'),(2032,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x64 9.0.30729.4148','9.0.30729.4148','20140804','Microsoft Corporation'),(2033,'dgpc02419','Oracle VM VirtualBox 4.3.26','4.3.26','20150406','Oracle Corporation'),(2034,'dgpc02419','Microsoft Visual C++ 2008 Redistributable - x64 9.0.30729.6161','9.0.30729.6161','20140729','Microsoft Corporation'),(2035,'dgpc02419','Microsoft Visual C++  Compilers 2010 Standard - enu - x64','10.0.30319','20141121','Microsoft Corporation'),(2036,'dgpc02419','Microsoft Visual C++ 2013 x64 Additional Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2037,'dgpc02419','Microsoft Visual C++ 2013 x64 Minimum Runtime - 12.0.21005','12.0.21005','20140729','Microsoft Corporation'),(2038,'dgpc02419','Microsoft Visual C++ 2005 Redistributable (x64)','8.0.61000','20140729','Microsoft Corporation'),(2039,'dgpc02419','Microsoft Visual J# 2.0 Redistributable Package - SE (x64)','2.0.50728','20140804','Microsoft Corporation'),(2040,'dgpc02419','Microsoft SQL Server 2008 Native Client','10.0.1600.22','20141024','Microsoft Corporation'),(2041,'dgpc02419','Microsoft Visual C++ 2012 x64 Minimum Runtime - 11.0.61030','11.0.61030','20140729','Microsoft Corporation'),(2042,'dgpc02419','TightVNC','2.7.10.0','20140812','GlavSoft LLC.'),(2043,'dgpc02419','Debugging Tools for Windows (x64)','6.12.2.633','20150404','Microsoft Corporation'),(2044,'dgpc02419','True Launch Bar','6.1','','Tordex'),(2125,'china1111','Internet Explorer 7 (200806)','20070813.185237','20150426','Microsoft Corporation'),(2126,'china1111','WebFldrs XP','9.50.7523','20150417','Microsoft Corporation');
 /*!40000 ALTER TABLE `InstalledSoftware` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -281,7 +280,7 @@ CREATE TABLE `OS` (
 
 LOCK TABLES `OS` WRITE;
 /*!40000 ALTER TABLE `OS` DISABLE KEYS */;
-INSERT INTO `OS` VALUES ('china1111','china-74d290c0d','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2015.5.4.1',0,0,'2015-05-15 07:38:10'),('dgpc02419','dgpc02419','Microsoft Windows 7 旗舰版  Service Pack 1 64-bi','2014-07-29','FJGCP-4DFJD-GJY49-VJBQ7-HYRR2','WORKGROUP',0,'hehui','administrator;hehui','','2014.12.23.1',0,0,'2015-04-17 15:42:45'),('pc1','pc1','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2014.12.23.1',0,0,'2015-04-28 09:44:02'),('pc2','pc2','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2014.12.23.1',0,0,'2015-04-28 09:44:02'),('pc3','pc3','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2014.12.23.1',0,0,'2015-04-28 09:44:02');
+INSERT INTO `OS` VALUES ('china1111','china-74d290c0d','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2015.5.4.1',0,0,'2015-05-20 09:32:49'),('dgpc02419','dgpc02419','Microsoft Windows 7 旗舰版  Service Pack 1 64-bi','2014-07-29','FJGCP-4DFJD-GJY49-VJBQ7-HYRR2','WORKGROUP',0,'hehui','administrator;hehui','','2014.12.23.1',0,0,'2015-04-17 15:42:45'),('pc1','pc1','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2014.12.23.1',0,0,'2015-04-28 09:44:02'),('pc2','pc2','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2014.12.23.1',0,0,'2015-04-28 09:44:02'),('pc3','pc3','Microsoft Windows XP Professional Service Pac','2015-04-17','MRX3F-47B9T-2487J-KWKMF-RPWBY','WORKGROUP',0,'hehui','administrator;hehui','200.200.200.106','2014.12.23.1',0,0,'2015-04-28 09:44:02');
 /*!40000 ALTER TABLE `OS` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -379,7 +378,7 @@ CREATE TABLE `SystemAdministrators` (
 
 LOCK TABLES `SystemAdministrators` WRITE;
 /*!40000 ALTER TABLE `SystemAdministrators` DISABLE KEYS */;
-INSERT INTO `SystemAdministrators` VALUES ('guest','Guest','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-04-17 16:33:26',1,1,NULL),('hehui','He Hui','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-05-15 07:27:11',0,1,NULL),('test','NNNN111','ddf63c1a8f2492aa4e41b34e93a9d54e','AAA111','dgpc02419','200.200.200.17','2015-04-24 10:25:37',1,0,'RRRRRRR111');
+INSERT INTO `SystemAdministrators` VALUES ('guest','Guest','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-04-17 16:33:26',1,1,NULL),('hehui','He Hui','46fe47e8b67cad6074a7dfd508be9dd9','','dgpc02419','200.200.200.17','2015-05-20 08:49:08',0,1,NULL),('test','NNNN111','ddf63c1a8f2492aa4e41b34e93a9d54e','AAA111','dgpc02419','200.200.200.17','2015-04-24 10:25:37',1,0,'RRRRRRR111');
 /*!40000 ALTER TABLE `SystemAdministrators` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -855,6 +854,92 @@ DELIMITER ;;
  in p_IDs varchar(255),
  in p_Keyword varchar(32),
  in p_Validity tinyint,
+ in p_TargetAssetNO varchar(32),
+ in p_TargetUserName varchar(32),
+ in p_TargetType tinyint,
+ in p_startTime DateTime,
+ in p_endTime DateTime
+                                                                                    
+)
+BEGIN
+
+###查询公告信息###
+
+declare whereStatement varchar(1024) default ' ';
+
+set whereStatement = CONCAT_WS(' ',  '  (PublishDate  between \' ', p_startTime, ' \'and \'',p_endTime, '\' ) ');
+
+if CHAR_LENGTH(p_IDs) <> 0 then
+#逗号分隔的ID列表
+set whereStatement = CONCAT_WS('', whereStatement, ' and ID in (', p_IDs, ')');
+end if;
+
+if CHAR_LENGTH(p_Keyword) <> 0 then
+set whereStatement = CONCAT_WS('', whereStatement, ' and Content  like \'%', p_Keyword, '%\'');
+end if;
+
+
+if p_Validity >= 0 then
+
+if p_Validity = 0 then
+#Already Expire
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and (select ( PublishDate + INTERVAL ValidityPeriod  MINUTE)  < now()  ) ');
+elseif p_Validity = 1 then
+#Not Expired
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and (select ( PublishDate + INTERVAL ValidityPeriod  MINUTE)  > now()   or ValidityPeriod=0 )  ');
+end if;
+
+end if;
+
+
+
+if p_TargetType >= 0 then
+set whereStatement = CONCAT_WS(' ', whereStatement, ' and TargetType=', p_TargetType);
+end if;
+
+if p_TargetType < 0  then
+        #Specific Targets
+        set whereStatement = CONCAT_WS('', whereStatement, ' or tb_ann.ID in (select t.Announcement from AnnouncementTargets t where t.AssetNO  like \'%', p_TargetAssetNO, '%\' and UserName  like \'%', p_TargetUserName, '%\' )');
+end if;
+
+if p_TargetType = 1 then
+        #Specific Targets
+        set whereStatement = CONCAT_WS('', whereStatement, ' and tb_ann.ID in (select t.Announcement from AnnouncementTargets t where t.AssetNO  like \'%', p_TargetAssetNO, '%\' and UserName  like \'%', p_TargetUserName, '%\' )');
+end if;
+
+
+
+
+
+set @fullStatement = CONCAT_WS(' ', ' select * from Announcements tb_ann where  ', whereStatement );
+#select  @fullStatement ;
+
+
+PREPARE s1 FROM @fullStatement;
+EXECUTE s1;
+DEALLOCATE PREPARE s1;
+
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Announcements_Query3` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Announcements_Query3`(
+ in p_IDs varchar(255),
+ in p_Keyword varchar(32),
+ in p_Validity tinyint,
  in p_AssetNO varchar(32),
  in p_UserName varchar(32),
  in p_TargetType tinyint,
@@ -1026,6 +1111,56 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementTargets_Update` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementTargets_Update`(
+ in p_AnnouncementID int unsigned,
+  in p_addedTargets text,
+ in p_deletedTargets text
+
+)
+BEGIN
+
+###更新公告目标###
+#p_addedTargets Format: 'PC1','User1';'PC2','User2';'','User3'
+#p_deletedTargets Format: Announcement1,Announcement2,Announcement3
+
+declare statement varchar(1024) default ' ';
+
+set @announcementTargetType=0;
+select TargetType into @announcementTargetType from Announcements where ID=p_AnnouncementID;
+if @announcementTargetType=1 then
+
+    if CHAR_LENGTH(p_deletedTargets) <> 0 then
+        set statement = CONCAT_WS(' ',  ' delete from AnnouncementTargets where ID in( ', p_deletedTargets, ' ) ;');
+    end if;
+    
+set @tempstr = concat("),(", p_AnnouncementID, ",");
+set @statement = concat(statement, concat("insert into AnnouncementTargets(Announcement,AssetNO,UserName) values(", p_AnnouncementID, ",", replace(p_addedTargets,';',@tempstr)), ");" );
+#select @statement;
+
+PREPARE s1 FROM @statement;
+EXECUTE s1;
+DEALLOCATE PREPARE s1;
+
+else
+    delete from AnnouncementTargets where ID=p_ID;
+end if;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `sp_Hardware_Query` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1101,93 +1236,6 @@ BEGIN
 ###更新资产编号###
 
         update OS set AssetNO=p_newAssetNO where AssetNO=p_oldAssetNO;
-
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `sp_Test` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = '' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Test`(
- in p_Validity tinyint,
- in p_AssetNO varchar(32),
- in p_UserName varchar(32)
-
-                                                                                    
-)
-BEGIN
-
-###查询公告信息###
-
-
-
-
-
-
-select * from Announcements where  (select ( PublishDate + INTERVAL ValidityPeriod  MINUTE)  < now() );
-
-
-
-
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `sp_AnnouncementTargets_Update` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = '' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_AnnouncementTargets_Update`(
- in p_AnnouncementID int unsigned,
-  in p_addedTargets text,
- in p_deletedTargets text
-
-)
-BEGIN
-
-###更新公告目标###
-#p_addedTargets Format: 'PC1','User1';'PC2','User2';'','User3'
-#p_deletedTargets Format: Announcement1,Announcement2,Announcement3
-
-declare statement varchar(1024) default ' ';
-
-set @announcementTargetType=0;
-select TargetType into @announcementTargetType from Announcements where ID=p_AnnouncementID;
-if @announcementTargetType=1 then
-
-    if CHAR_LENGTH(p_deletedTargets) <> 0 then
-        set statement = CONCAT_WS(' ',  ' delete from AnnouncementTargets where ID in( ', p_deletedTargets, ' ) ;');
-    end if;
-    
-set @tempstr = concat("),(", p_AnnouncementID, ",");
-set @statement = concat(statement, concat("insert into AnnouncementTargets(Announcement,AssetNO,UserName) values(", p_AnnouncementID, ",", replace(p_addedTargets,';',@tempstr)), ");" );
-#select @statement;
-
-PREPARE s1 FROM @statement;
-EXECUTE s1;
-DEALLOCATE PREPARE s1;
-
-else
-    delete from AnnouncementTargets where ID=p_ID;
-end if;
 
 END */;;
 DELIMITER ;
@@ -1370,6 +1418,43 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_Test` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = '' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`200.200.200.17`*/ /*!50003 PROCEDURE `sp_Test`(
+ in p_Validity tinyint,
+ in p_AssetNO varchar(32),
+ in p_UserName varchar(32)
+
+                                                                                    
+)
+BEGIN
+
+###查询公告信息###
+
+
+
+
+
+
+select * from Announcements where  (select ( PublishDate + INTERVAL ValidityPeriod  MINUTE)  < now() );
+
+
+
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -1380,4 +1465,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-05-15 15:52:18
+-- Dump completed on 2015-05-20 17:34:43

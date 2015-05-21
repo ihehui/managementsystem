@@ -79,6 +79,8 @@ AnnouncementManagementWidget::~AnnouncementManagementWidget()
 void AnnouncementManagementWidget::setAnnouncementsData(const QByteArray &data){
     m_selectedInfoList.clear();
     m_model->setJsonData(data);
+
+    ui->toolButtonFilter->setEnabled(true);
 }
 
 void AnnouncementManagementWidget::setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data){
@@ -229,7 +231,6 @@ void AnnouncementManagementWidget::showAnnouncementInfoWidget(AnnouncementInfo *
         return;
     }
 
-
     if(!m_infoWidget){
         m_infoWidget = new AnnouncementInfoWidget(readonly);
         connect(m_infoWidget, SIGNAL(signalAnnouncementUpdated()), this, SLOT(on_toolButtonQuery_clicked()));
@@ -256,6 +257,8 @@ void AnnouncementManagementWidget::slotShowCustomContextMenu(const QPoint & pos)
     QMenu menu(this);
     menu.addAction(ui->actionRefresh);
     if(m_selectedInfoList.isEmpty()){
+        menu.addSeparator();
+        menu.addAction(ui->actionCreate);
         menu.exec(tableView->viewport()->mapToGlobal(pos));
         return;
     }

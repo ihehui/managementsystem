@@ -19,14 +19,19 @@ namespace HEHUI {
 Helper::Helper(QObject *parent) :
     QObject(parent)
 {
-    
-    WinUtilities::getLogonInfoOfCurrentUser(&m_userName, &m_logonDomain);
+
+    m_userName = "";
+    m_logonDomain = "";
+    unsigned long status = 0;
+    bool ok = WinUtilities::getLogonInfoOfCurrentUser(&m_userName, &m_logonDomain, 0, &status);
+    if(!ok){
+       qCritical()<<QString("ERROR! %1").arg(WinUtilities::WinSysErrorMsg(status));
+    }
     m_logonDomain = m_logonDomain.toLower();
     m_localComputerName = QHostInfo::localHostName().toLower();
     if(!m_logonDomain.isEmpty() && (m_localComputerName != m_logonDomain)){
         m_userName = m_logonDomain + "\\" + m_userName;
     }
-
 
     //m_networkReady = false;
 
@@ -173,22 +178,24 @@ void Helper::processAnnouncementsInfo(const QString &userName, const QByteArray 
     qDebug()<<"--Helper::processAnnouncementsInfo(...)";
 
     if(m_userName != userName){return;}
+    if(infoData.isEmpty()){return;}
 
     setupBulletinBoardWidget();
-    bulletinBoardWidget->processAnnouncementsInfo(infoData);
+    if(!bulletinBoardWidget->processAnnouncementsInfo(infoData)){
+        return;
+    }
     bulletinBoardWidget->showNormal();
     bulletinBoardWidget->raise();
 }
 
 void Helper::processAnnouncementRepliesInfo(const QString &userName, const QByteArray &infoData){
     if(m_userName != userName){return;}
+    if(infoData.isEmpty()){return;}
 
     setupBulletinBoardWidget();
-
     bulletinBoardWidget->processAnnouncementReplies(infoData);
     bulletinBoardWidget->showNormal();
     bulletinBoardWidget->raise();
-
 }
 
 void Helper::adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName ){
@@ -233,8 +240,8 @@ void Helper::serverAnnouncementPacketReceived(const QString &id, const QString &
 //    bulletinBoardWidget->raise();
 }
 
-void Helper::sendReplyMessage(const QString&announcementID, const QString &replyMessage){
-    bulletinBoardPacketsParser->sendUserReplyMessagePacket(m_socketConnectedToLocalServer, announcementID, "", replyMessage);
+void Helper::sendReplyMessage(const QString &originalMessageID, const QString &replyMessage){
+    bulletinBoardPacketsParser->sendUserReplyMessagePacket(m_socketConnectedToLocalServer, originalMessageID, "", replyMessage);
 }
 
 void Helper::newPasswordRetreved(){
@@ -430,7 +437,7 @@ void Helper::setupBulletinBoardWidget(){
     if(bulletinBoardWidget){return;}
 
     bulletinBoardWidget = new BulletinBoardWidget(m_userName);
-    connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(quint32, const QString &)), this, SLOT(sendReplyMessage(quint32, const QString &)));
+    connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(const QString &, const QString &)), this, SLOT(sendReplyMessage(const QString &, const QString &)));
 }
 
 

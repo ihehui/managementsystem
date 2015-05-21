@@ -1178,6 +1178,8 @@ void ControlCenter::updateSystemInfoFromServer(const QString &extraInfo, const Q
 
         clientInfoModel->setClientList(clientsList);
 
+        ui.toolButtonfilter->setEnabled(true);
+
     }
         break;
 

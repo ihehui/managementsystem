@@ -25,7 +25,7 @@ public:
 
     void showAnnouncements(const QString &announcementID);
     void showAnnouncements();
-    void processAnnouncementsInfo(const QByteArray &infoData);
+    bool processAnnouncementsInfo(const QByteArray &infoData);
     void processAnnouncementReplies(const QByteArray &infoData);
 
     void deleteAnnouncementsInfo(const QString &announcementID);
@@ -35,7 +35,7 @@ protected:
 
 
 signals:
-    void sendReplyMessage(quint32 originalMessageID, const QString &replyMessage);
+    void sendReplyMessage(const QString &originalMessageID, const QString &replyMessage);
 
 private slots:
     void clearAnnouncements();
