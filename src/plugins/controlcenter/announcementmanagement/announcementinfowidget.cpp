@@ -436,7 +436,7 @@ void AnnouncementInfoWidget::linkClicked(const QUrl & url){
             return;
         }
 
-        ok = m_myself->packetsParser()->sendAdminReplyMessagePacket(m_myself->socketConnectedToServer(), m_info.ID, m_myself->getUserID(), sender, sendersAssetNO, text);
+        ok = m_myself->packetsParser()->sendAdminReplyMessagePacket(m_myself->socketConnectedToServer(), m_info.ID.toUInt(), m_myself->getUserID(), sender, sendersAssetNO, text);
         if(!ok){
             QMessageBox::critical(this, tr("Error"), tr("Failed to send data!"));
             return;

@@ -317,7 +317,6 @@ void ControlCenter::closeEvent(QCloseEvent *e) {
 
 
     if(controlCenterPacketsParser && m_socketConnectedToServer){
-        controlCenterPacketsParser->sendAdminOnlineStatusChangedPacket(m_socketConnectedToServer, m_adminUser->getUserID(), false);
         m_rtp->closeSocket(m_socketConnectedToServer);
     }
     
@@ -953,7 +952,7 @@ void ControlCenter::slotUpdateUserLogonPassword(){
     }
     
     
-    controlCenterPacketsParser->sendUpdateMSUserPasswordPacket("", 0, workgroup(), m_adminUser->getUserID());
+    //controlCenterPacketsParser->sendUpdateMSUserPasswordPacket("", 0, workgroup(), m_adminUser->getUserID());
 }
 
 void ControlCenter::slotInformUserNewLogonPassword(){
@@ -978,7 +977,7 @@ void ControlCenter::slotInformUserNewLogonPassword(){
     }
     
     
-    controlCenterPacketsParser->sendInformUpdatePasswordPacket("", 0, workgroup(), m_adminUser->getUserID());
+    //controlCenterPacketsParser->sendInformUpdatePasswordPacket("", 0, workgroup(), m_adminUser->getUserID());
     
 }
 
@@ -1052,7 +1051,7 @@ void ControlCenter::startNetwork(){
     //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
     connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &, bool, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &, bool, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &)));
 
     connect(controlCenterPacketsParser, SIGNAL(signalDesktopInfoPacketReceived(quint32, const QString &, int, int, int, int)), this, SLOT(processDesktopInfo(quint32, const QString &, int, int, int, int)));
     connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, QList<QPoint>, QList<QByteArray>)), this, SLOT(processScreenshot(const QString &, QList<QPoint>, QList<QByteArray>)));
@@ -1263,8 +1262,8 @@ void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QBy
 
 }
 
-void ControlCenter::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
-    if(!modified){return;}
+void ControlCenter::processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO){
+    if(oldAssetNO == newAssetNO){return;}
 
     ClientInfo *info = clientInfoModel->getClientInfo(oldAssetNO);
     if(!info){
@@ -1411,6 +1410,7 @@ void ControlCenter::peerDisconnected(SOCKETID socketID){
 
 void ControlCenter::adminVerified(){
     m_socketConnectedToServer = m_adminUser->socketConnectedToServer();
+    Packet::setLocalID(m_adminUser->getUserID());
 }
 
 

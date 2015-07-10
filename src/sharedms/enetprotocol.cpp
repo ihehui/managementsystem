@@ -15,7 +15,7 @@ ENETProtocol::ENETProtocol(QObject *parent) :
 
     //注册自定义类型，必须重载“<<”和“>>”
     //qRegisterMetaTypeStreamOperators<HEHUI::Packet>("HEHUI::Packet");
-    Packet::registerMetaTypeStreamOperators();
+    PacketBase::registerMetaTypeStreamOperators();
 
 }
 
@@ -35,24 +35,27 @@ inline void ENETProtocol::convertDataToPacket(quint32 peerID, QByteArray *data){
     quint16 port = 0;
     getPeerAddressInfo(peerID, &ip, &port);
 
-    QDataStream in(data, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_8);
-    QVariant v;
-    in >> v;
-    if (v.canConvert<Packet>()){
-        Packet *packet = PacketHandlerBase::getPacket();
-        *packet = v.value<Packet>();
-        packet->setTransmissionProtocol(TP_UDT);
-        packet->setSocketID(peerID);
+//    QDataStream in(data, QIODevice::ReadOnly);
+//    in.setVersion(QDataStream::Qt_4_8);
+//    QVariant v;
+//    in >> v;
+//    if (v.canConvert<PacketBase>()){
+//        PacketBase *packet = PacketHandlerBase::getPacket();
+//        *packet = v.value<PacketBase>();
+//        packet->setTransmissionProtocol(TP_UDT);
+//        packet->setSocketID(peerID);
 
+//        packet->setPeerHostAddress(QHostAddress(ip));
+//        packet->setPeerHostPort(port);
 
-        packet->setPeerHostAddress(QHostAddress(ip));
-        packet->setPeerHostPort(port);
-//        packet->setLocalHostAddress(m_udpSocket->localAddress());
-//        packet->setLocalHostPort(m_udpSocket->localPort());
+//        emit packetReceived(packet);
+//    }
 
-//        m_packetHandlerBase->appendIncomingPacket(packet);
-
+    PacketBase packet;
+    if(packet.fromByteArray(data)){
+        packet.setSocketID(peerID);
+        packet.setPeerHostAddress(QHostAddress(ip));
+        packet.setPeerHostPort(port);
         emit packetReceived(packet);
     }
 

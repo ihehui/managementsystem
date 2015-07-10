@@ -77,7 +77,7 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
 
     clientInfoHash.clear();
 
-    onlineAdminsCount = 0;
+    //onlineAdminsCount = 0;
 
     m_isUsingMySQL = true;
 
@@ -174,7 +174,7 @@ bool ServerService::startMainService(){
     //connect(m_udpServer, SIGNAL(signalNewUDPPacketReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
     //connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
 
-    connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&, const QString&)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const QString&, const QString&, quint8, const QString&)), this, SLOT(saveClientLog(const QString&, const QString&, quint8, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(SOCKETID, const QString &, const QString &, const QString &)), this, SLOT(processModifyAssetNOPacket(SOCKETID, const QString &, const QString &, const QString &)));
@@ -185,20 +185,18 @@ bool ServerService::startMainService(){
     connect(serverPacketsParser, SIGNAL(signalUpdateSysAdminInfoPacketReceived(SOCKETID, const QString &, const QByteArray &, bool)), this, SLOT(processUpdateSysAdminInfoPacket(SOCKETID, const QString &, const QByteArray &, bool)), Qt::QueuedConnection);
 
 
-    //    connect(serverPacketsParser, SIGNAL(signalHeartbeatPacketReceived(const QString &, const QString&)), this, SLOT(processHeartbeatPacket(const QString &, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool, const QString&, quint16)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool, const QString&, quint16)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminLogin(SOCKETID, const QString &, const QString &, const QString &, const QString &)), this, SLOT(processAdminLoginPacket(SOCKETID, const QString &, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalSystemAlarmsRequested(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&)), this, SLOT(sendAlarmsInfo(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID, const QString& , const QString&, bool)), this, SLOT(acknowledgeSystemAlarms(SOCKETID, const QString& , const QString&, bool)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID, const QString&, bool)), this, SLOT(acknowledgeSystemAlarms(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalAnnouncementsRequested(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&, const QString&, const QString&, const QString&)), this, SLOT(sendAnnouncementsInfo(SOCKETID, const QString& , const QString&, const QString&, const QString&, const QString&, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalCreateAnnouncementPacketReceived(SOCKETID, quint32, unsigned int, const QString &, quint8, const QString &, bool, int, quint8, const QString &)), this, SLOT(createAnnouncement(SOCKETID, quint32, unsigned int, const QString &, quint8, const QString &, bool, int, quint8, const QString &)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalUpdateAnnouncementRequested(SOCKETID, quint32, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), this, SLOT(updateAnnouncement(SOCKETID, quint32, const QString &, unsigned int, quint8, bool, const QString &, const QString &)), Qt::QueuedConnection);
 
-    connect(serverPacketsParser, SIGNAL(signalAnnouncementTargetsRequested(SOCKETID, const QString&)), this, SLOT(sendAnnouncementTargetsInfo(SOCKETID, const QString&)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalReplyMessagePacketReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(SOCKETID, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)));
+    connect(serverPacketsParser, SIGNAL(signalAnnouncementTargetsRequested(SOCKETID, unsigned int)), this, SLOT(sendAnnouncementTargetsInfo(SOCKETID, unsigned int)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalReplyMessagePacketReceived(SOCKETID, const QString &, unsigned int, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(SOCKETID, const QString &, unsigned int, const QString &, const QString &, const QString &, const QString &)));
 
 
 
@@ -233,7 +231,7 @@ bool ServerService::startMainService(){
     return true;
 }
 
-void ServerService::saveClientLog(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime){
+void ServerService::saveClientLog(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log){
     //qWarning()<<"ServerService::saveClientLog(...) IP:"<<clientAddress<<" log:"<<log;
 
     QString statement = QString("call sp_Logs_Save('%1', '%2', %3, '%4', '%5', '%6');")
@@ -242,7 +240,7 @@ void ServerService::saveClientLog(const QString &assetNO, const QString &clientA
             .arg(logType)
             .arg(log)
             .arg("NULL")
-            .arg(clientTime)
+            .arg("1970-01-01")
             ;
 
     if(!execQuery(statement)){
@@ -863,8 +861,8 @@ void ServerService::processUpdateSysAdminInfoPacket(SOCKETID socketID, const QSt
 void ServerService::processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName){
 
     if(newAssetNO.isEmpty() || oldAssetNO.isEmpty()){
-        QString message = "Invalid asset NO.";
-        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, false, message);
+        //QString message = "Invalid asset NO.";
+        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, oldAssetNO, oldAssetNO);
         return;
     }
 
@@ -872,8 +870,8 @@ void ServerService::processModifyAssetNOPacket(SOCKETID socketID, const QString 
     if(clientInfoHash.contains(oldAssetNO)){
         info = clientInfoHash.value(oldAssetNO);
     }else{
-        QString message = QString("Asset NO. '%1' not found!").arg(oldAssetNO);
-        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, false, message);
+        //QString message = QString("Asset NO. '%1' not found!").arg(oldAssetNO);
+        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, oldAssetNO, oldAssetNO);
         return;
     }
 
@@ -888,11 +886,11 @@ void ServerService::processModifyAssetNOPacket(SOCKETID socketID, const QString 
         QString message = QString("An error occurred when updating asset NO. to database. Old asset NO.:%1, new Asset No.:%2. %3").arg(oldAssetNO).arg(newAssetNO).arg(errStr);
         logMessage(errStr, QtServiceBase::Error);
 
-        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, false, message);
+        serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO);
         return;
     }
 
-    serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO, true, "");
+    serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, newAssetNO, oldAssetNO);
 
 }
 
@@ -1024,7 +1022,7 @@ void ServerService::processAdminLoginPacket(SOCKETID socketID, const QString &ad
         logMessage(error, QtServiceBase::Error);
     }
 
-    onlineAdminSockets.append(socketID);
+    onlineAdminSockets.insert(socketID, adminID);
     sendServerInfo(socketID);
     startGetingRealTimeResourcesLoad();
 
@@ -1050,7 +1048,7 @@ void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, con
         }
     }
 
-    onlineAdminSockets.removeAll(socketID);
+    onlineAdminSockets.remove(socketID);
     if(!onlineAdminSockets.size()){
         stopGetingRealTimeResourcesLoad();
     }
@@ -1092,7 +1090,7 @@ void ServerService::peerDisconnected(SOCKETID socketID){
         clientSocketsHash.remove(socketID);
     }
 
-    onlineAdminSockets.removeAll(socketID);
+    onlineAdminSockets.remove(socketID);
     if(!onlineAdminSockets.size()){
         stopGetingRealTimeResourcesLoad();
     }
@@ -1609,7 +1607,10 @@ void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, co
 
 }
 
-void ServerService::acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms){
+void ServerService::acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &alarms, bool deleteAlarms){
+
+    QString adminID = onlineAdminSockets.value(adminSocketID);
+    if(adminID.isEmpty()){return;}
 
     QString statement = QString("call sp_Alarms_Acknowledge('%1', '%2', %3); ")
             .arg(adminID)
@@ -1663,7 +1664,7 @@ void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad){
     QByteArray data = doc.toJson(QJsonDocument::Compact);
 
 
-    foreach (SOCKETID socketID, onlineAdminSockets) {
+    foreach (SOCKETID socketID, onlineAdminSockets.keys()) {
         serverPacketsParser->sendSystemInfoPacket(socketID, "", data, MS::SYSINFO_REALTIME_INFO);
     }
 
@@ -1827,10 +1828,9 @@ bool ServerService::updateAnnouncementTargets(unsigned int announcementID, const
     return true;
 }
 
-bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, const QString &announcementID){
+bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, unsigned int announcementID){
 
-    unsigned int id = announcementID.toUInt();
-    if(!id){
+    if(!announcementID){
         QString message = QString("Failed to query announcement targets! Invalid announcement ID!");
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
         return false;
@@ -1859,16 +1859,16 @@ bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, const QString
 
 
     QJsonObject object;
-    object["AnnouncementID"] = announcementID;
+    object["AnnouncementID"] = QString::number(announcementID);
     object["AnnouncementTargets"] = jsonArray;
     QJsonDocument doc(object);
     QByteArray data = doc.toJson(QJsonDocument::Compact);
 
-    return serverPacketsParser->sendSystemInfoPacket(socketID, announcementID, data, MS::SYSINFO_ANNOUNCEMENTTARGETS);
+    return serverPacketsParser->sendSystemInfoPacket(socketID, QString::number(announcementID), data, MS::SYSINFO_ANNOUNCEMENTTARGETS);
 
 }
 
-void ServerService::replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message){
+void ServerService::replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, unsigned int announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message){
 
     QString statement = QString("call sp_AnnouncementReplies_Insert(@ID, %1, '%2', %3, '%4', '%5', '%6' ); ")
             .arg(announcementID)
@@ -1911,14 +1911,14 @@ void ServerService::replyMessageReceived(SOCKETID socketID, const QString &sende
     jsonArray.append(infoArray);
 
     QJsonObject object;
-    object["AnnouncementID"] = announcementID;
+    object["AnnouncementID"] = QString::number(announcementID);
     object["AnnouncementReplies"] = jsonArray;
     QJsonDocument doc(object);
     QByteArray data = doc.toJson(QJsonDocument::Compact);
 
     if(receiversAssetNO.isEmpty()){
         //Send Message to Admin
-        foreach (SOCKETID sid, onlineAdminSockets) {
+        foreach (SOCKETID sid, onlineAdminSockets.keys()) {
             serverPacketsParser->sendSystemInfoPacket(sid, "", data, MS::SYSINFO_ANNOUNCEMENTREPLIES);
         }
     }else{
@@ -1990,10 +1990,6 @@ void ServerService::stop()
     onlineAdminSockets.clear();
     stopGetingRealTimeResourcesLoad();
 
-    if(serverPacketsParser){
-        serverPacketsParser->sendServerOnlineStatusChangedPacket(false);
-    }
-
     //updateOrSaveAllClientsInfoToDatabase();
 
     databaseUtility->closeAllDBConnections();
@@ -2026,7 +2022,6 @@ void ServerService::processCommand(int code)
 
     switch(code){
     case 0:
-        serverPacketsParser->sendUpdateClientSoftwarePacket();
         break;
     case 1:
         serverPacketsParser->sendRequestClientInfoPacket();

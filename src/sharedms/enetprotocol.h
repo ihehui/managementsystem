@@ -2,7 +2,7 @@
 #define ENETPROTOCOL_H
 
 #include "HHSharedENET/henetprotocolbase.h"
-#include "HHSharedNetwork/hpacket.h"
+#include "HHSharedNetwork/PacketBase"
 
 namespace HEHUI {
 
@@ -14,7 +14,7 @@ public:
     explicit ENETProtocol(QObject *parent = 0);
 
 signals:
-    void packetReceived(Packet *packet);
+    void packetReceived(const PacketBase &packet);
     //void dataReceived(const QString &peerAddress, quint16 peerPort, const QByteArray &data);
 
 public slots:

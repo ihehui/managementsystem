@@ -45,13 +45,13 @@ ClientPacketsParser::ClientPacketsParser(const QString &assetNO, ClientResources
         m_assetNO = QHostInfo::localHostName().toLower();
     }
     //m_localComputerName = QHostInfo::localHostName().toLower();
-
+    Packet::setLocalID(m_assetNO);
 
     Q_ASSERT(m_resourcesManager);
 
     m_udpServer = m_resourcesManager->getUDPServer();
     Q_ASSERT_X(m_udpServer, "ClientPacketsParser::ClientPacketsParser(...)", "Invalid UDPServer!");
-    connect(m_udpServer, SIGNAL(signalNewUDPPacketReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    connect(m_udpServer, SIGNAL(packetReceived(const PacketBase &)), this, SLOT(parseIncomingPacketData(const PacketBase &)), Qt::QueuedConnection);
 
 
     m_rtp = m_resourcesManager->getRTP();
@@ -65,11 +65,11 @@ ClientPacketsParser::ClientPacketsParser(const QString &assetNO, ClientResources
 
     m_tcpServer = m_rtp->getTCPServer();
     Q_ASSERT(m_tcpServer);
-    connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    connect(m_tcpServer, SIGNAL(packetReceived(const PacketBase &)), this, SLOT(parseIncomingPacketData(const PacketBase &)), Qt::QueuedConnection);
 
     m_enetProtocol = m_rtp->getENETProtocol();
     Q_ASSERT(m_enetProtocol);
-    connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    connect(m_enetProtocol, SIGNAL(packetReceived(const PacketBase &)), this, SLOT(parseIncomingPacketData(const PacketBase &)), Qt::QueuedConnection);
 
 
     serverAddress = QHostAddress::Null;
@@ -99,613 +99,318 @@ ClientPacketsParser::~ClientPacketsParser() {
 }
 
 
-void ClientPacketsParser::parseIncomingPacketData(Packet *packet){
+void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     //    qDebug()<<"----ClientPacketsParser::parseIncomingPacketData(Packet *packet)";
 
 
-    QByteArray packetData = packet->getPacketData();
-    QDataStream in(&packetData, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_8);
+    //QByteArray packetBody = packet.getPacketBody();
+    quint8 packetType = packet.getPacketType();
+    QString peerID = packet.getPeerID();
 
-    QString peerName = "";
-    in >> peerName;
-
-    QHostAddress peerAddress = packet->getPeerHostAddress();
-    quint16 peerPort = packet->getPeerHostPort();
-    quint8 packetType = packet->getPacketType();
-    SOCKETID socketID = packet->getSocketID();
-
-    PacketHandlerBase::recylePacket(packet);
-
-//    qDebug()<<"--ClientPacketsParser::parseIncomingPacketData(...) "<<" peerName:"<<peerName<<" peerAddress:"<<peerAddress<<" peerPort:"<<peerPort<<" socketID:"<<socketID<<" packetType:"<<packetType;
+    QHostAddress peerAddress = packet.getPeerHostAddress();
+    quint16 peerPort = packet.getPeerHostPort();
+    SOCKETID socketID = packet.getSocketID();
 
     switch(packetType){
 
-    case quint8(MS::ServerDeclare):
+    case quint8(MS::CMD_ServerDiscovery):
     {
-        quint16 rtpPort = 0, tcpPort = 0;
-        QString version = "";
-        int serverInstanceID = 0;
-        in >> rtpPort >> tcpPort >> version >> serverInstanceID;
+        ServerDiscoveryPacket p(packet);
+
         serverAddress = peerAddress;
-        serverRTPListeningPort = rtpPort;
-        serverName = peerName;
+        serverRTPListeningPort = p.rtpPort;
+        serverName = peerID;
 
-        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, tcpPort, serverName, version, serverInstanceID);
-        qDebug()<<"~~ServerDeclare"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRTPListeningPort:"<<serverRTPListeningPort << " serverTCPListeningPort:"<<tcpPort;
+        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, p.tcpPort, serverName, p.version, p.serverInstanceID);
+        qDebug()<<"~~CMD_ServerDiscovery"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRTPListeningPort:"<<serverRTPListeningPort << " serverTCPListeningPort:"<<p.tcpPort;
     }
     break;
 
-    case quint8(MS::ServerOnlineStatusChanged):
+    case quint8(MS::CMD_ClientInfo):
     {
-        quint8 online = 1;
-        quint16 rtpPort = 0, tcpPort = 0;
-        in >> online >> rtpPort >> tcpPort;
-        serverAddress = online?peerAddress:QHostAddress::Null;
-        serverRTPListeningPort = online?rtpPort:0;
-        serverName = peerName;
+        qDebug()<<"~~CMD_ClientInfo";
 
-        emit signalServerOnlineStatusChangedPacketReceived(online, serverAddress, serverRTPListeningPort, serverName);
-        qDebug()<<"~~ServerOnlineStatusChanged"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRUDPListeningPort:"<<serverRTPListeningPort;
-
+        ClientInfoPacket p(packet);
+        emit signalClientInfoRequestedPacketReceived(socketID, p.infoType);
     }
     break;
 
-    case quint8(MS::ClientInfoRequested):
+    case quint8(MS::CMD_RemoteConsole):
     {
-        QString assetNO = "";
-        quint8 infoType = 0;
-        in >> assetNO >> infoType;
+        qDebug()<<"~~CMD_RemoteConsole";
 
-        if(!assetNO.isEmpty()){
-            if(assetNO != m_assetNO){
-                qCritical()<<"ERROR! Computer Name Not Match!";
-                return;
-            }
+        RemoteConsolePacket p(packet);
+        switch (p.InfoType) {
+        case RemoteConsolePacket::REMOTECONSOLE_OPEN:
+            emit signalAdminRequestRemoteConsolePacketReceived(p.OpenConsole.applicationPath, p.OpenConsole.startProcess);
+            break;
+
+        case RemoteConsolePacket::REMOTECONSOLE_COMMAND:
+            emit signalRemoteConsoleCMDFromServerPacketReceived(p.Command.command);
+
+        default:
+            break;
         }
 
-        emit signalClientInfoRequestedPacketReceived(socketID, assetNO, infoType);
-        qDebug()<<"~~ClientInfoRequested";
     }
     break;
 
-    case quint8(MS::AdminRequestRemoteConsole):
-    {
-        QString assetNO = "", applicationPath = "", adminID = "";
-        bool startProcess = true;
-        in >> assetNO >> applicationPath >> adminID >> startProcess;
-
-        if(assetNO != m_assetNO){
-            return;
-        }
-
-        emit signalAdminRequestRemoteConsolePacketReceived(assetNO, applicationPath, adminID, startProcess, peerAddress.toString(), peerPort);
-
-        qDebug()<<"~~AdminRequestRemoteConsole";
-    }
-    break;
-    //    case quint8(MS::ClientResponseRemoteConsole):
-    //        break;
-    case quint8(MS::RemoteConsoleCMDFromAdmin):
-    {
-
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
-        QString assetNO = "", command = "";
-        in >> assetNO >> command;
-
-        if(assetNO != m_assetNO){
-            return;
-        }
-
-        emit signalRemoteConsoleCMDFromServerPacketReceived(assetNO, command, peerAddress.toString(), peerPort);
-        qDebug()<<"~~RemoteConsoleCMDFromAdmin";
-    }
-    break;
-    //    case quint8(MS::RemoteConsoleCMDResultFromClient):
-    //        break;
-    //    case quint8(MS::ClientResponseClientInfo):
-    //        break;
-    //    case quint8(MS::ClientRequestSoftwareVersion):
-    //        break;
-    case quint8(MS::ServerResponseSoftwareVersion):
-    {
-
-        QString softwareName, version;
-        in >> softwareName >> version;
-        emit signalServerResponseSoftwareVersionPacketReceived(softwareName, softwareName);
-        qDebug()<<"~~ServerResponseSoftwareVersion";
-    }
-    break;
-
-    case quint8(MS::SystemInfoFromServer):
+    case quint8(MS::CMD_SystemInfoFromServer):
     {
         qDebug()<<"SystemInfoFromServer";
 
-        QString extraInfo = "";
-        QByteArray systemInfo;
-        quint8 infoType = 0;
-        in >> extraInfo >> systemInfo >> infoType;
+        SystemInfoFromServerPacket p(packet);
 
-        if(infoType == quint8(MS::SYSINFO_ANNOUNCEMENTS) || infoType == quint8(MS::SYSINFO_ANNOUNCEMENTREPLIES)){
-            if(extraInfo.isEmpty()){
+        if(p.infoType == quint8(MS::SYSINFO_ANNOUNCEMENTS) || p.infoType == quint8(MS::SYSINFO_ANNOUNCEMENTREPLIES)){
+            if(p.extraInfo.isEmpty()){
                 foreach (SOCKETID sID, localUserSockets()) {
-                    sendSystemInfoPacket(sID, extraInfo, systemInfo, infoType);
+                    sendSystemInfoPacket(sID, p.extraInfo, p.data, p.infoType);
                 }
             }else{
-                SOCKETID sID = socketIDOfUser(extraInfo);
+                SOCKETID sID = socketIDOfUser(p.extraInfo);
                 if(INVALID_SOCK_ID == sID){
-                    qCritical()<<QString("ERROR! No online user named '%1'.").arg(extraInfo);
+                    qCritical()<<QString("ERROR! No online user named '%1'.").arg(p.extraInfo);
                     return;
                 }
-                sendSystemInfoPacket(sID, extraInfo, systemInfo, infoType);
+                sendSystemInfoPacket(sID, p.extraInfo, p.data, p.infoType);
             }
 
             return;
         }
 
-        emit signalSystemInfoFromServerReceived(extraInfo, systemInfo, infoType);
+        emit signalSystemInfoFromServerReceived(p.extraInfo, p.data, p.infoType);
     }
     break;
 
-//    case quint8(MS::Announcement):
-//    {
-//        unsigned int announcementID = 0;
-//        QString adminName = "";
-//        quint8 type = quint8(MS::ANNOUNCEMENT_NORMAL);
-//        QString content = "";
-//        bool confirmationRequired = true;
-//        int validityPeriod = 60;
-//        quint8 targetType = quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
-//        QString targets = "";
-
-//        in >> announcementID >> adminName >> type >> content >> confirmationRequired >> validityPeriod >> targetType >> targets;
-
-
-//        if(targets.trimmed().isEmpty()){
-//            foreach (SOCKETID sID, localUserSockets()) {
-//                sendServerAnnouncementPacket(sID, adminName, announcementID, content, confirmationRequired, validityPeriod);
-//            }
-//        }else{
-
-//            QStringList targetList = targets.split(";");
-//            if(targetList.isEmpty()){return;}
-//            foreach (QString targetInfo, targets) {
-//                QStringList list = targetInfo.split(",");
-//                if(list.size() != 2){continue;}
-
-//                QString userName = list.at(1);
-//                SOCKETID sID = socketIDOfUser(userName);
-//                if(INVALID_SOCK_ID == sID){
-//                    qCritical()<<QString("ERROR! No online user named '%1'.").arg(userName);
-//                    return;
-//                }
-//                sendServerAnnouncementPacket(sID, adminName, announcementID, content, confirmationRequired, validityPeriod);
-
-//            }
-
-//        }
-
-
-//        //emit signalServerAnnouncementPacketReceived(groupName, computerName, announcementID, announcement, adminName, userName, (mustRead == quint8(0))?false:true);
-
-//        qDebug()<<"~~Announcement"<<" adminName:"<<adminName<<" content:"<<content<<" targets:"<<targets<<" mustRead:"<<confirmationRequired;
-//        //qDebug()<<"~~Announcement";
-
-//    }
-//    break;
-
-    case quint8(MS::Update):
-        emit signalUpdateClientSoftwarePacketReceived();
-        qDebug()<<"~~Update";
-        break;
-
-    case quint8(MS::AdminRequestSetupUSBSD):
+    case quint8(MS::CMD_USBDev):
     {
-        quint8 usbSTORStatus = quint8(MS::USBSTOR_Unknown);
-        bool temporarilyAllowed = true;
-        QString adminName = "";
+        qDebug()<<"~~CMD_USBDev";
+        USBDevPacket p(packet);
+        emit signalSetupUSBSDPacketReceived(p.usbSTORStatus);
 
-        in >> usbSTORStatus >> temporarilyAllowed >> adminName;
-
-        emit signalSetupUSBSDPacketReceived(usbSTORStatus, temporarilyAllowed, adminName);
-        qDebug()<<"~~AdminRequestSetupUSBSD";
     }
     break;
 
-    case quint8(MS::ShowAdmin):
+    case quint8(MS::CMD_ModifyAssetNO):
     {
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
+        qDebug()<<"~~CMD_ModifyAssetNO";
 
-        bool show = false;
-        in >> show;
+        ModifyAssetNOPacket p(packet);
+        if(p.isRequest){
+            if(p.oldAssetNO != m_assetNO){
+                return;
+            }
+            emit signalModifyAssetNOPacketReceived(p.newAssetNO);
+        }else{
+            emit signalAssetNOModifiedPacketReceived(p.newAssetNO);
+        }
 
-        emit signalShowAdminPacketReceived(show);
-        qDebug()<<"~~ShowAdmin";
     }
     break;
 
-    case quint8(MS::ModifyAdminGroupUser):
+    case quint8(MS::CMD_RenameComputer):
     {
+        qDebug()<<"~~CMD_RenameComputer";
 
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
-        QString assetNO = "", userName = "", adminName = "";
-        bool addToAdminGroup = false;
-        in >> assetNO >> userName >> addToAdminGroup >> adminName;
-
-        if(assetNO != m_assetNO){
+        RenameComputerPacket p(packet);
+        if(p.assetNO != m_assetNO){
             return;
         }
 
-        emit signalModifyAdminGroupUserPacketReceived(assetNO, userName, addToAdminGroup, adminName, peerAddress.toString(), peerPort);
-        qDebug()<<"~~ModifyAdminGroupUser";
+        emit signalRenameComputerPacketReceived(p.newComputerName, p.domainAdminName, p.domainAdminPassword);
     }
     break;
 
-    case quint8(MS::ModifyAssetNO):
+    case quint8(MS::CMD_JoinOrUnjoinDomain):
     {
-        QString oldAssetNO = "", newAssetNO = "", adminName = "";
-        in >> newAssetNO >> oldAssetNO >> adminName;
+        qDebug()<<"~~CMD_JoinOrUnjoinDomain";
 
-        if(oldAssetNO != m_assetNO){
+        JoinOrUnjoinDomainPacket p(packet);
+        if(p.assetNO != m_assetNO){
             return;
         }
 
-        emit signalModifyAssetNOPacketReceived(newAssetNO, adminName);
-        qDebug()<<"~~ModifyAssetNO";
+        emit signalJoinOrUnjoinDomainPacketReceived( p.join, p.domainOrWorkgroupName, p.domainAdminName, p.domainAdminPassword);
     }
     break;
 
-    case quint8(MS::AssetNOModified):
+    case quint8(MS::CMD_AdminConnectionToClient):
     {
-        //From Server
-        QString newAssetNO = "", oldAssetNO = "", message = "";
-        quint8 modified = false;
-        in >> newAssetNO >> oldAssetNO >> modified >> message;
+        qDebug()<<"~~CMD_AdminConnectionToClient";
 
-        if(oldAssetNO != m_assetNO){
+        AdminConnectionToClientPacket p(packet);
+
+        emit signalAdminRequestConnectionToClientPacketReceived(socketID, p.computerName, p.adminID);
+    }
+    break;
+
+    case quint8(MS::CMD_AdminSearchClient):
+    {
+        qDebug()<<"~~CMD_AdminSearchClient ";
+        AdminSearchClientPacket p(packet);
+
+        emit signalAdminSearchClientPacketReceived(peerAddress.toString(), peerPort, p.computerName, p.userName, p.workgroup, p.macAddress, p.ipAddress, p.osVersion, p.adminID);
+    }
+    break;
+
+    case quint8(MS::CMD_LocalUserOnlineStatusChanged):
+    {
+        qDebug()<<"~~CMD_LocalUserOnlineStatusChanged";
+
+        LocalUserOnlineStatusChangedPacket p(packet);
+        changeLocalUserOnlineStatus(socketID, p.online, p.userName);
+    }
+    break;
+
+    case quint8(MS::CMD_Temperatures):
+    {
+        qDebug()<<"~~CMD_Temperatures";
+
+        TemperaturesPacket p(packet);
+        emit signalAdminRequestTemperatures(socketID, p.TemperaturesRequest.requestCPU, p.TemperaturesRequest.requestHD);
+    }
+    break;
+
+    case quint8(MS::CMD_Screenshot):
+    {
+        qDebug()<<"~~CMD_Screenshot";
+        ScreenshotPacket p(packet);
+        requestScreenshot(socketID, p.ScreenshotRequest.userName, peerAddress.toString(), p.ScreenshotRequest.adminListeningPort);
+    }
+    break;
+
+    case quint8(MS::CMD_Announcement):
+    {
+        AnnouncementPacket p(packet);
+        if(p.InfoType == AnnouncementPacket::ANNOUNCEMENT_REPLY){
+            sendUserReplyMessagePacket(m_socketConnectedToServer, p.ReplyInfo.announcementID, userNameOfSocket(socketID), p.ReplyInfo.receiver, "", p.ReplyInfo.replyMessage);
+        }
+
+    }
+    break;
+
+    case quint8(MS::CMD_Shutdown):
+    {
+        qDebug()<<"~~CMD_Shutdown";
+        ShutdownPacket p(packet);
+        emit signalAdminRequestShutdownPacketReceived(socketID, p.message, p.waitTime, p.force, p.reboot );
+    }
+    break;
+
+    case quint8(MS::CMD_LockWindows):
+    {
+        qDebug()<<"~~CMD_LockWindows";
+        LockWindowsPacket p(packet);
+        emit signalAdminRequestLockWindowsPacketReceived(socketID, p.userName, p.logoff );
+    }
+    break;
+
+    case quint8(MS::CMD_WinUser):
+    {
+        qDebug()<<"~~CMD_WinUser";
+        WinUserPacket p(packet);
+        emit signalAdminRequestCreateOrModifyWinUserPacketReceived(socketID, p.userData );
+    }
+    break;
+
+    case quint8(MS::CMD_ServiceConfig):
+    {
+        qDebug()<<"~~CMD_ServiceConfig";
+        ServiceConfigPacket p(packet);
+        emit signalAdminRequestChangeServiceConfigPacketReceived(socketID, p.serviceName, p.startService, p.startupType);
+    }
+    break;
+
+    case quint8(MS::CMD_ProcessMonitorInfo):
+    {
+        qDebug()<<"~~CMD_ProcessMonitorInfo";
+        ProcessMonitorInfoPacket p(packet);
+        if(p.assetNO != m_assetNO){
             return;
         }
 
-        emit signalAssetNOModifiedPacketReceived(newAssetNO, oldAssetNO, modified, message);
-        qDebug()<<"~~AssetNOModified";
-    }
-    break;
-
-    case quint8(MS::RenameComputer):
-    {
-        QString assetNO = "", newComputerName = "", adminName = "", domainAdminName = "", domainAdminPassword = "";
-        in >> assetNO >> newComputerName >> adminName >> domainAdminName >> domainAdminPassword;
-
-        if(assetNO != m_assetNO){
-            return;
-        }
-
-        emit signalRenameComputerPacketReceived(newComputerName, adminName, domainAdminName, domainAdminPassword);
-        qDebug()<<"~~RenameComputer";
-    }
-    break;
-
-    case quint8(MS::JoinOrUnjoinDomain):
-    {
-        QString assetNO = "", adminName = "", domainOrWorkgroupName = "", domainAdminName = "", domainAdminPassword = "";
-        bool join = false;
-        in >> assetNO >> adminName >> join >> domainOrWorkgroupName >> domainAdminName >> domainAdminPassword;
-
-        if(assetNO != m_assetNO){
-            return;
-        }
-
-        emit signalJoinOrUnjoinDomainPacketReceived(adminName, join, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
-        qDebug()<<"~~JoinOrUnjoinDomain";
-    }
-    break;
-
-    case quint8(MS::AdminRequestConnectionToClient):
-    {
-
-        QString adminComputerName = "", adminName = "" ;
-        in >> adminComputerName >> adminName ;
-
-//        if(computerName.toLower() != m_localComputerName){
-//            //m_udtProtocol->closeSocket(socketID);
-//            m_rtp->closeSocket(socketID);
-//            return;
-//        }
-
-        emit signalAdminRequestConnectionToClientPacketReceived(socketID, adminComputerName, adminName);
-        qDebug()<<"~~AdminRequestConnectionToClient";
-    }
-    break;
-    case quint8(MS::AdminSearchClient):
-    {
-
-        QString computerName = "", userName = "", workgroup = "", macAddress = "", ipAddress = "", osVersion = "", adminName = "" ;
-        in >> computerName >> userName >> workgroup >> macAddress >> ipAddress >> osVersion >> adminName;
-
-        emit signalAdminSearchClientPacketReceived(peerAddress.toString(), peerPort, computerName, userName, workgroup, macAddress, ipAddress, osVersion, adminName);
-
-        qDebug()<<"~~AdminSearchClient "<<" peerAddress:"<<peerAddress<<" peerPort:"<<peerPort;
-    }
-    break;
-
-
-    case quint8(MS::AdminRequestRemoteAssistance):
-    {
-
-        QString assetNO = "", adminName = "", userName = "";
-        in >> assetNO >> adminName >> userName;
-
-        if(assetNO != m_assetNO){
-            return;
-        }
-
-        SOCKETID sID = socketIDOfUser(userName);
-        if(INVALID_SOCK_ID != sID){
-            sendRequestRemoteAssistancePacket(sID, peerAddress.toString(), peerPort, adminName);
-        }
-
-        qDebug()<<"~~AdminRequestRemoteAssistance";
-    }
-    break;
-    case quint8(MS::UpdateMSWUserPassword):
-    {
-
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
-        QString workgroup = "", adminName = "";
-        in >> workgroup >> adminName;
-        emit signalAdminRequestUpdateMSUserPasswordPacketReceived(workgroup, adminName, peerAddress.toString(), peerPort);
-        qDebug()<<"~~UpdateMSWUserPassword";
-    }
-    break;
-
-    case quint8(MS::InformUserNewPassword):
-    {
-
-//        sendConfirmationOfReceiptPacket(peerAddress, peerPort, packetSerialNumber, peerName);
-
-        QString workgroup = "", adminName = "";
-        in >> workgroup >> adminName;
-
-        emit signalAdminRequestInformUserNewPasswordPacketReceived(workgroup, adminName, peerAddress.toString(), peerPort);
-
-        qDebug()<<"~~InformUserNewPassword";
-
-
-    }
-    break;
-
-
-    case quint8(MS::LocalUserOnlineStatusChanged):
-    {
-        QString userName = "";
-        quint8 online = 0;
-        in >> userName >> online;
-        
-        changeLocalUserOnlineStatus(socketID, online, userName);
-        
-//        emit signalLocalUserOnlineStatusChanged(socketID, userName, online);
-
-        qDebug()<<"~~LocalUserOnlineStatusChanged"<<"Name:"<<userName<<" Port:"<<peerPort <<" Online:"<<online;
-    }
-    break;
-
-    case quint8(MS::RequestTemperatures):
-    {
-        quint8 cpu = 1, harddisk = 0;
-        in >> cpu >> harddisk;
-
-        emit signalAdminRequestTemperatures(socketID, cpu, harddisk);
-
-        qDebug()<<"~~Temperatures";
-
-    }
-    break;
-    case quint8(MS::RequestScreenshot):
-    {
-        QString userName = "";
-        quint16 adminListeningPort = 0;
-        in >> userName >> adminListeningPort;
-
-        requestScreenshot(socketID, userName, peerAddress.toString(), adminListeningPort);
-
-        //emit signalAdminRequestScreenshot(socketID, userName, fullScreen);
-
-        qDebug()<<"~~RequestScreenshot";
-
-    }
-    break;
-
-    case quint8(MS::ReplyMessage):
-    {
-        //From local user
-        QString announcementID = "", receiver = "", replyMessage = "";
-        in >> announcementID >> receiver >> replyMessage ;
-
-        sendUserReplyMessagePacket(m_socketConnectedToServer, announcementID, userNameOfSocket(socketID), receiver, "", replyMessage);
-        qDebug()<<"~~ReplyMessage";
-    }
-    break;
-
-//    case quint8(MS::ResponseScreenshot):
-//    {
-//        //From local user
-//        QByteArray screenshot;
-//        in >> screenshot ;
-
-//        sendClientResponseScreenshotPacket(m_socketConnectedToAdmin, userNameOfSocket(socketID), screenshot);
-//        qDebug()<<"~~ResponseScreenshot";
-//    }
-//    break;
-
-    case quint8(MS::RequestShutdown):
-    {
-        QString message = "";
-        quint32 waitTime = 0;
-        quint8 force = 1, reboot = 0 ;
-
-        in >> message >> waitTime >> force >> reboot ;
-
-        emit signalAdminRequestShutdownPacketReceived(socketID, message, waitTime, force, reboot );
-        qDebug()<<"~~RequestShutdown";
-    }
-    break;
-
-    case quint8(MS::RequestLockWindows):
-    {
-        QString userName = "";
-        quint8 logoff = 0 ;
-
-        in >> userName >> logoff ;
-
-        emit signalAdminRequestLockWindowsPacketReceived(socketID, userName, logoff );
-        qDebug()<<"~~RequestLockWindows";
-    }
-    break;
-
-    case quint8(MS::RequestCreateOrModifyWinUser):
-    {
-        QByteArray userData;
-        in >> userData ;
-
-        emit signalAdminRequestCreateOrModifyWinUserPacketReceived(socketID, userData );
-        qDebug()<<"~~RequestCreateOrModifyWinUser";
-    }
-    break;
-
-    case quint8(MS::RequestDeleteUser):
-    {
-        QString userName = "";
-        in >> userName ;
-
-        emit signalAdminRequestDeleteUserPacketReceived(socketID, userName );
-        qDebug()<<"~~RequestDeleteUser";
-    }
-    break;
-
-    case quint8(MS::RequestChangeServiceConfig):
-    {
-        QString serviceName = "";
-        quint8  startService = 0;
-        quint64 startType = 0xFFFFFFFF;
-
-        in >> serviceName >> startService >> startType ;
-
-        emit signalAdminRequestChangeServiceConfigPacketReceived(socketID, serviceName, startService, startType);
-        qDebug()<<"~~RequestChangeServiceConfig";
-    }
-    break;
-
-    case quint8(MS::RequestChangeProcessMonitorInfo):
-    {
-        QByteArray localRules,  globalRules;
-        quint8 enableProcMon = 0;
-        quint8 enablePassthrough = 1;
-        quint8 enableLogAllowedProcess = 0;
-        quint8 enableLogBlockedProcess = 1;
-        quint8 useGlobalRules = 1;
-        QString assetNO = "";
-
-        in >> localRules >> globalRules >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>assetNO;
-
-        if(assetNO != m_assetNO){
-            return;
-        }
-
-        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, localRules, globalRules, enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules);
-        qDebug()<<"~~RequestChangeProcessMonitorInfo";
+        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, p.localRules, p.globalRules, p.enableProcMon, p.enablePassthrough, p.enableLogAllowedProcess, p.enableLogBlockedProcess, p.useGlobalRules);
     }
     break;
 
 ////////////////////////////////////////////
-    case quint8(MS::RequestFileSystemInfo):
+    case quint8(MS::CMD_FileTransfer):
     {
-        QString parentDirPath = "";
-        in >> parentDirPath;
+        qDebug()<<"~~CMD_FileTransfer";
 
-        emit signalFileSystemInfoRequested(socketID, parentDirPath);
+        FileTransferPacket p(packet);
+        switch (p.InfoType) {
+        case FileTransferPacket::FT_FileSystemInfoRequest :
+        {
+            emit signalFileSystemInfoRequested(socketID, p.FileSystemInfoRequest.parentDirPath);
 
-        qDebug()<<"~~RequestFileSystemInfo";
+        }
+            break;
+
+        case FileTransferPacket::FT_FileSystemInfoResponse :
+        {
+
+        }
+            break;
+
+        case FileTransferPacket::FT_FileDownloadingRequest :
+        {
+            emit signalAdminRequestDownloadFile(socketID, p.FileDownloadingRequest.baseDir, p.FileDownloadingRequest.fileName);
+
+        }
+            break;
+
+        case FileTransferPacket::FT_FileDownloadingResponse :
+        {
+
+        }
+            break;
+
+        case FileTransferPacket::FT_FileUploadingRequest :
+        {
+            emit signalAdminRequestUploadFile(socketID, p.FileUploadingRequest.fileMD5Sum, p.FileUploadingRequest.fileName, p.FileUploadingRequest.size, p.FileUploadingRequest.fileSaveDir);
+
+        }
+            break;
+
+        case FileTransferPacket::FT_FileUploadingResponse :
+        {
+
+        }
+            break;
+
+        case FileTransferPacket::FT_FileDataRequest :
+        {
+            emit signalFileDataRequested(socketID, p.FileDataRequest.fileMD5, p.FileDataRequest.startPieceIndex, p.FileDataRequest.endPieceIndex);
+        }
+            break;
+
+        case FileTransferPacket::FT_FileData :
+        {
+            emit signalFileDataReceived(socketID, p.FileDataResponse.fileMD5, p.FileDataResponse.pieceIndex, p.FileDataResponse.data, p.FileDataResponse.pieceMD5);
+        }
+            break;
+
+        case FileTransferPacket::FT_FileTXStatus :
+        {
+            emit signalFileTXStatusChanged(socketID, p.FileTXStatus.fileMD5, p.FileTXStatus.status);
+        }
+            break;
+
+        case FileTransferPacket::FT_FileTXError :
+        {
+            emit signalFileTXError(socketID, p.FileTXError.fileMD5, p.FileTXError.errorCode, p.FileTXError.message);
+        }
+            break;
+
+        default:
+            break;
+        }
+
     }
     break;
-    case quint8(MS::RequestUploadFile):
-    {
-        QByteArray fileMD5Sum;
-        QString fileName = "";
-        quint64 size = 0;
-        QString localFileSaveDir = "./";
-        in >> fileMD5Sum >> fileName >> size >> localFileSaveDir ;
-
-        emit signalAdminRequestUploadFile(socketID, fileMD5Sum, fileName, size, localFileSaveDir);
-
-        qDebug()<<"~~RequestUploadFile";
-    }
-    break;
-    case quint8(MS::RequestDownloadFile):
-    {
-        QString localBaseDir, fileName, remoteFileSaveDir;
-        in >> localBaseDir >> fileName >> remoteFileSaveDir;
-
-        emit signalAdminRequestDownloadFile(socketID, localBaseDir, fileName, remoteFileSaveDir);
-
-        qDebug()<<"~~RequestDownloadFile";
-    }
-    break;
-    case quint8(MS::RequestFileData):
-    {
-        QByteArray fileMD5;
-        int startPieceIndex = 0, endPieceIndex = 0;
-        in >> fileMD5 >> startPieceIndex >> endPieceIndex;
-
-        emit signalFileDataRequested(socketID, fileMD5, startPieceIndex, endPieceIndex);
-
-        qDebug()<<"~~RequestFileData";
-    }
-    break;
-    case quint8(MS::FileData):
-    {
-        QByteArray fileMD5, data, sha1;;
-        int pieceIndex = 0;
 
 
-        in >> fileMD5 >> pieceIndex >> data >>sha1;
-
-//        if(data.size() != size || sha1 != QCryptographicHash::hash(data, QCryptographicHash::Sha1)){
-//            qCritical()<<"ERROR! Data Verification Failed!";
-//            requestFileData(socketID, offset, size);
-//            return;
-//        }
-
-        emit signalFileDataReceived(socketID, fileMD5, pieceIndex, data, sha1);
-
-        //qDebug()<<"~~FileData";
-    }
-    break;
-    case quint8(MS::FileTXStatusChanged):
-    {
-        QByteArray fileMD5;
-        quint8 status;
-        in >> fileMD5 >> status;
-
-        emit signalFileTXStatusChanged(socketID, fileMD5, status);
-
-        qDebug()<<"~~FileTXStatusChanged";
-    }
-    break;
-    case quint8(MS::FileTXError):
-    {
-        QByteArray fileMD5;
-        quint8 errorCode;
-        QString message;
-        in >> fileMD5 >> errorCode >> message;
-
-        emit signalFileTXError(socketID, fileMD5, errorCode, message);
-
-        qDebug()<<"~~FileTXStatusChanged";
-    }
-    break;
 
 
 
@@ -780,7 +485,7 @@ void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QStrin
         return;
     }
 
-    sendAdminRequestScreenshotPacket(userSocketID, adminAddress, adminPort);
+    sendAdminRequestScreenshotPacket(userSocketID, userName, adminPort);
 
 }
 

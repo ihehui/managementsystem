@@ -983,10 +983,11 @@ void FileManagement::processPeerRequestDownloadFilePacket(SOCKETID socketID, con
 
     const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &errorString);
     if(!info){
-        controlCenterPacketsParser->denyFileDownloadRequest(socketID, fileName, false, errorString);
+        controlCenterPacketsParser->responseFileDownloadRequest(socketID, false, localBaseDir, fileName, QByteArray(), 0);
+        return;
     }
 
-    if(controlCenterPacketsParser->acceptFileDownloadRequest(socketID, fileName, true, info->md5sum, info->size, remoteFileSaveDir)){
+    if(controlCenterPacketsParser->responseFileDownloadRequest(socketID, true, localBaseDir, fileName, info->md5sum, info->size)){
         if(!filesList.contains(info->md5sum)){
             filesList.append(info->md5sum);
         }

@@ -240,13 +240,12 @@ void Helper::serverAnnouncementPacketReceived(const QString &id, const QString &
 //    bulletinBoardWidget->raise();
 }
 
-void Helper::sendReplyMessage(const QString &originalMessageID, const QString &replyMessage){
+void Helper::sendReplyMessage(unsigned int originalMessageID, const QString &replyMessage){
     bulletinBoardPacketsParser->sendUserReplyMessagePacket(m_socketConnectedToLocalServer, originalMessageID, "", replyMessage);
 }
 
 void Helper::newPasswordRetreved(){
 
-    bulletinBoardPacketsParser->sendNewPasswordRetrevedByUserPacket(m_socketConnectedToLocalServer);
 }
 
 void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID, const QString &adminName, const QString &adminAddress, quint16 adminPort){

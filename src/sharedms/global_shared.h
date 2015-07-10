@@ -191,109 +191,43 @@ namespace HEHUI {
     namespace MS {
 
         enum Command{
+
+
             CMD_UNUSED = UserDefinedPacket + 1, //6
-            CMD_JobFinished,
+            CMD_JobProgress,
 
-            ClientLookForServer,
-            ServerDeclare,
-            Update,
+            CMD_ServerDiscovery,
+            CMD_Message,
+            CMD_AdminLogin,
+            CMD_ClientInfo,
+            CMD_SystemInfoFromServer,
+            CMD_SysAdminInfo,
+            CMD_SystemAlarms,
 
-            ClientOnlineStatusChanged,
-            ServerOnlineStatusChanged,
-            ClientMessage,
-            ServerMessage,
+            CMD_Announcement,
+            CMD_RemoteConsole,
+            CMD_ClientLog,
 
-            AdminLogin,
-            ServerResponseAdminLoginResult,
-            AdminOnlineStatusChanged,
+            CMD_USBDev,
+            CMD_AdminConnectionToClient,
+            CMD_AdminSearchClient,
 
-            ClientInfoRequested,
-            ClientInfo,
-            SystemInfoFromServer,
-
-            UpdateSysAdminInfo,
-
-            SystemAlarmsFromServer,
-            RequestSystemAlarms,
-            AcknowledgeSystemAlarms,
-
-            Announcement_Create,
-            UpdateAnnouncement,
-            ReplyMessage,
-            AnnouncementFromServer,
-            RequestAnnouncement,
-            AnnouncementTargetsFromServer,
-            RequestAnnouncementTargets,
-            AnnouncementRepliesFromServer,
-            RequestAnnouncementReplies,
-
-
-            AdminRequestRemoteConsole,
-            ClientResponseRemoteConsoleStatus,
-            RemoteConsoleCMDFromAdmin,
-            RemoteConsoleCMDResultFromClient,
-
-            ClientRequestSoftwareVersion,
-            ServerResponseSoftwareVersion,
-
-
-
-            ClientLog,
-
-            AdminRequestSetupUSBSD,
-            ClientResponseUSBInfo,
-            ShowAdmin,
-            ModifyAdminGroupUser,
-            AdminRequestConnectionToClient,
-            ClientResponseAdminConnectionResult,
-            
-           
-            AdminSearchClient,
-            AdminRequestRemoteAssistance,
-            UserResponseRemoteAssistance,
-            
-            UpdateMSWUserPassword,
-            InformUserNewPassword,
-            NewPasswordRetrevedByUser,
-            
-            LocalServiceServerDeclare,
-            LocalUserOnlineStatusChanged,
+            CMD_LocalUserOnlineStatusChanged,
 
             //File TX
-            RequestFileSystemInfo,
-            ResponseFileSystemInfo,
-            RequestDownloadFile,
-            RequestUploadFile,
-            ResponseFileDownloadRequest,
-            ResponseFileUploadRequest,
-            RequestFileData,
-            FileData,
-            FileTXStatusChanged,
-            FileTXError,
+            CMD_FileTransfer,
 
-            ModifyAssetNO,
-            AssetNOModified,
-            RenameComputer,
-            JoinOrUnjoinDomain,
-            Remark,
+            CMD_ModifyAssetNO,
+            CMD_RenameComputer,
+            CMD_JoinOrUnjoinDomain,
+            CMD_Temperatures,
+            CMD_Screenshot,
+            CMD_Shutdown,
+            CMD_LockWindows,
+            CMD_WinUser,
+            CMD_ServiceConfig,
 
-            RequestTemperatures,
-            ResponseTemperatures,
-
-            RequestScreenshot,
-            ResponseScreenshot,
-            DesktopInfo,
-
-            RequestShutdown,
-            RequestLockWindows,
-
-            RequestCreateOrModifyWinUser,
-            RequestDeleteUser,
-
-            RequestChangeServiceConfig,
-            ServiceConfigChanged,
-
-            RequestChangeProcessMonitorInfo,
+            CMD_ProcessMonitorInfo,
 
             
 
@@ -388,6 +322,11 @@ namespace HEHUI {
         };
 
 
+        enum ErrorCode{
+            ERROR_NO_ERROR = 0,
+            ERROR_UNKNOWN_ERROR = 1,
+            ERROR_ID_NOT_EXIST,
+        };
 
 
     } // namespace MS

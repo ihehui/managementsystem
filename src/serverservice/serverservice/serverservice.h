@@ -65,7 +65,7 @@ signals:
 private slots:
     bool startMainService();
     //void saveClientLog(const QString &computerName, const QString &users, const QString &log, const QString &clientAddress);
-    void saveClientLog(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
+    void saveClientLog(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log);
 
     void sendServerOnlinePacket();
 
@@ -80,15 +80,15 @@ private slots:
     void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
     void processUpdateSysAdminInfoPacket(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin);
     void sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
-    void acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms);
+    void acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &alarms, bool deleteAlarms);
     void sendRealtimeInfo(int cpuLoad, int memoryLoad);
 
     bool sendAnnouncementsInfo(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
     bool createAnnouncement(SOCKETID adminSocketID, quint32 jobID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
     bool updateAnnouncement(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
     bool updateAnnouncementTargets(unsigned int announcementID, const QString &addedTargets, const QString &deletedTargets);
-    bool sendAnnouncementTargetsInfo(SOCKETID socketID, const QString &announcementID);
-    void replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
+    bool sendAnnouncementTargetsInfo(SOCKETID socketID, unsigned int announcementID);
+    void replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, unsigned int announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
     bool sendAnnouncementRepliesInfo(SOCKETID socketID, const QString &announcementID, const QString &receiver);
 
     void processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
@@ -165,10 +165,10 @@ private:
     QHash<SOCKETID /*Socket ID*/, QString/*Asset NO.*/> clientSocketsHash;
 
     QHash<QString /*Admin ID*/, AdminUserInfo *> adminsHash;
-    QList<SOCKETID /*Admin SOCKETID ID*/> onlineAdminSockets;
+    QHash<SOCKETID /*Admin SOCKETID ID*/, QString /*Admin ID*/> onlineAdminSockets;
 
 
-    int onlineAdminsCount;
+    //int onlineAdminsCount;
     bool m_isUsingMySQL;
 
     bool m_getRealTimeResourcesLoad;

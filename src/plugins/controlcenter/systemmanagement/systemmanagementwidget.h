@@ -79,7 +79,7 @@ private slots:
     void targetHostLookedUp(const QHostInfo &host);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &assetNO, bool online);
-    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, const QString &message, const QString &clientIP);
+    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, quint16 errorCode, const QString &clientIP);
 
     void requestConnectionToClientTimeout();
 
@@ -92,7 +92,7 @@ private slots:
     void updateResourcesLoadInfo();
 
 
-    void processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO, bool modified, const QString &message);
+    void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO);
     void modifyAssetNOTimeout();
 
     void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);

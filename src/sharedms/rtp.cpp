@@ -12,7 +12,8 @@ RTP::RTP(QObject *parent) :
 {
 
     qRegisterMetaType<SOCKETID>("SOCKETID");
-
+    qRegisterMetaType<PacketBase>("PacketBase");
+    //qRegisterMetaType<Packet>("Packet");
 
     m_udtProtocol = 0;
 //    m_udtProtocol = new UDTProtocol(true, 0, this);

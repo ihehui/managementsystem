@@ -36,6 +36,7 @@
 #include <QDebug>
 
 #include "../../sharedms/global_shared.h"
+#include "../../sharedms/packets.h"
 #include "resourcesmanagerinstance.h"
 
 
@@ -57,173 +58,55 @@ public:
 
 
 public slots:
-    void parseIncomingPacketData(Packet *packet);
+    void parseIncomingPacketData(const PacketBase &packet);
 
 
     bool sendLocalUserOnlineStatusChangedPacket(SOCKETID socketID, bool online){
         qDebug()<<"--sendLocalUserOnlineStatusChangedPacket(...)";
 
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
+        LocalUserOnlineStatusChangedPacket packet;
+        packet.userName = m_userName;
+        packet.online = online;
 
-        packet->setPacketType(quint8(MS::LocalUserOnlineStatusChanged));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << m_userName << (online?quint8(1):quint8(0));
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
-
-//    void sendUserOfflinePacket(){
-//        qDebug()<<"----sendUserOfflinePacket(...)";
-
-//        Packet *packet = m_packetHandlerBase->getPacket(QHostAddress::LocalHost, localServerRUDPListeningPort, localRUDPListeningAddress, localRUDPListeningPort);
-
-//        packet->setPacketType(quint8(MS::UserOffline));
-//        packet->setTransmissionProtocol(TP_UDT);
-//        //packet->setRemainingRetransmissionTimes(int(PACKET_RETRANSMISSION_TIMES));
-//        QByteArray ba;
-//        QDataStream out(&ba, QIODevice::WriteOnly);
-//        out.setVersion(QDataStream::Qt_4_7);
-//        out << m_localID << m_userName << m_localComputerName;
-//        packet->setPacketData(ba);
-//        m_packetHandlerBase->appendOutgoingPacket(packet);
-
-//    }
-
-    bool sendUserResponseRemoteAssistancePacket(SOCKETID adminSocketID, bool accept){
-
-        Packet *packet = m_packetHandlerBase->getPacket(adminSocketID);
-        
-        packet->setPacketType(quint8(MS::UserResponseRemoteAssistance));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << m_userName << m_localComputerName << accept;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(adminSocketID, &ba);
-    }
-
-    bool sendNewPasswordRetrevedByUserPacket(SOCKETID adminSocketID){
-
-        Packet *packet = m_packetHandlerBase->getPacket(adminSocketID);
-        
-        packet->setPacketType(quint8(MS::NewPasswordRetrevedByUser));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << m_userName << m_localComputerName;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(adminSocketID, &ba);
-    }
-
     
-    bool sendUserReplyMessagePacket(SOCKETID socketID, const QString &announcementID, const QString &receiver, const QString &replyMessage){
+    bool sendUserReplyMessagePacket(SOCKETID socketID, unsigned int announcementID, const QString &receiver, const QString &replyMessage){
         qWarning()<<"----sendUserReplyMessagePacket(...):";
 
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
+        AnnouncementPacket packet;
+        packet.InfoType = AnnouncementPacket::ANNOUNCEMENT_REPLY;
+        packet.ReplyInfo.announcementID = announcementID;
+        packet.ReplyInfo.sender = m_userName;
+        packet.ReplyInfo.receiver = receiver;
+        packet.ReplyInfo.receiversAssetNO = "";
+        packet.ReplyInfo.replyMessage = replyMessage;
 
-        packet->setPacketType(quint8(MS::ReplyMessage));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << announcementID << receiver << replyMessage;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
     bool sendUserScreenshotPacket(SOCKETID socketID, QList<QPoint> locations, QList<QByteArray> images){
         qWarning()<<"----sendUserScreenshotPacket(...):";
 
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
+        ScreenshotPacket packet;
+        packet.InfoType = ScreenshotPacket::SCREENSHOT_DATA;
+        packet.ScreenshotData.locations = locations;
+        packet.ScreenshotData.images = images;
 
-        packet->setPacketType(quint8(MS::ResponseScreenshot));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID ;
-
-        for(int i=0; i<locations.size(); i++){
-            QPoint point = locations.at(i);
-           out <<  point.x() << point.y() << images.at(i);
-        }
-
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
     bool sendUserDesktopInfoPacket(SOCKETID socketID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
         qWarning()<<"----sendUserDesktopInfoPacket(...):";
 
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
+        ScreenshotPacket packet;
+        packet.InfoType = ScreenshotPacket::SCREENSHOT_DESKTOP_INFO;
+        packet.DesktopInfo.desktopWidth = desktopWidth;
+        packet.DesktopInfo.desktopHeight = desktopHeight;
+        packet.DesktopInfo.blockWidth = blockWidth;
+        packet.DesktopInfo.blockHeight = blockHeight;
 
-        packet->setPacketType(quint8(MS::DesktopInfo));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_localID << desktopWidth << desktopHeight << blockWidth << blockHeight;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
 
@@ -241,9 +124,6 @@ signals:
 
     void signalSystemInfoFromServerReceived(const QString &extraInfo, const QByteArray &clientInfo, quint8 infoType);
 
-    void signalAdminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName );
-    void signalAdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword);
-//    void signalAnnouncementPacketReceived(const QString &id, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod);
 
     void signalAdminRequestScreenshotPacketReceived(SOCKETID adminSocketID, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 

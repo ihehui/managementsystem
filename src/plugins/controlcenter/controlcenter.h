@@ -93,7 +93,7 @@ private slots:
     void updateSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
     void updateClientInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
 
-    void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
+    void processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 

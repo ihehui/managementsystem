@@ -4,7 +4,7 @@
 #include "sharedmslib.h"
 
 #include "HHSharedNetwork/htcpbase.h"
-#include "HHSharedNetwork/hpacket.h"
+#include "HHSharedNetwork/PacketBase"
 
 namespace HEHUI {
 
@@ -18,7 +18,7 @@ public:
     quint16 getTCPServerListeningPort();
 
 signals:
-    void packetReceived(Packet *packet);
+    void packetReceived(const PacketBase &packet);
 
 
 

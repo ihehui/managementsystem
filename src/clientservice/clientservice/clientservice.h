@@ -60,31 +60,26 @@ private slots:
 
     void serverFound(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
 
-    void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
+    void processClientInfoRequestedPacket(SOCKETID socketID, quint8 infoType);
     void systemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID);
     void systemInfoThreadFinished();
 
-    void processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName);
+    void processSetupUSBSDPacket(quint8 usbSTORStatus);
     void processShowAdminPacket(bool show);
 
-    void processModifyAssetNOPacket(const QString &newAssetNO, const QString &adminName);
-    void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message);
+    void processModifyAssetNOPacket(const QString &newAssetNO);
+    void processAssetNOModifiedPacket(const QString &newAssetNO);
     void modifyAssetNOTimeout();
 
-    void processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword);
-    void processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool joinDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
+    void processRenameComputerPacketReceived(const QString &newComputerName, const QString &domainAdminName, const QString &domainAdminPassword);
+    void processJoinOrUnjoinDomainPacketReceived(bool joinDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
 
-    void processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminName);
+    void processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminID);
     void processAdminSearchClientPacket(const QString &adminAddress, quint16 adminPort, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName);
     
-    
-//    void processServerAnnouncementPacket(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead);
-//    void processAdminRequestRemoteAssistancePacket(const QString &computerName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
-    void processAdminRequestUpdateMSUserPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
-    void processAdminRequestInformUserNewPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 
-    void processAdminRequestRemoteConsolePacket(const QString &assetNO, const QString &applicationPath, const QString &adminID, bool startProcess, const QString &adminAddress, quint16 adminPort);
-    void processRemoteConsoleCMDFromServerPacket(const QString &assetNO, const QString &command, const QString &adminAddress, quint16 adminPort);
+    void processAdminRequestRemoteConsolePacket(const QString &applicationPath, bool startProcess);
+    void processRemoteConsoleCMDFromServerPacket(const QString &command);
 
     void consoleProcessStateChanged(bool running, const QString &message);
     void consoleProcessOutputRead(const QString &output);
@@ -147,7 +142,7 @@ private slots:
     //File TX
     void startFileManager();
     void processAdminRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
-    void processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
+    void processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName);
     void processFileDataRequestPacket(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
     void processFileDataReceivedPacket(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
     void processFileTXStatusChangedPacket(SOCKETID socketID, const QByteArray &fileMD5, quint8 status);
@@ -220,9 +215,8 @@ private:
 
     QString m_adminAddress;
     quint16 m_adminPort;
+    QString m_adminID;
     
-    QHash<QString/*User Name*/, QString/*Password*/> userPasswordsHash;
-
 
     QTimer *lookForServerTimer;
 

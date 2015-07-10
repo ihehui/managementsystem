@@ -35,8 +35,11 @@
 #include <QHostAddress>
 #include <QHostInfo>
 #include <QDebug>
+#include <QDateTime>
 
-#include "../../sharedms/global_shared.h"
+//#include "../../sharedms/global_shared.h"
+#include "../../sharedms/packets.h"
+
 #include "../resourcesmanagerinstance.h"
 
 #include "HHSharedCore/hcryptography.h"
@@ -55,7 +58,7 @@ public:
 
 public slots:
 
-    void parseIncomingPacketData(Packet *packet);
+    void parseIncomingPacketData(const PacketBase &packet);
 
 
     bool sendServerDeclarePacket(const QHostAddress peerAddress, quint16 peerPort){
@@ -64,265 +67,85 @@ public slots:
         static int serverInstanceID = qrand();
         //qDebug()<<"Server Instance ID:"<<serverInstanceID;
 
-        Packet *packet = PacketHandlerBase::getPacket();
+        ServerDiscoveryPacket packet;
+        packet.responseFromServer = 1;
+        packet.version = QString(APP_VERSION);
+        packet.rtpPort = localRTPListeningPort;
+        packet.tcpPort = m_localTCPServerListeningPort;
+        packet.serverInstanceID = serverInstanceID;
 
-        packet->setPacketType(quint8(MS::ServerDeclare));
-        packet->setTransmissionProtocol(TP_UDP);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << localRTPListeningPort << m_localTCPServerListeningPort << QString(APP_VERSION) << serverInstanceID;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_udpServer->sendDatagram(ba, peerAddress, peerPort);
-
-    }
-
-    bool sendServerOnlineStatusChangedPacket(bool online, const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
-        qDebug()<<"----sendServerOnlinePacket(...)";
-
-        Packet *packet = PacketHandlerBase::getPacket();
-
-        packet->setPacketType(quint8(MS::ServerOnlineStatusChanged));
-        packet->setTransmissionProtocol(TP_UDP);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << quint8(online) << localRTPListeningPort << m_localTCPServerListeningPort;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
+        return m_udpServer->sendDatagram(packet.toByteArray(), peerAddress, peerPort);
     }
 
     bool sendServerMessagePacket(int adminSocketID, const QString &message, quint8 messageType = quint8(MS::MSG_Information)){
 
-        Packet *packet = PacketHandlerBase::getPacket(adminSocketID);
+        MessagePacket packet;
+        packet.msgType = messageType;
+        packet.message = message;
 
-        packet->setPacketType(quint8(MS::ServerMessage));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << message <<messageType;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(adminSocketID, &ba);
+        return m_rtp->sendReliableData(adminSocketID, &packet.toByteArray());
     }
 
     bool sendJobFinishedPacket(int adminSocketID, quint32 jobID, quint8 result, const QVariant &extraData){
 
-        Packet *packet = PacketHandlerBase::getPacket(adminSocketID);
+        JobProgressPacket packet;
+        packet.jobID = jobID;
+        packet.result = result;
+        packet.extraData = extraData;
 
-        packet->setPacketType(quint8(MS::CMD_JobFinished));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << jobID << result << extraData;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(adminSocketID, &ba);
+        return m_rtp->sendReliableData(adminSocketID, &packet.toByteArray());
     }
-
 
     bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0){
 
-        QHostAddress targetAddress = QHostAddress(peerAddress);
-        Packet *packet = PacketHandlerBase::getPacket();
-        packet->setTransmissionProtocol(TP_UDP);
+        ClientInfoPacket packet;
+        packet.IsRequest = 1;
+        packet.infoType = infoType;
 
-        packet->setPacketType(quint8(MS::ClientInfoRequested));
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << assetNO << infoType;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_udpServer->sendDatagram(ba, targetAddress, clientPort);
+        return m_udpServer->sendDatagram(packet.toByteArray(), QHostAddress(peerAddress), clientPort);
     }
 
     bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &assetNO = "", quint8 infoType = 0){
 
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
-        packet->setTransmissionProtocol(TP_UDT);
+        ClientInfoPacket packet;
+        packet.IsRequest = 1;
+        packet.infoType = infoType;
 
-        packet->setPacketType(quint8(MS::ClientInfoRequested));
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << assetNO << infoType;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
-    }
-
-
-    bool sendServerResponseSoftwareVersionPacket(SOCKETID socketID, const QString &softwareName, const QString &version){
-        qDebug()<<"----sendServerResponseSoftwareVersionPacket(...)";
-
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
-
-        packet->setPacketType(quint8(MS::ServerResponseSoftwareVersion));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << softwareName << version;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
-    }
-
-    bool sendUpdateClientSoftwarePacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT)){
-        qDebug()<<"----sendUpdateClientSoftwarePacket(...)";
-
-        Packet *packet = PacketHandlerBase::getPacket();
-
-        packet->setPacketType(quint8(MS::Update));
-        packet->setTransmissionProtocol(TP_UDP);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
     bool sendAdminLoginResultPacket(SOCKETID socketID, bool result, const QString &message, bool readonly){
         qDebug()<<"----sendAdminLoginResultPacket(...)";
 
-        Packet *packet = PacketHandlerBase::getPacket();
+        AdminLoginPacket packet;
+        packet.InfoType = AdminLoginPacket::LOGIN_RESULT;
+        packet.LoginResult.loggedIn = result;
+        packet.LoginResult.message = message;
+        packet.LoginResult.readonly = readonly;
 
-        packet->setPacketType(quint8(MS::ServerResponseAdminLoginResult));
-        packet->setTransmissionProtocol(TP_UDP);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << quint8(result) << message << quint8(readonly);
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
     bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType){
         //qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
 
-        Packet *packet = PacketHandlerBase::getPacket();
+        SystemInfoFromServerPacket packet;
+        packet.infoType = infoType;
+        packet.data = data;
+        packet.extraInfo = extraInfo;
 
-        packet->setPacketType(quint8(MS::SystemInfoFromServer));
-        packet->setTransmissionProtocol(TP_UDP);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << extraInfo << data << infoType;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
-    bool sendServerResponseModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
-        qWarning()<<"----sendServerResponseModifyAssetNOPacket(...) newAssetNO:"<<newAssetNO<<" "<<modified;
+    bool sendServerResponseModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO){
+        qWarning()<<"----sendServerResponseModifyAssetNOPacket(...) newAssetNO:"<<newAssetNO<<" oldAssetNO:"<<oldAssetNO;
 
-        Packet *packet = PacketHandlerBase::getPacket(socketID);
+        ModifyAssetNOPacket packet;
+        packet.isRequest = 0;
+        packet.oldAssetNO = oldAssetNO;
+        packet.newAssetNO = newAssetNO;
 
-        packet->setPacketType(quint8(MS::AssetNOModified));
-        packet->setTransmissionProtocol(TP_UDT);
-        QByteArray ba;
-        QDataStream out(&ba, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_8);
-        out << m_serverName << newAssetNO << oldAssetNO << quint8(modified) << message;
-        packet->setPacketData(ba);
-
-        ba.clear();
-        out.device()->seek(0);
-        QVariant v;
-        v.setValue(*packet);
-        out << v;
-
-        PacketHandlerBase::recylePacket(packet);
-
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
 
@@ -346,7 +169,7 @@ signals:
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
 
-    void signalClientLogReceived(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log, const QString &clientTime);
+    void signalClientLogReceived(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log);
 
     void signalModifyAssetNOPacketReceived(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
 
@@ -356,19 +179,17 @@ signals:
     void signalUpdateSysAdminInfoPacketReceived(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin = false);
 
 
-    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online, const QString &ip, quint16 port);
-
     void signalAdminLogin(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
     void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
     void signalSystemAlarmsRequested(SOCKETID adminSocketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
-    void signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID adminSocketID, const QString &adminID, const QString &alarms, bool deleteAlarms);
+    void signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID adminSocketID, const QString &alarms, bool deleteAlarms);
 
     void signalAnnouncementsRequested(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
     void signalCreateAnnouncementPacketReceived(SOCKETID adminSocketID, quint32 jobID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
     void signalUpdateAnnouncementRequested(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
-    void signalAnnouncementTargetsRequested(SOCKETID adminSocketID, const QString &announcementID);
-    void signalReplyMessagePacketReceived(SOCKETID socketID, const QString &senderAssetNO, const QString &announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
+    void signalAnnouncementTargetsRequested(SOCKETID adminSocketID, unsigned int announcementID);
+    void signalReplyMessagePacketReceived(SOCKETID socketID, const QString &senderAssetNO, unsigned int announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
 
 
 private:

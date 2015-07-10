@@ -65,6 +65,7 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
 
     m_localID = m_userName + "@" + computerName;
     qDebug()<<"----------computerName:"<<computerName;
+    Packet::setLocalID(m_localID);
 
 
     m_rtp = m_resourcesManager->getRTP();
@@ -78,11 +79,11 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
 
     m_tcpServer = m_rtp->getTCPServer();
     Q_ASSERT(m_tcpServer);
-    connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    connect(m_tcpServer, SIGNAL(packetReceived(const PacketBase &)), this, SLOT(parseIncomingPacketData(const PacketBase &)), Qt::QueuedConnection);
 
     m_enetProtocol = m_rtp->getENETProtocol();
     Q_ASSERT(m_enetProtocol);
-    connect(m_enetProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    connect(m_enetProtocol, SIGNAL(packetReceived(const PacketBase &)), this, SLOT(parseIncomingPacketData(const PacketBase &)), Qt::QueuedConnection);
 
 
 
@@ -107,96 +108,50 @@ BulletinBoardPacketsParser::~BulletinBoardPacketsParser() {
 
 }
 
-void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
+void BulletinBoardPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     qDebug()<<"----BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet)";
     
 
-    QByteArray packetData = packet->getPacketData();
-    QDataStream in(&packetData, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_6);
+//    QByteArray packetData = packet->getPacketData();
+//    QDataStream in(&packetData, QIODevice::ReadOnly);
+//    in.setVersion(QDataStream::Qt_4_6);
 
-    QString peerID = "";
-    in >> peerID;
+//    QString peerID = "";
+//    in >> peerID;
 
-    quint8 packetType = packet->getPacketType();
-    SOCKETID socketID = packet->getSocketID();
-    PacketHandlerBase::recylePacket(packet);
+//    quint8 packetType = packet->getPacketType();
+//    SOCKETID socketID = packet->getSocketID();
+//    PacketHandlerBase::recylePacket(packet);
+
+    quint8 packetType = packet.getPacketType();
+    QString peerID = packet.getPeerID();
+
+    QHostAddress peerAddress = packet.getPeerHostAddress();
+    quint16 peerPort = packet.getPeerHostPort();
+    SOCKETID socketID = packet.getSocketID();
 
     switch(packetType){
 
-    case quint8(MS::LocalServiceServerDeclare):
-    {
-        //QString localComputerName = "";
-        //in >> localComputerName;
-
-        emit signalLocalServiceServerDeclarePacketReceived(peerID);
-        
-    }
-        break;
-
-    case quint8(MS::SystemInfoFromServer):
-    {
-
-        QString extraInfo = "";
-        QByteArray systemInfo;
-        quint8 infoType = 0;
-        in >> extraInfo >> systemInfo >> infoType;
-        emit signalSystemInfoFromServerReceived(extraInfo, systemInfo, infoType);
-
-        //qDebug()<<"SystemInfoFromServer";
-    }
-    break;
-
-    case quint8(MS::AdminRequestRemoteAssistance):
-    {
-        
-        QString adminAddress = "", adminName = "";
-        quint16 adminPort = 0;
-
-        in >> adminAddress >> adminPort >> adminName;
-        emit signalAdminRequestRemoteAssistancePacketReceived(adminAddress, adminPort, adminName);
-
-        qDebug()<<"~~AdminRequestRemoteAssistance";
-        
-    }
-        break;
-
-    case quint8(MS::InformUserNewPassword):
-    {
-        QString adminAddress = "", adminName = "",  oldPassword = "",  newPassword = "";
-        quint16 adminPort = 0;
-        in >> adminAddress >> adminPort >> adminName >> oldPassword >> newPassword;
-        emit signalAdminInformUserNewPasswordPacketReceived(adminAddress, adminPort, adminName, oldPassword, newPassword);
-        
-        qDebug()<<"~~InformUserNewPassword";
-
-    }
-        break;
-
-//    case quint8(MS::Announcement):
+//    case quint8(MS::LocalServiceServerDeclare):
 //    {
-//        QString id = "", adminName = "";
-//        quint8 type = quint8(MS::ANNOUNCEMENT_NORMAL);
-//        QString content = "";
-//        bool confirmationRequired = true;
-//        int validityPeriod = 60;
-
-//        in >> id >> adminName >> type >> content >> confirmationRequired >> validityPeriod >> targetType >> targets;
-//        emit signalAnnouncementPacketReceived(id, adminName, type, content, confirmationRequired, validityPeriod);
-
+//        emit signalLocalServiceServerDeclarePacketReceived(peerID);
 //    }
 //        break;
 
-    case quint8(MS::RequestScreenshot):
+    case quint8(MS::CMD_SystemInfoFromServer):
     {
-        QString adminName,  adminAddress;
-        quint16 adminPort = 0;
-        in >> adminName >> adminAddress >> adminPort;
+        SystemInfoFromServerPacket p(packet);
+        emit signalSystemInfoFromServerReceived(p.extraInfo, p.data, p.infoType);
+    }
+    break;
 
-        emit signalAdminRequestScreenshotPacketReceived(socketID, adminName, adminAddress, adminPort);
+    case quint8(MS::CMD_Screenshot):
+    {
+        qDebug()<<"~~CMD_Screenshot";
 
-        qDebug()<<"~~RequestScreenshot";
-
+        ScreenshotPacket p(packet);
+        if(m_userName != p.ScreenshotRequest.userName){return;}
+        emit signalAdminRequestScreenshotPacketReceived(socketID, p.ScreenshotRequest.adminID, peerAddress.toString(), p.ScreenshotRequest.adminListeningPort);
     }
         break;
 

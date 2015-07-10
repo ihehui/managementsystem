@@ -31,24 +31,27 @@ void TCPServer::processData(SOCKETID socketID, QByteArray *data){
     getAddressInfoFromSocket(socketID, &address, &port, true);
 
 
-    QDataStream in(data, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_4_8);
-    QVariant v;
-    in >> v;
-    if (v.canConvert<Packet>()){
-        Packet *packet = PacketHandlerBase::getPacket();
-        *packet = v.value<Packet>();
-        packet->setTransmissionProtocol(TP_UDT);
-        packet->setSocketID(socketID);
+//    QDataStream in(data, QIODevice::ReadOnly);
+//    in.setVersion(QDataStream::Qt_4_8);
+//    QVariant v;
+//    in >> v;
+//    if (v.canConvert<PacketBase>()){
+//        PacketBase *packet = PacketHandlerBase::getPacket();
+//        *packet = v.value<PacketBase>();
+//        packet->setTransmissionProtocol(TP_UDT);
+//        packet->setSocketID(socketID);
 
+//        packet->setPeerHostAddress(QHostAddress(address));
+//        packet->setPeerHostPort(port);
 
-        packet->setPeerHostAddress(QHostAddress(address));
-        packet->setPeerHostPort(port);
-//        packet->setLocalHostAddress(m_udpSocket->localAddress());
-//        packet->setLocalHostPort(m_udpSocket->localPort());
+//        emit packetReceived(packet);
+//    }
 
-//        m_packetHandlerBase->appendIncomingPacket(packet);
-
+    PacketBase packet;
+    if(packet.fromByteArray(data)){
+        packet.setSocketID(socketID);
+        packet.setPeerHostAddress(QHostAddress(address));
+        packet.setPeerHostPort(port);
         emit packetReceived(packet);
     }
 

@@ -80,6 +80,7 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 
     m_adminAddress = "";
     m_adminPort = 0;
+    m_adminID = "";
 
 
     lookForServerTimer = 0;
@@ -246,25 +247,22 @@ bool ClientService::startMainService(){
 
     connect(clientPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
 
-    connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(quint8, bool, const QString & )), this, SLOT(processSetupUSBSDPacket(quint8, bool, const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(quint8)), this, SLOT(processSetupUSBSDPacket(quint8)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalShowAdminPacketReceived(bool)), this, SLOT(processShowAdminPacket(bool)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(const QString &, const QString &)), this, SLOT(processModifyAssetNOPacket(const QString &, const QString &)));
-    connect(clientPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &, bool, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &, bool, const QString &)));
+    connect(clientPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(const QString &)), this, SLOT(processModifyAssetNOPacket(const QString &)));
+    connect(clientPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &)));
 
-    connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)), this, SLOT(processRenameComputerPacketReceived(const QString &, const QString &, const QString &, const QString &)));
-    connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(const QString &, bool, const QString &, const QString &, const QString &)));
+    connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const QString &, const QString &, const QString &)), this, SLOT(processRenameComputerPacketReceived(const QString &, const QString &, const QString &)));
+    connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(bool, const QString &, const QString &, const QString &)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(bool, const QString &, const QString &, const QString &)));
     connect(clientPacketsParser, SIGNAL(signalAdminRequestConnectionToClientPacketReceived(SOCKETID, const QString &, const QString &)), this, SLOT(processAdminRequestConnectionToClientPacket(SOCKETID, const QString &, const QString &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminSearchClientPacketReceived(const QString &, quint16 , const QString &, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(processAdminSearchClientPacket(const QString &, quint16 , const QString &, const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
     
-//    connect(clientPacketsParser, SIGNAL(signalAdminRequestRemoteAssistancePacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestRemoteAssistancePacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestUpdateMSUserPasswordPacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestUpdateMSUserPasswordPacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestInformUserNewPasswordPacketReceived(const QString &, const QString &, const QString &, quint16 )), this, SLOT(processAdminRequestInformUserNewPasswordPacket(const QString &, const QString &, const QString &, quint16 )), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalClientInfoRequestedPacketReceived(SOCKETID, const QString &, quint8)), this, SLOT(processClientInfoRequestedPacket(SOCKETID, const QString &, quint8)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalClientInfoRequestedPacketReceived(SOCKETID, quint8)), this, SLOT(processClientInfoRequestedPacket(SOCKETID, quint8)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestRemoteConsolePacketReceived(const QString &, const QString &, const QString &, bool, const QString &, quint16)), this, SLOT(processAdminRequestRemoteConsolePacket(const QString &, const QString &, const QString &, bool, const QString &, quint16)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalRemoteConsoleCMDFromServerPacketReceived(const QString &, const QString &, const QString &, quint16)), this, SLOT(processRemoteConsoleCMDFromServerPacket(const QString &, const QString &, const QString &, quint16)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestRemoteConsolePacketReceived(const QString &, bool)), this, SLOT(processAdminRequestRemoteConsolePacket(const QString &, bool)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalRemoteConsoleCMDFromServerPacketReceived(const QString &)), this, SLOT(processRemoteConsoleCMDFromServerPacket(const QString &)), Qt::QueuedConnection);
     
 //    connect(clientPacketsParser, SIGNAL(signalServerAnnouncementPacketReceived(const QString &,const QString &, quint32, const QString &,const QString &,const QString &,bool)), this, SLOT(processServerAnnouncementPacket(const QString &, const QString &, quint32, const QString &, const QString &, const QString &,bool)), Qt::QueuedConnection);
 
@@ -276,7 +274,6 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalAdminRequestShutdownPacketReceived(SOCKETID,const QString&,quint32,bool,bool)), this, SLOT(processAdminRequestShutdownPacket(SOCKETID,const QString&,quint32,bool,bool)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminRequestLockWindowsPacketReceived(SOCKETID,const QString&,bool)), this, SLOT(processAdminRequestLockWindowsPacket(SOCKETID,const QString&,bool)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminRequestCreateOrModifyWinUserPacketReceived(SOCKETID,const QByteArray&)), this, SLOT(processAdminRequestCreateOrModifyWinUserPacket(SOCKETID,const QByteArray&)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestDeleteUserPacketReceived(SOCKETID,const QString&)), this, SLOT(processAdminRequestDeleteUserPacket(SOCKETID,const QString&)), Qt::QueuedConnection);
 
 
     connect(clientPacketsParser, SIGNAL(signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID,QString,bool,ulong)), this, SLOT(processAdminRequestChangeServiceConfigPacket(SOCKETID,QString,bool,ulong)), Qt::QueuedConnection);
@@ -289,7 +286,7 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalFileSystemInfoRequested(SOCKETID, const QString &)), this, SLOT(fileSystemInfoRequested(SOCKETID, const QString &)));
     //File TX
     connect(clientPacketsParser, SIGNAL(signalAdminRequestUploadFile(SOCKETID, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processAdminRequestUploadFilePacket(SOCKETID, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestDownloadFile(SOCKETID, const QString &, const QString &, const QString &)), this, SLOT(processAdminRequestDownloadFilePacket(SOCKETID, const QString &, const QString &, const QString &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminRequestDownloadFile(SOCKETID, const QString &, const QString &)), this, SLOT(processAdminRequestDownloadFilePacket(SOCKETID, const QString &, const QString &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalFileDataRequested(SOCKETID, const QByteArray &, int, int )), this, SLOT(processFileDataRequestPacket(SOCKETID,const QByteArray &, int, int )), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalFileDataReceived(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), this, SLOT(processFileDataReceivedPacket(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalFileTXStatusChanged(SOCKETID, const QByteArray &,quint8)), this, SLOT(processFileTXStatusChangedPacket(SOCKETID, const QByteArray &, quint8)), Qt::QueuedConnection);
@@ -441,13 +438,13 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverRTPL
 
     clientPacketsParser->setSocketConnectedToServer(m_socketConnectedToServer);
 
-    if(!clientPacketsParser->sendClientOnlineStatusChangedPacket(m_socketConnectedToServer, true)){
-        QString err = m_rtp->lastErrorString();
-        m_rtp->closeSocket(m_socketConnectedToServer);
-        m_socketConnectedToServer = INVALID_SOCK_ID;
-        qCritical()<<"Error! Can not changed online status to server! "<<err;
-        return;
-    }
+//    if(!clientPacketsParser->sendClientOnlineStatusChangedPacket(m_socketConnectedToServer, true)){
+//        QString err = m_rtp->lastErrorString();
+//        m_rtp->closeSocket(m_socketConnectedToServer);
+//        m_socketConnectedToServer = INVALID_SOCK_ID;
+//        qCritical()<<"Error! Can not changed online status to server! "<<err;
+//        return;
+//    }
 
     lookForServerTimer->stop();
 
@@ -469,8 +466,8 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverRTPL
     //uploadClientInfo();
     //uploadClientSummaryInfo(m_socketConnectedToServer);
 
-    processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_OS);
-    processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_HARDWARE);
+    processClientInfoRequestedPacket(m_socketConnectedToServer, MS::SYSINFO_OS);
+    processClientInfoRequestedPacket(m_socketConnectedToServer, MS::SYSINFO_HARDWARE);
 
     uploadSoftwareInfo();
 
@@ -502,7 +499,7 @@ void ClientService::serverFound(const QString &serverAddress, quint16 serverRTPL
 
 }
 
-void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType){
+void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, quint8 infoType){
 
 
 #ifdef Q_OS_WIN
@@ -569,7 +566,7 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, const QS
 
 void ClientService::systemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID){
 
-    qDebug()<<"ClientService::systemInfoResultReady(...)"<<" size:"<<data.size();
+    //qDebug()<<"ClientService::systemInfoResultReady(...)"<<" size:"<<data.size();
     //qDebug()<<"system info:"<<data;
 
 #if defined(Q_OS_WIN32)
@@ -619,9 +616,11 @@ void ClientService::systemInfoThreadFinished(){
     systemInfo = 0;
 }
 
-void ClientService::processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporarilyAllowed, const QString &adminName){
+void ClientService::processSetupUSBSDPacket(quint8 usbSTORStatus){
 
 #ifdef Q_OS_WIN
+
+    bool temporarilyAllowed = false;
 
     QString str = "Unknown";
     bool ok = false;
@@ -645,7 +644,7 @@ void ClientService::processSetupUSBSDPacket(quint8 usbSTORStatus, bool temporari
 //        str = "Enabled(Perpetual License)";
 //    }
 
-    QString log = QString("USB Storage Device Settings Changed To:%1! Admin:%2").arg(str).arg(adminName);
+    QString log = QString("USB Storage Device Settings Changed To:%1! Admin:%2").arg(str).arg(m_adminID);
     if(!ok){
         log = QString("Failed to change USB Storage Device settings to:%1!").arg(str);
     }
@@ -677,20 +676,16 @@ void ClientService::processShowAdminPacket(bool show){
 
 }
 
-void ClientService::processModifyAssetNOPacket(const QString &newAssetNO, const QString &adminName){
-
-    //TODO:
+void ClientService::processModifyAssetNOPacket(const QString &newAssetNO){
 
     if(INVALID_SOCK_ID == m_socketConnectedToServer){
-        QString message = tr("No Server Connected!");
-        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, m_localAssetNO, false, message);
+        clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToAdmin, false, m_localAssetNO, m_localAssetNO, "");
         return;
     }
 
-    bool sent = clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToServer, newAssetNO, adminName);
+    bool sent = clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToServer, true, m_localAssetNO, newAssetNO, m_adminID);
     if(!sent){
-        QString message = tr("Can not send data to server!");
-        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, m_localAssetNO, false, message);
+        clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToAdmin, false,  m_localAssetNO, m_localAssetNO, "");
         return;
     }
 
@@ -699,17 +694,19 @@ void ClientService::processModifyAssetNOPacket(const QString &newAssetNO, const 
 
 }
 
-void ClientService::processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO, bool modified, const QString &message){
+void ClientService::processAssetNOModifiedPacket(const QString &newAssetNO){
 
+    bool modified = (m_localAssetNO != newAssetNO);
     if(!modified){
-        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, oldAssetNO, false, message);
+        clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToAdmin, false, m_localAssetNO, m_localAssetNO, "");
         return;
     }
 
+    QString oldAssetNO = m_localAssetNO;
     setLocalAssetNO(newAssetNO);
     m_localAssetNO = newAssetNO;
     clientPacketsParser->setAssetNO(newAssetNO);
-    clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, oldAssetNO, true, "");
+    clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToAdmin, false, oldAssetNO, newAssetNO, "");
 
     QString log = QString("Computer asset NO. modified from '%1' to '%2'. Computr name:%3").arg(oldAssetNO).arg(newAssetNO).arg(m_localComputerName);
     logMessage(log);
@@ -723,13 +720,13 @@ void ClientService::modifyAssetNOTimeout(){
         return;
     }
     if(newAssetNOToBeUsed != m_localAssetNO){
-        QString message = tr("Failed to modify asset number! Waitting for server response timed out!");
-        clientPacketsParser->sendClientResponseModifyAssetNOPacket(m_socketConnectedToAdmin, m_localAssetNO, false, message);
+        //QString message = tr("Failed to modify asset number! Waitting for server response timed out!");
+        clientPacketsParser->sendModifyAssetNOPacket(m_socketConnectedToAdmin, false, m_localAssetNO, m_localAssetNO, "");
         return;
     }
 }
 
-void ClientService::processRenameComputerPacketReceived(const QString &newComputerName, const QString &adminName, const QString &domainAdminName, const QString &domainAdminPassword){
+void ClientService::processRenameComputerPacketReceived(const QString &newComputerName, const QString &domainAdminName, const QString &domainAdminPassword){
 
 #ifdef Q_OS_WIN32
 
@@ -743,17 +740,17 @@ void ClientService::processRenameComputerPacketReceived(const QString &newComput
 
     //uploadClientSummaryInfo(m_socketConnectedToServer);
     //uploadClientSummaryInfo(m_socketConnectedToAdmin);
-    processClientInfoRequestedPacket(m_socketConnectedToServer, m_localAssetNO, MS::SYSINFO_OS);
-    processClientInfoRequestedPacket(m_socketConnectedToAdmin, m_localAssetNO, MS::SYSINFO_OS);
+    processClientInfoRequestedPacket(m_socketConnectedToServer, MS::SYSINFO_OS);
+    processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_OS);
 
 
     QString log;
     if(ok){
         //QSettings settings("HKEY_LOCAL_MACHINE\\SOFTWARE\\HEHUI", QSettings::NativeFormat, this);
         //settings.setValue("ComputerName", newComputerName);
-        log = QString("The computer is renamed from '%1' to '%2'. Restart the computer to apply all changes! Admin:%3.").arg(m_localComputerName).arg(newComputerName).arg(adminName);
+        log = QString("The computer is renamed from '%1' to '%2'. Restart the computer to apply all changes! Admin:%3.").arg(m_localComputerName).arg(newComputerName).arg(m_adminID);
     }else{
-        log = QString("Failed to rename computer! Admin:%1. Error Code:%2").arg(adminName).arg(errorCode);
+        log = QString("Failed to rename computer! Admin:%1. Error Code:%2").arg(m_adminID).arg(errorCode);
     }
 
     bool sent = false;
@@ -778,7 +775,7 @@ void ClientService::processRenameComputerPacketReceived(const QString &newComput
 
 }
 
-void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &adminName, bool isDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
+void ClientService::processJoinOrUnjoinDomainPacketReceived(bool isDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
 #ifdef Q_OS_WIN32
 
@@ -803,9 +800,9 @@ void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &admin
     if(ok){
         m_isJoinedToDomain = isDomain;
         m_joinInfo = domainOrWorkgroupName;
-        log = QString("Computer '%1' is successfully joined to %2 '%3'! Restart the computer to apply all changes! Admin:%4.").arg(m_localComputerName).arg(isDomain?"domain":"workgroup").arg(domainOrWorkgroupName).arg(adminName);
+        log = QString("Computer '%1' is successfully joined to %2 '%3'! Restart the computer to apply all changes! Admin:%4.").arg(m_localComputerName).arg(isDomain?"domain":"workgroup").arg(domainOrWorkgroupName).arg(m_adminID);
     }else{
-        log = QString("Failed to join computer '%1' to %2 '%3'! Admin:%4. Error Code:%5").arg(m_localComputerName).arg(isDomain?"domain":"workgroup").arg(domainOrWorkgroupName).arg(adminName).arg(errorCode);
+        log = QString("Failed to join computer '%1' to %2 '%3'! Admin:%4. Error Code:%5").arg(m_localComputerName).arg(isDomain?"domain":"workgroup").arg(domainOrWorkgroupName).arg(m_adminID).arg(errorCode);
     }
 
     bool sent = false;
@@ -825,8 +822,8 @@ void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &admin
 
     //uploadClientSummaryInfo(m_socketConnectedToServer);
     //uploadClientSummaryInfo(m_socketConnectedToAdmin);
-    processClientInfoRequestedPacket(m_socketConnectedToServer, m_localAssetNO, MS::SYSINFO_OS);
-    processClientInfoRequestedPacket(m_socketConnectedToAdmin, m_localAssetNO, MS::SYSINFO_OS);
+    processClientInfoRequestedPacket(m_socketConnectedToServer, MS::SYSINFO_OS);
+    processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_OS);
 
 
 #else
@@ -836,7 +833,7 @@ void ClientService::processJoinOrUnjoinDomainPacketReceived(const QString &admin
 
 }
 
-void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminName){
+void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminID){
     qDebug()<<"--ClientService::processAdminRequestConnectionToClientPacket(...)";
 
 
@@ -845,6 +842,7 @@ void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSo
 #ifdef Q_OS_WIN
     bool result =false;
     QString message = "";
+    quint8 errorCode = MS::ERROR_NO_ERROR;
 
 //    if(m_localComputerName == computerName ){
         message = "";
@@ -870,7 +868,7 @@ void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSo
         uploadClientOSInfo(m_socketConnectedToServer);
     }
 
-    bool ok = clientPacketsParser->sendClientResponseAdminConnectionResultPacket(adminSocketID, m_localComputerName, result, message);
+    bool ok = clientPacketsParser->sendClientResponseAdminConnectionResultPacket(adminSocketID, m_localComputerName, result, errorCode);
     if(!ok){
         qCritical()<<"Error! Failed to response admin connection request! "<<m_rtp->lastErrorString();
     }
@@ -878,15 +876,15 @@ void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSo
 
     if(ok && result){
         m_socketConnectedToAdmin = adminSocketID;
-        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, adminName);
+        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, adminID);
 
         m_rtp->getAddressInfoFromSocket(m_socketConnectedToAdmin, &m_adminAddress, &m_adminPort);
-        qWarning()<<QString("Admin %1 connected form %2:%3 via %4!").arg(adminName+"@"+adminComputerName).arg(m_adminAddress).arg(m_adminPort).arg(m_rtp->socketProtocolString(m_socketConnectedToAdmin));
+        m_adminID = adminID;
+        qWarning()<<QString("Admin %1 connected form %2:%3 via %4!").arg(adminID+"@"+adminComputerName).arg(m_adminAddress).arg(m_adminPort).arg(m_rtp->socketProtocolString(m_socketConnectedToAdmin));
 
         //uploadClientSummaryInfo(m_socketConnectedToAdmin);
-        processClientInfoRequestedPacket(m_socketConnectedToAdmin, m_localAssetNO, MS::SYSINFO_OS);
-
-        processClientInfoRequestedPacket(m_socketConnectedToAdmin, m_localAssetNO, MS::SYSINFO_REALTIME_INFO);
+        processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_OS);
+        processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_REALTIME_INFO);
 
     }else{
         m_rtp->closeSocket(adminSocketID);
@@ -903,7 +901,6 @@ void ClientService::processAdminRequestConnectionToClientPacket(SOCKETID adminSo
 
     if( (previousSocketConnectedToAdmin != INVALID_SOCK_ID) && (previousSocketConnectedToAdmin != m_socketConnectedToAdmin) ){
         clientPacketsParser->sendClientMessagePacket(previousSocketConnectedToAdmin, QString("Another administrator has logged on from %1!").arg(m_adminAddress), quint8(MS::MSG_Critical));
-        clientPacketsParser->sendClientOnlineStatusChangedPacket(previousSocketConnectedToAdmin, false);
         m_rtp->closeSocket(previousSocketConnectedToAdmin);
 //        closeFileTXWithAdmin();
     }
@@ -1090,45 +1087,12 @@ void ClientService::processAdminSearchClientPacket(const QString &adminAddress, 
     
 //}
 
-void ClientService::processAdminRequestUpdateMSUserPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort){
-
-#ifdef Q_OS_WIN
-
-    if(!workgroupName.isEmpty()){
-        if(workgroupName.toLower() != m_joinInfo.toLower()){
-            return;
-        }
-    }
-
-    QString log = QString("Update Password! Admin:%1").arg(adminName);
-    if(INVALID_SOCK_ID != m_socketConnectedToServer){
-        bool sent = clientPacketsParser->sendClientLogPacket(m_socketConnectedToServer, quint8(MS::LOG_AdminInformUserNewPassword), log);
-        if(!sent){
-            qCritical()<<tr("ERROR! Can not send log to server %1:%2! %3").arg(m_serverAddress.toString()).arg(m_serverUDTListeningPort).arg(m_rtp->lastErrorString());
-        }
-    }
-#endif
-    
-    
-}
-
-void ClientService::processAdminRequestInformUserNewPasswordPacket(const QString &workgroupName, const QString &adminName, const QString &adminAddress, quint16 adminPort){
-
-    qWarning()<<"--processAdminRequestInformUserNewPasswordPacket(...)";
-    
-
-}
 
 
 
-void ClientService::processAdminRequestRemoteConsolePacket(const QString &assetNO, const QString &applicationPath, const QString &adminID, bool startProcess, const QString &adminAddress, quint16 adminPort){
+void ClientService::processAdminRequestRemoteConsolePacket(const QString &applicationPath, bool startProcess){
 
-    if(assetNO != m_localAssetNO){
-        return;
-    }
-    if(!m_adminAddress.isEmpty() && m_adminAddress != adminAddress){
-        qWarning()<<"m_adminAddress:"<<m_adminAddress;
-        qWarning()<<"adminAddress:"<<adminAddress;
+    if(!m_adminAddress.isEmpty()){
         //clientPacketsParser->sendClientMessagePacket(QHostAddress(adminAddress), adminPort, localComputerName, QString("Another administrator has logged on from %1!").arg(m_adminAddress));
         clientPacketsParser->sendClientResponseRemoteConsoleStatusPacket(m_socketConnectedToAdmin, false, QString("Another administrator has logged on from %1!").arg(m_adminAddress), quint8(MS::MSG_Critical));
 
@@ -1161,11 +1125,7 @@ void ClientService::processAdminRequestRemoteConsolePacket(const QString &assetN
 
 }
 
-void ClientService::processRemoteConsoleCMDFromServerPacket(const QString &assetNO, const QString &command, const QString &adminAddress, quint16 adminPort){
-
-    if(assetNO != m_localAssetNO){
-        return;
-    }
+void ClientService::processRemoteConsoleCMDFromServerPacket(const QString &command){
 
     if((!process) || (!process->isRunning())){
         clientPacketsParser->sendClientResponseRemoteConsoleStatusPacket(m_socketConnectedToAdmin, false, "The Process is not running!", qint8(MS::MSG_Critical));
@@ -1173,7 +1133,6 @@ void ClientService::processRemoteConsoleCMDFromServerPacket(const QString &asset
     }
 
     process->writeDataToProcess(command);
-
 
 }
 
@@ -1763,7 +1722,7 @@ void ClientService::uploadSoftwareInfo(){
     QString section = "LastUploadSoftwareInfo";
     QDateTime time = settings->getValueWithDecryption(section, m_encryptionKey, QDateTime()).toDateTime();
     if(time.isNull() || (time.addDays(2) < QDateTime::currentDateTime())){
-        processClientInfoRequestedPacket(m_socketConnectedToServer, "", MS::SYSINFO_SOFTWARE);
+        processClientInfoRequestedPacket(m_socketConnectedToServer, MS::SYSINFO_SOFTWARE);
         settings->setValueWithEncryption(section, QDateTime::currentDateTime(), m_encryptionKey);
     }
 
@@ -1838,6 +1797,7 @@ void ClientService::peerDisconnected(const QHostAddress &peerAddress, quint16 pe
         qWarning()<<QString("Admin %1:%2 Offline!").arg(m_adminAddress).arg(m_adminPort);
         m_adminAddress = "";
         m_adminPort = 0;
+        m_adminID = "";
 
     }
 
@@ -1879,6 +1839,7 @@ void ClientService::peerDisconnected(SOCKETID socketID){
         clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, "");
         m_adminAddress = "";
         m_adminPort = 0;
+        m_adminID = "";
 
 //        closeFileTXWithAdmin();
     }else{
@@ -1946,10 +1907,10 @@ void ClientService::processAdminRequestUploadFilePacket(SOCKETID socketID, const
     QString errorString;
     const FileManager::FileMetaInfo *info = m_fileManager->tryToReceiveFile(fileMD5Sum, localPath, size, &errorString);
     if(!info){
-        clientPacketsParser->responseFileUploadRequest(socketID, fileMD5Sum, false, errorString);
+        clientPacketsParser->responseFileUploadRequest(socketID, false, fileMD5Sum, errorString);
     }
 
-    clientPacketsParser->responseFileUploadRequest(socketID, fileMD5Sum, true, errorString);
+    clientPacketsParser->responseFileUploadRequest(socketID, true, fileMD5Sum, errorString);
 
 
 //    m_udtProtocolForFileTransmission->receiveFileFromPeer(socketID, localPath, 0, size);
@@ -1958,23 +1919,17 @@ void ClientService::processAdminRequestUploadFilePacket(SOCKETID socketID, const
 
 
 
-    if(clientPacketsParser->responseFileUploadRequest(socketID, fileMD5Sum, true, "")){
+    if(clientPacketsParser->responseFileUploadRequest(socketID, true, fileMD5Sum, "")){
         fileTXSocketHash.insertMulti(socketID, fileMD5Sum);
 
         //clientPacketsParser->requestFileData(socketID, fileMD5Sum, -1, -1);
         clientPacketsParser->requestFileData(socketID, fileMD5Sum, 0, 0);
-
-
     }else{
         m_fileManager->closeFile(fileMD5Sum);
     }
-
-
-
-
 }
 
-void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir){
+void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName){
 
     startFileManager();
 
@@ -1990,11 +1945,7 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
 
         foreach(QString file, dir.entryList(filters, QDir::Dirs | QDir::Files | QDir::System | QDir::Hidden | QDir::NoDotAndDotDot))
         {
-            QString newRemoteDir = remoteFileSaveDir + "/" + fileName;
-            if(remoteFileSaveDir.endsWith('/')){
-                newRemoteDir = remoteFileSaveDir + fileName;
-            }
-            processAdminRequestDownloadFilePacket(socketID, absoluteFilePath, file, newRemoteDir);
+            processAdminRequestDownloadFilePacket(socketID, absoluteFilePath, file);
 
             qApp->processEvents();
         }
@@ -2004,10 +1955,10 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
 
     const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &errorString);
     if(!info){
-        clientPacketsParser->denyFileDownloadRequest(socketID, fileName, false, errorString);
+        clientPacketsParser->responseFileDownloadRequest(socketID, false, absoluteFilePath, fileName, info->md5sum, info->size);
     }
 
-    if(clientPacketsParser->acceptFileDownloadRequest(socketID, fileName, true, info->md5sum, info->size, remoteFileSaveDir)){
+    if(clientPacketsParser->responseFileDownloadRequest(socketID, true, absoluteFilePath, fileName, info->md5sum, info->size)){
         fileTXSocketHash.insertMulti(socketID, info->md5sum);
     }else{
         m_fileManager->closeFile(info->md5sum);
@@ -2412,13 +2363,13 @@ void ClientService::stop()
         systemInfo->stopGetingRealTimeResourcesLoad();
     }
 
-    if(clientPacketsParser){
-        clientPacketsParser->sendClientOnlineStatusChangedPacket(m_socketConnectedToServer, false);
-        Utilities::msleep(1000);
-//        clientPacketsParser->sendClientOfflinePacket(networkManager->localRUDPListeningAddress(), networkManager->localRUDPListeningPort(), localComputerName, false);
-//        clientPacketsParser->aboutToQuit();
-        //QTimer::singleShot(1000, clientPacketsParser, SLOT(aboutToQuit()));
-    }
+//    if(clientPacketsParser){
+//        clientPacketsParser->sendClientOnlineStatusChangedPacket(m_socketConnectedToServer, false);
+//        Utilities::msleep(1000);
+////        clientPacketsParser->sendClientOfflinePacket(networkManager->localRUDPListeningAddress(), networkManager->localRUDPListeningPort(), localComputerName, false);
+////        clientPacketsParser->aboutToQuit();
+//        //QTimer::singleShot(1000, clientPacketsParser, SLOT(aboutToQuit()));
+//    }
 
 
     if(m_udpServer){
