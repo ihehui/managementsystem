@@ -121,7 +121,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         serverRTPListeningPort = p.rtpPort;
         serverName = peerID;
 
-        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, p.tcpPort, serverName, p.version, p.serverInstanceID);
+        emit signalServerDeclarePacketReceived(p);
         qDebug()<<"~~CMD_ServerDiscovery"<<" serverAddress:"<<serverAddress.toString()<<" servername:"<<serverName <<" serverRTPListeningPort:"<<serverRTPListeningPort << " serverTCPListeningPort:"<<p.tcpPort;
     }
     break;
@@ -131,7 +131,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_ClientInfo";
 
         ClientInfoPacket p(packet);
-        emit signalClientInfoRequestedPacketReceived(socketID, p.infoType);
+        emit signalClientInfoRequestedPacketReceived(p);
     }
     break;
 
@@ -140,18 +140,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_RemoteConsole";
 
         RemoteConsolePacket p(packet);
-        switch (p.InfoType) {
-        case RemoteConsolePacket::REMOTECONSOLE_OPEN:
-            emit signalAdminRequestRemoteConsolePacketReceived(p.OpenConsole.applicationPath, p.OpenConsole.startProcess);
-            break;
-
-        case RemoteConsolePacket::REMOTECONSOLE_COMMAND:
-            emit signalRemoteConsoleCMDFromServerPacketReceived(p.Command.command);
-
-        default:
-            break;
-        }
-
+        emit signalRemoteConsolePacketReceived(p);
     }
     break;
 
@@ -178,7 +167,8 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
             return;
         }
 
-        emit signalSystemInfoFromServerReceived(p.extraInfo, p.data, p.infoType);
+        emit signalSystemInfoFromServerReceived(p);
+
     }
     break;
 
@@ -186,8 +176,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     {
         qDebug()<<"~~CMD_USBDev";
         USBDevPacket p(packet);
-        emit signalSetupUSBSDPacketReceived(p.usbSTORStatus);
-
+        emit signalSetupUSBSDPacketReceived(p);
     }
     break;
 
@@ -196,15 +185,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_ModifyAssetNO";
 
         ModifyAssetNOPacket p(packet);
-        if(p.isRequest){
-            if(p.oldAssetNO != m_assetNO){
-                return;
-            }
-            emit signalModifyAssetNOPacketReceived(p.newAssetNO);
-        }else{
-            emit signalAssetNOModifiedPacketReceived(p.newAssetNO);
-        }
-
+        emit signalModifyAssetNOPacketReceived(p);
     }
     break;
 
@@ -217,7 +198,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
             return;
         }
 
-        emit signalRenameComputerPacketReceived(p.newComputerName, p.domainAdminName, p.domainAdminPassword);
+        emit signalRenameComputerPacketReceived(p);
     }
     break;
 
@@ -226,11 +207,9 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_JoinOrUnjoinDomain";
 
         JoinOrUnjoinDomainPacket p(packet);
-        if(p.assetNO != m_assetNO){
-            return;
-        }
+        if(p.assetNO != m_assetNO){return;}
 
-        emit signalJoinOrUnjoinDomainPacketReceived( p.join, p.domainOrWorkgroupName, p.domainAdminName, p.domainAdminPassword);
+        emit signalJoinOrUnjoinDomainPacketReceived(p);
     }
     break;
 
@@ -239,8 +218,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_AdminConnectionToClient";
 
         AdminConnectionToClientPacket p(packet);
-
-        emit signalAdminRequestConnectionToClientPacketReceived(socketID, p.computerName, p.adminID);
+        emit signalAdminRequestConnectionToClientPacketReceived(p);
     }
     break;
 
@@ -249,7 +227,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_AdminSearchClient ";
         AdminSearchClientPacket p(packet);
 
-        emit signalAdminSearchClientPacketReceived(peerAddress.toString(), peerPort, p.computerName, p.userName, p.workgroup, p.macAddress, p.ipAddress, p.osVersion, p.adminID);
+        emit signalAdminSearchClientPacketReceived(p);
     }
     break;
 
@@ -267,7 +245,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_Temperatures";
 
         TemperaturesPacket p(packet);
-        emit signalAdminRequestTemperatures(socketID, p.TemperaturesRequest.requestCPU, p.TemperaturesRequest.requestHD);
+        emit signalAdminRequestTemperatures(p);
     }
     break;
 
@@ -293,7 +271,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     {
         qDebug()<<"~~CMD_Shutdown";
         ShutdownPacket p(packet);
-        emit signalAdminRequestShutdownPacketReceived(socketID, p.message, p.waitTime, p.force, p.reboot );
+        emit signalAdminRequestShutdownPacketReceived(p);
     }
     break;
 
@@ -301,7 +279,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     {
         qDebug()<<"~~CMD_LockWindows";
         LockWindowsPacket p(packet);
-        emit signalAdminRequestLockWindowsPacketReceived(socketID, p.userName, p.logoff );
+        emit signalAdminRequestLockWindowsPacketReceived(p);
     }
     break;
 
@@ -309,7 +287,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     {
         qDebug()<<"~~CMD_WinUser";
         WinUserPacket p(packet);
-        emit signalAdminRequestCreateOrModifyWinUserPacketReceived(socketID, p.userData );
+        emit signalWinUserPacketReceived(p);
     }
     break;
 
@@ -317,7 +295,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     {
         qDebug()<<"~~CMD_ServiceConfig";
         ServiceConfigPacket p(packet);
-        emit signalAdminRequestChangeServiceConfigPacketReceived(socketID, p.serviceName, p.startService, p.startupType);
+        emit signalAdminRequestChangeServiceConfigPacketReceived(p);
     }
     break;
 
@@ -329,9 +307,10 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
             return;
         }
 
-        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, p.localRules, p.globalRules, p.enableProcMon, p.enablePassthrough, p.enableLogAllowedProcess, p.enableLogBlockedProcess, p.useGlobalRules);
+        emit signalRequestChangeProcessMonitorInfoPacketReceived(p);
     }
     break;
+
 
 ////////////////////////////////////////////
     case quint8(MS::CMD_FileTransfer):
@@ -339,74 +318,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_FileTransfer";
 
         FileTransferPacket p(packet);
-        switch (p.InfoType) {
-        case FileTransferPacket::FT_FileSystemInfoRequest :
-        {
-            emit signalFileSystemInfoRequested(socketID, p.FileSystemInfoRequest.parentDirPath);
-
-        }
-            break;
-
-        case FileTransferPacket::FT_FileSystemInfoResponse :
-        {
-
-        }
-            break;
-
-        case FileTransferPacket::FT_FileDownloadingRequest :
-        {
-            emit signalAdminRequestDownloadFile(socketID, p.FileDownloadingRequest.baseDir, p.FileDownloadingRequest.fileName);
-
-        }
-            break;
-
-        case FileTransferPacket::FT_FileDownloadingResponse :
-        {
-
-        }
-            break;
-
-        case FileTransferPacket::FT_FileUploadingRequest :
-        {
-            emit signalAdminRequestUploadFile(socketID, p.FileUploadingRequest.fileMD5Sum, p.FileUploadingRequest.fileName, p.FileUploadingRequest.size, p.FileUploadingRequest.fileSaveDir);
-
-        }
-            break;
-
-        case FileTransferPacket::FT_FileUploadingResponse :
-        {
-
-        }
-            break;
-
-        case FileTransferPacket::FT_FileDataRequest :
-        {
-            emit signalFileDataRequested(socketID, p.FileDataRequest.fileMD5, p.FileDataRequest.startPieceIndex, p.FileDataRequest.endPieceIndex);
-        }
-            break;
-
-        case FileTransferPacket::FT_FileData :
-        {
-            emit signalFileDataReceived(socketID, p.FileDataResponse.fileMD5, p.FileDataResponse.pieceIndex, p.FileDataResponse.data, p.FileDataResponse.pieceMD5);
-        }
-            break;
-
-        case FileTransferPacket::FT_FileTXStatus :
-        {
-            emit signalFileTXStatusChanged(socketID, p.FileTXStatus.fileMD5, p.FileTXStatus.status);
-        }
-            break;
-
-        case FileTransferPacket::FT_FileTXError :
-        {
-            emit signalFileTXError(socketID, p.FileTXError.fileMD5, p.FileTXError.errorCode, p.FileTXError.message);
-        }
-            break;
-
-        default:
-            break;
-        }
-
+        emit signalFileTransferPacketReceived(p);
     }
     break;
 

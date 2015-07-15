@@ -3,6 +3,7 @@
 #include "rtp.h"
 
 #include "global_shared.h"
+#include "packets.h"
 
 namespace HEHUI {
 
@@ -13,7 +14,34 @@ RTP::RTP(QObject *parent) :
 
     qRegisterMetaType<SOCKETID>("SOCKETID");
     qRegisterMetaType<PacketBase>("PacketBase");
-    //qRegisterMetaType<Packet>("Packet");
+
+    qRegisterMetaType<ServerDiscoveryPacket>("ServerDiscoveryPacket");
+    qRegisterMetaType<MessagePacket>("MessagePacket");
+    qRegisterMetaType<JobProgressPacket>("JobProgressPacket");
+    qRegisterMetaType<AdminLoginPacket>("AdminLoginPacket");
+    qRegisterMetaType<ClientInfoPacket>("ClientInfoPacket");
+    qRegisterMetaType<SystemInfoFromServerPacket>("SystemInfoFromServerPacket");
+    qRegisterMetaType<SysAdminInfoPacket>("SysAdminInfoPacket");
+    qRegisterMetaType<SystemAlarmsPacket>("SystemAlarmsPacket");
+    qRegisterMetaType<AnnouncementPacket>("AnnouncementPacket");
+    qRegisterMetaType<RemoteConsolePacket>("RemoteConsolePacket");
+    qRegisterMetaType<ClientLogPacket>("ClientLogPacket");
+    qRegisterMetaType<USBDevPacket>("USBDevPacket");
+    qRegisterMetaType<AdminConnectionToClientPacket>("AdminConnectionToClientPacket");
+    qRegisterMetaType<AdminSearchClientPacket>("AdminSearchClientPacket");
+    qRegisterMetaType<LocalUserOnlineStatusChangedPacket>("LocalUserOnlineStatusChangedPacket");
+    qRegisterMetaType<FileTransferPacket>("FileTransferPacket");
+    qRegisterMetaType<ModifyAssetNOPacket>("ModifyAssetNOPacket");
+    qRegisterMetaType<RenameComputerPacket>("RenameComputerPacket");
+    qRegisterMetaType<JoinOrUnjoinDomainPacket>("JoinOrUnjoinDomainPacket");
+    qRegisterMetaType<TemperaturesPacket>("TemperaturesPacket");
+    qRegisterMetaType<ScreenshotPacket>("ScreenshotPacket");
+    qRegisterMetaType<ShutdownPacket>("ShutdownPacket");
+    qRegisterMetaType<LockWindowsPacket>("LockWindowsPacket");
+    qRegisterMetaType<WinUserPacket>("WinUserPacket");
+    qRegisterMetaType<ServiceConfigPacket>("ServiceConfigPacket");
+    qRegisterMetaType<ProcessMonitorInfoPacket>("ProcessMonitorInfoPacket");
+
 
     m_udtProtocol = 0;
 //    m_udtProtocol = new UDTProtocol(true, 0, this);

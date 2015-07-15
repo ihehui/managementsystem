@@ -86,6 +86,7 @@ public slots:
         ServerDiscoveryPacket packet;
         packet.responseFromServer = 0;
         packet.version = QString(APP_VERSION);
+        //packet.udpPort = m_udpServer->localPort();
 
         return m_udpServer->sendDatagram(packet.toByteArray(), address, port );
     }
@@ -375,62 +376,59 @@ private slots:
 
 
 signals:
-    //void  signalHeartbeatPacketReceived(const QString &computerName);
-    //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
 
-    void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
+    void signalServerDeclarePacketReceived(const ServerDiscoveryPacket &packet);
+    void signalClientInfoRequestedPacketReceived(const ClientInfoPacket &packet);
+    void signalRemoteConsolePacketReceived(const RemoteConsolePacket &packet);
+    void signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &packet);
+    void signalSetupUSBSDPacketReceived(const USBDevPacket &packet);
 
-    void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
+    void signalModifyAssetNOPacketReceived(const QString &newAssetNO);
+    void signalAssetNOModifiedPacketReceived(const QString &newAssetNO);
+    void signalModifyAssetNOPacketReceived(const ModifyAssetNOPacket &packet);
 
-    void signalClientInfoRequestedPacketReceived(SOCKETID socketID, quint8 infoType);
-    void signalAdminRequestRemoteConsolePacketReceived(const QString &applicationPath, bool startProcess);
-    void signalRemoteConsoleCMDFromServerPacketReceived(const QString &command);
+    void signalRenameComputerPacketReceived(const RenameComputerPacket &packet);
+    void signalJoinOrUnjoinDomainPacketReceived(const JoinOrUnjoinDomainPacket &packet);
+
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
     void signalServerResponseSoftwareVersionPacketReceived(const QString &softwareName, const QString &version);
 
-    void signalSystemInfoFromServerReceived(const QString &extraInfo, const QByteArray &clientInfo, quint8 infoType);
+    void signalAdminRequestConnectionToClientPacketReceived(const AdminConnectionToClientPacket &packet);
+    void signalAdminSearchClientPacketReceived(const AdminSearchClientPacket &packet);
+
+    void signalAdminRequestTemperatures(const TemperaturesPacket &packet);
+
 
     //void signalServerAnnouncementPacketReceived(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead);
 
     void signalUpdateClientSoftwarePacketReceived();
 
-    void signalSetupUSBSDPacketReceived(quint8 usbSTORStatus);
     void signalShowAdminPacketReceived(bool show);
     void signalModifyAdminGroupUserPacketReceived(const QString &assetNO, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
 
-    void signalModifyAssetNOPacketReceived(const QString &newAssetNO);
-    void signalAssetNOModifiedPacketReceived(const QString &newAssetNO);
-
-    void signalRenameComputerPacketReceived(const QString &newComputerName, const QString &domainAdminName, const QString &domainAdminPassword);
-    void signalJoinOrUnjoinDomainPacketReceived(bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
-
-    void signalAdminRequestConnectionToClientPacketReceived(SOCKETID socketID, const QString &adminComputerName, const QString &users);
-    void signalAdminSearchClientPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName);
-    
 //    void signalLocalUserOnlineStatusChanged(SOCKETID userSocketID, const QString &userName, bool online);
 
-    void signalAdminRequestTemperatures(SOCKETID adminSocketID, bool cpu, bool harddisk);
 //    void signalAdminRequestScreenshot(SOCKETID socketID, const QString &userName, bool fullScreen);
 
-    void signalAdminRequestShutdownPacketReceived(SOCKETID adminSocketID, const QString &message, quint32 waitTime, bool force, bool reboot);
-    void signalAdminRequestLockWindowsPacketReceived(SOCKETID adminSocketID, const QString &userName, bool logoff);
-    void signalAdminRequestCreateOrModifyWinUserPacketReceived(SOCKETID adminSocketID, const QByteArray &userData);
+    void signalAdminRequestShutdownPacketReceived(const ShutdownPacket &packet);
+    void signalAdminRequestLockWindowsPacketReceived(const LockWindowsPacket &packet);
+
+    void signalAdminRequestChangeServiceConfigPacketReceived(const ServiceConfigPacket &packet);
+    void signalWinUserPacketReceived(const WinUserPacket &packet);
+    void signalRequestChangeProcessMonitorInfoPacketReceived(const ProcessMonitorInfoPacket &packet);
 
 
-    void signalAdminRequestChangeServiceConfigPacketReceived(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
-    void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules);
+    ///////////////////////////
+    void signalFileTransferPacketReceived(const FileTransferPacket &packet);
 
-
-///////////////////////////
-    void signalFileSystemInfoRequested(SOCKETID socketID, const QString &parentDirPath);
-
-    void signalAdminRequestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
-    void signalAdminRequestDownloadFile(SOCKETID socketID, const QString &localBaseDir, const QString &fileName);
-    void signalFileDataRequested(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
-    void signalFileDataReceived(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
-    void signalFileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status);
-    void signalFileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
+//    void signalFileSystemInfoRequested(SOCKETID socketID, const QString &parentDirPath);
+//    void signalAdminRequestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
+//    void signalAdminRequestDownloadFile(SOCKETID socketID, const QString &localBaseDir, const QString &fileName);
+//    void signalFileDataRequested(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
+//    void signalFileDataReceived(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
+//    void signalFileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status);
+//    void signalFileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
 
 private:
 

@@ -62,11 +62,11 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
     m_rtp = m_resourcesManager->getRTP();
     Q_ASSERT(m_rtp);
 
-//    m_udtProtocol = m_rtp->getUDTProtocol();
-//    Q_ASSERT(m_udtProtocol);
-//    m_udtProtocol->startWaitingForIOInOneThread(10);
-//    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
-//    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    //    m_udtProtocol = m_rtp->getUDTProtocol();
+    //    Q_ASSERT(m_udtProtocol);
+    //    m_udtProtocol->startWaitingForIOInOneThread(10);
+    //    //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
+    //    connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
 
     m_tcpServer = m_rtp->getTCPServer();
     Q_ASSERT(m_tcpServer);
@@ -88,7 +88,7 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
     ipmcListeningPort = quint16(IP_MULTICAST_GROUP_PORT);
 
 
-//    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
+    //    localUDTListeningPort = m_udtProtocol->getUDTListeningPort();
     m_localTCPServerListeningPort = m_tcpServer->getTCPServerListeningPort();
     m_localENETListeningPort = m_rtp->getENETProtocolPort();
 
@@ -132,7 +132,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         serverName = peerID;
         emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, p.tcpPort, serverName, p.version, p.serverInstanceID);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_JobProgress):
     {
@@ -141,7 +141,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         JobProgressPacket p(packet);
         emit signalJobFinished(p.jobID, p.result, p.extraData);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_Message):
     {
@@ -155,7 +155,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
             emit signalClientMessagePacketReceived(peerID, p.message, p.msgType);
         }
     }
-    break;
+        break;
 
     case quint8(MS::CMD_ClientInfo):
     {
@@ -164,7 +164,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         ClientInfoPacket p(packet);
         emit signalClientInfoPacketReceived(p.assetNO, p.data, p.infoType);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_SystemInfoFromServer):
     {
@@ -173,7 +173,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         SystemInfoFromServerPacket p(packet);
         emit signalSystemInfoFromServerReceived(p.extraInfo, p.data, p.infoType);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_USBDev):
     {
@@ -182,7 +182,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         USBDevPacket p(packet);
         emit signalClientResponseUSBInfoPacketReceived(socketID, peerID, p.usbSTORStatus);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_RemoteConsole):
     {
@@ -203,7 +203,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         }
 
     }
-    break;
+        break;
 
     case quint8(MS::CMD_AdminLogin):
     {
@@ -212,35 +212,35 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         AdminLoginPacket p(packet);
         emit signalServerResponseAdminLoginResultPacketReceived(socketID, peerID, p.LoginResult.loggedIn, p.LoginResult.message, p.LoginResult.readonly);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_AdminConnectionToClient):
     {
         AdminConnectionToClientPacket p(packet);
         emit signalClientResponseAdminConnectionResultPacketReceived(socketID, peerID, p.computerName, p.verified, p.errorCode, peerAddress.toString());
     }
-    break;
+        break;
 
     case quint8(MS::CMD_ModifyAssetNO):
     {
         ModifyAssetNOPacket p(packet);
         emit signalAssetNOModifiedPacketReceived(p.oldAssetNO, p.newAssetNO);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_LocalUserOnlineStatusChanged):
     {
         LocalUserOnlineStatusChangedPacket p(packet);
         emit signalUserOnlineStatusChanged(peerID, p.userName, p.online);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_Temperatures):
     {
         TemperaturesPacket p(packet);
         emit signalTemperaturesPacketReceived(peerID, p.TemperaturesResponse.cpuTemperature, p.TemperaturesResponse.harddiskTemperature);
     }
-    break;
+        break;
 
     case quint8(MS::CMD_Screenshot):
     {
@@ -258,100 +258,33 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
             break;
         }
     }
-    break;
+        break;
 
     case quint8(MS::CMD_ServiceConfig):
     {
         ServiceConfigPacket p(packet);
         emit signalServiceConfigChangedPacketReceived(peerID, p.serviceName, p.processID, p.startupType);
     }
-    break;
+        break;
 
 
         ////////////////////////////////////////////
-            case quint8(MS::CMD_FileTransfer):
-            {
-                qDebug()<<"~~CMD_FileTransfer";
+    case quint8(MS::CMD_FileTransfer):
+    {
+        qDebug()<<"~~CMD_FileTransfer";
 
-                FileTransferPacket p(packet);
-                switch (p.InfoType) {
-                case FileTransferPacket::FT_FileSystemInfoRequest :
-                {
-                    emit signalFileSystemInfoRequested(socketID, p.FileSystemInfoRequest.parentDirPath);
-
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileSystemInfoResponse :
-                {
-
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileDownloadingRequest :
-                {
-                    emit signalAdminRequestDownloadFile(socketID, p.FileDownloadingRequest.baseDir, p.FileDownloadingRequest.fileName);
-
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileDownloadingResponse :
-                {
-
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileUploadingRequest :
-                {
-                    emit signalAdminRequestUploadFile(socketID, p.FileUploadingRequest.fileMD5Sum, p.FileUploadingRequest.fileName, p.FileUploadingRequest.size, p.FileUploadingRequest.fileSaveDir);
-
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileUploadingResponse :
-                {
-
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileDataRequest :
-                {
-                    emit signalFileDataRequested(socketID, p.FileDataRequest.fileMD5, p.FileDataRequest.startPieceIndex, p.FileDataRequest.endPieceIndex);
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileData :
-                {
-                    emit signalFileDataReceived(socketID, p.FileDataResponse.fileMD5, p.FileDataResponse.pieceIndex, p.FileDataResponse.data, p.FileDataResponse.pieceMD5);
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileTXStatus :
-                {
-                    emit signalFileTXStatusChanged(socketID, p.FileTXStatus.fileMD5, p.FileTXStatus.status);
-                }
-                    break;
-
-                case FileTransferPacket::FT_FileTXError :
-                {
-                    emit signalFileTXError(socketID, p.FileTXError.fileMD5, p.FileTXError.errorCode, p.FileTXError.message);
-                }
-                    break;
-
-                default:
-                    break;
-                }
-
-            }
-            break;
+        FileTransferPacket p(packet);
+        emit signalFileTransferPacketReceived(p);
+    }
+        break;
 
 
 
     default:
         qWarning()<<"ControlCenterPacketsParser! Unknown Packet Type: "<<packetType
-//                 <<"    Serial Number: "<<packetSerialNumber
-                <<"    From: "<<peerAddress.toString()
-               <<":"<<peerPort;
+                    //                 <<"    Serial Number: "<<packetSerialNumber
+                 <<"    From: "<<peerAddress.toString()
+                <<":"<<peerPort;
         break;
 
     }

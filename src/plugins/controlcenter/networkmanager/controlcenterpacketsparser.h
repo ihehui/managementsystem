@@ -210,14 +210,14 @@ public slots:
         return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
-    bool sendJoinOrUnjoinDomainPacket(SOCKETID socketID, const QString &assetNO, const QString &adminID, bool join, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
+    bool sendJoinOrUnjoinDomainPacket(SOCKETID socketID, const QString &assetNO, const QString &adminID, bool joinWorkgroup, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword){
 
         JoinOrUnjoinDomainPacket packet;
         packet.assetNO = assetNO;
         packet.domainOrWorkgroupName = domainOrWorkgroupName;
         packet.domainAdminName = domainAdminName;
         packet.domainAdminPassword = domainAdminPassword;
-        packet.join = join;
+        packet.joinWorkgroup = joinWorkgroup;
 
         return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
@@ -513,7 +513,6 @@ signals:
     //    void signalClientOnlinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
     //    void signalClientOfflinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
 
-    void signalServerOnlineStatusChangedPacketReceived(bool online, const QHostAddress serverAddress, quint16 serverPort, const QString &serverName);
     void signalJobFinished(quint32 jobID, quint8 result, const QVariant &extraData);
     void signalServerMessageReceived(const QString &message, quint8 messageType);
 
@@ -564,14 +563,16 @@ signals:
 
 
     ///////////////////////////
-    void signalFileSystemInfoRequested(SOCKETID socketID, const QString &parentDirPath);
 
-    void signalAdminRequestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
-    void signalAdminRequestDownloadFile(SOCKETID socketID, const QString &localBaseDir, const QString &fileName);
-    void signalFileDataRequested(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
-    void signalFileDataReceived(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
-    void signalFileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status);
-    void signalFileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
+    void signalFileTransferPacketReceived(const FileTransferPacket &packet);
+
+//    void signalFileSystemInfoRequested(SOCKETID socketID, const QString &parentDirPath);
+//    void signalAdminRequestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
+//    void signalAdminRequestDownloadFile(SOCKETID socketID, const QString &localBaseDir, const QString &fileName);
+//    void signalFileDataRequested(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);
+//    void signalFileDataReceived(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1);
+//    void signalFileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status);
+//    void signalFileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
 
 
 public slots:

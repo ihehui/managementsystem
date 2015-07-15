@@ -563,7 +563,7 @@ public:
     QString domainOrWorkgroupName;
     QString domainAdminName;
     QString domainAdminPassword;
-    quint8 join;
+    quint8 joinWorkgroup;
 };
 ////////////////////////////////////////////////////////////////////////
 

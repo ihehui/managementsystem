@@ -96,16 +96,17 @@ public slots:
     void peerDisconnected(bool normalClose);
 
     ///////////////////
+
+    void processFileTransferPacket(const FileTransferPacket &packet);
+
     void requestFileSystemInfo(const QString &parentDirPath);
     void fileSystemInfoReceived(SOCKETID socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData);
+
     void requestUploadFilesToRemote(const QString &localBaseDir, const QStringList &localFiles, const QString &remoteDir);
     void requestDownloadFileFromRemote(const QString &remoteBaseDir, const QStringList &remoteFiles, const QString &localDir);
 
     //File TX
     void startFileManager();
-    void processPeerRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
-    void processPeerRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
-
     void fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &localFileSaveDir);
     void fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message);
     void fileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message);
@@ -119,6 +120,8 @@ public slots:
     void fileTXError(int requestID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
     void pieceVerified(const QByteArray &fileMD5, int pieceIndex, bool verified, int verificationProgress);
 
+    void processPeerRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
+    void processPeerRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
 
 private slots:
 
@@ -157,6 +160,7 @@ private:
     FileManager *m_fileManager;
     QList<int/*File TX Request ID*/> fileTXRequestList;
     QList<QByteArray/*File MD5*/> filesList;
+    QHash<QString /*Remote File Path*/, QString/*Local File Path*/> fileSavePathHash;
 
 };
 

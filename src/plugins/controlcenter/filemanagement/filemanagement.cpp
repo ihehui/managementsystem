@@ -498,7 +498,7 @@ FileManagement::~FileManagement(){
     fileTXRequestList.clear();
     filesList.clear();
 
-
+    fileSavePathHash.clear();
 }
 
 void FileManagement::setPacketsParser(ControlCenterPacketsParser *parser){
@@ -508,6 +508,9 @@ void FileManagement::setPacketsParser(ControlCenterPacketsParser *parser){
     controlCenterPacketsParser = parser;
 
     ////////////////////
+
+    connect(controlCenterPacketsParser, SIGNAL(signalFileTransferPacketReceived(const FileTransferPacket &)), this, SLOT(processFileTransferPacket(const FileTransferPacket &)));
+
     connect(controlCenterPacketsParser, SIGNAL(signalFileSystemInfoReceived(SOCKETID, const QString &, const QByteArray &)), this, SLOT(fileSystemInfoReceived(SOCKETID, const QString &, const QByteArray &)));
     //File TX
     connect(controlCenterPacketsParser, SIGNAL(signalAdminRequestUploadFile(SOCKETID, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processPeerRequestUploadFilePacket(SOCKETID, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
@@ -793,6 +796,85 @@ void FileManagement::peerDisconnected(bool normalClose){
 
 ////////////////////////////////////////
 
+
+void FileManagement::processFileTransferPacket(const FileTransferPacket &packet){
+
+    SOCKETID socketID = packet.getSocketID();
+    switch (packet.InfoType) {
+    case FileTransferPacket::FT_FileSystemInfoRequest :
+    {
+        //fileSystemInfoRequested(socketID, packet.FileSystemInfoRequest.parentDirPath);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileSystemInfoResponse :
+    {
+        fileSystemInfoReceived(socketID, packet.FileSystemInfoResponse.parentDirPath, packet.FileSystemInfoResponse.fileSystemInfoData);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileDownloadingRequest :
+    {
+        //processAdminRequestDownloadFilePacket(socketID, packet.FileDownloadingRequest.baseDir, packet.FileDownloadingRequest.fileName);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileDownloadingResponse :
+    {
+        QString localSaveDir = fileSavePathHash.take(packet.FileDownloadingResponse.baseDir + "/" + packet.FileDownloadingResponse.fileName);
+        if(localSaveDir.isEmpty()){localSaveDir = m_localCurrentDir;}
+
+        if(packet.FileDownloadingResponse.accepted){
+            fileDownloadRequestAccepted(socketID, packet.FileDownloadingResponse.fileName, packet.FileDownloadingResponse.fileMD5Sum, packet.FileDownloadingResponse.size, localSaveDir);
+        }else{
+            fileDownloadRequestDenied(socketID, packet.FileDownloadingResponse.fileName, "");
+        }
+
+    }
+        break;
+
+    case FileTransferPacket::FT_FileUploadingRequest :
+    {
+        //processAdminRequestUploadFilePacket(socketID, packet.FileUploadingRequest.fileMD5Sum, packet.FileUploadingRequest.fileName, packet.FileUploadingRequest.size, packet.FileUploadingRequest.fileSaveDir);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileUploadingResponse :
+    {
+        fileUploadRequestResponsed(socketID, packet.FileUploadingResponse.fileMD5Sum, packet.FileUploadingResponse.accepted, packet.FileUploadingResponse.message);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileDataRequest :
+    {
+        processFileDataRequestPacket(socketID, packet.FileDataRequest.fileMD5, packet.FileDataRequest.startPieceIndex, packet.FileDataRequest.endPieceIndex);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileData :
+    {
+        processFileDataReceivedPacket(socketID, packet.FileDataResponse.fileMD5, packet.FileDataResponse.pieceIndex, packet.FileDataResponse.data, packet.FileDataResponse.pieceMD5);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileTXStatus :
+    {
+        processFileTXStatusChangedPacket(socketID, packet.FileTXStatus.fileMD5, packet.FileTXStatus.status);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileTXError :
+    {
+        processFileTXErrorFromPeer(socketID, packet.FileTXError.fileMD5, packet.FileTXError.errorCode, packet.FileTXError.message);
+    }
+        break;
+
+    default:
+        break;
+    }
+
+}
+
 void FileManagement::requestFileSystemInfo(const QString &parentDirPath){
 
     if(!controlCenterPacketsParser->requestFileSystemInfo(m_peerSocket, parentDirPath)){
@@ -898,6 +980,7 @@ void FileManagement::requestDownloadFileFromRemote(const QString &remoteBaseDir,
             continue ;
         }else{
             ui.textEditLogs->append(tr("Request downloading file %1").arg(remoteFileName));
+            fileSavePathHash.insert(remoteBaseDir + "/" + remoteFileName, localDir);
         }
     }
 

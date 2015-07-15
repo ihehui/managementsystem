@@ -621,7 +621,7 @@ void SystemManagementWidget::changeWorkgroup(){
         }
     }
 
-    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_peerAssetNO, m_adminUser->getUserID(), !joinWorkgroupAction, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
+    ok = controlCenterPacketsParser->sendJoinOrUnjoinDomainPacket(m_peerSocket, m_peerAssetNO, m_adminUser->getUserID(), joinWorkgroupAction, domainOrWorkgroupName, domainAdminName, domainAdminPassword);
     if(!ok){
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;

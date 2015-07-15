@@ -58,44 +58,51 @@ private slots:
 
     void serverLookedUp(const QHostInfo &host);
 
-    void serverFound(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
+    void serverFound(const ServerDiscoveryPacket &packet);
 
+    void processSetupUSBSDPacket(const USBDevPacket &packet);
+
+    void processModifyAssetNOPacket(const ModifyAssetNOPacket &packet);
+    void modifyAssetNOTimeout();
+
+    void processClientInfoRequestedPacket(const ClientInfoPacket &packet);
     void processClientInfoRequestedPacket(SOCKETID socketID, quint8 infoType);
     void systemInfoResultReady(const QByteArray &data, quint8 infoType, SOCKETID socketID);
     void systemInfoThreadFinished();
 
-    void processSetupUSBSDPacket(quint8 usbSTORStatus);
-    void processShowAdminPacket(bool show);
-
-    void processModifyAssetNOPacket(const QString &newAssetNO);
-    void processAssetNOModifiedPacket(const QString &newAssetNO);
-    void modifyAssetNOTimeout();
-
-    void processRenameComputerPacketReceived(const QString &newComputerName, const QString &domainAdminName, const QString &domainAdminPassword);
-    void processJoinOrUnjoinDomainPacketReceived(bool joinDomain, const QString &domainOrWorkgroupName, const QString &domainAdminName, const QString &domainAdminPassword);
-
-    void processAdminRequestConnectionToClientPacket(SOCKETID adminSocketID, const QString &adminComputerName, const QString &adminID);
-    void processAdminSearchClientPacket(const QString &adminAddress, quint16 adminPort, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminName);
-    
+    void processSystemInfoFromServer(const SystemInfoFromServerPacket &packet);
 
     void processAdminRequestRemoteConsolePacket(const QString &applicationPath, bool startProcess);
     void processRemoteConsoleCMDFromServerPacket(const QString &command);
+    void processRemoteConsolePacket(const RemoteConsolePacket &packet);
+
+    void processRenameComputerPacketReceived(const RenameComputerPacket &packet);
+    void processJoinOrUnjoinDomainPacketReceived(const JoinOrUnjoinDomainPacket &packet);
+
+    void processAdminRequestConnectionToClientPacket(const AdminConnectionToClientPacket &packet);
+    void processAdminSearchClientPacket(const AdminSearchClientPacket &packet);
+    
+
+
+    void processShowAdminPacket(bool show);
+
+
 
     void consoleProcessStateChanged(bool running, const QString &message);
     void consoleProcessOutputRead(const QString &output);
 
-//    void processLocalUserOnlineStatusChanged(SOCKETID userSocketID, const QString &userName, bool online);
+    void processAdminRequestTemperaturesPacket(const TemperaturesPacket &packet);
 
-    void processAdminRequestTemperaturesPacket(SOCKETID socketID, bool cpu = true, bool harddisk = false);
-//    void processAdminRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen = true);
+    void processAdminRequestShutdownPacket(const ShutdownPacket &packet);
+    void processAdminRequestLockWindowsPacket(const LockWindowsPacket &packet);
 
-    void processAdminRequestShutdownPacket(SOCKETID adminSocketID, const QString &message, quint32 waitTime, bool force, bool reboot);
-    void processAdminRequestLockWindowsPacket(SOCKETID adminSocketID, const QString &userName, bool logoff);
-    void processAdminRequestCreateOrModifyWinUserPacket(SOCKETID adminSocketID, const QByteArray &userData);
+    void processAdminRequestChangeServiceConfigPacket(const ServiceConfigPacket &packet);
+
+    void processWinUserPacket(const WinUserPacket &packet);
+
     void processAdminRequestDeleteUserPacket(SOCKETID adminSocketID, const QString &userName);
 
-    void processAdminRequestChangeServiceConfigPacket(SOCKETID socketID, const QString &serviceName, bool startService, unsigned long startupType);
-    void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules);
+    void processRequestChangeProcessMonitorInfoPacket(const ProcessMonitorInfoPacket &packet);
     void initProcessMonitorInfo();
 
 
@@ -105,7 +112,6 @@ private slots:
 
 //    void uploadClientDetailedInfoToServer();
 
-    void processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
 
     void update();
     bool updateAdministratorPassword(const QString &newPassword);
@@ -138,6 +144,9 @@ private slots:
     void peerDisconnected(SOCKETID socketID);
 
 ///////////////////
+
+    void processFileTransferPacket(const FileTransferPacket &packet);
+
     void fileSystemInfoRequested(SOCKETID socketID, const QString &parentDirPath);
     //File TX
     void startFileManager();
@@ -221,7 +230,7 @@ private:
     QTimer *lookForServerTimer;
 
     QHostAddress m_serverAddress;
-    quint16 m_serverUDTListeningPort;
+    quint16 m_serverRTPListeningPort;
 
     QString m_serverName;
     int m_serverInstanceID;

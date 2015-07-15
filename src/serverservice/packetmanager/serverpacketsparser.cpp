@@ -107,7 +107,6 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     //QByteArray packetBody = packet.getPacketBody();
     quint8 packetType = packet.getPacketType();
     QString peerID = packet.getPeerID();
-
     QHostAddress peerAddress = packet.getPeerHostAddress();
     quint16 peerPort = packet.getPeerHostPort();
     SOCKETID socketID = packet.getSocketID();
@@ -130,7 +129,12 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     case quint8(MS::CMD_ServerDiscovery):
     {
         ServerDiscoveryPacket p(packet);
-        sendServerDeclarePacket(peerAddress, p.udpPort);
+        if(p.responseFromServer){return;}
+        quint16 udpPort= p.udpPort;
+        if(!udpPort){
+            udpPort = peerPort;
+        }
+        sendServerDeclarePacket(peerAddress, udpPort);
         qWarning()<<"~~ClientLookForServer--"<<" peerAddress:"<<peerAddress.toString()<<"   peerPort:"<<peerPort <<" Version:"<<p.version << " peerID:" << peerID;
     }
     break;

@@ -1228,14 +1228,14 @@ void JoinOrUnjoinDomainPacket::init(){
     domainOrWorkgroupName = "";
     domainAdminName = "";
     domainAdminPassword = "";
-    join = 1;
+    joinWorkgroup = 1;
 }
 
 void JoinOrUnjoinDomainPacket::parsePacketBody(QByteArray &packetBody){
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
-    in >> assetNO >> domainOrWorkgroupName >> domainAdminName >> domainAdminPassword >> join;
+    in >> assetNO >> domainOrWorkgroupName >> domainAdminName >> domainAdminPassword >> joinWorkgroup;
 }
 
 QByteArray JoinOrUnjoinDomainPacket::packBodyData(){
@@ -1243,7 +1243,7 @@ QByteArray JoinOrUnjoinDomainPacket::packBodyData(){
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
 
-    out << assetNO << domainOrWorkgroupName << domainAdminName << domainAdminPassword << join;
+    out << assetNO << domainOrWorkgroupName << domainAdminName << domainAdminPassword << joinWorkgroup;
 
     return ba;
 }
