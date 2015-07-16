@@ -56,7 +56,7 @@ void AdminUser::init(RTP *rtp, ControlCenterPacketsParser *controlCenterPacketsP
     setParent(parent);
 
     connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)));
-    connect(m_controlCenterPacketsParser, SIGNAL(signalServerResponseAdminLoginResultPacketReceived(SOCKETID, const QString &, bool, const QString &, bool)), this, SLOT(processLoginResult(SOCKETID, const QString &, bool, const QString &, bool)));
+    connect(m_controlCenterPacketsParser, SIGNAL(signalServerResponseAdminLoginResultPacketReceived(const AdminLoginPacket &)), this, SLOT(processLoginResult(const AdminLoginPacket &)));
 
 }
 
@@ -127,7 +127,7 @@ void AdminUser::modifyServerSettings(){
 
     ServerAddressManagerWindow smw(&dlg);
     connect(&smw, SIGNAL(signalLookForServer(const QString &, quint16 )), m_controlCenterPacketsParser, SLOT(sendClientLookForServerPacket(const QString &, quint16)));
-    connect(m_controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const QString&, quint16, quint16, const QString&, const QString&, int)), &smw, SLOT(serverFound(const QString&, quint16, quint16, const QString&, const QString&, int)));
+    connect(m_controlCenterPacketsParser, SIGNAL(signalServerDeclarePacketReceived(const ServerDiscoveryPacket &)), &smw, SLOT(serverFound(const ServerDiscoveryPacket &)));
     connect(&smw, SIGNAL(signalServerSelected(const QString &, quint16, const QString &, const QString &)), this, SLOT(serverSelected(const QString &, quint16, const QString &, const QString &)));
 
     vbl.addWidget(&smw);
@@ -189,23 +189,24 @@ bool AdminUser::login(){
 
 }
 
-void AdminUser::processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly){
-    Q_ASSERT(socketID == m_socketConnectedToServer);
+void AdminUser::processLoginResult(const AdminLoginPacket &packet){
 
-    m_serverName = serverName;
+    Q_ASSERT(packet.getSocketID() == m_socketConnectedToServer);
 
-    setVerified(result);
-    m_readonly = readonly;
+    m_serverName = packet.getPeerID();
 
-    if(result){
+    bool loggedin = packet.LoginResult.loggedIn;
+    setVerified(loggedin);
+    m_readonly = packet.LoginResult.readonly;
+
+    if(loggedin){
         m_loginDlg->accept();
         delete m_loginDlg;
         m_loginDlg = 0;
         emit signalVerified();
     }else{
-        m_loginDlg->setErrorMessage(message);
+        m_loginDlg->setErrorMessage(packet.LoginResult.message);
     }
-
 
 }
 

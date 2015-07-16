@@ -111,21 +111,15 @@ public slots:
 
 
 
-
     /////////////////////////////////////////////////////
 
 
 
 signals:
-    //void  signalHeartbeatPacketReceived(const QString &computerName);
-    //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
-
     void signalLocalServiceServerDeclarePacketReceived(const QString &localComputerName);
 
-    void signalSystemInfoFromServerReceived(const QString &extraInfo, const QByteArray &clientInfo, quint8 infoType);
-
-
-    void signalAdminRequestScreenshotPacketReceived(SOCKETID adminSocketID, const QString &adminName, const QString &adminAddress, quint16 adminPort);
+    void signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &packet);
+    void signalAdminRequestScreenshotPacketReceived(const ScreenshotPacket &packet);
 
 
 private:
@@ -138,14 +132,10 @@ private:
     PacketHandlerBase *m_packetHandlerBase;
     //NetworkManagerInstance *networkManager;
 
-
-
     RTP *m_rtp;
 //    UDTProtocol *m_udtProtocol;
     TCPServer *m_tcpServer;
     ENETProtocol *m_enetProtocol;
-
-
 
 };
 

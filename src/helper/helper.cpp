@@ -145,13 +145,12 @@ void Helper::startNetwork(){
     if(!bulletinBoardPacketsParser){
         bulletinBoardPacketsParser = new BulletinBoardPacketsParser(resourcesManager, m_userName, m_localComputerName, this);
 
-        connect(bulletinBoardPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
+        connect(bulletinBoardPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &)), this, SLOT(processSystemInfoFromServer(const SystemInfoFromServerPacket &)));
 
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), this, SLOT(adminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), Qt::QueuedConnection);
         connect(bulletinBoardPacketsParser, SIGNAL(signalAdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), this, SLOT(AdminInformUserNewPasswordPacketReceived(const QString&, quint16, const QString&, const QString&, const QString&)), Qt::QueuedConnection);
-//        connect(bulletinBoardPacketsParser, SIGNAL(signalAnnouncementPacketReceived(const QString &, const QString &, quint8, const QString &, bool, int)), this, SLOT(serverAnnouncementPacketReceived(const QString &, const QString &, quint8, const QString &, bool, int)), Qt::QueuedConnection);
 
-        connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestScreenshotPacketReceived(SOCKETID, const QString&, const QString&, quint16)), this, SLOT(adminRequestScreenshotPacketReceived(SOCKETID, const QString&, const QString&, quint16)), Qt::QueuedConnection);
+        connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestScreenshotPacketReceived(const ScreenshotPacket &)), this, SLOT(adminRequestScreenshotPacketReceived(const ScreenshotPacket &)), Qt::QueuedConnection);
 
     }
 
@@ -159,7 +158,11 @@ void Helper::startNetwork(){
 
 }
 
-void Helper::processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType){
+void Helper::processSystemInfoFromServer(const SystemInfoFromServerPacket &packet){
+
+    QString extraInfo = packet.extraInfo;
+    QByteArray infoData = packet.data;
+    quint8 infoType = packet.infoType;
 
     switch (infoType) {
     case quint8(MS::SYSINFO_ANNOUNCEMENTS):
@@ -248,17 +251,20 @@ void Helper::newPasswordRetreved(){
 
 }
 
-void Helper::adminRequestScreenshotPacketReceived(SOCKETID socketID, const QString &adminName, const QString &adminAddress, quint16 adminPort){
+void Helper::adminRequestScreenshotPacketReceived(const ScreenshotPacket &packet){
 
+    //QString adminName = packet.ScreenshotRequest.adminID;
+    QHostAddress adminAddress = packet.getPeerHostAddress();
+    quint16 adminPort = packet.ScreenshotRequest.adminListeningPort;
 
-    QString errorMessage;
+        QString errorMessage;
     if(m_socketConnectedToAdmin != INVALID_SOCK_ID){
         m_rtp->closeSocket(m_socketConnectedToAdmin);
     }
 
-    m_socketConnectedToAdmin = m_rtp->connectToHost(QHostAddress(adminAddress), adminPort, 5000, &errorMessage, RTP::TCP);
+    m_socketConnectedToAdmin = m_rtp->connectToHost(adminAddress, adminPort, 5000, &errorMessage, RTP::TCP);
     if(m_socketConnectedToAdmin == INVALID_SOCK_ID){
-        qCritical()<<QString("Can not connect to admin host '%1:%2'.<br>%3").arg(adminAddress).arg(adminPort).arg(errorMessage);
+        qCritical()<<QString("Can not connect to admin host '%1:%2'.<br>%3").arg(adminAddress.toString()).arg(adminPort).arg(errorMessage);
         return;
     }
 

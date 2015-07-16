@@ -277,7 +277,7 @@ void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID){
         int cpuLoad = SystemUtilities::getCPULoad();
         int memLoad = 0;
         SystemUtilities::getMemoryStatus(0, &memLoad);
-        qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
+        //qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
 
         QJsonObject obj;
         obj["CPULoad"] = QString::number(cpuLoad);

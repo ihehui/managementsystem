@@ -102,8 +102,6 @@ ServerPacketsParser::~ServerPacketsParser() {
 
 void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
 
-    //    qDebug()<<"----ServerPacketsParser::parseIncomingPacketData(Packet *packet)";
-
     //QByteArray packetBody = packet.getPacketBody();
     quint8 packetType = packet.getPacketType();
     QString peerID = packet.getPeerID();
@@ -111,19 +109,6 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     quint16 peerPort = packet.getPeerHostPort();
     SOCKETID socketID = packet.getSocketID();
     
-//    QByteArray packetData = packet->getPacketData();
-//    QDataStream in(&packetData, QIODevice::ReadOnly);
-//    in.setVersion(QDataStream::Qt_4_8);
-
-//    QString peerID = "";
-//    in >> peerID;
-
-//    QHostAddress peerAddress = packet.getPeerHostAddress();
-//    quint16 peerPort = packet.getPeerHostPort();
-//    quint8 packetType = packet.getPacketType();
-//    SOCKETID socketID = packet.getSocketID();
-//    qDebug()<<"--ServerPacketsParser::parseIncomingPacketData(...) "<<" peerID:"<<peerID<<" peerAddress:"<<peerAddress<<" peerPort:"<<peerPort<<" packetSerialNumber:"<<packetSerialNumber<<" packetType:"<<packetType;
-
     switch(packetType){
 
     case quint8(MS::CMD_ServerDiscovery):
@@ -144,7 +129,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_AdminLogin";
 
         AdminLoginPacket p(packet);
-        emit signalAdminLogin(socketID, p.LoginInfo.adminID, p.LoginInfo.password, p.LoginInfo.computerName, peerAddress.toString());
+        emit signalAdminLogin(p);
     }
     break;
 
@@ -153,23 +138,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_SystemAlarms";
 
         SystemAlarmsPacket p(packet);
-        switch (p.InfoType) {
-        case SystemAlarmsPacket::SYSTEMALARMS_QUERY:
-        {
-            emit signalSystemAlarmsRequested(socketID, p.QueryInfo.assetNO, p.QueryInfo.type, p.QueryInfo.acknowledged, p.QueryInfo.startTime, p.QueryInfo.endTime);
-        }
-            break;
-
-        case SystemAlarmsPacket::SYSTEMALARMS_ACK:
-        {
-            emit signalAcknowledgeSystemAlarmsPacketReceived(socketID, p.ACKInfo.alarms, p.ACKInfo.deleteAlarms);
-        }
-            break;
-
-        default:
-            break;
-        }
-
+        emit signalSystemAlarmsPacketReceived(p);
     }
     break;
 
@@ -178,40 +147,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_Announcement";
 
         AnnouncementPacket p(packet);
-        switch (p.InfoType) {
-        case AnnouncementPacket::ANNOUNCEMENT_QUERY :
-        {
-            emit signalAnnouncementsRequested(socketID, p.QueryInfo.announcementID, p.QueryInfo.keyword, p.QueryInfo.validity, p.QueryInfo.assetNO, p.QueryInfo.userName, p.QueryInfo.target, p.QueryInfo.startTime, p.QueryInfo.endTime);
-        }
-            break;
-
-        case AnnouncementPacket::ANNOUNCEMENT_CREATE :
-        {
-            emit signalCreateAnnouncementPacketReceived(socketID, p.JobID, p.CreateInfo.localTempID, p.CreateInfo.adminID, p.CreateInfo.type, p.CreateInfo.content, p.CreateInfo.confirmationRequired, p.CreateInfo.validityPeriod, p.CreateInfo.targetType, p.CreateInfo.targets);
-        }
-            break;
-
-        case AnnouncementPacket::ANNOUNCEMENT_UPDATE :
-        {
-            emit signalUpdateAnnouncementRequested(socketID, p.JobID, p.UpdateInfo.adminName, p.UpdateInfo.announcementID, p.UpdateInfo.targetType, p.UpdateInfo.active, p.UpdateInfo.addedTargets, p.UpdateInfo.deletedTargets);
-        }
-            break;
-
-        case AnnouncementPacket::ANNOUNCEMENT_REPLY :
-        {
-            emit signalReplyMessagePacketReceived(socketID, peerID, p.ReplyInfo.announcementID, p.ReplyInfo.sender, p.ReplyInfo.receiver, p.ReplyInfo.receiversAssetNO, p.ReplyInfo.replyMessage);
-        }
-            break;
-        case AnnouncementPacket::ANNOUNCEMENT_QUERY_TARGETS :
-        {
-            emit signalAnnouncementTargetsRequested(socketID, p.QueryTargetsInfo.announcementID);
-        }
-            break;
-
-        default:
-            break;
-        }
-
+        emit signalAnnouncementsPacketReceived(p);
     }
     break;
 
@@ -220,11 +156,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_ClientInfo";
 
         ClientInfoPacket p(packet);
-        if(p.IsRequest){
-            emit signalClientInfoRequestedPacketReceived(socketID, p.assetNO, p.infoType);
-        }else{
-            emit signalClientInfoPacketReceived(peerID, p.data, p.infoType);
-        }
+        emit signalClientInfoPacketReceived(p);
     }
     break;
 
@@ -233,7 +165,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_ClientLog";
 
         ClientLogPacket p(packet);
-        emit signalClientLogReceived(peerID, peerAddress.toString(), p.logType, p.log);
+        emit signalClientLogReceived(p);
     }
     break;
 
@@ -242,7 +174,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_ModifyAssetNO";
 
         ModifyAssetNOPacket p(packet);
-        emit signalModifyAssetNOPacketReceived(socketID, p.newAssetNO, peerID, p.adminID);
+        emit signalModifyAssetNOPacketReceived(p);
     }
     break;
 
@@ -251,7 +183,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_ProcessMonitorInfo";
 
         ProcessMonitorInfoPacket p(packet);
-        emit signalRequestChangeProcessMonitorInfoPacketReceived(socketID, p.localRules, p.globalRules, p.enableProcMon, p.enablePassthrough, p.enableLogAllowedProcess, p.enableLogBlockedProcess, p.useGlobalRules, p.assetNO);
+        emit signalProcessMonitorInfoPacketReceived(p);
     }
     break;
 
@@ -260,7 +192,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
         qDebug()<<"~~CMD_SysAdminInfo";
 
         SysAdminInfoPacket p(packet);
-        emit signalUpdateSysAdminInfoPacketReceived(socketID, p.adminID, p.data, p.deleteAdmin);
+        emit signalUpdateSysAdminInfoPacketReceived(p);
     }
     break;
 

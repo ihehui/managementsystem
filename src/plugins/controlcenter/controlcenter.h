@@ -86,19 +86,18 @@ private slots:
     void startNetwork();
 
 
-    void showServerMessage(const QString &message, quint8 messageType);
+    void showReceivedMessage(const MessagePacket &packet);
+    void updateOrSaveClientInfo(const ClientInfoPacket &packet);
+    void processSystemInfoFromServer(const SystemInfoFromServerPacket &packet);
 
-    void updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType);
-    void processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
     void updateSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
     void updateClientInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType);
 
-    void processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO);
+    void processAssetNOModifiedPacket(const ModifyAssetNOPacket &packet);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online);
 
-    void processDesktopInfo(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight);
-    void processScreenshot(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
+    void processScreenshotPacket(const ScreenshotPacket &packet);
     void closeRemoteDesktopMonitor();
     void closeUserSocket(quint32 userSocketID);
 

@@ -34,7 +34,7 @@ public slots:
 private slots:
     void startNetwork();
 
-    void processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType);
+    void processSystemInfoFromServer(const SystemInfoFromServerPacket &packet);
     void processAnnouncementsInfo(const QString &userName, const QByteArray &infoData);
     void processAnnouncementRepliesInfo(const QString &userName, const QByteArray &infoData);
 
@@ -46,7 +46,7 @@ private slots:
 
     void newPasswordRetreved();
 
-    void adminRequestScreenshotPacketReceived(SOCKETID socketID, const QString &adminName, const QString &adminAddress, quint16 adminPort);
+    void adminRequestScreenshotPacketReceived(const ScreenshotPacket &packet);
     void screenshot();
     
 //    void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);

@@ -46,7 +46,7 @@ public slots:
     void serverSelected(const QString &serverAddress, quint16 serverPort, const QString &serverName, const QString &version);
     bool connectToServer(const QString &serverAddress, quint16 serverPort);
     bool login();
-    void processLoginResult(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
+    void processLoginResult(const AdminLoginPacket &packet);
 
     void peerDisconnected(SOCKETID socketID);
 

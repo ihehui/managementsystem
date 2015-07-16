@@ -45,6 +45,8 @@ class ServerAddressManagerWindowClass;
 
 namespace HEHUI {
 
+class ServerDiscoveryPacket;
+
 class ServerAddressManagerWindow : public QWidget
 {
     Q_OBJECT
@@ -67,7 +69,7 @@ signals:
     
 
 public slots:
-    void serverFound(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
+    void serverFound(const ServerDiscoveryPacket &packet);
     
 private slots:
     void slotRequestForLANServer(const QString &ip, quint16 port);

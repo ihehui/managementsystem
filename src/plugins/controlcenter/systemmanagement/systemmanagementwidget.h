@@ -79,20 +79,22 @@ private slots:
     void targetHostLookedUp(const QHostInfo &host);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &assetNO, bool online);
-    void processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, quint16 errorCode, const QString &clientIP);
+    void processClientResponseAdminConnectionResultPacket(const AdminConnectionToClientPacket &packet);
 
     void requestConnectionToClientTimeout();
 
-    void clientMessageReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
-
     void requestClientInfo(quint8 infoType);
-    void clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType);
+    void clientInfoPacketReceived(const ClientInfoPacket &packet);
+    void systemInfoFromServerPacketReceived(const SystemInfoFromServerPacket &packet);
+    void processClientInfo(const QString &assetNO, const QByteArray &data, quint8 infoType);
+
+
     void updateOSInfo();
     void updateHardwareInfo();
     void updateResourcesLoadInfo();
 
 
-    void processAssetNOModifiedPacket(const QString &newAssetNO, const QString &oldAssetNO);
+    void processAssetNOModifiedPacket(const ModifyAssetNOPacket &packet);
     void modifyAssetNOTimeout();
 
     void changServiceConfig(const QString &serviceName, bool startService, quint64 startupType);
@@ -111,18 +113,16 @@ private slots:
 
     void requestClientInfoTimeout();
 
-    void clientResponseRemoteConsoleStatusPacketReceived(const QString &assetNO, bool running, const QString &extraMessage, quint8 messageType);
-    void remoteConsoleCMDResultFromClientPacketReceived(const QString &assetNO, const QString &result);
+    void remoteConsolePacketReceived(const RemoteConsolePacket &packet);
     void requestRemoteConsoleTimeout();
 
-    void userOnlineStatusChangedPacketReceived(const QString &assetNO, const QString &userName, bool online);
+    void userOnlineStatusChangedPacketReceived(const LocalUserOnlineStatusChangedPacket &packet);
+    void serviceConfigChangedPacketReceived(const ServiceConfigPacket &packet);
+    void updateTemperatures(const TemperaturesPacket &packet);
 
+    //    void replyMessageReceived(const QString &announcementID, const QString &sender, const QString &sendersAssetNO, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage);
     void userResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
 
-    void updateTemperatures(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
-//    void replyMessageReceived(const QString &announcementID, const QString &sender, const QString &sendersAssetNO, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage);
-
-    void serviceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType);
 
     void peerDisconnected(SOCKETID socketID);
     void peerDisconnected(bool normalClose);

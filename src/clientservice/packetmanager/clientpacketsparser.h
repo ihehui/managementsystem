@@ -399,17 +399,9 @@ signals:
 
     void signalAdminRequestTemperatures(const TemperaturesPacket &packet);
 
-
-    //void signalServerAnnouncementPacketReceived(const QString &workgroupName, const QString &computerName, quint32 announcementID, const QString &announcement, const QString &adminName, const QString &userName, bool mustRead);
-
     void signalUpdateClientSoftwarePacketReceived();
 
     void signalShowAdminPacketReceived(bool show);
-    void signalModifyAdminGroupUserPacketReceived(const QString &assetNO, const QString &userName, bool addToAdminGroup, const QString &adminName, const QString &adminAddress, quint16 adminPort);
-
-//    void signalLocalUserOnlineStatusChanged(SOCKETID userSocketID, const QString &userName, bool online);
-
-//    void signalAdminRequestScreenshot(SOCKETID socketID, const QString &userName, bool fullScreen);
 
     void signalAdminRequestShutdownPacketReceived(const ShutdownPacket &packet);
     void signalAdminRequestLockWindowsPacketReceived(const LockWindowsPacket &packet);

@@ -92,36 +92,14 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
 }
 
 BulletinBoardPacketsParser::~BulletinBoardPacketsParser() {
-    // TODO Auto-generated destructor stub
     qDebug()<<"~BulletinBoardPacketsParser()";
 
-
-
-    //    if(processWaitingForReplyPacketsTimer){
-    //        processWaitingForReplyPacketsTimer->stop();
-    //    }
-    //    delete processWaitingForReplyPacketsTimer;
-    //    processWaitingForReplyPacketsTimer = 0;
-
     disconnect();
-
-
 }
 
 void BulletinBoardPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     qDebug()<<"----BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet)";
     
-
-//    QByteArray packetData = packet->getPacketData();
-//    QDataStream in(&packetData, QIODevice::ReadOnly);
-//    in.setVersion(QDataStream::Qt_4_6);
-
-//    QString peerID = "";
-//    in >> peerID;
-
-//    quint8 packetType = packet->getPacketType();
-//    SOCKETID socketID = packet->getSocketID();
-//    PacketHandlerBase::recylePacket(packet);
 
     quint8 packetType = packet.getPacketType();
     QString peerID = packet.getPeerID();
@@ -132,26 +110,19 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(const PacketBase &packe
 
     switch(packetType){
 
-//    case quint8(MS::LocalServiceServerDeclare):
-//    {
-//        emit signalLocalServiceServerDeclarePacketReceived(peerID);
-//    }
-//        break;
-
     case quint8(MS::CMD_SystemInfoFromServer):
     {
         SystemInfoFromServerPacket p(packet);
-        emit signalSystemInfoFromServerReceived(p.extraInfo, p.data, p.infoType);
+        emit signalSystemInfoFromServerReceived(p);
     }
     break;
 
     case quint8(MS::CMD_Screenshot):
     {
         qDebug()<<"~~CMD_Screenshot";
-
         ScreenshotPacket p(packet);
         if(m_userName != p.ScreenshotRequest.userName){return;}
-        emit signalAdminRequestScreenshotPacketReceived(socketID, p.ScreenshotRequest.adminID, peerAddress.toString(), p.ScreenshotRequest.adminListeningPort);
+        emit signalAdminRequestScreenshotPacketReceived(p);
     }
         break;
 

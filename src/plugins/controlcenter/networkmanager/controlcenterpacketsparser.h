@@ -504,61 +504,30 @@ public slots:
 
 
 signals:
-    //void  signalHeartbeatPacketReceived(const QString &computerName);
-    //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber1, quint16 packetSerialNumber2);
 
-    //    void signalClientLookForServerPacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
-    void signalServerDeclarePacketReceived(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID);
-
-    //    void signalClientOnlinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
-    //    void signalClientOfflinePacketReceived(const QHostAddress clientAddress, quint16 clientPort, const QString &clientName);
-
+    void signalServerDeclarePacketReceived(const ServerDiscoveryPacket &packet);
     void signalJobFinished(quint32 jobID, quint8 result, const QVariant &extraData);
-    void signalServerMessageReceived(const QString &message, quint8 messageType);
+    void signalMessagePacketReceived(const MessagePacket &packet);
+    void signalClientInfoPacketReceived(const ClientInfoPacket &packet);
+    void signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &packet);
 
-    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online);
+    void signalClientResponseUSBInfoPacketReceived(const USBDevPacket &packet);
+    void signalRemoteConsolePacketReceived(const RemoteConsolePacket &packet);
+    void signalServerResponseAdminLoginResultPacketReceived(const AdminLoginPacket &packet);
 
-    //    void signalAdminLoggedOnToServerRequestPacketReceived(const QHostAddress adminAddress, quint16 adminPort, const QString &adminID);
-    //    void signalServerRequestRemoteConsolePacketReceived(const QString &adminID);
-    void signalClientResponseRemoteConsoleStatusPacketReceived(const QString &assetNO, bool accept, const QString &extraMessage, quint8 messageType);
-    //    void signalRemoteConsoleCMDFromServerPacketReceived(const QString &command);
-    void signalRemoteConsoleCMDResultFromClientPacketReceived(const QString &assetNO, const QString &result);
+    void signalClientResponseAdminConnectionResultPacketReceived(const AdminConnectionToClientPacket &packet);
+    void signalAssetNOModifiedPacketReceived(const ModifyAssetNOPacket &packet);
+    void signalUserOnlineStatusChanged(const LocalUserOnlineStatusChangedPacket &packet);
+    void signalTemperaturesPacketReceived(const TemperaturesPacket &packet);
+    void signalScreenshotPacketReceived(const ScreenshotPacket &packet);
 
+    void signalServiceConfigChangedPacketReceived(const ServiceConfigPacket &packet);
 
-
-    void signalClientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
-    void signalSystemInfoFromServerReceived(const QString &extraInfo, const QByteArray &clientInfo, quint8 infoType);
-
-    void signalClientResponseUSBInfoPacketReceived(SOCKETID socketID, const QString &assetNO, quint8 usbInfo);
-
-
-
-    void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
-    void signalServerResponseSoftwareVersionPacketReceived(const QString &softwareName, const QString &version);
-
-    //    void  signalServerAnnouncementPacketReceived(const QString &groupName, const QString &computerName, const QString &announcement, bool mustRead = true);
-
-    void signalServerResponseAdminLoginResultPacketReceived(SOCKETID socketID, const QString &serverName, bool result, const QString &message, bool readonly);
-
-    void signalClientResponseAdminConnectionResultPacketReceived(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, quint8 errorCode, const QString &clientIP);
-    void signalClientMessagePacketReceived(const QString &assetNO, const QString &message, quint8 clientMessageType);
-
-    void signalAssetNOModifiedPacketReceived(const QString &oldAssetNO, const QString &newAssetNO);
 
     void signalUserResponseRemoteAssistancePacketReceived(const QString &userName, const QString &computerName, bool accept);
-    void signalNewPasswordRetrevedByUserPacketReceived(const QString &userName, const QString &computerName);
-    
-
-    void signalUserOnlineStatusChanged(const QString &assetNO, const QString &userName, bool online);
-
-    void signalTemperaturesPacketReceived(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature);
-
-//    void signalUserReplyMessagePacketReceived(const QString &announcementID, const QString &sender, const QString &sendersAssetNO, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage);
-
-    void signalDesktopInfoPacketReceived(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight,int  blockWidth, int blockHeight);
-    void signalScreenshotPacketReceived(const QString &userID, QList<QPoint> locations, QList<QByteArray> images);
-
-    void signalServiceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType);
+    void signalClientOnlineStatusChanged(SOCKETID socketID, const QString &assetNO, bool online);
+    void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
+    void signalServerResponseSoftwareVersionPacketReceived(const QString &softwareName, const QString &version);
 
 
 

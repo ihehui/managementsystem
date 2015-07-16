@@ -300,28 +300,26 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     }
 
     this->controlCenterPacketsParser = parser;
+    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const ClientInfoPacket &)), this, SLOT(clientInfoPacketReceived(const ClientInfoPacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &)), this, SLOT(systemInfoFromServerPacketReceived(const SystemInfoFromServerPacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(const AdminConnectionToClientPacket &)), this, SLOT(processClientResponseAdminConnectionResultPacket(const AdminConnectionToClientPacket &)));
+
+
     connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString&, bool)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(SOCKETID, const QString &, const QString &, bool, quint8, const QString &)), this, SLOT(processClientResponseAdminConnectionResultPacket(SOCKETID, const QString &, const QString &, bool, quint8, const QString &)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientMessagePacketReceived(const QString &, const QString &, quint8)), this, SLOT(clientMessageReceived(const QString &, const QString &, quint8)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &, quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &, quint8)));
-    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(clientInfoPacketReceived(const QString &, const QByteArray &,quint8)));
+    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const ModifyAssetNOPacket &)), this, SLOT(processAssetNOModifiedPacket(const ModifyAssetNOPacket &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalRemoteConsolePacketReceived(const RemoteConsolePacket &)), this, SLOT(remoteConsolePacketReceived(const RemoteConsolePacket &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseRemoteConsoleStatusPacketReceived(const QString &, bool, const QString &, quint8)), this, SLOT(clientResponseRemoteConsoleStatusPacketReceived(const QString &, bool, const QString &, quint8)));
-    connect(controlCenterPacketsParser, SIGNAL(signalRemoteConsoleCMDResultFromClientPacketReceived(const QString &, const QString &)), this, SLOT(remoteConsoleCMDResultFromClientPacketReceived(const QString &, const QString &)));
-
-    connect(controlCenterPacketsParser, SIGNAL(signalUserOnlineStatusChanged(const QString&, const QString&,  bool)), this, SLOT(userOnlineStatusChangedPacketReceived(const QString&, const QString&, bool)));
-
-    connect(controlCenterPacketsParser, SIGNAL(signalUserResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)), this, SLOT(userResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)));
+    connect(controlCenterPacketsParser, SIGNAL(signalUserOnlineStatusChanged(const LocalUserOnlineStatusChangedPacket &)), this, SLOT(userOnlineStatusChangedPacketReceived(const LocalUserOnlineStatusChangedPacket &)));
     
+    connect(controlCenterPacketsParser, SIGNAL(signalServiceConfigChangedPacketReceived(const ServiceConfigPacket &)), this, SLOT(serviceConfigChangedPacketReceived(const ServiceConfigPacket &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const QString &, const QString &, const QString &)), this, SLOT(updateTemperatures(const QString &, const QString &, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalTemperaturesPacketReceived(const TemperaturesPacket &)), this, SLOT(updateTemperatures(const TemperaturesPacket &)));
 
-//    connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)));
+    //    connect(controlCenterPacketsParser, SIGNAL(signalUserReplyMessagePacketReceived(const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)), this, SLOT(replyMessageReceived(const QString &, const QString &, const QString &, const QString &, const QString &, const QString &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalUserResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)), this, SLOT(userResponseRemoteAssistancePacketReceived(const QString &, const QString &, bool)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalServiceConfigChangedPacketReceived(QString,QString,quint64,quint64)), this, SLOT(serviceConfigChangedPacketReceived(QString,QString,quint64,quint64)));
 
 
     //    ////////////////////
@@ -368,7 +366,7 @@ void SystemManagementWidget::on_toolButtonVerify_clicked(){
 
     QString errorMessage;
     if(m_peerSocket == INVALID_SOCK_ID){
-     m_peerSocket = m_rtp->connectToHost(m_peerIPAddress, RTP_LISTENING_PORT, 5000, &errorMessage, RTP::Protocol(ui.comboBoxProtocol->itemData(ui.comboBoxProtocol->currentIndex()).toUInt()));
+        m_peerSocket = m_rtp->connectToHost(m_peerIPAddress, RTP_LISTENING_PORT, 5000, &errorMessage, RTP::Protocol(ui.comboBoxProtocol->itemData(ui.comboBoxProtocol->currentIndex()).toUInt()));
     }
     if(m_peerSocket == INVALID_SOCK_ID){
         QMessageBox::critical(this, tr("Error"), tr("Can not connect to host!<br>%1").arg(errorMessage));
@@ -452,33 +450,33 @@ void SystemManagementWidget::on_toolButtonShutdown_clicked(){
         return;
     }
 
-//    QAction *action = qobject_cast<QAction*>(sender());
-//    if(!action){return;}
+    //    QAction *action = qobject_cast<QAction*>(sender());
+    //    if(!action){return;}
 
-//    bool reboot = true;
-//    QString text;
-//    if(action == ui.actionReboot){
-//        text = tr("reboot");
-//        reboot = true;
-//    }else{
-//        text = tr("shutdown");
-//        reboot = false;
-//    }
-//    text = tr("Do you really want to <b><font color = 'red'>%1</font></b> the computer? ").arg(text);
+    //    bool reboot = true;
+    //    QString text;
+    //    if(action == ui.actionReboot){
+    //        text = tr("reboot");
+    //        reboot = true;
+    //    }else{
+    //        text = tr("shutdown");
+    //        reboot = false;
+    //    }
+    //    text = tr("Do you really want to <b><font color = 'red'>%1</font></b> the computer? ").arg(text);
 
 
-//    int ret = QMessageBox::question(this, tr("Question"), text, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-//    if(ret == QMessageBox::No){
-//        return;
-//    }
+    //    int ret = QMessageBox::question(this, tr("Question"), text, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    //    if(ret == QMessageBox::No){
+    //        return;
+    //    }
 
-//    bool ok = controlCenterPacketsParser->sendRequestShutdownPacket(m_peerSocket, reboot, true, 10, "Shutdown.............");
-//    if(!ok){
-//        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
-//        return;
-//    }
+    //    bool ok = controlCenterPacketsParser->sendRequestShutdownPacket(m_peerSocket, reboot, true, 10, "Shutdown.............");
+    //    if(!ok){
+    //        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+    //        return;
+    //    }
 
-//    ui.toolButtonShutdown->setEnabled(false);
+    //    ui.toolButtonShutdown->setEnabled(false);
 
 }
 
@@ -677,9 +675,9 @@ void SystemManagementWidget::on_toolButtonSetupUSB_clicked(){
     }
 
     bool m_temporarilyAllowed = false;
-//    if(!usbSTORStatus){
-//        m_temporarilyAllowed = temporarilyAllowed();
-//    }
+    //    if(!usbSTORStatus){
+    //        m_temporarilyAllowed = temporarilyAllowed();
+    //    }
 
     bool ok = controlCenterPacketsParser->sendSetupUSBSDPacket(m_peerSocket, usbSTORStatus, m_temporarilyAllowed, m_adminUser->getUserID());
     if(!ok){
@@ -909,16 +907,17 @@ void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID soc
 
 }
 
-void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &assetNO, const QString &computerName, bool result, quint16 errorCode, const QString &clientIP){
-    qDebug()<<"SystemManagementWidget::processClientResponseVerifyInfoResultPacket:"<<"computerName:"<<computerName<<" result:"<<result;
-
-    if(socketID != m_peerSocket){
+void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(const AdminConnectionToClientPacket &packet){
+    if(packet.getSocketID() != m_peerSocket){
         return;
     }
 
+    QString assetNO = packet.getPeerID();
+    QString computerName = packet.computerName;
+
     clientResponseAdminConnectionResultPacketReceived = true;
 
-    if(result == true){
+    if(packet.verified == true){
         m_peerAssetNO = assetNO;
         m_clientInfo.setAssetNO(assetNO);
         m_peerComputerName = computerName;
@@ -934,7 +933,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
         ui.lineEditComputerName1->setText(computerName);
         ui.lineEditComputerName1->setReadOnly(true);
 
-        ui.lineEditIP->setText(clientIP);
+        ui.lineEditIP->setText(packet.getPeerHostAddress().toString());
 
 
         ui.tabSystemInfo->setEnabled(true);
@@ -972,7 +971,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(SO
 
         ui.tabFileManagement->setEnabled(false);
 
-        QMessageBox::critical(this, tr("Connection failed"), tr("Error Code: %1").arg(errorCode));
+        QMessageBox::critical(this, tr("Connection failed"), tr("Error Code: %1").arg(packet.errorCode));
     }
 
 }
@@ -987,33 +986,6 @@ void SystemManagementWidget::requestConnectionToClientTimeout(){
 
 }
 
-void SystemManagementWidget::clientMessageReceived(const QString &assetNO, const QString &message, quint8 clientMessageType){
-    qDebug()<<"--SystemManagementWidget::clientMessageReceived(...)"<<" Asset NO:"<<assetNO;
-
-    if(assetNO != m_peerAssetNO){
-        return;
-    }
-
-    QString msg = QString(tr("<p>Message From Computer <b>%1</b> :</p>").arg(m_peerComputerName));
-    msg += message;
-    switch(clientMessageType){
-    case quint8(MS::MSG_Information):
-        QMessageBox::information(this, tr("Message"), msg);
-        break;
-    case quint8(MS::MSG_Warning):
-        QMessageBox::warning(this, tr("Warning"), msg);
-        break;
-    case quint8(MS::MSG_Critical):
-        QMessageBox::critical(this, tr("Error"), msg);
-        break;
-    default:
-        QMessageBox::information(this, tr("Message"), msg);
-    }
-
-
-
-}
-
 void SystemManagementWidget::requestClientInfo(quint8 infoType){
 
     bool ok = controlCenterPacketsParser->sendRequestClientInfoPacket(m_peerSocket, m_peerAssetNO, infoType);
@@ -1023,13 +995,31 @@ void SystemManagementWidget::requestClientInfo(quint8 infoType){
 
 }
 
-void SystemManagementWidget::clientInfoPacketReceived(const QString &assetNO, const QByteArray &data, quint8 infoType){
+void SystemManagementWidget::clientInfoPacketReceived(const ClientInfoPacket &packet){
 
-    qDebug()<<"--SystemManagementWidget::clientInfoPacketReceived(...)"<<"  Asset NO.:"<<assetNO<<"  Type:"<<infoType;
+    QString assetNO = packet.getPeerID();
+    QByteArray data = packet.data;
+    quint8 infoType = packet.infoType;
 
-    if(m_peerAssetNO != assetNO){
-        return;
-    }
+    processClientInfo(assetNO, data, infoType);
+
+}
+
+void SystemManagementWidget::systemInfoFromServerPacketReceived(const SystemInfoFromServerPacket &packet){
+
+    QString extraInfo = packet.extraInfo;
+    QByteArray infoData = packet.data;
+    quint8 infoType = packet.infoType;
+    qDebug()<<"infoType:"<<infoType<<"  extraInfo:"<<extraInfo;
+
+    if(m_peerAssetNO != extraInfo){return;}
+    processClientInfo(extraInfo, infoData, infoType);
+
+}
+
+void SystemManagementWidget::processClientInfo(const QString &assetNO, const QByteArray &data, quint8 infoType){
+
+    if(m_peerAssetNO != assetNO){return;}
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
@@ -1078,26 +1068,6 @@ void SystemManagementWidget::clientInfoPacketReceived(const QString &assetNO, co
     default:
         break;
     }
-
-    //    QJsonObject osObj = object["OS"].toObject();
-    //    if(!osObj.isEmpty()){
-    //        updateOSInfo(osObj);
-    //    }
-
-    //    QJsonObject obj = object["Hardware"].toObject();
-    //    if(!obj.isEmpty()){
-    //        updateSystemInfo(obj);
-    //    }
-
-    //    QJsonArray softwareArray = object["Software"].toArray();
-    //    if(!softwareArray.isEmpty()){
-    //        updateSoftwareInfo(softwareArray);
-    //    }
-
-    //    QJsonArray serviceArray = object["Service"].toArray();
-    //    if(!serviceArray.isEmpty()){
-    //        updateServicesInfo(serviceArray);
-    //    }
 
 }
 
@@ -1190,11 +1160,11 @@ void SystemManagementWidget::updateResourcesLoadInfo(){
 }
 
 
-void SystemManagementWidget::processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO){
+void SystemManagementWidget::processAssetNOModifiedPacket(const ModifyAssetNOPacket &packet){
+    QString oldAssetNO = packet.oldAssetNO;
+    QString newAssetNO = packet.newAssetNO;
 
-    if(oldAssetNO != m_peerAssetNO){
-        return;
-    }
+    if(oldAssetNO != m_peerAssetNO){return;}
 
     if(oldAssetNO == newAssetNO){
         ui.lineEditAssetNO->setText(oldAssetNO);
@@ -1251,10 +1221,10 @@ void SystemManagementWidget::requestDeleteUser(const QString &userName){
     QJsonDocument doc(userObject);
     requestCreateOrModifyWinUser(doc.toJson(QJsonDocument::Compact));
 
-//    bool ok = controlCenterPacketsParser->sendRequestDeleteUserPacket(m_peerSocket, userName);
-//    if(!ok){
-//        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
-//    }
+    //    bool ok = controlCenterPacketsParser->sendRequestDeleteUserPacket(m_peerSocket, userName);
+    //    if(!ok){
+    //        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+    //    }
 }
 
 
@@ -1279,24 +1249,24 @@ void SystemManagementWidget::requestSendMessageToUser(const QString &userName){
         return;
     }
 
-//    AnnouncementInfo info;
-//    wgt.getAnnouncementInfo(&info);
+    //    AnnouncementInfo info;
+    //    wgt.getAnnouncementInfo(&info);
 
-//    bool ok = controlCenterPacketsParser->sendCreateAnnouncementPacket(
-//                m_peerSocket,
-//                info.TempID,
-//                m_adminUser->getUserID(),
-//                info.Type,
-//                info.Content,
-//                info.ACKRequired,
-//                info.ValidityPeriod,
-//                info.TargetType,
-//                info.Targets
-//                );
+    //    bool ok = controlCenterPacketsParser->sendCreateAnnouncementPacket(
+    //                m_peerSocket,
+    //                info.TempID,
+    //                m_adminUser->getUserID(),
+    //                info.Type,
+    //                info.Content,
+    //                info.ACKRequired,
+    //                info.ValidityPeriod,
+    //                info.TargetType,
+    //                info.Targets
+    //                );
 
-//    if(!ok){
-//        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
-//    }
+    //    if(!ok){
+    //        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+    //    }
 
 }
 
@@ -1333,54 +1303,55 @@ void SystemManagementWidget::requestClientInfoTimeout(){
 
 }
 
-void SystemManagementWidget::clientResponseRemoteConsoleStatusPacketReceived(const QString &assetNO, bool running, const QString &extraMessage, quint8 messageType){
+void SystemManagementWidget::remoteConsolePacketReceived(const RemoteConsolePacket &packet){
 
-
-    if(assetNO != this->m_peerAssetNO){
+    if(packet.getPeerID() != this->m_peerAssetNO){
         return;
     }
 
-    ui.textBrowserRemoteApplicationOutput->append(extraMessage);
+    switch (packet.InfoType) {
+    case RemoteConsolePacket::REMOTECONSOLE_STATE :
+    {
+        bool running = packet.ConsoleState.isRunning;
+        QString extraMessage = packet.ConsoleState.message;
+        //quint8 messageType = packet.ConsoleState.messageType;
 
-    if(running){
-        remoteConsoleRunning = true;
-        //        ui.horizontalLayoutRemoteApplication->setEnabled(false);
-        //        ui.horizontalLayoutCommand->setEnabled(true);
-        ui.comboBoxRemoteApplicationPath->setEnabled(false);
-        ui.toolButtonRunRemoteApplication->setEnabled(true);
-        ui.toolButtonRunRemoteApplication->setIcon(QIcon(":/icon/resources/images/stop.png"));
+        ui.textBrowserRemoteApplicationOutput->append(extraMessage);
 
-        ui.comboBoxCommand->setFocus();
-        ui.toolButtonSendCommand->setEnabled(true);
+        if(running){
+            remoteConsoleRunning = true;
+            //        ui.horizontalLayoutRemoteApplication->setEnabled(false);
+            //        ui.horizontalLayoutCommand->setEnabled(true);
+            ui.comboBoxRemoteApplicationPath->setEnabled(false);
+            ui.toolButtonRunRemoteApplication->setEnabled(true);
+            ui.toolButtonRunRemoteApplication->setIcon(QIcon(":/icon/resources/images/stop.png"));
 
-    }else{
-        remoteConsoleRunning = false;
-        //        ui.horizontalLayoutRemoteApplication->setEnabled(true);
-        //        ui.horizontalLayoutCommand->setEnabled(false);
-        ui.comboBoxRemoteApplicationPath->setEnabled(true);
-        ui.comboBoxRemoteApplicationPath->setFocus();
-        ui.toolButtonRunRemoteApplication->setEnabled(true);
-        ui.toolButtonRunRemoteApplication->setIcon(QIcon(":/icon/resources/images/start.png"));
-        
-        ui.toolButtonSendCommand->setEnabled(false);
+            ui.comboBoxCommand->setFocus();
+            ui.toolButtonSendCommand->setEnabled(true);
 
-        //QMessageBox::critical(this, tr("Error"), tr("<p>Message From Computer <b>%1</b> :</p>").arg(computerName) + extraMessage);
+        }else{
+            remoteConsoleRunning = false;
+            //        ui.horizontalLayoutRemoteApplication->setEnabled(true);
+            //        ui.horizontalLayoutCommand->setEnabled(false);
+            ui.comboBoxRemoteApplicationPath->setEnabled(true);
+            ui.comboBoxRemoteApplicationPath->setFocus();
+            ui.toolButtonRunRemoteApplication->setEnabled(true);
+            ui.toolButtonRunRemoteApplication->setIcon(QIcon(":/icon/resources/images/start.png"));
 
+            ui.toolButtonSendCommand->setEnabled(false);
+        }
     }
+        break;
 
-    if(!extraMessage.trimmed().isEmpty()){
-        clientMessageReceived(assetNO, extraMessage, messageType);
+    case RemoteConsolePacket::REMOTECONSOLE_OUTPUT :
+    {
+        ui.textBrowserRemoteApplicationOutput->append(packet.Output.output);
     }
+        break;
 
-}
-
-void SystemManagementWidget::remoteConsoleCMDResultFromClientPacketReceived(const QString &assetNO, const QString &result){
-
-    if(assetNO != this->m_peerAssetNO){
-        return;
+    default:
+        break;
     }
-
-    ui.textBrowserRemoteApplicationOutput->append(result);
 
 }
 
@@ -1402,10 +1373,12 @@ void SystemManagementWidget::userResponseRemoteAssistancePacketReceived(const QS
     }
 }
 
-void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString &assetNO, const QString &userName, bool online){
-    if(assetNO != m_peerAssetNO){
-        return;
-    }
+void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const LocalUserOnlineStatusChangedPacket &packet){
+
+    if(packet.getPeerID() != m_peerAssetNO){return;}
+
+    QString userName = packet.userName;
+    bool online = packet.online;
 
     if(online){
         if(!m_onlineUsers.contains(userName)){
@@ -1421,13 +1394,16 @@ void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const QString
 
 }
 
-void SystemManagementWidget::updateTemperatures(const QString &assetNO, const QString &cpuTemperature, const QString &harddiskTemperature){
-    if(assetNO != m_peerAssetNO){
+void SystemManagementWidget::updateTemperatures(const TemperaturesPacket &packet){
+
+    if(packet.getPeerID() != m_peerAssetNO){
         return;
     }
 
-    QStringList temperatures;
+    QString cpuTemperature = packet.TemperaturesResponse.cpuTemperature;
+    QString harddiskTemperature = packet.TemperaturesResponse.harddiskTemperature;
 
+    QStringList temperatures;
     if(!cpuTemperature.trimmed().isEmpty()){
         foreach (QString temperature, cpuTemperature.split(",")) {
             temperatures.append(temperature + "\342\204\203");
@@ -1449,12 +1425,13 @@ void SystemManagementWidget::updateTemperatures(const QString &assetNO, const QS
 //    QMessageBox::information(this, tr("Message"), QString("Message received from '%1':\r\n%2").arg(sender).arg(replyMessage));
 //}
 
-void SystemManagementWidget::serviceConfigChangedPacketReceived(const QString &assetNO, const QString &serviceName, quint64 processID, quint64 startupType){
-    if(assetNO != m_peerAssetNO){
+void SystemManagementWidget::serviceConfigChangedPacketReceived(const ServiceConfigPacket &packet){
+
+    if(packet.getPeerID() != m_peerAssetNO){
         return;
     }
 
-    ui.tabServices->serviceConfigChanged(serviceName, processID, startupType);
+    ui.tabServices->serviceConfigChanged(packet.serviceName, packet.processID, packet.startupType);
 
 }
 

@@ -41,7 +41,7 @@
 
 #include "../../sharedms/global_shared.h"
 #include "../../sharedms/settings.h"
-
+#include "../../sharedms/packets.h"
 
 
 namespace HEHUI {
@@ -154,7 +154,13 @@ bool ServerAddressManagerWindow::isIPAddressValid(){
 
 }
 
-void ServerAddressManagerWindow::serverFound(const QString &serverAddress, quint16 serverRTPListeningPort, quint16 serverTCPListeningPort, const QString &serverName, const QString &version, int serverInstanceID){
+void ServerAddressManagerWindow::serverFound(const ServerDiscoveryPacket &packet){
+    QString serverAddress = packet.getPeerHostAddress().toString();
+    quint16 serverRTPListeningPort = packet.rtpPort;
+    quint16 serverTCPListeningPort = packet.tcpPort;
+    QString serverName = packet.getPeerID();
+    QString version = packet.version;
+    int serverInstanceID = packet.serverInstanceID;
 
     qWarning();
     qWarning()<<"Server Found!"<<" Address:"<<serverAddress<<" RTP Port:"<<serverRTPListeningPort<<" Name:"<<serverName<<" Version:"<<version;

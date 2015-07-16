@@ -126,11 +126,10 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         qDebug()<<"~~CMD_ServerDiscovery";
 
         ServerDiscoveryPacket p(packet);
-
         serverAddress = peerAddress;
         serverRTPListeningPort = p.rtpPort;
         serverName = peerID;
-        emit signalServerDeclarePacketReceived(serverAddress.toString(), serverRTPListeningPort, p.tcpPort, serverName, p.version, p.serverInstanceID);
+        emit signalServerDeclarePacketReceived(p);
     }
         break;
 
@@ -148,12 +147,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         qDebug()<<"~~CMD_Message--";
 
         MessagePacket p(packet);
-        if(serverName == peerID){
-            emit signalServerMessageReceived(p.message, p.msgType);
-
-        }else{
-            emit signalClientMessagePacketReceived(peerID, p.message, p.msgType);
-        }
+        emit signalMessagePacketReceived(p);
     }
         break;
 
@@ -162,7 +156,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         qDebug()<<"~~CMD_ClientInfo";
 
         ClientInfoPacket p(packet);
-        emit signalClientInfoPacketReceived(p.assetNO, p.data, p.infoType);
+        emit signalClientInfoPacketReceived(p);
     }
         break;
 
@@ -171,7 +165,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         //qDebug()<<"~~CMD_SystemInfoFromServer";
 
         SystemInfoFromServerPacket p(packet);
-        emit signalSystemInfoFromServerReceived(p.extraInfo, p.data, p.infoType);
+        emit signalSystemInfoFromServerReceived(p);
     }
         break;
 
@@ -180,7 +174,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         qDebug()<<"~~CMD_USBDev";
 
         USBDevPacket p(packet);
-        emit signalClientResponseUSBInfoPacketReceived(socketID, peerID, p.usbSTORStatus);
+        emit signalClientResponseUSBInfoPacketReceived(p);
     }
         break;
 
@@ -189,19 +183,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         qDebug()<<"~~ClientResponseRemoteConsole";
 
         RemoteConsolePacket p(packet);
-        switch (p.InfoType) {
-        case RemoteConsolePacket::REMOTECONSOLE_STATE :
-            emit signalClientResponseRemoteConsoleStatusPacketReceived(peerID, p.ConsoleState.isRunning, p.ConsoleState.message, p.ConsoleState.messageType);
-            break;
-
-        case RemoteConsolePacket::REMOTECONSOLE_OUTPUT :
-            emit signalRemoteConsoleCMDResultFromClientPacketReceived(peerID, p.Output.output);
-            break;
-
-        default:
-            break;
-        }
-
+        emit signalRemoteConsolePacketReceived(p);
     }
         break;
 
@@ -210,60 +192,49 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         qDebug()<<"~~CMD_AdminLogin";
 
         AdminLoginPacket p(packet);
-        emit signalServerResponseAdminLoginResultPacketReceived(socketID, peerID, p.LoginResult.loggedIn, p.LoginResult.message, p.LoginResult.readonly);
+        emit signalServerResponseAdminLoginResultPacketReceived(p);
     }
         break;
 
     case quint8(MS::CMD_AdminConnectionToClient):
     {
         AdminConnectionToClientPacket p(packet);
-        emit signalClientResponseAdminConnectionResultPacketReceived(socketID, peerID, p.computerName, p.verified, p.errorCode, peerAddress.toString());
+        emit signalClientResponseAdminConnectionResultPacketReceived(p);
     }
         break;
 
     case quint8(MS::CMD_ModifyAssetNO):
     {
         ModifyAssetNOPacket p(packet);
-        emit signalAssetNOModifiedPacketReceived(p.oldAssetNO, p.newAssetNO);
+        emit signalAssetNOModifiedPacketReceived(p);
     }
         break;
 
     case quint8(MS::CMD_LocalUserOnlineStatusChanged):
     {
         LocalUserOnlineStatusChangedPacket p(packet);
-        emit signalUserOnlineStatusChanged(peerID, p.userName, p.online);
+        emit signalUserOnlineStatusChanged(p);
     }
         break;
 
     case quint8(MS::CMD_Temperatures):
     {
         TemperaturesPacket p(packet);
-        emit signalTemperaturesPacketReceived(peerID, p.TemperaturesResponse.cpuTemperature, p.TemperaturesResponse.harddiskTemperature);
+        emit signalTemperaturesPacketReceived(p);
     }
         break;
 
     case quint8(MS::CMD_Screenshot):
     {
         ScreenshotPacket p(packet);
-        switch (p.InfoType) {
-        case ScreenshotPacket::SCREENSHOT_DESKTOP_INFO :
-            emit signalDesktopInfoPacketReceived(socketID, peerID, p.DesktopInfo.desktopWidth, p.DesktopInfo.desktopHeight, p.DesktopInfo.blockWidth, p.DesktopInfo.blockHeight);
-            break;
-
-        case ScreenshotPacket::SCREENSHOT_DATA :
-            emit signalScreenshotPacketReceived(peerID, p.ScreenshotData.locations, p.ScreenshotData.images);
-            break;
-
-        default:
-            break;
-        }
+        emit signalScreenshotPacketReceived(p);
     }
         break;
 
     case quint8(MS::CMD_ServiceConfig):
     {
         ServiceConfigPacket p(packet);
-        emit signalServiceConfigChangedPacketReceived(peerID, p.serviceName, p.processID, p.startupType);
+        emit signalServiceConfigChangedPacketReceived(p);
     }
         break;
 

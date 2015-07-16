@@ -1044,18 +1044,14 @@ void ControlCenter::startNetwork(){
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
     connect(controlCenterPacketsParser, SIGNAL(signalJobFinished(quint32, quint8, const QVariant &)), JobMonitor::instance(), SLOT(finishJob(quint32, quint8, const QVariant &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalMessagePacketReceived(const MessagePacket &)), this, SLOT(showReceivedMessage(const MessagePacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const ClientInfoPacket &)), this, SLOT(updateOrSaveClientInfo(const ClientInfoPacket &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalServerMessageReceived(const QString &, quint8)), this, SLOT(showServerMessage(const QString &, quint8)));
+    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &)), this, SLOT(processSystemInfoFromServer(const SystemInfoFromServerPacket &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const QString &, const QByteArray &,quint8)), this, SLOT(updateOrSaveClientInfo(const QString &, const QByteArray &,quint8)));
-    //connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(int, const QString&, bool)), this, SLOT(processClientOnlineStatusChangedPacket(int, const QString&, bool)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const QString &, const QByteArray &,quint8)), this, SLOT(processSystemInfoFromServer(const QString &, const QByteArray &,quint8)));
+    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const ModifyAssetNOPacket &)), this, SLOT(processAssetNOModifiedPacket(const ModifyAssetNOPacket &)));
 
-    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const QString &, const QString &)), this, SLOT(processAssetNOModifiedPacket(const QString &, const QString &)));
-
-    connect(controlCenterPacketsParser, SIGNAL(signalDesktopInfoPacketReceived(quint32, const QString &, int, int, int, int)), this, SLOT(processDesktopInfo(quint32, const QString &, int, int, int, int)));
-    connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const QString &, QList<QPoint>, QList<QByteArray>)), this, SLOT(processScreenshot(const QString &, QList<QPoint>, QList<QByteArray>)));
-    //connect(controlCenterPacketsParser, SIGNAL(signalServerResponseAdminLoginResultPacketReceived(SOCKETID, const QString &, bool, const QString &, bool)), this, SLOT(processLoginResult(SOCKETID, const QString &, bool, const QString &, bool)));
+    connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const ScreenshotPacket &)), this, SLOT(processScreenshotPacket(const ScreenshotPacket &)));
 
 
 
@@ -1071,9 +1067,13 @@ void ControlCenter::startNetwork(){
 
 }
 
-void ControlCenter::showServerMessage(const QString &message, quint8 messageType){
+void ControlCenter::showReceivedMessage(const MessagePacket &packet){
 
-    QString msg = QString(tr("<p>Message From Server <b>%1</b> :</p>").arg(m_adminUser->serverName()));
+    QString message = packet.message;
+    quint8 messageType = packet.msgType;
+
+    QString msg = QString(tr("<p>Message From %1 <b>%2</b> :</p>").arg((packet.getSocketID() == m_socketConnectedToServer)?tr("Server"):tr("Computer")).arg(packet.getPeerID()));
+
     msg += message;
     switch(messageType){
     case quint8(MS::MSG_Information):
@@ -1091,9 +1091,12 @@ void ControlCenter::showServerMessage(const QString &message, quint8 messageType
 
 }
 
-void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteArray &clientInfoData, quint8 infoType){
-    //qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...) "<< " Asset NO.:"<<assetNO;
-    
+void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
+
+    QString assetNO = packet.getPeerID();
+    QByteArray clientInfoData = packet.data;
+    quint8 infoType = packet.infoType;
+
     ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
     if(!info){
         info = new ClientInfo(assetNO, this);
@@ -1122,9 +1125,10 @@ void ControlCenter::updateOrSaveClientInfo(const QString &assetNO, const QByteAr
 
 }
 
-void ControlCenter::processSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType){
-    //qDebug()<<"--ControlCenter::processSystemInfoFromServer(...) "<< " extraInfo:"<<extraInfo<<" infoType:"<<infoType;
-
+void ControlCenter::processSystemInfoFromServer(const SystemInfoFromServerPacket &packet){
+    QString extraInfo = packet.extraInfo;
+    QByteArray infoData = packet.data;
+    quint8 infoType = packet.infoType;
 
     switch (infoType) {
     case quint8(MS::SYSINFO_OS):
@@ -1262,7 +1266,10 @@ void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QBy
 
 }
 
-void ControlCenter::processAssetNOModifiedPacket(const QString &oldAssetNO, const QString &newAssetNO){
+void ControlCenter::processAssetNOModifiedPacket(const ModifyAssetNOPacket &packet){
+
+    QString oldAssetNO = packet.oldAssetNO;
+    QString newAssetNO = packet.newAssetNO;
     if(oldAssetNO == newAssetNO){return;}
 
     ClientInfo *info = clientInfoModel->getClientInfo(oldAssetNO);
@@ -1305,28 +1312,41 @@ void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
 
 }
 
-void ControlCenter::processDesktopInfo(quint32 userSocketID, const QString &userID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
+void ControlCenter::processScreenshotPacket(const ScreenshotPacket &packet){
+
+
+    switch (packet.InfoType) {
+    case ScreenshotPacket::SCREENSHOT_DESKTOP_INFO :
+    {
 
     if(!m_remoteDesktopMonitor){
-        m_remoteDesktopMonitor = new RemoteDesktopMonitor(this);
-        connect(m_remoteDesktopMonitor, SIGNAL(closeUserSocket(quint32)), this, SLOT(closeUserSocket(quint32)));
-        connect(m_remoteDesktopMonitor, SIGNAL(signalClose()), this, SLOT(closeRemoteDesktopMonitor()));
+            m_remoteDesktopMonitor = new RemoteDesktopMonitor(this);
+            connect(m_remoteDesktopMonitor, SIGNAL(closeUserSocket(quint32)), this, SLOT(closeUserSocket(quint32)));
+            connect(m_remoteDesktopMonitor, SIGNAL(signalClose()), this, SLOT(closeRemoteDesktopMonitor()));
 
-        ui.tabWidget->insertTab(1, m_remoteDesktopMonitor, tr("Remote Desktop"));
-        ui.tabWidget->setCurrentWidget(m_remoteDesktopMonitor);
+            ui.tabWidget->insertTab(1, m_remoteDesktopMonitor, tr("Remote Desktop"));
+            ui.tabWidget->setCurrentWidget(m_remoteDesktopMonitor);
+        }
+
+        m_remoteDesktopMonitor->setDesktopInfo(packet.getSocketID(), packet.getPeerID(), packet.DesktopInfo.desktopWidth, packet.DesktopInfo.desktopHeight, packet.DesktopInfo.blockWidth, packet.DesktopInfo.blockHeight);
+    }
+        break;
+
+    case ScreenshotPacket::SCREENSHOT_DATA :
+    {
+        if(!m_remoteDesktopMonitor){
+            qCritical()<<QString("ERROR! Remote Desktop Monitor Not Initialized.");
+            return;
+        }
+        m_remoteDesktopMonitor->updateScreenshot(packet.getPeerID(), packet.ScreenshotData.locations, packet.ScreenshotData.images);
+    }
+        break;
+
+    default:
+        break;
     }
 
-    m_remoteDesktopMonitor->setDesktopInfo(userSocketID, userID, desktopWidth, desktopHeight, blockWidth, blockHeight);
 
-}
-
-void ControlCenter::processScreenshot(const QString &userID, QList<QPoint> locations, QList<QByteArray> images){
-    if(!m_remoteDesktopMonitor){
-        qCritical()<<QString("ERROR! Remote Desktop Monitor Not Initialized.");
-        return;
-    }
-
-    m_remoteDesktopMonitor->updateScreenshot(userID, locations, images);
 }
 
 void ControlCenter::closeRemoteDesktopMonitor(){

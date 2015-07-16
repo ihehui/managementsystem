@@ -156,8 +156,6 @@ private slots:
 
 
 signals:
-    //void  signalHeartbeatPacketReceived(const QString &clientAddress, const QString &computerName);
-    //void  signalConfirmationOfReceiptPacketReceived(quint16 packetSerialNumber, quint16 packetSerialNumbe2);
 
     void signalClientLookForServerPacketReceived(const QHostAddress &clientAddress, quint16 clientTCPListeningPort, const QString &clientName);
     void signalClientDeclarePacketReceived(SOCKETID socketID, const QString &clientName, bool isAdmin);
@@ -169,28 +167,22 @@ signals:
 
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
 
-    void signalClientLogReceived(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log);
+    void signalClientLogReceived(const ClientLogPacket &packet);
 
-    void signalModifyAssetNOPacketReceived(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
+    void signalModifyAssetNOPacketReceived(const ModifyAssetNOPacket &packet);
 
-    void signalRequestChangeProcessMonitorInfoPacketReceived(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
+    void signalProcessMonitorInfoPacketReceived(const ProcessMonitorInfoPacket &packet);
 
-    void signalClientInfoRequestedPacketReceived(SOCKETID socketID, const QString &assetNO, quint8 infoType);
-    void signalUpdateSysAdminInfoPacketReceived(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin = false);
+    void signalClientInfoPacketReceived(const ClientInfoPacket &packet);
+    void signalUpdateSysAdminInfoPacketReceived(const SysAdminInfoPacket &packet);
 
 
-    void signalAdminLogin(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
+    void signalAdminLogin(const AdminLoginPacket &packet);
+    void signalSystemAlarmsPacketReceived(const SystemAlarmsPacket &packet);
+
+    void signalAnnouncementsPacketReceived(const AnnouncementPacket &packet);
+
     void signalAdminOnlineStatusChanged(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
-
-    void signalSystemAlarmsRequested(SOCKETID adminSocketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
-    void signalAcknowledgeSystemAlarmsPacketReceived(SOCKETID adminSocketID, const QString &alarms, bool deleteAlarms);
-
-    void signalAnnouncementsRequested(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
-    void signalCreateAnnouncementPacketReceived(SOCKETID adminSocketID, quint32 jobID, unsigned int localTempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
-    void signalUpdateAnnouncementRequested(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
-    void signalAnnouncementTargetsRequested(SOCKETID adminSocketID, unsigned int announcementID);
-    void signalReplyMessagePacketReceived(SOCKETID socketID, const QString &senderAssetNO, unsigned int announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
-
 
 private:
 

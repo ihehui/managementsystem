@@ -65,24 +65,31 @@ signals:
 private slots:
     bool startMainService();
     //void saveClientLog(const QString &computerName, const QString &users, const QString &log, const QString &clientAddress);
-    void saveClientLog(const QString &assetNO, const QString &clientAddress, quint8 logType, const QString &log);
+    void saveClientLog(const ClientLogPacket &packet);
 
     void sendServerOnlinePacket();
 
 //    bool updateOrSaveClientInfoToDatabase(ClientInfo *info);
 //    void updateOrSaveAllClientsInfoToDatabase();
 
+    void processClientInfoPacket(const ClientInfoPacket &packet);
+    void clientInfoRequested(SOCKETID socketID, const QString &assetNO, quint8 infoType);
+
     void clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
     void processOSInfo(ClientInfo *info, const QByteArray &osData);
     void processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData);
     void processSoftwareInfo(ClientInfo *info, const QByteArray &data);
 
-    void processClientInfoRequestedPacket(SOCKETID socketID, const QString &assetNO, quint8 infoType);
-    void processUpdateSysAdminInfoPacket(SOCKETID socketID, const QString &sysAdminID, const QByteArray &infoData, bool deleteAdmin);
+
+    void processUpdateSysAdminInfoPacket(const SysAdminInfoPacket &packet);
+
+    void processSystemAlarmsPacket(const SystemAlarmsPacket &packet);
     void sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime);
     void acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &alarms, bool deleteAlarms);
+
     void sendRealtimeInfo(int cpuLoad, int memoryLoad);
 
+    void processAnnouncementPacket(const AnnouncementPacket &packet);
     bool sendAnnouncementsInfo(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime);
     bool createAnnouncement(SOCKETID adminSocketID, quint32 jobID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets);
     bool updateAnnouncement(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets);
@@ -91,13 +98,12 @@ private slots:
     void replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, unsigned int announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message);
     bool sendAnnouncementRepliesInfo(SOCKETID socketID, const QString &announcementID, const QString &receiver);
 
-    void processModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO, const QString &adminName);
-
-    void processRequestChangeProcessMonitorInfoPacket(SOCKETID socketID, const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);
+    void processModifyAssetNOPacket(const ModifyAssetNOPacket &packet);
+    void processProcessMonitorInfoPacket(const ProcessMonitorInfoPacket &packet);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port);
 
-    void processAdminLoginPacket(SOCKETID socketID, const QString &adminName, const QString &password, const QString &adminIP, const QString &adminComputerName);
+    void processAdminLoginPacket(const AdminLoginPacket &packet);
     void processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
 
 
