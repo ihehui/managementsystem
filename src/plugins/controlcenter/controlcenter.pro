@@ -46,7 +46,6 @@ HEADERS += \
     controlcenterplugin.h \
     constants.h \
     networkmanager/resourcesmanagerinstance.h \
-    filemanagement/filemanagement.h \
     servicesmanagement/servicesmanagement.h \
     servicesmanagement/serviceinfomodel.h \
     clientmanagement/clientinfomodel.h \
@@ -72,7 +71,8 @@ HEADERS += \
     servermanagement/servermanagementwidget.h \
     announcementmanagement/announcementinfowidget.h \
     announcementmanagement/announcementmanagementwidget.h \
-    announcementmanagement/announcementinfomodel.h
+    announcementmanagement/announcementinfomodel.h \
+    filemanagement/filemanagementwidget.h
 
 SOURCES += \
     networkmanager/controlcenterpacketsparser.cpp \
@@ -82,7 +82,6 @@ SOURCES += \
     controlcenter.cpp \
     controlcenterplugin.cpp \
     networkmanager/resourcesmanagerinstance.cpp \
-    filemanagement/filemanagement.cpp \
     servicesmanagement/servicesmanagement.cpp \
     servicesmanagement/serviceinfomodel.cpp \
     clientmanagement/clientinfomodel.cpp \
@@ -108,7 +107,8 @@ SOURCES += \
     servermanagement/servermanagementwidget.cpp \
     announcementmanagement/announcementinfowidget.cpp \
     announcementmanagement/announcementmanagementwidget.cpp \
-    announcementmanagement/announcementinfomodel.cpp
+    announcementmanagement/announcementinfomodel.cpp \
+    filemanagement/filemanagementwidget.cpp
 
 
 FORMS += taskmanagement/taskinfoviewwidget.ui \

@@ -315,7 +315,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet){
 ////////////////////////////////////////////
     case quint8(MS::CMD_FileTransfer):
     {
-        qDebug()<<"~~CMD_FileTransfer";
+        //qDebug()<<"~~CMD_FileTransfer";
 
         FileTransferPacket p(packet);
         emit signalFileTransferPacketReceived(p);

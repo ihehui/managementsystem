@@ -103,42 +103,41 @@ public:
 
     int readPiece(const QByteArray &fileMD5, int pieceIndex);
     void writePiece(const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM);
-//    void verifyPiece(QByteArray fileMD5, int pieceIndex);
-
-//    QBitArray completedPieces(const QByteArray &fileMD5) const;
-//    void setCompletedPieces(const QByteArray &fileMD5, const QBitArray &pieces);
 
     QList<int/*Piece Index*/> completedPieces(const QByteArray &fileMD5);
     QList<int/*Piece Index*/> uncompletedPieces(const QByteArray &fileMD5);
     int getOneUncompletedPiece(const QByteArray &fileMD5);
-
-    //    QByteArray calcFileMD5(const QString &filePath);
 
     void closeFile(const QString &filePath);
     void closeFile(const QByteArray &fileMD5);
 
     QString getFileLocalSavePath(const QByteArray &fileMD5);
 
-//    int regenerateFileID(int oldFileID);
-//    QFile *generateNewFile(quint64 size, const QString &localSavePath);
+    //    int regenerateFileID(int oldFileID);
+    //    QFile *generateNewFile(quint64 size, const QString &localSavePath);
 
-//    QString errorString() const;
+    //    QString errorString() const;
 
-public slots:
-//    void startDataVerification();
 
 signals:
     void dataRead(int requestID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM);
     void error(int requestID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
-//    void verificationProgress(QByteArray fileMD5, int percent);
-//    void verificationDone(QByteArray fileMD5);
+    //    void verificationProgress(QByteArray fileMD5, int percent);
+    //    void verificationDone(QByteArray fileMD5);
     void pieceVerified(const QByteArray &fileMD5, int pieceIndex, bool verified, int verificationProgress);
+
+
+public slots:
+    //    void startDataVerification();
+    void stop();
+
 
 protected:
     void run();
 
 private slots:
     void wakeUp();
+    bool isAboutToQuit();
 
 private:
     typedef QByteArray MD5 ; //File MD5 Hash
@@ -149,8 +148,8 @@ private:
     QByteArray readBlock(int requestID, FileMetaInfo *info, int pieceIndex);
     bool writeBlock(FileMetaInfo *info, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM);
     bool verifySinglePiece(FileMetaInfo *info, int pieceIndex);
-//    void verifyFileContents(FileMetaInfo *info);
-//    void VerifyAllPendingFiles();
+    //    void verifyFileContents(FileMetaInfo *info);
+    //    void VerifyAllPendingFiles();
 
     struct WriteRequest {
         //int fileID;
@@ -160,7 +159,6 @@ private:
         QByteArray dataSHA1SUM;
     };
     struct ReadRequest {
-        //int fileID;
         QByteArray fileMD5;
         int pieceIndex;
         //int length;
@@ -168,21 +166,23 @@ private:
     };
 
 
-//    QString errString;
+    //    QString errString;
 
 
 
     int readId;
-//    bool startVerification;
+    //    bool startVerification;
     bool m_quit;
     bool m_wokeUp;
 
     QList<WriteRequest> writeRequests;
     QList<ReadRequest> readRequests;
-//    QList<MD5/*File MD5*/> pendingVerificationRequests;
-//    QList<MD5/*File MD5*/> newPendingVerificationRequests;
+    //    QList<MD5/*File MD5*/> pendingVerificationRequests;
+    //    QList<MD5/*File MD5*/> newPendingVerificationRequests;
 
     mutable QMutex mutex;
+    QMutex quitMutex;
+
     mutable QWaitCondition cond;
 
 };

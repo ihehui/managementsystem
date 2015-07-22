@@ -142,7 +142,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEditGroupsOther"/>
+         <widget class="QLineEdit" name="lineEditGroupsOther">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -205,6 +209,9 @@
            <property name="echoMode">
             <enum>QLineEdit::Password</enum>
            </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
@@ -218,6 +225,9 @@
           <widget class="QLineEdit" name="lineEditConfirmPassword">
            <property name="echoMode">
             <enum>QLineEdit::Password</enum>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
            </property>
           </widget>
          </item>

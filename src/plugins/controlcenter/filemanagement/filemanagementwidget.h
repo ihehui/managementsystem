@@ -69,13 +69,13 @@ private:
 
 
 
-class FileManagement : public QWidget
+class FileManagementWidget : public QWidget
 {
     Q_OBJECT
     
 public:
-    explicit FileManagement(QWidget *parent = 0);
-    ~FileManagement();
+    explicit FileManagementWidget(QWidget *parent = 0);
+    ~FileManagementWidget();
 
     void setPacketsParser(ControlCenterPacketsParser *parser);
     void setPeerSocket(UDTSOCKET peerSocket);
@@ -107,7 +107,7 @@ public slots:
 
     //File TX
     void startFileManager();
-    void fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &localFileSaveDir);
+    void fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile);
     void fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message);
     void fileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message);
 
@@ -160,7 +160,6 @@ private:
     FileManager *m_fileManager;
     QList<int/*File TX Request ID*/> fileTXRequestList;
     QList<QByteArray/*File MD5*/> filesList;
-    QHash<QString /*Remote File Path*/, QString/*Local File Path*/> fileSavePathHash;
 
 };
 

@@ -940,12 +940,14 @@ void FileTransferPacket::init(){
 
     FileDownloadingRequest.baseDir = "";
     FileDownloadingRequest.fileName = "";
+    FileDownloadingRequest.dirToSaveFile = "./";
 
     FileDownloadingResponse.baseDir = "";
     FileDownloadingResponse.fileName = "";
     FileDownloadingResponse.accepted = 1;
     FileDownloadingResponse.fileMD5Sum = QByteArray();
     FileDownloadingResponse.size = 0;
+    FileDownloadingResponse.pathToSaveFile = "";
 
     FileUploadingRequest.fileName = "";
     FileUploadingRequest.fileMD5Sum = QByteArray();
@@ -999,13 +1001,13 @@ void FileTransferPacket::parsePacketBody(QByteArray &packetBody){
 
     case FT_FileDownloadingRequest:
     {
-        in >> FileDownloadingRequest.baseDir >> FileDownloadingRequest.fileName;
+        in >> FileDownloadingRequest.baseDir >> FileDownloadingRequest.fileName >> FileDownloadingRequest.dirToSaveFile;
     }
         break;
 
     case FT_FileDownloadingResponse:
     {
-        in >> FileDownloadingResponse.accepted >> FileDownloadingResponse.baseDir >> FileDownloadingResponse.fileName >> FileDownloadingResponse.fileMD5Sum >> FileDownloadingResponse.size;
+        in >> FileDownloadingResponse.accepted >> FileDownloadingResponse.baseDir >> FileDownloadingResponse.fileName >> FileDownloadingResponse.fileMD5Sum >> FileDownloadingResponse.size >> FileDownloadingResponse.pathToSaveFile;
     }
         break;
 
@@ -1074,13 +1076,13 @@ QByteArray FileTransferPacket::packBodyData(){
 
     case FT_FileDownloadingRequest:
     {
-        out << FileDownloadingRequest.baseDir << FileDownloadingRequest.fileName;
+        out << FileDownloadingRequest.baseDir << FileDownloadingRequest.fileName << FileDownloadingRequest.dirToSaveFile;
     }
         break;
 
     case FT_FileDownloadingResponse:
     {
-        out << FileDownloadingResponse.accepted << FileDownloadingResponse.baseDir << FileDownloadingResponse.fileName << FileDownloadingResponse.fileMD5Sum << FileDownloadingResponse.size;
+        out << FileDownloadingResponse.accepted << FileDownloadingResponse.baseDir << FileDownloadingResponse.fileName << FileDownloadingResponse.fileMD5Sum << FileDownloadingResponse.size << FileDownloadingResponse.pathToSaveFile;
     }
         break;
 

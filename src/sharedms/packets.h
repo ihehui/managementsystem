@@ -455,6 +455,7 @@ public:
     struct FileDownloadingRequestStruct{
         QString baseDir;
         QString fileName;
+        QString dirToSaveFile;
     } FileDownloadingRequest;
     struct FileDownloadingResponseStruct{
         quint8 accepted;
@@ -462,6 +463,7 @@ public:
         QString fileName;
         QByteArray fileMD5Sum;
         quint64 size;
+        QString pathToSaveFile;
     } FileDownloadingResponse;
 
     struct FileUploadingRequestStruct{

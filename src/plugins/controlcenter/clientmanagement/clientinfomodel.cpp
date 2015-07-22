@@ -60,14 +60,12 @@ void ClientInfoModel::setClientList(QList<ClientInfo *> &clientsList)
 
 void ClientInfoModel::addClientInfo(ClientInfo *clientInfo){
     
-    beginResetModel();
-
     if(!clientsList.contains(clientInfo)){
+        beginResetModel();
         this->clientsList.append(clientInfo);
+        endResetModel();
     }
-    
-    endResetModel();
-    
+        
 }
 
 void ClientInfoModel::updateClientInfo(ClientInfo *clientInfo){

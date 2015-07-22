@@ -66,8 +66,8 @@ private slots:
     void on_pushButtonRegedit_clicked();
     void on_pushButtonOtherEXE_clicked();
 
-    void on_toolButtonQuerySystemInfo_clicked();
-    void on_toolButtonRequestHardwareInfo_clicked();
+    void on_toolButtonQuerySystemInfoFromServer_clicked();
+    void on_toolButtonRequestHardwareInfoFromClient_clicked();
     void on_toolButtonSaveAs_clicked();
 
     void on_groupBoxTemperatures_clicked(bool checked);
@@ -166,7 +166,7 @@ private:
     bool clientResponseAdminConnectionResultPacketReceived;
     bool remoteConsoleRunning;
 
-    FileManagement *m_fileManagementWidget;
+    FileManagementWidget *m_fileManagementWidget;
 
     QTimer *m_updateTemperaturesTimer;
 

@@ -246,10 +246,10 @@ bool ClientService::startMainService(){
     connect(clientPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket & )), this, SLOT(processSystemInfoFromServer(const SystemInfoFromServerPacket &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalSetupUSBSDPacketReceived(const USBDevPacket &)), this, SLOT(processSetupUSBSDPacket(const USBDevPacket &)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(const ModifyAssetNOPacket &)), this, SLOT(processModifyAssetNOPacket(const ModifyAssetNOPacket &)));
+    connect(clientPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(const ModifyAssetNOPacket &)), this, SLOT(processModifyAssetNOPacket(const ModifyAssetNOPacket &)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const RenameComputerPacket &)), this, SLOT(processRenameComputerPacketReceived(const RenameComputerPacket &)));
-    connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(const JoinOrUnjoinDomainPacket &)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(const JoinOrUnjoinDomainPacket &)));
+    connect(clientPacketsParser, SIGNAL(signalRenameComputerPacketReceived(const RenameComputerPacket &)), this, SLOT(processRenameComputerPacketReceived(const RenameComputerPacket &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalJoinOrUnjoinDomainPacketReceived(const JoinOrUnjoinDomainPacket &)), this, SLOT(processJoinOrUnjoinDomainPacketReceived(const JoinOrUnjoinDomainPacket &)), Qt::QueuedConnection);
 
 
 
@@ -280,16 +280,16 @@ bool ClientService::startMainService(){
 
     ////////////////////
 
-    connect(clientPacketsParser, SIGNAL(signalFileTransferPacketReceived(const FileTransferPacket &)), this, SLOT(processFileTransferPacket(const FileTransferPacket &)));
+    connect(clientPacketsParser, SIGNAL(signalFileTransferPacketReceived(const FileTransferPacket &)), this, SLOT(processFileTransferPacket(const FileTransferPacket &)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalFileSystemInfoRequested(SOCKETID, const QString &)), this, SLOT(fileSystemInfoRequested(SOCKETID, const QString &)));
-    //File TX
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestUploadFile(SOCKETID, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processAdminRequestUploadFilePacket(SOCKETID, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestDownloadFile(SOCKETID, const QString &, const QString &)), this, SLOT(processAdminRequestDownloadFilePacket(SOCKETID, const QString &, const QString &)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileDataRequested(SOCKETID, const QByteArray &, int, int )), this, SLOT(processFileDataRequestPacket(SOCKETID,const QByteArray &, int, int )), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileDataReceived(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), this, SLOT(processFileDataReceivedPacket(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileTXStatusChanged(SOCKETID, const QByteArray &,quint8)), this, SLOT(processFileTXStatusChangedPacket(SOCKETID, const QByteArray &, quint8)), Qt::QueuedConnection);
-    connect(clientPacketsParser, SIGNAL(signalFileTXError(SOCKETID , const QByteArray &, quint8 , const QString &)), this, SLOT(processFileTXErrorFromPeer(SOCKETID , const QByteArray &, quint8 , const QString &)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalFileSystemInfoRequested(SOCKETID, const QString &)), this, SLOT(fileSystemInfoRequested(SOCKETID, const QString &)));
+//    //File TX
+//    connect(clientPacketsParser, SIGNAL(signalAdminRequestUploadFile(SOCKETID, const QByteArray &, const QString &, quint64, const QString &)), this, SLOT(processAdminRequestUploadFilePacket(SOCKETID, const QByteArray &, const QString &,quint64, const QString &)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalAdminRequestDownloadFile(SOCKETID, const QString &, const QString &)), this, SLOT(processAdminRequestDownloadFilePacket(SOCKETID, const QString &, const QString &)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalFileDataRequested(SOCKETID, const QByteArray &, int, int )), this, SLOT(processFileDataRequestPacket(SOCKETID,const QByteArray &, int, int )), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalFileDataReceived(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), this, SLOT(processFileDataReceivedPacket(SOCKETID, const QByteArray &, int, const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalFileTXStatusChanged(SOCKETID, const QByteArray &,quint8)), this, SLOT(processFileTXStatusChangedPacket(SOCKETID, const QByteArray &, quint8)), Qt::QueuedConnection);
+//    connect(clientPacketsParser, SIGNAL(signalFileTXError(SOCKETID , const QByteArray &, quint8 , const QString &)), this, SLOT(processFileTXErrorFromPeer(SOCKETID , const QByteArray &, quint8 , const QString &)), Qt::QueuedConnection);
 
 
 
@@ -1909,7 +1909,7 @@ void ClientService::processFileTransferPacket(const FileTransferPacket &packet){
 
     case FileTransferPacket::FT_FileDownloadingRequest :
     {
-        processAdminRequestDownloadFilePacket(socketID, packet.FileDownloadingRequest.baseDir, packet.FileDownloadingRequest.fileName);
+        processAdminRequestDownloadFilePacket(socketID, packet.FileDownloadingRequest.baseDir, packet.FileDownloadingRequest.fileName, packet.FileDownloadingRequest.dirToSaveFile);
     }
         break;
 
@@ -2021,7 +2021,7 @@ void ClientService::processAdminRequestUploadFilePacket(SOCKETID socketID, const
     }
 }
 
-void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName){
+void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &dirToSaveFile){
 
     startFileManager();
 
@@ -2037,7 +2037,7 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
 
         foreach(QString file, dir.entryList(filters, QDir::Dirs | QDir::Files | QDir::System | QDir::Hidden | QDir::NoDotAndDotDot))
         {
-            processAdminRequestDownloadFilePacket(socketID, absoluteFilePath, file);
+            processAdminRequestDownloadFilePacket(socketID, absoluteFilePath, file, dirToSaveFile + "/" + fileName );
 
             qApp->processEvents();
         }
@@ -2047,10 +2047,10 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
 
     const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &errorString);
     if(!info){
-        clientPacketsParser->responseFileDownloadRequest(socketID, false, absoluteFilePath, fileName, info->md5sum, info->size);
+        clientPacketsParser->responseFileDownloadRequest(socketID, false, absoluteFilePath, fileName, info->md5sum, info->size, "");
     }
 
-    if(clientPacketsParser->responseFileDownloadRequest(socketID, true, absoluteFilePath, fileName, info->md5sum, info->size)){
+    if(clientPacketsParser->responseFileDownloadRequest(socketID, true, absoluteFilePath, fileName, info->md5sum, info->size, dirToSaveFile + "/" + fileName)){
         fileTXSocketHash.insertMulti(socketID, info->md5sum);
     }else{
         m_fileManager->closeFile(info->md5sum);
@@ -2153,7 +2153,7 @@ void ClientService::processFileTXErrorFromPeer(SOCKETID socketID, const QByteArr
 }
 
 void ClientService::fileDataRead(int requestID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM){
-    qDebug()<<"--ClientService::fileDataRead(...) "<<" pieceIndex:"<<pieceIndex<<" size:"<<data.size();
+    //qDebug()<<"--ClientService::fileDataRead(...) "<<" pieceIndex:"<<pieceIndex<<" size:"<<data.size();
 
     SOCKETID socketID = fileTXRequestHash.take(requestID);
     clientPacketsParser->sendFileData(socketID, fileMD5, pieceIndex, &data, &dataSHA1SUM);

@@ -6,7 +6,7 @@
 #include <QUrl>
 #include <QDebug>
 
-#include "filemanagement.h"
+#include "filemanagementwidget.h"
 
 
 namespace HEHUI {
@@ -441,7 +441,7 @@ QString FileSystemModel::currentDirPath() const{
 
 
 /////////////////////////////////////////////
-FileManagement::FileManagement(QWidget *parent) :
+FileManagementWidget::FileManagementWidget(QWidget *parent) :
     QWidget(parent)
 {
     ui.setupUi(this);
@@ -470,7 +470,7 @@ FileManagement::FileManagement(QWidget *parent) :
 
 }
 
-FileManagement::~FileManagement(){
+FileManagementWidget::~FileManagementWidget(){
     //TODO:
 //    fileSavePathMap.clear();
 
@@ -490,7 +490,7 @@ FileManagement::~FileManagement(){
     }
 
     if(m_fileManager){
-        m_fileManager->exit();
+        m_fileManager->stop();
         delete m_fileManager;
         m_fileManager = 0;
     }
@@ -498,10 +498,9 @@ FileManagement::~FileManagement(){
     fileTXRequestList.clear();
     filesList.clear();
 
-    fileSavePathHash.clear();
 }
 
-void FileManagement::setPacketsParser(ControlCenterPacketsParser *parser){
+void FileManagementWidget::setPacketsParser(ControlCenterPacketsParser *parser){
 
     //TODO:
     Q_ASSERT(parser);
@@ -509,7 +508,7 @@ void FileManagement::setPacketsParser(ControlCenterPacketsParser *parser){
 
     ////////////////////
 
-    connect(controlCenterPacketsParser, SIGNAL(signalFileTransferPacketReceived(const FileTransferPacket &)), this, SLOT(processFileTransferPacket(const FileTransferPacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalFileTransferPacketReceived(const FileTransferPacket &)), this, SLOT(processFileTransferPacket(const FileTransferPacket &)), Qt::QueuedConnection);
 
 //    connect(controlCenterPacketsParser, SIGNAL(signalFileSystemInfoReceived(SOCKETID, const QString &, const QByteArray &)), this, SLOT(fileSystemInfoReceived(SOCKETID, const QString &, const QByteArray &)));
 //    //File TX
@@ -530,20 +529,20 @@ void FileManagement::setPacketsParser(ControlCenterPacketsParser *parser){
 
 }
 
-void FileManagement::setPeerSocket(UDTSOCKET peerSocket){
+void FileManagementWidget::setPeerSocket(UDTSOCKET peerSocket){
     this->m_peerSocket = peerSocket;
     //TODO
 
 }
 
-void FileManagement::dragEnterEvent(QDragEnterEvent *event){
+void FileManagementWidget::dragEnterEvent(QDragEnterEvent *event){
 
     if (event->mimeData()->hasUrls()) {
         event->acceptProposedAction();
     }
 }
 
-void FileManagement::dragMoveEvent(QDragMoveEvent *event)
+void FileManagementWidget::dragMoveEvent(QDragMoveEvent *event)
 {
     // Accept file actions with all extensions.
 
@@ -553,7 +552,7 @@ void FileManagement::dragMoveEvent(QDragMoveEvent *event)
 
 }
 
-void FileManagement::dropEvent(QDropEvent *event)
+void FileManagementWidget::dropEvent(QDropEvent *event)
 {
 
     // Accept drops if the file exists.
@@ -584,7 +583,7 @@ void FileManagement::dropEvent(QDropEvent *event)
 
 }
 
-void FileManagement::on_groupBoxLocal_toggled( bool on ){
+void FileManagementWidget::on_groupBoxLocal_toggled( bool on ){
 
     if(on){
         if(!localFileSystemModel){
@@ -614,7 +613,7 @@ void FileManagement::on_groupBoxLocal_toggled( bool on ){
 
 }
 
-void FileManagement::on_toolButtonShowLocalFiles_clicked(){
+void FileManagementWidget::on_toolButtonShowLocalFiles_clicked(){
 
     QString path = ui.comboBoxLocalPath->currentText();
 
@@ -631,7 +630,7 @@ void FileManagement::on_toolButtonShowLocalFiles_clicked(){
 
 }
 
-void FileManagement::localFileItemDoubleClicked(const QModelIndex &index){
+void FileManagementWidget::localFileItemDoubleClicked(const QModelIndex &index){
 
     if(!index.isValid()){
         return;
@@ -651,7 +650,7 @@ void FileManagement::localFileItemDoubleClicked(const QModelIndex &index){
 
 }
 
-void FileManagement::on_groupBoxRemote_toggled( bool on ){
+void FileManagementWidget::on_groupBoxRemote_toggled( bool on ){
 
     if(on){
         if(!remoteFileSystemModel){
@@ -679,7 +678,7 @@ void FileManagement::on_groupBoxRemote_toggled( bool on ){
 
 }
 
-void FileManagement::on_toolButtonShowRemoteFiles_clicked(){
+void FileManagementWidget::on_toolButtonShowRemoteFiles_clicked(){
 
     QString newPath = ui.comboBoxRemotePath->currentText();
 //    emit signalShowRemoteFiles(newPath);
@@ -689,7 +688,7 @@ void FileManagement::on_toolButtonShowRemoteFiles_clicked(){
     ui.tableViewRemoteFiles->clearSelection();
 }
 
-void FileManagement::tableViewRemoteFileItemDoubleClicked(const QModelIndex &index){
+void FileManagementWidget::tableViewRemoteFileItemDoubleClicked(const QModelIndex &index){
 
     if(!index.isValid()){
         return;
@@ -712,7 +711,7 @@ void FileManagement::tableViewRemoteFileItemDoubleClicked(const QModelIndex &ind
 
 }
 
-bool FileManagement::getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage){
+bool FileManagementWidget::getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage){
 
     Q_ASSERT(result);
     Q_ASSERT(errorMessage);
@@ -769,12 +768,12 @@ bool FileManagement::getLocalFilesInfo(const QString &parentDirPath, QByteArray 
 
 }
 
-bool FileManagement::parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data){
+bool FileManagementWidget::parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data){
     return remoteFileSystemModel->parseRemoteFilesInfo(remoteParentDirPath, data);
 }
 
 
-void FileManagement::peerDisconnected(bool normalClose){
+void FileManagementWidget::peerDisconnected(bool normalClose){
 
     if(normalClose){
         ui.textEditLogs->append(tr("Peer Closed!"));
@@ -797,7 +796,7 @@ void FileManagement::peerDisconnected(bool normalClose){
 ////////////////////////////////////////
 
 
-void FileManagement::processFileTransferPacket(const FileTransferPacket &packet){
+void FileManagementWidget::processFileTransferPacket(const FileTransferPacket &packet){
 
     SOCKETID socketID = packet.getSocketID();
     switch (packet.InfoType) {
@@ -821,11 +820,11 @@ void FileManagement::processFileTransferPacket(const FileTransferPacket &packet)
 
     case FileTransferPacket::FT_FileDownloadingResponse :
     {
-        QString localSaveDir = fileSavePathHash.take(packet.FileDownloadingResponse.baseDir + "/" + packet.FileDownloadingResponse.fileName);
-        if(localSaveDir.isEmpty()){localSaveDir = m_localCurrentDir;}
+        QString pathToSaveFile = packet.FileDownloadingResponse.pathToSaveFile;
+        if(pathToSaveFile.isEmpty()){pathToSaveFile = m_localCurrentDir + "/" + packet.FileDownloadingResponse.fileName;}
 
         if(packet.FileDownloadingResponse.accepted){
-            fileDownloadRequestAccepted(socketID, packet.FileDownloadingResponse.fileName, packet.FileDownloadingResponse.fileMD5Sum, packet.FileDownloadingResponse.size, localSaveDir);
+            fileDownloadRequestAccepted(socketID, packet.FileDownloadingResponse.fileName, packet.FileDownloadingResponse.fileMD5Sum, packet.FileDownloadingResponse.size, pathToSaveFile);
         }else{
             fileDownloadRequestDenied(socketID, packet.FileDownloadingResponse.fileName, "");
         }
@@ -875,7 +874,7 @@ void FileManagement::processFileTransferPacket(const FileTransferPacket &packet)
 
 }
 
-void FileManagement::requestFileSystemInfo(const QString &parentDirPath){
+void FileManagementWidget::requestFileSystemInfo(const QString &parentDirPath){
 
     if(!controlCenterPacketsParser->requestFileSystemInfo(m_peerSocket, parentDirPath)){
         ui.textEditLogs->append(tr("Error! Can not send request! %1").arg(controlCenterPacketsParser->lastErrorMessage()));
@@ -883,7 +882,7 @@ void FileManagement::requestFileSystemInfo(const QString &parentDirPath){
 
 }
 
-void FileManagement::fileSystemInfoReceived(SOCKETID socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData){
+void FileManagementWidget::fileSystemInfoReceived(SOCKETID socketID, const QString &parentDirPath, const QByteArray &fileSystemInfoData){
 
     if(socketID != m_peerSocket){
         return;
@@ -896,7 +895,7 @@ void FileManagement::fileSystemInfoReceived(SOCKETID socketID, const QString &pa
 
 }
 
-void FileManagement::requestUploadFilesToRemote(const QString &localBaseDir, const QStringList &localFiles, const QString &remoteDir){
+void FileManagementWidget::requestUploadFilesToRemote(const QString &localBaseDir, const QStringList &localFiles, const QString &remoteDir){
 
     if(m_peerSocket == INVALID_SOCK_ID){
 //        on_toolButtonVerify_clicked();
@@ -959,7 +958,7 @@ void FileManagement::requestUploadFilesToRemote(const QString &localBaseDir, con
 
 }
 
-void FileManagement::requestDownloadFileFromRemote(const QString &remoteBaseDir, const QStringList &remoteFiles, const QString &localDir){
+void FileManagementWidget::requestDownloadFileFromRemote(const QString &remoteBaseDir, const QStringList &remoteFiles, const QString &localDir){
 
     if(m_peerSocket == INVALID_SOCK_ID){
         //TODO:
@@ -980,16 +979,17 @@ void FileManagement::requestDownloadFileFromRemote(const QString &remoteBaseDir,
             continue ;
         }else{
             ui.textEditLogs->append(tr("Request downloading file %1").arg(remoteFileName));
-            fileSavePathHash.insert(remoteBaseDir + "/" + remoteFileName, localDir);
         }
     }
 
 }
 
-void FileManagement::startFileManager(){
+void FileManagementWidget::startFileManager(){
 
     if(!m_fileManager){
-        m_fileManager = ResourcesManagerInstance::instance()->getFileManager();
+        //m_fileManager = ResourcesManagerInstance::instance()->getFileManager();
+        m_fileManager = new FileManager(this);
+        m_fileManager->start(QThread::LowestPriority);
         connect(m_fileManager, SIGNAL(dataRead(int , const QByteArray &, int , const QByteArray &, const QByteArray &)), this, SLOT(fileDataRead(int , const QByteArray &, int , const QByteArray &, const QByteArray &)), Qt::QueuedConnection);
         connect(m_fileManager, SIGNAL(error(int, const QByteArray &, quint8, const QString &)), this, SLOT(fileTXError(int, const QByteArray &, quint8, const QString &)), Qt::QueuedConnection);
         connect(m_fileManager, SIGNAL(pieceVerified(const QByteArray &, int , bool , int )), this, SLOT(pieceVerified(const QByteArray &, int , bool , int )), Qt::QueuedConnection);
@@ -1002,7 +1002,8 @@ void FileManagement::startFileManager(){
 
 }
 
-void FileManagement::processPeerRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir){
+void FileManagementWidget::processPeerRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir){
+    qDebug()<<"--FileManagement::processPeerRequestUploadFilePacket(...)";
 
     if(socketID != m_peerSocket){
         return;
@@ -1032,7 +1033,7 @@ void FileManagement::processPeerRequestUploadFilePacket(SOCKETID socketID, const
 
 }
 
-void FileManagement::processPeerRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir){
+void FileManagementWidget::processPeerRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir){
 
     if(socketID != m_peerSocket){
         return;
@@ -1066,11 +1067,11 @@ void FileManagement::processPeerRequestDownloadFilePacket(SOCKETID socketID, con
 
     const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &errorString);
     if(!info){
-        controlCenterPacketsParser->responseFileDownloadRequest(socketID, false, localBaseDir, fileName, QByteArray(), 0);
+        controlCenterPacketsParser->responseFileDownloadRequest(socketID, false, localBaseDir, fileName, QByteArray(), 0, "");
         return;
     }
 
-    if(controlCenterPacketsParser->responseFileDownloadRequest(socketID, true, localBaseDir, fileName, info->md5sum, info->size)){
+    if(controlCenterPacketsParser->responseFileDownloadRequest(socketID, true, localBaseDir, fileName, info->md5sum, info->size, remoteFileSaveDir + "/" + fileName)){
         if(!filesList.contains(info->md5sum)){
             filesList.append(info->md5sum);
         }
@@ -1081,24 +1082,20 @@ void FileManagement::processPeerRequestDownloadFilePacket(SOCKETID socketID, con
 
 }
 
-void FileManagement::fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &localFileSaveDir){
+void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile){
+    //qDebug()<<"--FileManagement::fileDownloadRequestAccepted(...) " << " currentThreadId:"<<QThread::currentThreadId();
 
     if(socketID != m_peerSocket){
         return;
     }
     //TODO:
 
-    ui.textEditLogs->append(tr("File download request accepted! %1").arg(remoteFileName));
+    ui.textEditLogs->append(tr("File download request accepted! %1").arg(pathToSaveFile));
 
     startFileManager();
 
-    QString localPath = localFileSaveDir + "/" + remoteFileName;
-    if(localFileSaveDir.endsWith('/') || localFileSaveDir.endsWith('\\')){
-        localPath = localFileSaveDir + remoteFileName;
-    }
-
     QString errorString;
-    const FileManager::FileMetaInfo *info = m_fileManager->tryToReceiveFile(fileMD5Sum, localPath, size, &errorString);
+    const FileManager::FileMetaInfo *info = m_fileManager->tryToReceiveFile(fileMD5Sum, pathToSaveFile, size, &errorString);
     if(!info){
         ui.textEditLogs->append(tr("Error! Failed to download file '%1'! %2 ").arg(remoteFileName).arg(errorString));
         return;
@@ -1116,7 +1113,7 @@ void FileManagement::fileDownloadRequestAccepted(SOCKETID socketID, const QStrin
 
 }
 
-void FileManagement::fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message){
+void FileManagementWidget::fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message){
 
     if(socketID != m_peerSocket){
         return;
@@ -1127,7 +1124,7 @@ void FileManagement::fileDownloadRequestDenied(SOCKETID socketID, const QString 
 
 }
 
-void FileManagement::fileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message){
+void FileManagementWidget::fileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message){
 
     if(socketID != m_peerSocket){
         return;
@@ -1149,7 +1146,7 @@ void FileManagement::fileUploadRequestResponsed(SOCKETID socketID, const QByteAr
 
 }
 
-void FileManagement::processFileDataRequestPacket(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
+void FileManagementWidget::processFileDataRequestPacket(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
     qDebug()<<"--FileManagement::processFileDataRequestPacket(...) "<<" startPieceIndex:"<<startPieceIndex<<" endPieceIndex:"<<endPieceIndex;
 
     if(socketID != m_peerSocket){
@@ -1182,7 +1179,7 @@ void FileManagement::processFileDataRequestPacket(SOCKETID socketID, const QByte
 
 }
 
-void FileManagement::processFileDataReceivedPacket(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1){
+void FileManagementWidget::processFileDataReceivedPacket(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &sha1){
 
     if(socketID != m_peerSocket){
         return;
@@ -1196,7 +1193,7 @@ void FileManagement::processFileDataReceivedPacket(SOCKETID socketID, const QByt
 
 }
 
-void FileManagement::processFileTXStatusChangedPacket(SOCKETID socketID, const QByteArray &fileMD5, quint8 status){
+void FileManagementWidget::processFileTXStatusChangedPacket(SOCKETID socketID, const QByteArray &fileMD5, quint8 status){
 
     if(socketID != m_peerSocket){
         return;
@@ -1249,7 +1246,7 @@ void FileManagement::processFileTXStatusChangedPacket(SOCKETID socketID, const Q
 
 }
 
-void FileManagement::processFileTXErrorFromPeer(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorMessage){
+void FileManagementWidget::processFileTXErrorFromPeer(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorMessage){
     qDebug()<<"--FileManagement::processFileTXErrorFromPeer(...) " <<" socketID:"<<socketID;
     qCritical()<<errorMessage;
 
@@ -1257,7 +1254,7 @@ void FileManagement::processFileTXErrorFromPeer(SOCKETID socketID, const QByteAr
 
 }
 
-void FileManagement::fileDataRead(int requestID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM){
+void FileManagementWidget::fileDataRead(int requestID, const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM){
     qDebug()<<"--FileManagement::fileDataRead(...) "<<" pieceIndex:"<<pieceIndex<<" size:"<<data.size();
 
 
@@ -1275,7 +1272,7 @@ void FileManagement::fileDataRead(int requestID, const QByteArray &fileMD5, int 
 
 }
 
-void FileManagement::fileTXError(int requestID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString){
+void FileManagementWidget::fileTXError(int requestID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString){
 
     if(!fileTXRequestList.contains(requestID)){
         return;
@@ -1293,8 +1290,8 @@ void FileManagement::fileTXError(int requestID, const QByteArray &fileMD5, quint
 
 }
 
-void FileManagement::pieceVerified(const QByteArray &fileMD5, int pieceIndex, bool verified, int verificationProgress){
-    qDebug()<<"--FileManagement::pieceVerified(...) "<<" pieceIndex:"<<pieceIndex<<" verificationProgress:"<<verificationProgress;
+void FileManagementWidget::pieceVerified(const QByteArray &fileMD5, int pieceIndex, bool verified, int verificationProgress){
+    //qDebug()<<"--FileManagement::pieceVerified(...) "<<" pieceIndex:"<<pieceIndex<<" verificationProgress:"<<verificationProgress;
 
     if(!filesList.contains(fileMD5)){
         return;
@@ -1347,7 +1344,7 @@ void FileManagement::pieceVerified(const QByteArray &fileMD5, int pieceIndex, bo
 
 //////////////////////////////////////////////
 
-void FileManagement::on_pushButtonUploadToRemote_clicked(){
+void FileManagementWidget::on_pushButtonUploadToRemote_clicked(){
 
 //    QModelIndex index = ui.tableViewLocalFiles->currentIndex();
 //    if(!index.isValid() || localFileSystemModel->fileInfo(index).isRoot()){
@@ -1403,7 +1400,7 @@ void FileManagement::on_pushButtonUploadToRemote_clicked(){
 
 }
 
-void FileManagement::on_pushButtonDownloadToLocal_clicked(){
+void FileManagementWidget::on_pushButtonDownloadToLocal_clicked(){
 
 //    QModelIndex index = ui.tableViewRemoteFiles->currentIndex();
 //    if(!index.isValid() || remoteFileSystemModel->isDrive(index)){
@@ -1454,10 +1451,7 @@ void FileManagement::on_pushButtonDownloadToLocal_clicked(){
         return;
     }
 
-
     requestDownloadFileFromRemote(remoteFileSystemModel->currentDirPath(), files, m_localCurrentDir);
-
-
 
 }
 

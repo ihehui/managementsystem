@@ -72,7 +72,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     //ui.comboBoxProtocol->addItem("UDT", quint8(RTP::UDT));
 
     //ui.tabSystemInfo->setEnabled(false);
-    ui.toolButtonRequestHardwareInfo->setEnabled(false);
+    ui.toolButtonRequestHardwareInfoFromClient->setEnabled(false);
     ui.toolButtonSaveAs->setEnabled(false);
 
     ui.tabRemoteConsole->setEnabled(false);
@@ -158,7 +158,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     remoteConsoleRunning = false;
 
 
-    m_fileManagementWidget = qobject_cast<FileManagement *>(ui.tabFileManagement);
+    m_fileManagementWidget = qobject_cast<FileManagementWidget *>(ui.tabFileManagement);
     Q_ASSERT(m_fileManagementWidget);
     if(parser){
         m_fileManagementWidget->setPacketsParser(parser);
@@ -723,12 +723,12 @@ void SystemManagementWidget::on_pushButtonOtherEXE_clicked(){
 
 }
 
-void SystemManagementWidget::on_toolButtonQuerySystemInfo_clicked(){
+void SystemManagementWidget::on_toolButtonQuerySystemInfoFromServer_clicked(){
     controlCenterPacketsParser->sendRequestClientInfoPacket(m_adminUser->socketConnectedToServer(), peerAssetNO(), MS::SYSINFO_HARDWARE);
-    ui.toolButtonQuerySystemInfo->setEnabled(false);
+    ui.toolButtonQuerySystemInfoFromServer->setEnabled(false);
 }
 
-void SystemManagementWidget::on_toolButtonRequestHardwareInfo_clicked(){
+void SystemManagementWidget::on_toolButtonRequestHardwareInfoFromClient_clicked(){
 
     //    if(!verifyPrivilege()){
     //        return;
@@ -741,7 +741,7 @@ void SystemManagementWidget::on_toolButtonRequestHardwareInfo_clicked(){
     }
 
 
-    ui.toolButtonRequestHardwareInfo->setEnabled(false);
+    ui.toolButtonRequestHardwareInfoFromClient->setEnabled(false);
     ui.toolButtonSaveAs->setEnabled(false);
 
     //ui.osGroupBox->setEnabled(false);
@@ -938,7 +938,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(co
 
         ui.tabSystemInfo->setEnabled(true);
         ui.groupBoxTemperatures->setEnabled(true);
-        ui.toolButtonRequestHardwareInfo->setEnabled(true);
+        ui.toolButtonRequestHardwareInfoFromClient->setEnabled(true);
 
         ui.tabRemoteConsole->setEnabled(true);
         ui.groupBoxRemoteConsole->setEnabled(true);
@@ -958,7 +958,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(co
         //ui.tabSystemInfo->setEnabled(false);
         ui.groupBoxRemoteConsole->setEnabled(false);
 
-        ui.toolButtonRequestHardwareInfo->setEnabled(false);
+        ui.toolButtonRequestHardwareInfoFromClient->setEnabled(false);
         ui.groupBoxTemperatures->setEnabled(false);
 
         ui.toolButtonVerify->setEnabled(true);
@@ -1010,7 +1010,7 @@ void SystemManagementWidget::systemInfoFromServerPacketReceived(const SystemInfo
     QString extraInfo = packet.extraInfo;
     QByteArray infoData = packet.data;
     quint8 infoType = packet.infoType;
-    qDebug()<<"infoType:"<<infoType<<"  extraInfo:"<<extraInfo;
+    //qDebug()<<"infoType:"<<infoType<<"  extraInfo:"<<extraInfo;
 
     if(m_peerAssetNO != extraInfo){return;}
     processClientInfo(extraInfo, infoData, infoType);
@@ -1149,8 +1149,8 @@ void SystemManagementWidget::updateHardwareInfo(){
     ui.checkBoxUSBSDReadable->setEnabled(false);
     ui.checkBoxUSBSDWriteable->setEnabled(false);
 
-    ui.toolButtonQuerySystemInfo->setEnabled(true);
-    ui.toolButtonRequestHardwareInfo->setEnabled(true);
+    ui.toolButtonQuerySystemInfoFromServer->setEnabled(true);
+    //ui.toolButtonRequestHardwareInfoFromClient->setEnabled(true);
 
 }
 
@@ -1296,9 +1296,9 @@ void SystemManagementWidget::requestLockWindows(const QString &userName, bool lo
 
 void SystemManagementWidget::requestClientInfoTimeout(){
 
-    if(!ui.toolButtonRequestHardwareInfo->isEnabled()){
+    if(!ui.toolButtonRequestHardwareInfoFromClient->isEnabled()){
         QMessageBox::critical(this, tr("Error"), tr("Timeout! No response from client!"));
-        ui.toolButtonRequestHardwareInfo->setEnabled(true);
+        ui.toolButtonRequestHardwareInfoFromClient->setEnabled(true);
     }
 
 }
@@ -1452,7 +1452,7 @@ void SystemManagementWidget::peerDisconnected(bool normalClose){
     m_peerSocket = INVALID_SOCK_ID;
 
     //ui.tabSystemInfo->setEnabled(false);
-    ui.toolButtonRequestHardwareInfo->setEnabled(false);
+    ui.toolButtonRequestHardwareInfoFromClient->setEnabled(false);
     if(ui.osVersionLineEdit->text().trimmed().isEmpty()){
         ui.toolButtonSaveAs->setEnabled(false);
     }

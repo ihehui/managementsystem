@@ -637,7 +637,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButtonQuerySystemInfo">
+          <widget class="QToolButton" name="toolButtonQuerySystemInfoFromServer">
            <property name="toolTip">
             <string>Query hardware info from server</string>
            </property>
@@ -673,7 +673,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButtonRequestHardwareInfo">
+          <widget class="QToolButton" name="toolButtonRequestHardwareInfoFromClient">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -893,7 +893,7 @@
        <string>Users</string>
       </attribute>
      </widget>
-     <widget class="HEHUI::FileManagement" name="tabFileManagement">
+     <widget class="HEHUI::FileManagementWidget" name="tabFileManagement">
       <property name="enabled">
        <bool>false</bool>
       </property>
@@ -1151,9 +1151,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>HEHUI::FileManagement</class>
+   <class>HEHUI::FileManagementWidget</class>
    <extends>QWidget</extends>
-   <header location="global">filemanagement.h</header>
+   <header location="global">filemanagementwidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -1185,7 +1185,7 @@
   <tabstop>lineEditHost</tabstop>
   <tabstop>toolButtonVerify</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>toolButtonRequestHardwareInfo</tabstop>
+  <tabstop>toolButtonRequestHardwareInfoFromClient</tabstop>
   <tabstop>toolButtonSaveAs</tabstop>
   <tabstop>osVersionLineEdit</tabstop>
   <tabstop>workgroupLineEdit</tabstop>

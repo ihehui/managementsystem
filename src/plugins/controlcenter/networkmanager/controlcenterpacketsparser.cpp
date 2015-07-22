@@ -153,8 +153,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
 
     case quint8(MS::CMD_ClientInfo):
     {
-        qDebug()<<"~~CMD_ClientInfo";
-
+        //qDebug()<<"~~CMD_ClientInfo";
         ClientInfoPacket p(packet);
         emit signalClientInfoPacketReceived(p);
     }
@@ -242,7 +241,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         ////////////////////////////////////////////
     case quint8(MS::CMD_FileTransfer):
     {
-        qDebug()<<"~~CMD_FileTransfer";
+        //qDebug()<<"~~CMD_FileTransfer";
 
         FileTransferPacket p(packet);
         emit signalFileTransferPacketReceived(p);

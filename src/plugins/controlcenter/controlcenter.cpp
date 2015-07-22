@@ -1044,14 +1044,13 @@ void ControlCenter::startNetwork(){
     controlCenterPacketsParser = new ControlCenterPacketsParser(resourcesManager, this);
 
     connect(controlCenterPacketsParser, SIGNAL(signalJobFinished(quint32, quint8, const QVariant &)), JobMonitor::instance(), SLOT(finishJob(quint32, quint8, const QVariant &)), Qt::QueuedConnection);
-    connect(controlCenterPacketsParser, SIGNAL(signalMessagePacketReceived(const MessagePacket &)), this, SLOT(showReceivedMessage(const MessagePacket &)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const ClientInfoPacket &)), this, SLOT(updateOrSaveClientInfo(const ClientInfoPacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalMessagePacketReceived(const MessagePacket &)), this, SLOT(showReceivedMessage(const MessagePacket &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const ClientInfoPacket &)), this, SLOT(updateOrSaveClientInfo(const ClientInfoPacket &)), Qt::QueuedConnection);
 
-    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &)), this, SLOT(processSystemInfoFromServer(const SystemInfoFromServerPacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &)), this, SLOT(processSystemInfoFromServer(const SystemInfoFromServerPacket &)), Qt::QueuedConnection);
 
-    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const ModifyAssetNOPacket &)), this, SLOT(processAssetNOModifiedPacket(const ModifyAssetNOPacket &)));
-
-    connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const ScreenshotPacket &)), this, SLOT(processScreenshotPacket(const ScreenshotPacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalAssetNOModifiedPacketReceived(const ModifyAssetNOPacket &)), this, SLOT(processAssetNOModifiedPacket(const ModifyAssetNOPacket &)), Qt::QueuedConnection);
+    connect(controlCenterPacketsParser, SIGNAL(signalScreenshotPacketReceived(const ScreenshotPacket &)), this, SLOT(processScreenshotPacket(const ScreenshotPacket &)), Qt::QueuedConnection);
 
 
 
@@ -1092,6 +1091,7 @@ void ControlCenter::showReceivedMessage(const MessagePacket &packet){
 }
 
 void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
+    //qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...)";
 
     QString assetNO = packet.getPeerID();
     QByteArray clientInfoData = packet.data;
@@ -1108,12 +1108,9 @@ void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
         info->setJsonData(clientInfoData);
         break;
 
-//    case quint8(MS::SYSINFO_SOFTWARE):
-//        processSoftwareInfo(info, clientInfo);
-//        break;
-//    case quint8(MS::SYSINFO_SERVICES):
-//        updateServicesInfo(object);
-//        break;
+    case quint8(MS::SYSINFO_REALTIME_INFO):
+        break;
+
     default:
         qCritical()<<"ERROR! Unknown client info type!";
         break;
@@ -1147,7 +1144,7 @@ void ControlCenter::processSystemInfoFromServer(const SystemInfoFromServerPacket
 
     updateSystemInfoFromServer(extraInfo, infoData, infoType);
 
-    qApp->processEvents();
+    //qApp->processEvents();
 
 }
 

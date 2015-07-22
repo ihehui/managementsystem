@@ -298,11 +298,12 @@ public slots:
         packet.InfoType = FileTransferPacket::FT_FileDownloadingRequest;
         packet.FileDownloadingRequest.baseDir = remoteBaseDir;
         packet.FileDownloadingRequest.fileName = remoteFileName;
+        packet.FileDownloadingRequest.dirToSaveFile = localFileSaveDir;
 
         return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
 
-    bool responseFileDownloadRequest(SOCKETID socketID, bool accepted, const QString &baseDir, const QString &fileName, const QByteArray &fileMD5Sum, quint64 size){
+    bool responseFileDownloadRequest(SOCKETID socketID, bool accepted, const QString &baseDir, const QString &fileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile){
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileDownloadingResponse;
@@ -311,6 +312,7 @@ public slots:
         packet.FileDownloadingResponse.fileName = fileName;
         packet.FileDownloadingResponse.fileMD5Sum = fileMD5Sum;
         packet.FileDownloadingResponse.size = size;
+        packet.FileDownloadingResponse.pathToSaveFile = pathToSaveFile;
 
         return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }
@@ -327,7 +329,7 @@ public slots:
     }
 
     bool requestFileData(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
-        qDebug()<<"--requestFileData(...) "<<" startPieceIndex:"<<startPieceIndex<<" endPieceIndex:"<<endPieceIndex;
+        //qDebug()<<"--requestFileData(...) "<<" startPieceIndex:"<<startPieceIndex<<" endPieceIndex:"<<endPieceIndex;
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileDataRequest;
