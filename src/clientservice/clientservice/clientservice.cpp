@@ -1991,30 +1991,18 @@ void ClientService::processAdminRequestUploadFilePacket(SOCKETID socketID, const
 
     startFileManager();
 
-    QString localPath = localFileSaveDir + "/" + fileName;
-    if(localFileSaveDir.endsWith('/')){
-        localPath = localFileSaveDir + fileName;
-    }
+    QDir dir(localFileSaveDir);
+    QString localPath = dir.absoluteFilePath(fileName);
 
-    QString errorString;
-    const FileManager::FileMetaInfo *info = m_fileManager->tryToReceiveFile(fileMD5Sum, localPath, size, &errorString);
+    FileManager::FileError error;
+    const FileManager::FileMetaInfo *info = m_fileManager->tryToReceiveFile(fileMD5Sum, localPath, size, &error);
     if(!info){
-        clientPacketsParser->responseFileUploadRequest(socketID, false, fileMD5Sum, errorString);
+        clientPacketsParser->responseFileUploadRequest(socketID, false, fileMD5Sum, error.errorString);
+        return;
     }
-
-    clientPacketsParser->responseFileUploadRequest(socketID, true, fileMD5Sum, errorString);
-
-
-//    m_udtProtocolForFileTransmission->receiveFileFromPeer(socketID, localPath, 0, size);
-//    return;
-
-
-
 
     if(clientPacketsParser->responseFileUploadRequest(socketID, true, fileMD5Sum, "")){
         fileTXSocketHash.insertMulti(socketID, fileMD5Sum);
-
-        //clientPacketsParser->requestFileData(socketID, fileMD5Sum, -1, -1);
         clientPacketsParser->requestFileData(socketID, fileMD5Sum, 0, 0);
     }else{
         m_fileManager->closeFile(fileMD5Sum);
@@ -2025,7 +2013,8 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
 
     startFileManager();
 
-    QString errorString;
+    QDir saveDir(dirToSaveFile);
+    QString newSavePath = saveDir.absoluteFilePath(fileName);
 
     QFileInfo fi(localBaseDir, fileName);
     QString absoluteFilePath = fi.absoluteFilePath();
@@ -2037,7 +2026,7 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
 
         foreach(QString file, dir.entryList(filters, QDir::Dirs | QDir::Files | QDir::System | QDir::Hidden | QDir::NoDotAndDotDot))
         {
-            processAdminRequestDownloadFilePacket(socketID, absoluteFilePath, file, dirToSaveFile + "/" + fileName );
+            processAdminRequestDownloadFilePacket(socketID, absoluteFilePath, file, newSavePath );
 
             qApp->processEvents();
         }
@@ -2045,12 +2034,13 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
         return;
     }
 
-    const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &errorString);
+    FileManager::FileError error;
+    const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &error);
     if(!info){
         clientPacketsParser->responseFileDownloadRequest(socketID, false, absoluteFilePath, fileName, info->md5sum, info->size, "");
     }
 
-    if(clientPacketsParser->responseFileDownloadRequest(socketID, true, absoluteFilePath, fileName, info->md5sum, info->size, dirToSaveFile + "/" + fileName)){
+    if(clientPacketsParser->responseFileDownloadRequest(socketID, true, absoluteFilePath, fileName, info->md5sum, info->size, newSavePath)){
         fileTXSocketHash.insertMulti(socketID, info->md5sum);
     }else{
         m_fileManager->closeFile(info->md5sum);

@@ -161,6 +161,7 @@ private:
     QList<int/*File TX Request ID*/> fileTXRequestList;
     QList<QByteArray/*File MD5*/> filesList;
 
+
 };
 
 }

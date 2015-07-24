@@ -325,7 +325,14 @@ namespace HEHUI {
         enum ErrorCode{
             ERROR_NO_ERROR = 0,
             ERROR_UNKNOWN_ERROR = 1,
+
             ERROR_ID_NOT_EXIST,
+
+            ERROR_OBJECT_READ_FAILED,
+            ERROR_OBJECT_WRITE_FAILED,
+            ERROR_OBJECT_NOT_EXIST,
+            ERROR_OBJECT_EXIST_WITH_SAME_NAME,
+            ERROR_OBJECT_EXIST_WITH_SAME_CONTENT
         };
 
 

@@ -63,7 +63,12 @@ class SHAREDMSLIB_API FileManager : public QThread
     Q_OBJECT
 
 public:
-    enum Error{ERROR_NO_ERROR = 0, ERROR_UNKNOWN, ERROR_FILE_EXIST, ERROR_FILE_NOT_EXIST, ERROR_FILE_IN_USE, FILE_READ_ERROR, FILE_WRITE_ERROR};
+    enum Error{ERROR_NO_ERROR = 0, ERROR_UNKNOWN, ERROR_FILE_EXIST_WITH_SAME_NAME, ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME, ERROR_FILE_NOT_EXIST, ERROR_FILE_IN_USE, FILE_READ_ERROR, FILE_WRITE_ERROR};
+    struct FileError{
+        Error errorCode;
+        QString errorString;
+    };
+
     struct FileMetaInfo
     {
         FileMetaInfo(){
@@ -98,8 +103,8 @@ public:
     FileManager(QObject *parent = 0);
     virtual ~FileManager();
 
-    const FileMetaInfo * tryToSendFile(const QString &localSavePath, QString *errorString/*, int pieceLength = FILE_PIECE_LENGTH*/);
-    const FileMetaInfo * tryToReceiveFile(QByteArray fileMD5Sum, const QString &localSavePath, quint64 size, QString *errorString/*, int pieceLength = FILE_PIECE_LENGTH*/);
+    const FileMetaInfo * tryToSendFile(const QString &localSavePath, FileError *error/*, int pieceLength = FILE_PIECE_LENGTH*/);
+    const FileMetaInfo * tryToReceiveFile(QByteArray fileMD5Sum, const QString &localSavePath, quint64 size, FileError *error/*, int pieceLength = FILE_PIECE_LENGTH*/);
 
     int readPiece(const QByteArray &fileMD5, int pieceIndex);
     void writePiece(const QByteArray &fileMD5, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM);

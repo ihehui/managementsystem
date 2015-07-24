@@ -1118,7 +1118,7 @@ void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
 
     clientInfoModel->addClientInfo(info);
 
-    qApp->processEvents();
+    //qApp->processEvents();
 
 }
 

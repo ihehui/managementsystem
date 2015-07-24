@@ -277,31 +277,33 @@ void FileManager::run()
 
 }
 
-const FileManager::FileMetaInfo * FileManager::tryToSendFile( const QString &localSavePath, QString *errorString/*, int pieceLength*/){
+const FileManager::FileMetaInfo * FileManager::tryToSendFile( const QString &localSavePath, FileError *error/*, int pieceLength*/){
 
-    Q_ASSERT(errorString);
+    Q_ASSERT(error);
+    if(!error){
+        qCritical()<<"ERROR! Invalid Pointer!";
+        return 0;
+    }
 
     {
         QMutexLocker locker(&mutex);
         foreach (FileMetaInfo *metaInfo, fileMetaInfoHash) {
             if(metaInfo->file->fileName() == localSavePath){
-                //QString errString = tr("File '%1' is in use!").arg(localSavePath);
-                //emit error(FILE_READ_ERROR, errString);
                 return metaInfo;
             }
         }
     }
 
     if(!QFile::exists(localSavePath)){
-        *errorString = tr("File '%1' does not exist!").arg(localSavePath);
-        //emit error(ERROR_FILE_NOT_EXIST, errString);
+        error->errorCode = ERROR_FILE_NOT_EXIST;
+        error->errorString = tr("File '%1' does not exist!").arg(localSavePath);
         return 0;
     }
 
     QFile *file = new QFile(localSavePath);
     if (!file->open(QFile::ReadOnly)) {
-        *errorString = tr("Failed to open file %1! %2").arg(localSavePath).arg(file->errorString());
-        //emit error(FILE_READ_ERROR, errString);
+        error->errorCode = FILE_READ_ERROR;
+        error->errorString = tr("Failed to open file %1! %2").arg(localSavePath).arg(file->errorString());
         delete file;
         return 0;
     }
@@ -334,21 +336,39 @@ const FileManager::FileMetaInfo * FileManager::tryToSendFile( const QString &loc
 
 }
 
-const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileMD5Sum, const QString &localSavePath, quint64 size, QString *errorString/*, int pieceLength*/){
+const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileMD5Sum, const QString &localSavePath, quint64 size, FileError *error/*, int pieceLength*/){
 
-    Q_ASSERT(errorString);
+    Q_ASSERT(error);
+    if(!error){
+        qCritical()<<"ERROR! Invalid Pointer!";
+        return 0;
+    }
 
     QString tempFilePath = localSavePath + SUFFIX_TEMP_FILE;
     QString infoFilePath = localSavePath + SUFFIX_INFO_FILE;
 
     QFileInfo fi(localSavePath);
     if(fi.exists()){
-        *errorString = tr("File '%1' already exists!").arg(localSavePath);
-        //emit error(ERROR_FILE_EXIST, errString);
+        QFile file(localSavePath);
+        if (!file.open(QFile::ReadOnly)) {
+            error->errorCode = ERROR_FILE_EXIST_WITH_SAME_NAME;
+            error->errorString = tr("File '%1' already exists but it can not be opened!").arg(localSavePath);
+            return 0;
+        }
+        QByteArray md5Sum = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Md5);
+        if(md5Sum == fileMD5Sum){
+            error->errorCode = ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME;
+            error->errorString = tr("File '%1' already exists!").arg(localSavePath);
+        }else{
+            error->errorCode = ERROR_FILE_EXIST_WITH_SAME_NAME;
+            error->errorString = tr("File '%1' already exists but it has different content!").arg(localSavePath);
+        }
         return 0;
+
     }else{
         if(!fi.dir().mkpath(fi.absolutePath())){
-            *errorString = tr("Can not create directory '%1'!").arg(fi.absolutePath());
+            error->errorCode = FILE_WRITE_ERROR;
+            error->errorString = tr("Failed to make path '%1'!").arg(fi.absolutePath());
             return 0;
         }
     }
@@ -360,8 +380,8 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
                 if(metaInfo->md5sum == fileMD5Sum ){
                     return metaInfo;
                 }else{
-                    *errorString = tr("File '%1' is in use!").arg(localSavePath);
-                    //emit error(ERROR_FILE_EXIST, errString);
+                    error->errorCode = ERROR_FILE_IN_USE;
+                    error->errorString = tr("File '%1' is in use!").arg(localSavePath);
                     return 0;
                 }
             }
@@ -370,8 +390,8 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
 
     QFile *file = new QFile(tempFilePath);
     if (!file->open(QFile::ReadWrite)) {
-        *errorString = tr("Failed to open/create file %1: %2").arg(file->fileName()).arg(file->errorString());
-        //emit error(FILE_READ_ERROR, errString);
+        error->errorCode = FILE_WRITE_ERROR;
+        error->errorString = tr("Failed to open/create file %1: %2").arg(file->fileName()).arg(file->errorString());
         delete file;
         return 0;
     }
@@ -383,8 +403,8 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
     if(oldMD5 != fileMD5Sum || oldSize != size || file->size() == 0){
         file->resize(0);
         if (!file->resize(size)) {
-            *errorString = tr("Failed to resize file %1: %2").arg(file->fileName()).arg(file->errorString());
-            //emit error(FILE_WRITE_ERROR, errString);
+            error->errorCode = FILE_WRITE_ERROR;
+            error->errorString = tr("Failed to resize file %1: %2").arg(file->fileName()).arg(file->errorString());
             delete file;
             return 0;
         }
@@ -419,9 +439,6 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
 
     {
         QMutexLocker locker(&mutex);
-        //        while(fileMetaInfoHash.contains(info->fileID)){
-        //            info->fileID = qrand();
-        //        }
         fileMetaInfoHash.insert(fileMD5Sum, info);
         cond.wakeOne();
     }
