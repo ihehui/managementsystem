@@ -305,7 +305,7 @@ bool FileSystemModel::parseRemoteFilesInfo(const QString &remoteParentDirPath, c
         info->dateModified = time.toString("yyyy/MM/dd hh:mm:ss");
 
         items.append(info);
-        qDebug()<<"name:"<<name<<" size:"<<size<<" type:"<<type<<" lastModified:"<<lastModified;
+        //qDebug()<<"name:"<<name<<" size:"<<size<<" type:"<<type<<" lastModified:"<<lastModified;
 
     }
 
@@ -319,6 +319,13 @@ bool FileSystemModel::parseRemoteFilesInfo(const QString &remoteParentDirPath, c
     this->fileItems.clear();
     this->fileItems = items;
     endResetModel();
+
+    if(parentDirPath.isEmpty()){
+        m_drives.clear();
+        foreach (FileItemInfo *info, fileItems) {
+            m_drives.append(info->name);
+        }
+    }
 
 
     return true;
@@ -435,6 +442,10 @@ QString FileSystemModel::currentDirPath() const{
     return m_currentDirPath;
 }
 
+QStringList FileSystemModel::drives() const{
+    return m_drives;
+}
+
 
 
 
@@ -465,7 +476,6 @@ FileManagementWidget::FileManagementWidget(QWidget *parent) :
     //    m_peerFileTransmissionSocket = INVALID_SOCK_ID;
 
     m_fileManager = 0;
-
 
 
 }
@@ -599,6 +609,9 @@ void FileManagementWidget::on_groupBoxLocal_toggled( bool on ){
             localFilesCompleter->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
             localFilesCompleter->setModel(localFileSystemModel);
             ui.comboBoxLocalPath->setCompleter(localFilesCompleter);
+
+            comboBoxLocalPathCurrentIndexChanged(0);
+
         }
 
         if(ui.groupBoxRemote->isChecked()){
@@ -616,6 +629,9 @@ void FileManagementWidget::on_groupBoxLocal_toggled( bool on ){
 void FileManagementWidget::on_toolButtonShowLocalFiles_clicked(){
 
     QString path = ui.comboBoxLocalPath->currentText();
+    if(ui.comboBoxLocalPath->currentIndex() == 0){
+        path = "";
+    }
 
     if(!path.isEmpty() && !QFile::exists(path)){
         QMessageBox::critical(this, tr("Error"), tr("Target path does not exist!"));
@@ -628,6 +644,21 @@ void FileManagementWidget::on_toolButtonShowLocalFiles_clicked(){
 
     m_localCurrentDir = path;
 
+}
+
+void FileManagementWidget::comboBoxLocalPathCurrentIndexChanged(int index){
+    on_toolButtonShowLocalFiles_clicked();
+    if(index == 0){
+        ui.comboBoxLocalPath->disconnect();
+        ui.comboBoxLocalPath->clear();
+        QFileInfoList infoList = QDir::drives();
+        foreach (QFileInfo info, infoList) {
+            ui.comboBoxLocalPath->addItem(info.filePath());
+        }
+        ui.comboBoxLocalPath->insertItem(0, tr("Computer"));
+        ui.comboBoxLocalPath->setCurrentIndex(0);
+        connect(ui.comboBoxLocalPath, SIGNAL(currentIndexChanged(int)), this, SLOT(comboBoxLocalPathCurrentIndexChanged(int)));
+    }
 }
 
 void FileManagementWidget::localFileItemDoubleClicked(const QModelIndex &index){
@@ -681,11 +712,18 @@ void FileManagementWidget::on_groupBoxRemote_toggled( bool on ){
 void FileManagementWidget::on_toolButtonShowRemoteFiles_clicked(){
 
     QString newPath = ui.comboBoxRemotePath->currentText();
+    if(ui.comboBoxRemotePath->currentIndex() == 0){
+        newPath = "";
+    }
     //    emit signalShowRemoteFiles(newPath);
     requestFileSystemInfo(newPath);
 
     remoteFileSystemModel->changePath(newPath);
     ui.tableViewRemoteFiles->clearSelection();
+}
+
+void FileManagementWidget::comboBoxRemotePathIndexChanged(int index){
+    on_toolButtonShowRemoteFiles_clicked();
 }
 
 void FileManagementWidget::tableViewRemoteFileItemDoubleClicked(const QModelIndex &index){
@@ -902,10 +940,16 @@ void FileManagementWidget::fileSystemInfoReceived(SOCKETID socketID, const QStri
         return;
     }
 
-    //    FileManagement *fm = qobject_cast<FileManagement *>(ui.tabFileManagement);
-    //    if(!fm){return;}
-
     parseRemoteFilesInfo(parentDirPath, fileSystemInfoData);
+
+    if(parentDirPath.isEmpty()){
+        ui.comboBoxRemotePath->disconnect();
+        ui.comboBoxRemotePath->clear();
+        ui.comboBoxRemotePath->addItems(remoteFileSystemModel->drives());
+        ui.comboBoxRemotePath->insertItem(0, tr("Computer"));
+        ui.comboBoxRemotePath->setCurrentIndex(0);
+        connect(ui.comboBoxRemotePath, SIGNAL(currentIndexChanged(int)), this, SLOT(comboBoxRemotePathIndexChanged(int)));
+    }
 
 }
 
@@ -937,10 +981,8 @@ void FileManagementWidget::requestUploadFilesToRemote(const QString &localBaseDi
             }
 
             if(!newFiles.isEmpty()){
-                QString newRemoteDir = remoteDir + "/" + localFileName;
-                if(remoteDir.endsWith("/") || remoteDir.endsWith("\\") ){
-                    newRemoteDir = remoteDir + localFileName;
-                }
+                QDir dir(remoteDir);
+                QString newRemoteDir = dir.absoluteFilePath(localFileName);
                 requestUploadFilesToRemote(fi.absoluteFilePath(), newFiles, newRemoteDir);
             }
             continue;
@@ -1098,7 +1140,7 @@ void FileManagementWidget::processPeerRequestDownloadFilePacket(SOCKETID socketI
 }
 
 void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile){
-    qDebug()<<"--FileManagement::fileDownloadRequestAccepted(...) " << " currentThreadId:"<<QThread::currentThreadId();
+    //qDebug()<<"--FileManagement::fileDownloadRequestAccepted(...) " << " currentThreadId:"<<QThread::currentThreadId();
 
 
     if(socketID != m_peerSocket){return;}
@@ -1114,62 +1156,79 @@ void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const 
 
         switch (error.errorCode) {
         case FileManager::ERROR_FILE_EXIST_WITH_SAME_NAME :
+        {
+            QDir dir(pathToSaveFile);
+            if(!dir.remove(pathToSaveFile)){
+                QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
+                ui.textEditLogs->append(msg);
+                QMessageBox::critical(this, tr("Error"), msg);
+                return;
+            }
+            ui.textEditLogs->append(tr("File automatically overwrote: %1").arg(pathToSaveFile));
+            fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
+            return;
+        }
+            break;
         case FileManager::ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME :
         {
-            QString txt = tr("A file with the same name but different content already exists:<br>%1").arg(pathToSaveFile);
-            if(error.errorCode == FileManager::ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME){
-                txt = tr("File already exists!");
-            }
+            ui.textEditLogs->append(tr("File automatically skipped: %1").arg(pathToSaveFile));
+            return;
 
-            static bool skipAll = false;
-            static bool overwriteAll = false;
-            if(skipAll){
-                ui.textEditLogs->append(tr("File automatically skipped: %1").arg(pathToSaveFile));
-                return;
-            }else if(overwriteAll){
-                QDir dir(pathToSaveFile);
-                if(!dir.remove(pathToSaveFile)){
-                    QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
-                    ui.textEditLogs->append(msg);
-                    QMessageBox::critical(this, tr("Error"), msg);
-                    return;
-                }
-                ui.textEditLogs->append(tr("File automatically overwrote: %1").arg(pathToSaveFile));
-                fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
-                return;
-            }else{
-                QMessageBox msgBox;
-                msgBox.setModal(true);
-                msgBox.setWindowTitle(tr("File Exists"));
-                msgBox.setText(tr("A file with the same name but different content already exists!"));
-                msgBox.setInformativeText("Do you want to skip or overwrite the file?");
-                msgBox.setIcon(QMessageBox::Question);
-                QPushButton *skipAllButton = msgBox.addButton(tr("Skip All"), QMessageBox::ActionRole);
-                QPushButton *overwriteAllButton = msgBox.addButton(tr("Overwrite All"), QMessageBox::ActionRole);
-                QPushButton *skipButton = msgBox.addButton(tr("Skip"), QMessageBox::ActionRole);
-                QPushButton *overwriteButton = msgBox.addButton(tr("Overwrite"), QMessageBox::ActionRole);
+//            static bool skipAll = false;
+//            static bool overwriteAll = false;
+//            if(skipAll){
+//                ui.textEditLogs->append(tr("File automatically skipped: %1").arg(pathToSaveFile));
+//                return;
+//            }else if(overwriteAll){
+//                QDir dir(pathToSaveFile);
+//                if(!dir.remove(pathToSaveFile)){
+//                    QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
+//                    ui.textEditLogs->append(msg);
+//                    QMessageBox::critical(this, tr("Error"), msg);
+//                    return;
+//                }
+//                ui.textEditLogs->append(tr("File automatically overwrote: %1").arg(pathToSaveFile));
+//                fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
+//                return;
+//            }else{
+//                QMessageBox msgBox;
+//                msgBox.setModal(true);
+//                msgBox.setWindowTitle(tr("File Exists"));
+//                msgBox.setText(tr("A file with the same name but different content already exists!"));
+//                msgBox.setInformativeText("Do you want to skip or overwrite the file?");
+//                msgBox.setIcon(QMessageBox::Question);
+//                QPushButton *skipAllButton = msgBox.addButton(tr("Skip All"), QMessageBox::ActionRole);
+//                QPushButton *overwriteAllButton = msgBox.addButton(tr("Overwrite All"), QMessageBox::ActionRole);
+//                QPushButton *skipButton = msgBox.addButton(tr("Skip"), QMessageBox::ActionRole);
+//                QPushButton *overwriteButton = msgBox.addButton(tr("Overwrite"), QMessageBox::ActionRole);
 
-                msgBox.exec();
-                if (msgBox.clickedButton() == skipAllButton) {
-                    skipAll = true;
-                } else if (msgBox.clickedButton() == overwriteAllButton) {
-                    overwriteAll = true;
-                } else if (msgBox.clickedButton() == skipButton) {
-                    ui.textEditLogs->append(tr("File skipped: %1").arg(pathToSaveFile));
-                    return;
-                } else if (msgBox.clickedButton() == overwriteButton) {
-                    QDir dir(pathToSaveFile);
-                    if(!dir.remove(pathToSaveFile)){
-                        QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
-                        ui.textEditLogs->append(msg);
-                        QMessageBox::critical(this, tr("Error"), msg);
-                        return;
-                    }
-                    fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
-                    ui.textEditLogs->append(tr("File overwrote: %1").arg(pathToSaveFile));
-                    return;
-                }
-            }
+//                QString txt = tr("A file with the same name but different content already exists:<br>%1").arg(pathToSaveFile);
+//                if(error.errorCode == FileManager::ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME){
+//                    txt = tr("File already exists:<br>%1").arg(pathToSaveFile);
+//                }
+//                msgBox.setText(txt);
+
+//                msgBox.exec();
+//                if (msgBox.clickedButton() == skipAllButton) {
+//                    skipAll = true;
+//                } else if (msgBox.clickedButton() == overwriteAllButton) {
+//                    overwriteAll = true;
+//                } else if (msgBox.clickedButton() == skipButton) {
+//                    ui.textEditLogs->append(tr("File skipped: %1").arg(pathToSaveFile));
+//                    return;
+//                } else if (msgBox.clickedButton() == overwriteButton) {
+//                    QDir dir(pathToSaveFile);
+//                    if(!dir.remove(pathToSaveFile)){
+//                        QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
+//                        ui.textEditLogs->append(msg);
+//                        QMessageBox::critical(this, tr("Error"), msg);
+//                        return;
+//                    }
+//                    fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
+//                    ui.textEditLogs->append(tr("File overwrote: %1").arg(pathToSaveFile));
+//                    return;
+//                }
+//            }
 
         }
             break;

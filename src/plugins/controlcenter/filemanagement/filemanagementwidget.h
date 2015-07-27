@@ -9,6 +9,7 @@
 #include <QList>
 #include <QDragEnterEvent>
 #include <QMap>
+#include <QMessageBox>
 
 #include "ui_filemanagement.h"
 
@@ -49,6 +50,7 @@ public:
     void changePath(const QString &newPath);
 
     QString currentDirPath() const;
+    QStringList drives() const;
 
 private:
     struct FileItemInfo{
@@ -60,10 +62,10 @@ private:
     };
 
     QList<FileItemInfo *> fileItems;
-
     QString m_currentDirPath;
-
     QFileIconProvider *m_fileIconProvider;
+
+    QStringList m_drives;
 
 };
 
@@ -127,11 +129,13 @@ private slots:
 
     void on_groupBoxLocal_toggled( bool on );
     void on_toolButtonShowLocalFiles_clicked();
+    void comboBoxLocalPathCurrentIndexChanged(int index);
     void localFileItemDoubleClicked(const QModelIndex &index);
 
 
     void on_groupBoxRemote_toggled( bool on );
     void on_toolButtonShowRemoteFiles_clicked();
+    void comboBoxRemotePathIndexChanged(int index);
     void tableViewRemoteFileItemDoubleClicked(const QModelIndex &index);
     bool getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage);
     bool parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data);
@@ -160,6 +164,7 @@ private:
     FileManager *m_fileManager;
     QList<int/*File TX Request ID*/> fileTXRequestList;
     QList<QByteArray/*File MD5*/> filesList;
+
 
 
 };

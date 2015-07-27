@@ -46,17 +46,14 @@
 #include <QMutex>
 #include <QThread>
 #include <QWaitCondition>
-
+#include <QByteArray>
+#include <QFile>
 
 
 #include "sharedmslib.h"
 
 
-QT_BEGIN_NAMESPACE
-class QByteArray;
-class QFile;
-class QTimerEvent;
-QT_END_NAMESPACE
+
 
 class SHAREDMSLIB_API FileManager : public QThread
 {
