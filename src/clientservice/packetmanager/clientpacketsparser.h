@@ -270,12 +270,34 @@ public slots:
     }
 
 //////////////////////////////
-    bool responseFileSystemInfo(SOCKETID socketID, QString parentDirPath, const QByteArray &fileSystemInfoData){
+    bool responseFileSystemInfo(SOCKETID socketID, const QString &baseDirPath, const QByteArray &fileSystemInfoData){
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileSystemInfoResponse;
-        packet.FileSystemInfoResponse.parentDirPath = parentDirPath;
+        packet.FileSystemInfoResponse.baseDirPath = baseDirPath;
         packet.FileSystemInfoResponse.fileSystemInfoData = fileSystemInfoData;
+
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+    }
+
+    bool responseDeletingFiles(SOCKETID socketID, const QString &baseDirPath, const QStringList &failedFiles){
+
+        FileTransferPacket packet;
+        packet.InfoType = FileTransferPacket::FT_FileDeletingResponse;
+        packet.FileDeletingResponse.baseDirPath = baseDirPath;
+        packet.FileDeletingResponse.failedFiles = failedFiles;
+
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+    }
+
+    bool responseRenamingFiles(SOCKETID socketID, const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message){
+
+        FileTransferPacket packet;
+        packet.InfoType = FileTransferPacket::FT_FileRenamingResponse;
+        packet.FileRenamingResponse.baseDirPath = baseDirPath;
+        packet.FileRenamingResponse.oldFileName = fileName;
+        packet.FileRenamingResponse.renamed = renamed;
+        packet.FileRenamingResponse.message = message;
 
         return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }

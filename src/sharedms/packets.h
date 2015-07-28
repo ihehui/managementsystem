@@ -433,12 +433,22 @@ public:
         FT_UNKNOWN = 0,
         FT_FileSystemInfoRequest,
         FT_FileSystemInfoResponse,
+
+        FT_FileDeletingRequest,
+        FT_FileDeletingResponse,
+
+        FT_FileRenamingRequest,
+        FT_FileRenamingResponse,
+
         FT_FileDownloadingRequest,
         FT_FileDownloadingResponse,
+
         FT_FileUploadingRequest,
         FT_FileUploadingResponse,
+
         FT_FileDataRequest,
         FT_FileData,
+
         FT_FileTXStatus,
         FT_FileTXError
     };
@@ -448,9 +458,30 @@ public:
         QString parentDirPath;
     } FileSystemInfoRequest;
     struct FileSystemInfoResponseStruct{
-        QString parentDirPath;
+        QString baseDirPath;
         QByteArray fileSystemInfoData;
     } FileSystemInfoResponse;
+
+    struct FileDeletingRequestStruct{
+        QString baseDirPath;
+        QStringList files;
+    } FileDeletingRequest;
+    struct FileDeletingResponseStruct{
+        QString baseDirPath;
+        QStringList failedFiles;
+    } FileDeletingResponse;
+
+    struct FileRenamingRequestStruct{
+        QString baseDirPath;
+        QString oldFileName;
+        QString newFileName;
+    } FileRenamingRequest;
+    struct FileRenamingResponseStruct{
+        QString baseDirPath;
+        QString oldFileName;
+        quint8 renamed;
+        QString message;
+    } FileRenamingResponse;
 
     struct FileDownloadingRequestStruct{
         QString baseDir;

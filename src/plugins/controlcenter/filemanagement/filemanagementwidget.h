@@ -87,6 +87,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dragMoveEvent(QDragMoveEvent *event);
     void dropEvent(QDropEvent *event);
+    void keyReleaseEvent(QKeyEvent * keyEvent);
 
 
 signals:
@@ -125,6 +126,9 @@ public slots:
     void processPeerRequestUploadFilePacket(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &localFileSaveDir);
     void processPeerRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
 
+    void processFileDeletingResult(const QString &baseDirPath, const QStringList &failedFiles);
+    void processFileRenamingResult(const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message);
+
 private slots:
 
     void on_groupBoxLocal_toggled( bool on );
@@ -143,6 +147,11 @@ private slots:
     void on_pushButtonUploadToRemote_clicked();
     void on_pushButtonDownloadToLocal_clicked();
 
+    void deleteFiles();
+    void deleteLocalFiles(const QString &path, QStringList *failedFiles = 0, const QStringList &nameFilters = QStringList(), const QStringList & ignoredFiles = QStringList(), const QStringList & ignoredDirs = QStringList());
+
+    void renameFile();
+
 private:
     Ui::FileManagement ui;
 
@@ -154,17 +163,11 @@ private:
 
     FileSystemModel *remoteFileSystemModel;
 
-
-//    UDTProtocol *m_udtProtocol;
     int m_peerSocket;
-    //UDTProtocolForFileTransmission *m_udtProtocolForFileTransmission;
-    //UDTSOCKET m_peerFileTransmissionSocket;
-
 
     FileManager *m_fileManager;
     QList<int/*File TX Request ID*/> fileTXRequestList;
     QList<QByteArray/*File MD5*/> filesList;
-
 
 
 };

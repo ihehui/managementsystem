@@ -935,8 +935,24 @@ void FileTransferPacket::init(){
 
     FileSystemInfoRequest.parentDirPath = "";
 
-    FileSystemInfoResponse.parentDirPath = "";
+    FileSystemInfoResponse.baseDirPath = "";
     FileSystemInfoResponse.fileSystemInfoData = QByteArray();
+
+    FileDeletingRequest.baseDirPath = "";
+    FileDeletingRequest.files.clear();
+
+    FileDeletingResponse.baseDirPath = "";
+    FileDeletingResponse.failedFiles.clear();
+
+    FileRenamingRequest.baseDirPath = "";
+    FileRenamingRequest.oldFileName = "";
+    FileRenamingRequest.newFileName = "";
+
+    FileRenamingResponse.baseDirPath = "";
+    FileRenamingResponse.oldFileName = "";
+    FileRenamingResponse.renamed = 0;
+    FileRenamingResponse.message = "";
+
 
     FileDownloadingRequest.baseDir = "";
     FileDownloadingRequest.fileName = "";
@@ -995,7 +1011,31 @@ void FileTransferPacket::parsePacketBody(QByteArray &packetBody){
 
     case FT_FileSystemInfoResponse:
     {
-        in >> FileSystemInfoResponse.parentDirPath >> FileSystemInfoResponse.fileSystemInfoData;
+        in >> FileSystemInfoResponse.baseDirPath >> FileSystemInfoResponse.fileSystemInfoData;
+    }
+        break;
+
+    case FT_FileDeletingRequest:
+    {
+        in >> FileDeletingRequest.baseDirPath >> FileDeletingRequest.files;
+    }
+        break;
+
+    case FT_FileDeletingResponse:
+    {
+        in >> FileDeletingResponse.baseDirPath >> FileDeletingResponse.failedFiles;
+    }
+        break;
+
+    case FT_FileRenamingRequest:
+    {
+        in >> FileRenamingRequest.baseDirPath >> FileRenamingRequest.oldFileName >> FileRenamingRequest.newFileName;
+    }
+        break;
+
+    case FT_FileRenamingResponse:
+    {
+        in >> FileRenamingResponse.baseDirPath >> FileRenamingResponse.oldFileName >> FileRenamingResponse.renamed >> FileRenamingResponse.message;
     }
         break;
 
@@ -1070,7 +1110,31 @@ QByteArray FileTransferPacket::packBodyData(){
 
     case FT_FileSystemInfoResponse:
     {
-        out << FileSystemInfoResponse.parentDirPath << FileSystemInfoResponse.fileSystemInfoData;
+        out << FileSystemInfoResponse.baseDirPath << FileSystemInfoResponse.fileSystemInfoData;
+    }
+        break;
+
+    case FT_FileDeletingRequest:
+    {
+        out << FileDeletingRequest.baseDirPath << FileDeletingRequest.files;
+    }
+        break;
+
+    case FT_FileDeletingResponse:
+    {
+        out << FileDeletingResponse.baseDirPath << FileDeletingResponse.failedFiles;
+    }
+        break;
+
+    case FT_FileRenamingRequest:
+    {
+        out << FileRenamingRequest.baseDirPath << FileRenamingRequest.oldFileName << FileRenamingRequest.newFileName;
+    }
+        break;
+
+    case FT_FileRenamingResponse:
+    {
+        out << FileRenamingResponse.baseDirPath << FileRenamingResponse.oldFileName << FileRenamingResponse.renamed << FileRenamingResponse.message;
     }
         break;
 

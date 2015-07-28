@@ -1907,6 +1907,29 @@ void ClientService::processFileTransferPacket(const FileTransferPacket &packet){
     }
         break;
 
+    case FileTransferPacket::FT_FileDeletingRequest :
+    {
+        deleteFiles(packet.getSocketID(), packet.FileDeletingRequest.baseDirPath, packet.FileDeletingRequest.files);
+    }
+        break;
+    case FileTransferPacket::FT_FileDeletingResponse :
+    {
+
+    }
+        break;
+
+    case FileTransferPacket::FT_FileRenamingRequest :
+    {
+        renameFile(packet.getSocketID(), packet.FileRenamingRequest.baseDirPath, packet.FileRenamingRequest.oldFileName, packet.FileRenamingRequest.newFileName);
+    }
+        break;
+    case FileTransferPacket::FT_FileRenamingResponse :
+    {
+
+    }
+        break;
+
+
     case FileTransferPacket::FT_FileDownloadingRequest :
     {
         processAdminRequestDownloadFilePacket(socketID, packet.FileDownloadingRequest.baseDir, packet.FileDownloadingRequest.fileName, packet.FileDownloadingRequest.dirToSaveFile);
@@ -2213,6 +2236,71 @@ void ClientService::pieceVerified(const QByteArray &fileMD5, int pieceIndex, boo
 
 }
 
+void ClientService::deleteFiles(SOCKETID socketID, const QString &localBaseDir, const QStringList files){
+    QStringList failedFiles;
+    QDir dir(localBaseDir);
+    foreach (QString file, files) {
+        deleteLocalFiles(dir.absoluteFilePath(file), &failedFiles);
+    }
+    fileSystemInfoRequested(socketID, localBaseDir);
+    clientPacketsParser->responseDeletingFiles(socketID, localBaseDir, failedFiles);
+}
+
+void ClientService::deleteLocalFiles(const QString &path, QStringList *failedFiles, const QStringList & nameFilters, const QStringList & ignoredFiles, const QStringList & ignoredDirs){
+    qDebug()<<"--ClientService::deleteLocalFiles(...)  path:"<<path;
+
+    QFileInfo fi(path);
+    if(fi.isFile()){
+        if(!QFile::remove(path)){
+            if(failedFiles){
+                failedFiles->append(path);
+            }
+        }
+        return;
+    }
+
+
+    QDir dir(path);
+    if(!dir.exists()){return;}
+
+    QStringList filters = nameFilters;
+    if(filters.isEmpty()){
+        filters << "*" << "*.*";
+    }
+
+    QStringList tempFailedFiles;
+    foreach(QString file, dir.entryList(filters, QDir::Files | QDir::System | QDir::Hidden))
+    {
+        if(ignoredFiles.contains(file)){continue;}
+        if(!dir.remove(file)){
+            tempFailedFiles.append(dir.absoluteFilePath(file));
+        }
+        qApp->processEvents();
+    }
+
+    foreach(QString subDir, dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::System | QDir::Hidden))
+    {
+        deleteLocalFiles(path + QDir::separator() + subDir, &tempFailedFiles, filters, ignoredFiles, ignoredDirs);
+    }
+
+    if(!ignoredDirs.contains(dir.dirName())){
+        dir.rmdir(path);
+    }
+
+    if(failedFiles){
+        failedFiles->append(tempFailedFiles);
+    }
+
+}
+
+void ClientService::renameFile(SOCKETID socketID, const QString &localBaseDir, const QString &oldFileName, const QString &newFileName){
+    bool renamed = false;
+    QDir dir(localBaseDir);
+    renamed = dir.rename(oldFileName, newFileName);
+    fileSystemInfoRequested(socketID, localBaseDir);
+    clientPacketsParser->responseRenamingFiles(socketID, localBaseDir, oldFileName, renamed, "");
+}
+
 bool ClientService::getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage){
 
     Q_ASSERT(result);
@@ -2264,7 +2352,7 @@ bool ClientService::getLocalFilesInfo(const QString &parentDirPath, QByteArray *
         uint lastModified = info.lastModified().toTime_t();
 
         out << name << size << type << lastModified;
-        qDebug()<<"name:"<<name<<" size:"<<size<<" type:"<<type<<" lastModified:"<<lastModified;
+        //qDebug()<<"name:"<<name<<" size:"<<size<<" type:"<<type<<" lastModified:"<<lastModified;
     }
 
     return true;

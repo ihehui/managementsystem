@@ -402,8 +402,29 @@ public slots:
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileSystemInfoResponse;
-        packet.FileSystemInfoResponse.parentDirPath = parentDirPath;
+        packet.FileSystemInfoResponse.baseDirPath = parentDirPath;
         packet.FileSystemInfoResponse.fileSystemInfoData = fileSystemInfoData;
+
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+    }
+
+    bool requestDeleteFiles(SOCKETID socketID, const QString &remoteBaseDir, const QStringList &remoteFiles){
+
+        FileTransferPacket packet;
+        packet.InfoType = FileTransferPacket::FT_FileDeletingRequest;
+        packet.FileDeletingRequest.baseDirPath = remoteBaseDir;
+        packet.FileDeletingRequest.files = remoteFiles;
+
+        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+    }
+
+    bool requestRenameFile(SOCKETID socketID, const QString &remoteBaseDir, const QString &oldFileName, const QString &newFileName){
+
+        FileTransferPacket packet;
+        packet.InfoType = FileTransferPacket::FT_FileRenamingRequest;
+        packet.FileRenamingRequest.baseDirPath = remoteBaseDir;
+        packet.FileRenamingRequest.oldFileName = oldFileName;
+        packet.FileRenamingRequest.newFileName = newFileName;
 
         return m_rtp->sendReliableData(socketID, &packet.toByteArray());
     }

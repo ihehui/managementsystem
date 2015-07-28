@@ -161,6 +161,9 @@ private slots:
     void fileTXError(int requestID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString);
     void pieceVerified(const QByteArray &fileMD5, int pieceIndex, bool verified, int verificationProgress);
 
+    void deleteFiles(SOCKETID socketID, const QString &localBaseDir, const QStringList files);
+    void deleteLocalFiles(const QString &path, QStringList *failedFiles = 0, const QStringList &nameFilters = QStringList(), const QStringList & ignoredFiles = QStringList(), const QStringList & ignoredDirs = QStringList());
+    void renameFile(SOCKETID socketID, const QString &localBaseDir, const QString &oldFileName, const QString &newFileName);
 
 private:
     bool getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage);

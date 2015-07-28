@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QMimeData>
 #include <QUrl>
+#include <QInputDialog>
 #include <QDebug>
 
 #include "filemanagementwidget.h"
@@ -593,6 +594,19 @@ void FileManagementWidget::dropEvent(QDropEvent *event)
 
 }
 
+void FileManagementWidget::keyReleaseEvent(QKeyEvent * keyEvent){
+
+    if(keyEvent->key() == Qt::Key_Delete){
+        deleteFiles();
+    }else if(keyEvent->key() == Qt::Key_F2){
+        renameFile();
+    }
+
+    //    if(QApplication::keyboardModifiers() == Qt::ShiftModifier && keyEvent->key() == Qt::Key_Delete){
+    //    }
+
+}
+
 void FileManagementWidget::on_groupBoxLocal_toggled( bool on ){
 
     if(on){
@@ -846,7 +860,29 @@ void FileManagementWidget::processFileTransferPacket(const FileTransferPacket &p
 
     case FileTransferPacket::FT_FileSystemInfoResponse :
     {
-        fileSystemInfoReceived(socketID, packet.FileSystemInfoResponse.parentDirPath, packet.FileSystemInfoResponse.fileSystemInfoData);
+        fileSystemInfoReceived(socketID, packet.FileSystemInfoResponse.baseDirPath, packet.FileSystemInfoResponse.fileSystemInfoData);
+    }
+        break;
+
+    case FileTransferPacket::FT_FileDeletingRequest :
+    {
+
+    }
+        break;
+    case FileTransferPacket::FT_FileDeletingResponse :
+    {
+
+    }
+        break;
+
+    case FileTransferPacket::FT_FileRenamingRequest :
+    {
+
+    }
+        break;
+    case FileTransferPacket::FT_FileRenamingResponse :
+    {
+
     }
         break;
 
@@ -865,17 +901,6 @@ void FileManagementWidget::processFileTransferPacket(const FileTransferPacket &p
         }
 
         if(packet.FileDownloadingResponse.accepted){
-//            int retVal;
-//            QMetaObject::invokeMethod(this,
-//                                      "fileDownloadRequestAccepted",
-//                                      Qt::AutoConnection,
-//                                      Q_RETURN_ARG(int, retVal),
-//                                      Q_ARG(SOCKETID, socketID),
-//                                      Q_ARG(QString, packet.FileDownloadingResponse.fileName),
-//                                      Q_ARG(QByteArray, packet.FileDownloadingResponse.fileMD5Sum),
-//                                      Q_ARG(quint64, packet.FileDownloadingResponse.size),
-//                                      Q_ARG(QString, pathToSaveFile)
-//                                      );
             fileDownloadRequestAccepted(socketID, packet.FileDownloadingResponse.fileName, packet.FileDownloadingResponse.fileMD5Sum, packet.FileDownloadingResponse.size, pathToSaveFile);
         }else{
             fileDownloadRequestDenied(socketID, packet.FileDownloadingResponse.fileName, "");
@@ -1139,6 +1164,17 @@ void FileManagementWidget::processPeerRequestDownloadFilePacket(SOCKETID socketI
 
 }
 
+void FileManagementWidget::processFileDeletingResult(const QString &baseDirPath, const QStringList &failedFiles){
+    if(failedFiles.isEmpty()){return;}
+    QMessageBox::critical(this, tr("Error"), tr("Some files can not be deleted:<br>%1").arg(failedFiles.join("<br>")));
+}
+
+void FileManagementWidget::processFileRenamingResult(const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message){
+    if(renamed){return;}
+    QMessageBox::critical(this, tr("Error"), tr("File '%1' can not be renamed!").arg(fileName));
+}
+
+
 void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile){
     //qDebug()<<"--FileManagement::fileDownloadRequestAccepted(...) " << " currentThreadId:"<<QThread::currentThreadId();
 
@@ -1174,61 +1210,61 @@ void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const 
             ui.textEditLogs->append(tr("File automatically skipped: %1").arg(pathToSaveFile));
             return;
 
-//            static bool skipAll = false;
-//            static bool overwriteAll = false;
-//            if(skipAll){
-//                ui.textEditLogs->append(tr("File automatically skipped: %1").arg(pathToSaveFile));
-//                return;
-//            }else if(overwriteAll){
-//                QDir dir(pathToSaveFile);
-//                if(!dir.remove(pathToSaveFile)){
-//                    QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
-//                    ui.textEditLogs->append(msg);
-//                    QMessageBox::critical(this, tr("Error"), msg);
-//                    return;
-//                }
-//                ui.textEditLogs->append(tr("File automatically overwrote: %1").arg(pathToSaveFile));
-//                fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
-//                return;
-//            }else{
-//                QMessageBox msgBox;
-//                msgBox.setModal(true);
-//                msgBox.setWindowTitle(tr("File Exists"));
-//                msgBox.setText(tr("A file with the same name but different content already exists!"));
-//                msgBox.setInformativeText("Do you want to skip or overwrite the file?");
-//                msgBox.setIcon(QMessageBox::Question);
-//                QPushButton *skipAllButton = msgBox.addButton(tr("Skip All"), QMessageBox::ActionRole);
-//                QPushButton *overwriteAllButton = msgBox.addButton(tr("Overwrite All"), QMessageBox::ActionRole);
-//                QPushButton *skipButton = msgBox.addButton(tr("Skip"), QMessageBox::ActionRole);
-//                QPushButton *overwriteButton = msgBox.addButton(tr("Overwrite"), QMessageBox::ActionRole);
+            //            static bool skipAll = false;
+            //            static bool overwriteAll = false;
+            //            if(skipAll){
+            //                ui.textEditLogs->append(tr("File automatically skipped: %1").arg(pathToSaveFile));
+            //                return;
+            //            }else if(overwriteAll){
+            //                QDir dir(pathToSaveFile);
+            //                if(!dir.remove(pathToSaveFile)){
+            //                    QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
+            //                    ui.textEditLogs->append(msg);
+            //                    QMessageBox::critical(this, tr("Error"), msg);
+            //                    return;
+            //                }
+            //                ui.textEditLogs->append(tr("File automatically overwrote: %1").arg(pathToSaveFile));
+            //                fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
+            //                return;
+            //            }else{
+            //                QMessageBox msgBox;
+            //                msgBox.setModal(true);
+            //                msgBox.setWindowTitle(tr("File Exists"));
+            //                msgBox.setText(tr("A file with the same name but different content already exists!"));
+            //                msgBox.setInformativeText("Do you want to skip or overwrite the file?");
+            //                msgBox.setIcon(QMessageBox::Question);
+            //                QPushButton *skipAllButton = msgBox.addButton(tr("Skip All"), QMessageBox::ActionRole);
+            //                QPushButton *overwriteAllButton = msgBox.addButton(tr("Overwrite All"), QMessageBox::ActionRole);
+            //                QPushButton *skipButton = msgBox.addButton(tr("Skip"), QMessageBox::ActionRole);
+            //                QPushButton *overwriteButton = msgBox.addButton(tr("Overwrite"), QMessageBox::ActionRole);
 
-//                QString txt = tr("A file with the same name but different content already exists:<br>%1").arg(pathToSaveFile);
-//                if(error.errorCode == FileManager::ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME){
-//                    txt = tr("File already exists:<br>%1").arg(pathToSaveFile);
-//                }
-//                msgBox.setText(txt);
+            //                QString txt = tr("A file with the same name but different content already exists:<br>%1").arg(pathToSaveFile);
+            //                if(error.errorCode == FileManager::ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME){
+            //                    txt = tr("File already exists:<br>%1").arg(pathToSaveFile);
+            //                }
+            //                msgBox.setText(txt);
 
-//                msgBox.exec();
-//                if (msgBox.clickedButton() == skipAllButton) {
-//                    skipAll = true;
-//                } else if (msgBox.clickedButton() == overwriteAllButton) {
-//                    overwriteAll = true;
-//                } else if (msgBox.clickedButton() == skipButton) {
-//                    ui.textEditLogs->append(tr("File skipped: %1").arg(pathToSaveFile));
-//                    return;
-//                } else if (msgBox.clickedButton() == overwriteButton) {
-//                    QDir dir(pathToSaveFile);
-//                    if(!dir.remove(pathToSaveFile)){
-//                        QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
-//                        ui.textEditLogs->append(msg);
-//                        QMessageBox::critical(this, tr("Error"), msg);
-//                        return;
-//                    }
-//                    fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
-//                    ui.textEditLogs->append(tr("File overwrote: %1").arg(pathToSaveFile));
-//                    return;
-//                }
-//            }
+            //                msgBox.exec();
+            //                if (msgBox.clickedButton() == skipAllButton) {
+            //                    skipAll = true;
+            //                } else if (msgBox.clickedButton() == overwriteAllButton) {
+            //                    overwriteAll = true;
+            //                } else if (msgBox.clickedButton() == skipButton) {
+            //                    ui.textEditLogs->append(tr("File skipped: %1").arg(pathToSaveFile));
+            //                    return;
+            //                } else if (msgBox.clickedButton() == overwriteButton) {
+            //                    QDir dir(pathToSaveFile);
+            //                    if(!dir.remove(pathToSaveFile)){
+            //                        QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
+            //                        ui.textEditLogs->append(msg);
+            //                        QMessageBox::critical(this, tr("Error"), msg);
+            //                        return;
+            //                    }
+            //                    fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
+            //                    ui.textEditLogs->append(tr("File overwrote: %1").arg(pathToSaveFile));
+            //                    return;
+            //                }
+            //            }
 
         }
             break;
@@ -1597,6 +1633,172 @@ void FileManagementWidget::on_pushButtonDownloadToLocal_clicked(){
     }
 
     requestDownloadFileFromRemote(remoteFileSystemModel->currentDirPath(), files, m_localCurrentDir);
+
+}
+
+void FileManagementWidget::deleteFiles(){
+
+    QModelIndexList selectedIndexes;
+    QString baseDir;
+    QStringList files;
+
+    if(ui.tableViewRemoteFiles->hasFocus()){
+        selectedIndexes = ui.tableViewRemoteFiles->selectionModel()->selectedIndexes();
+        baseDir = remoteFileSystemModel->currentDirPath();
+        int selectedIndexesCount = selectedIndexes.count();
+        for (int j = 0; j < selectedIndexesCount; ++j) {
+            QModelIndex index = selectedIndexes.at(j);
+            if (index.column() != 0){continue;}
+
+            QString filePath = remoteFileSystemModel->fileName(index);
+            if(filePath == ".."){continue;}
+            files.append(filePath);
+            qApp->processEvents();
+        }
+
+    }else{
+        selectedIndexes = ui.tableViewLocalFiles->selectionModel()->selectedIndexes();
+        baseDir = m_localCurrentDir;
+        int selectedIndexesCount = selectedIndexes.count();
+        for (int j = 0; j < selectedIndexesCount; ++j) {
+            QModelIndex index = selectedIndexes.at(j);
+            if (index.column() != 0){continue;}
+
+            QString filePath = localFileSystemModel->fileInfo(index).fileName();
+            if(m_localCurrentDir.startsWith(filePath)){continue;}
+            files.append(filePath);
+            qApp->processEvents();
+        }
+    }
+
+    if(files.isEmpty()){return;}
+
+    int ret = QMessageBox::question(this, tr("Question"), tr("Do you really want to delete these files?"), QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+    if(ret == QMessageBox::No){return;}
+
+
+    if(ui.tableViewRemoteFiles->hasFocus()){
+        bool ok = controlCenterPacketsParser->requestDeleteFiles(m_peerSocket, baseDir, files);
+        if(!ok){
+            ui.textEditLogs->append(tr("Error! Can not send file deletion request! %1").arg(controlCenterPacketsParser->lastErrorMessage()) );
+        }else{
+            ui.textEditLogs->append(tr("Request deleting files:<br> %1").arg(files.join("<br>")));
+        }
+    }else{
+        QDir dir(baseDir);
+        QStringList failedFiles;
+        foreach (QString file, files) {
+            deleteLocalFiles(dir.absoluteFilePath(file), &failedFiles);
+        }
+
+        if(failedFiles.isEmpty()){
+            ui.textEditLogs->append(tr("Local files deleted:<br>%1").arg(files.join("<br>")));
+        }else{
+            ui.textEditLogs->append(tr("Failed to delete local files:<br>%1").arg(failedFiles.join("<br>")) );
+        }
+
+    }
+
+
+}
+
+void FileManagementWidget::deleteLocalFiles(const QString &path, QStringList *failedFiles, const QStringList & nameFilters, const QStringList & ignoredFiles, const QStringList & ignoredDirs){
+
+    QDir dir(path);
+    if(!dir.exists()){return;}
+
+    QStringList filters = nameFilters;
+    if(filters.isEmpty()){
+        filters << "*" << "*.*";
+    }
+
+    QStringList tempFailedFiles;
+
+    foreach(QString file, dir.entryList(filters, QDir::Files | QDir::System | QDir::Hidden))
+    {
+        if(ignoredFiles.contains(file)){continue;}
+        if(!dir.remove(file)){
+            tempFailedFiles.append(dir.absoluteFilePath(file));
+        }
+        qApp->processEvents();
+    }
+
+    foreach(QString subDir, dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::System | QDir::Hidden))
+    {
+        deleteLocalFiles(path + QDir::separator() + subDir, &tempFailedFiles, filters, ignoredFiles, ignoredDirs);
+    }
+
+    if(!ignoredDirs.contains(dir.dirName())){
+        dir.rmdir(path);
+    }
+
+    if(failedFiles){
+        failedFiles->append(tempFailedFiles);
+    }
+
+}
+
+
+void FileManagementWidget::renameFile(){
+
+    QModelIndexList selectedIndexes;
+    QString baseDir;
+    QString file;
+
+    if(ui.tableViewRemoteFiles->hasFocus()){
+        selectedIndexes = ui.tableViewRemoteFiles->selectionModel()->selectedIndexes();
+        baseDir = remoteFileSystemModel->currentDirPath();
+        if(selectedIndexes.isEmpty()){return;}
+
+        QModelIndex index = selectedIndexes.at(0);
+        if(index.column() != 0){return;}
+
+        file = remoteFileSystemModel->fileName(index);
+        if(file == ".."){return;}
+    }else{
+        selectedIndexes = ui.tableViewLocalFiles->selectionModel()->selectedIndexes();
+        baseDir = m_localCurrentDir;
+        if(selectedIndexes.isEmpty()){return;}
+
+        QModelIndex index = selectedIndexes.at(0);
+        if (index.column() != 0){return;}
+
+        file = localFileSystemModel->fileInfo(index).fileName();
+        if(m_localCurrentDir.startsWith(file)){return;}
+
+    }
+
+    if(file.isEmpty()){return;}
+
+    int ret = QMessageBox::question(this, tr("Question"), tr("Do you really want to rename the file '%1'?").arg(file), QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+    if(ret == QMessageBox::No){return;}
+
+
+    bool ok;
+    QString newFileName = QInputDialog::getText(this, tr("Rename File"),
+                                         tr("New File Name:"), QLineEdit::Normal,
+                                         file, &ok);
+    if (!ok || newFileName.isEmpty()){
+        return;
+    }
+
+
+    if(ui.tableViewRemoteFiles->hasFocus()){
+        ok = controlCenterPacketsParser->requestRenameFile(m_peerSocket, baseDir, file, newFileName);
+        if(!ok){
+            ui.textEditLogs->append(tr("Error! Can not send file renaming request! %1").arg(controlCenterPacketsParser->lastErrorMessage()) );
+        }else{
+            ui.textEditLogs->append(tr("Request renaming file:<br> %1").arg(file));
+        }
+    }else{
+        QDir dir(baseDir);
+        ok = dir.rename(file, newFileName);
+        if(!ok){
+            ui.textEditLogs->append(tr("Error! Failed to rename local file '%1'!").arg(file) );
+        }else{
+            ui.textEditLogs->append(tr("Local file '%1' renamed to '%2'").arg(file).arg(newFileName));
+        }
+    }
 
 }
 

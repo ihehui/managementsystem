@@ -84,8 +84,11 @@
           </item>
           <item row="1" column="0" colspan="3">
            <widget class="QTableView" name="tableViewLocalFiles">
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
             <property name="acceptDrops">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="selectionMode">
              <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -248,6 +251,9 @@
           </item>
           <item row="1" column="0" colspan="3">
            <widget class="QTableView" name="tableViewRemoteFiles">
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
             <property name="acceptDrops">
              <bool>true</bool>
             </property>
