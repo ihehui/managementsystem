@@ -43,7 +43,6 @@
 #include "HHSharedCore/hcryptography.h"
 //#include "HHSharedNetwork/hpacketparserbase.h"
 #include "HHSharedCore/hutilities.h"
-#include "HHSharedNetwork/hpackethandlerbase.h"
 
 
 namespace HEHUI {
@@ -129,7 +128,7 @@ private:
     QString m_localID;
 
     ResourcesManagerInstance *m_resourcesManager;
-    PacketHandlerBase *m_packetHandlerBase;
+//    PacketHandlerBase *m_packetHandlerBase;
     //NetworkManagerInstance *networkManager;
 
     RTP *m_rtp;

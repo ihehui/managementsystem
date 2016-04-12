@@ -211,7 +211,7 @@ ControlCenter::~ControlCenter()
     resourcesManager = 0;
 
     //TODO
-    PacketHandlerBase::clean();
+//    PacketHandlerBase::clean();
 
 
     delete proxyModel;

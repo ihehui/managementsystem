@@ -5,6 +5,7 @@
 #define __countof(x)	((sizeof(x)/sizeof(x[0])))
 #endif
 
+
 CAviFile:: CAviFile(LPCTSTR lpszFileName /* =_T("Output.avi") */,
             DWORD dwCodec /* = mmioFOURCC('M','P','G','4') */,
             DWORD dwFrameRate /* = 1 */)

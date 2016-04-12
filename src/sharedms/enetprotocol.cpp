@@ -3,7 +3,6 @@
 
 #include "enetprotocol.h"
 
-#include "HHSharedNetwork/hpackethandlerbase.h"
 
 namespace HEHUI {
 

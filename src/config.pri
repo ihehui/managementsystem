@@ -3,9 +3,9 @@
 include( ../config_global.pri )
 
 
-VER_MAJ = 2015
-VER_MIN = 5
-VER_PAT = 4
+VER_MAJ = 2016
+VER_MIN = 3
+VER_PAT = 21
 VER_CMP = 1
 
 VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}.$${VER_CMP}
@@ -15,7 +15,7 @@ VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}.$${VER_CMP}
 QMAKE_TARGET_COMPANY	= "He Hui"
 QMAKE_TARGET_PRODUCT	= "Management System"
 QMAKE_TARGET_DESCRIPTION    = "Crossplatform Tools Based On Qt"
-QMAKE_TARGET_COPYRIGHT	= "Copyright (C) 2007 - 2015 He Hui"
+QMAKE_TARGET_COPYRIGHT	= "Copyright (C) 2007 - 2016 He Hui"
 
 APP_ORG = "He Hui"
 APP_AUTHOR = "He Hui"

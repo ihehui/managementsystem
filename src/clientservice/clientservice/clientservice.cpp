@@ -141,7 +141,7 @@ ClientService::~ClientService(){
 //    delete m_udpServer;
 //    delete m_udtProtocol;
 
-    PacketHandlerBase::clean();
+//    PacketHandlerBase::clean();
 
 
     delete databaseUtility;

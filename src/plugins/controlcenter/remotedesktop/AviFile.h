@@ -17,6 +17,9 @@
 #pragma comment(lib, "vfw32.lib")
 ////http://www.codeproject.com/Articles/5055/Create-a-movie-from-an-HBitmap?msg=4401798#xx4401798xx
  
+#pragma comment(lib,"gdiplus")
+#pragma comment(lib,"Gdi32.lib")
+#pragma comment(lib, "user32.lib")
 
 class CAviFile
 {

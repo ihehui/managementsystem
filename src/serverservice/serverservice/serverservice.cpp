@@ -110,7 +110,7 @@ ServerService::~ServerService(){
     //    delete m_udpServer;
     //    delete m_udtProtocol;
 
-    PacketHandlerBase::clean();
+//    PacketHandlerBase::clean();
 
 
     QList<ClientInfo*> clientInfoList = clientInfoHash.values();

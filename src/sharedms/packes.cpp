@@ -2,24 +2,77 @@
 
 #include "global_shared.h"
 #include "HHSharedNetwork/PacketBase"
+#include "HHSharedCore/hcryptography.h"
 
 
 namespace HEHUI {
 
 
-
 ////////////////////////////////////////////////////////////////////////
-ServerDiscoveryPacket::ServerDiscoveryPacket()
-    :Packet(quint8(MS::CMD_ServerDiscovery))
+
+QByteArray MSPacket::sessionEncryptionKey = QByteArray("HE.HUI");
+MSPacket::MSPacket(quint8 packetType)
+    :Packet(packetType)
 {
     init();
 }
 
-ServerDiscoveryPacket::ServerDiscoveryPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_JobProgress))
+MSPacket::MSPacket(const PacketBase &base, quint8 packetType)
+    :Packet(packetType)
 {
     init();
     convert(base);
+}
+
+MSPacket::~MSPacket(){
+
+}
+
+void MSPacket::setSessionEncryptionKey(const QByteArray &key){
+    sessionEncryptionKey = key;
+}
+
+void MSPacket::init(){
+
+}
+
+QByteArray MSPacket::encrypt(const QByteArray &data){
+    if(sessionEncryptionKey.isEmpty()){return data;}
+    Cryptography cryptography;
+    QByteArray encryptedData;
+    if(cryptography.teaCrypto(&encryptedData, data, sessionEncryptionKey, true)){
+        return encryptedData;
+    }
+    return QByteArray();
+}
+
+QByteArray MSPacket::decrypt(const QByteArray &encryptedData){
+    if(sessionEncryptionKey.isEmpty()){return encryptedData;}
+    Cryptography cryptography;
+    QByteArray decryptedData;
+    if(cryptography.teaCrypto(&decryptedData, encryptedData, sessionEncryptionKey, false)){
+        return decryptedData;
+    }
+    return QByteArray();
+}
+
+
+////////////////////////////////////////////////////////////////////////
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+ServerDiscoveryPacket::ServerDiscoveryPacket()
+    :MSPacket(quint8(MS::CMD_ServerDiscovery))
+{
+
+}
+
+ServerDiscoveryPacket::ServerDiscoveryPacket(const PacketBase &base)
+    :MSPacket(quint8(MS::CMD_JobProgress))
+{
+
 }
 
 ServerDiscoveryPacket::~ServerDiscoveryPacket(){
@@ -67,16 +120,15 @@ QByteArray ServerDiscoveryPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 MessagePacket::MessagePacket()
-    :Packet(quint8(MS::CMD_Message))
+    :MSPacket(quint8(MS::CMD_Message))
 {
-    init();
+
 }
 
 MessagePacket::MessagePacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_Message))
+    :MSPacket(quint8(MS::CMD_Message))
 {
-    init();
-    convert(base);
+
 }
 
 MessagePacket::~MessagePacket(){
@@ -108,16 +160,15 @@ QByteArray MessagePacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 JobProgressPacket::JobProgressPacket()
-    :Packet(quint8(MS::CMD_JobProgress))
+    :MSPacket(quint8(MS::CMD_JobProgress))
 {
-    init();
+
 }
 
 JobProgressPacket::JobProgressPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_JobProgress))
+    :MSPacket(quint8(MS::CMD_JobProgress))
 {
-    init();
-    convert(base);
+
 }
 
 JobProgressPacket::~JobProgressPacket(){
@@ -151,16 +202,15 @@ QByteArray JobProgressPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AdminLoginPacket::AdminLoginPacket()
-    :Packet(quint8(MS::CMD_AdminLogin))
+    :MSPacket(quint8(MS::CMD_AdminLogin))
 {
-    init();
+
 }
 
 AdminLoginPacket::AdminLoginPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_AdminLogin))
+    :MSPacket(quint8(MS::CMD_AdminLogin))
 {
-    init();
-    convert(base);
+
 }
 
 AdminLoginPacket::~AdminLoginPacket(){
@@ -239,16 +289,15 @@ QByteArray AdminLoginPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ClientInfoPacket::ClientInfoPacket()
-    :Packet(quint8(MS::CMD_ClientInfo))
+    :MSPacket(quint8(MS::CMD_ClientInfo))
 {
-    init();
+
 }
 
 ClientInfoPacket::ClientInfoPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_ClientInfo))
+    :MSPacket(quint8(MS::CMD_ClientInfo))
 {
-    init();
-    convert(base);
+
 }
 
 ClientInfoPacket::~ClientInfoPacket(){
@@ -283,16 +332,15 @@ QByteArray ClientInfoPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 SystemInfoFromServerPacket::SystemInfoFromServerPacket()
-    :Packet(quint8(MS::CMD_SystemInfoFromServer))
+    :MSPacket(quint8(MS::CMD_SystemInfoFromServer))
 {
-    init();
+
 }
 
 SystemInfoFromServerPacket::SystemInfoFromServerPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_SystemInfoFromServer))
+    :MSPacket(quint8(MS::CMD_SystemInfoFromServer))
 {
-    init();
-    convert(base);
+
 }
 
 SystemInfoFromServerPacket::~SystemInfoFromServerPacket(){
@@ -325,17 +373,16 @@ QByteArray SystemInfoFromServerPacket::packBodyData(){
 
 
 ////////////////////////////////////////////////////////////////////////
-SysAdminInfoPacket::SysAdminInfoPacket()
-    :Packet(quint8(MS::CMD_SysAdminInfo))
+SysAdminInfoPacket::SysAdminInfoPacket(const QByteArray &sessionEncryptionKey)
+    :MSPacket(quint8(MS::CMD_SysAdminInfo))
 {
-    init();
+
 }
 
 SysAdminInfoPacket::SysAdminInfoPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_SysAdminInfo))
+    :MSPacket(quint8(MS::CMD_SysAdminInfo))
 {
-    init();
-    convert(base);
+
 }
 
 SysAdminInfoPacket::~SysAdminInfoPacket(){
@@ -370,16 +417,15 @@ QByteArray SysAdminInfoPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 SystemAlarmsPacket::SystemAlarmsPacket()
-    :Packet(quint8(MS::CMD_SystemAlarms))
+    :MSPacket(quint8(MS::CMD_SystemAlarms))
 {
-    init();
+
 }
 
 SystemAlarmsPacket::SystemAlarmsPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_SystemAlarms))
+    :MSPacket(quint8(MS::CMD_SystemAlarms))
 {
-    init();
-    convert(base);
+
 }
 
 SystemAlarmsPacket::~SystemAlarmsPacket(){
@@ -459,16 +505,15 @@ QByteArray SystemAlarmsPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AnnouncementPacket::AnnouncementPacket()
-    :Packet(quint8(MS::CMD_Announcement))
+    :MSPacket(quint8(MS::CMD_Announcement))
 {
-    init();
+
 }
 
 AnnouncementPacket::AnnouncementPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_Announcement))
+    :MSPacket(quint8(MS::CMD_Announcement))
 {
-    init();
-    convert(base);
+
 }
 
 AnnouncementPacket::~AnnouncementPacket(){
@@ -611,16 +656,15 @@ QByteArray AnnouncementPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 RemoteConsolePacket::RemoteConsolePacket()
-    :Packet(quint8(MS::CMD_RemoteConsole))
+    :MSPacket(quint8(MS::CMD_RemoteConsole))
 {
-    init();
+
 }
 
 RemoteConsolePacket::RemoteConsolePacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_RemoteConsole))
+    :MSPacket(quint8(MS::CMD_RemoteConsole))
 {
-    init();
-    convert(base);
+
 }
 
 void RemoteConsolePacket::init(){
@@ -722,16 +766,15 @@ QByteArray RemoteConsolePacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ClientLogPacket::ClientLogPacket()
-    :Packet(quint8(MS::CMD_ClientLog))
+    :MSPacket(quint8(MS::CMD_ClientLog))
 {
-    init();
+
 }
 
 ClientLogPacket::ClientLogPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_ClientLog))
+    :MSPacket(quint8(MS::CMD_ClientLog))
 {
-    init();
-    convert(base);
+
 }
 
 void ClientLogPacket::init(){
@@ -760,16 +803,15 @@ QByteArray ClientLogPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 USBDevPacket::USBDevPacket()
-    :Packet(quint8(MS::CMD_FileTransfer))
+    :MSPacket(quint8(MS::CMD_FileTransfer))
 {
-    init();
+
 }
 
 USBDevPacket::USBDevPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_FileTransfer))
+    :MSPacket(quint8(MS::CMD_FileTransfer))
 {
-    init();
-    convert(base);
+
 }
 
 void USBDevPacket::init(){
@@ -797,16 +839,15 @@ QByteArray USBDevPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AdminConnectionToClientPacket::AdminConnectionToClientPacket()
-    :Packet(quint8(MS::CMD_AdminConnectionToClient))
+    :MSPacket(quint8(MS::CMD_AdminConnectionToClient))
 {
-    init();
+
 }
 
 AdminConnectionToClientPacket::AdminConnectionToClientPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_AdminConnectionToClient))
+    :MSPacket(quint8(MS::CMD_AdminConnectionToClient))
 {
-    init();
-    convert(base);
+
 }
 
 void AdminConnectionToClientPacket::init(){
@@ -837,16 +878,15 @@ QByteArray AdminConnectionToClientPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AdminSearchClientPacket::AdminSearchClientPacket()
-    :Packet(quint8(MS::CMD_AdminSearchClient))
+    :MSPacket(quint8(MS::CMD_AdminSearchClient))
 {
-    init();
+
 }
 
 AdminSearchClientPacket::AdminSearchClientPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_AdminSearchClient))
+    :MSPacket(quint8(MS::CMD_AdminSearchClient))
 {
-    init();
-    convert(base);
+
 }
 
 void AdminSearchClientPacket::init(){
@@ -880,16 +920,15 @@ QByteArray AdminSearchClientPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 LocalUserOnlineStatusChangedPacket::LocalUserOnlineStatusChangedPacket()
-    :Packet(quint8(MS::CMD_LocalUserOnlineStatusChanged))
+    :MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
 {
-    init();
+
 }
 
 LocalUserOnlineStatusChangedPacket::LocalUserOnlineStatusChangedPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_LocalUserOnlineStatusChanged))
+    :MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
 {
-    init();
-    convert(base);
+
 }
 
 void LocalUserOnlineStatusChangedPacket::init(){
@@ -918,16 +957,15 @@ QByteArray LocalUserOnlineStatusChangedPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 FileTransferPacket::FileTransferPacket()
-    :Packet(quint8(MS::CMD_FileTransfer))
+    :MSPacket(quint8(MS::CMD_FileTransfer))
 {
-    init();
+
 }
 
 FileTransferPacket::FileTransferPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_FileTransfer))
+    :MSPacket(quint8(MS::CMD_FileTransfer))
 {
-    init();
-    convert(base);
+
 }
 
 void FileTransferPacket::init(){
@@ -1197,16 +1235,15 @@ QByteArray FileTransferPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ModifyAssetNOPacket::ModifyAssetNOPacket()
-    :Packet(quint8(MS::CMD_ModifyAssetNO))
+    :MSPacket(quint8(MS::CMD_ModifyAssetNO))
 {
-    init();
+
 }
 
 ModifyAssetNOPacket::ModifyAssetNOPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_ModifyAssetNO))
+    :MSPacket(quint8(MS::CMD_ModifyAssetNO))
 {
-    init();
-    convert(base);
+
 }
 
 void ModifyAssetNOPacket::init(){
@@ -1237,16 +1274,15 @@ QByteArray ModifyAssetNOPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 RenameComputerPacket::RenameComputerPacket()
-    :Packet(quint8(MS::CMD_RenameComputer))
+    :MSPacket(quint8(MS::CMD_RenameComputer))
 {
-    init();
+
 }
 
 RenameComputerPacket::RenameComputerPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_RenameComputer))
+    :MSPacket(quint8(MS::CMD_RenameComputer))
 {
-    init();
-    convert(base);
+
 }
 
 void RenameComputerPacket::init(){
@@ -1277,16 +1313,15 @@ QByteArray RenameComputerPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 JoinOrUnjoinDomainPacket::JoinOrUnjoinDomainPacket()
-    :Packet(quint8(MS::CMD_JoinOrUnjoinDomain))
+    :MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
 {
-    init();
+
 }
 
 JoinOrUnjoinDomainPacket::JoinOrUnjoinDomainPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_JoinOrUnjoinDomain))
+    :MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
 {
-    init();
-    convert(base);
+
 }
 
 void JoinOrUnjoinDomainPacket::init(){
@@ -1318,16 +1353,15 @@ QByteArray JoinOrUnjoinDomainPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 TemperaturesPacket::TemperaturesPacket()
-    :Packet(quint8(MS::CMD_Temperatures))
+    :MSPacket(quint8(MS::CMD_Temperatures))
 {
-    init();
+
 }
 
 TemperaturesPacket::TemperaturesPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_Temperatures))
+    :MSPacket(quint8(MS::CMD_Temperatures))
 {
-    init();
-    convert(base);
+
 }
 
 void TemperaturesPacket::init(){
@@ -1402,16 +1436,15 @@ QByteArray TemperaturesPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ScreenshotPacket::ScreenshotPacket()
-    :Packet(quint8(MS::CMD_Screenshot))
+    :MSPacket(quint8(MS::CMD_Screenshot))
 {
-    init();
+
 }
 
 ScreenshotPacket::ScreenshotPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_Screenshot))
+    :MSPacket(quint8(MS::CMD_Screenshot))
 {
-    init();
-    convert(base);
+
 }
 
 void ScreenshotPacket::init(){
@@ -1512,16 +1545,15 @@ QByteArray ScreenshotPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ShutdownPacket::ShutdownPacket()
-    :Packet(quint8(MS::CMD_Shutdown))
+    :MSPacket(quint8(MS::CMD_Shutdown))
 {
-    init();
+
 }
 
 ShutdownPacket::ShutdownPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_Shutdown))
+    :MSPacket(quint8(MS::CMD_Shutdown))
 {
-    init();
-    convert(base);
+
 }
 
 void ShutdownPacket::init(){
@@ -1552,16 +1584,15 @@ QByteArray ShutdownPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 LockWindowsPacket::LockWindowsPacket()
-    :Packet(quint8(MS::CMD_LockWindows))
+    :MSPacket(quint8(MS::CMD_LockWindows))
 {
-    init();
+
 }
 
 LockWindowsPacket::LockWindowsPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_LockWindows))
+    :MSPacket(quint8(MS::CMD_LockWindows))
 {
-    init();
-    convert(base);
+
 }
 
 void LockWindowsPacket::init(){
@@ -1590,16 +1621,15 @@ QByteArray LockWindowsPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 WinUserPacket::WinUserPacket()
-    :Packet(quint8(MS::CMD_WinUser))
+    :MSPacket(quint8(MS::CMD_WinUser))
 {
-    init();
+
 }
 
 WinUserPacket::WinUserPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_WinUser))
+    :MSPacket(quint8(MS::CMD_WinUser))
 {
-    init();
-    convert(base);
+
 }
 
 void WinUserPacket::init(){
@@ -1627,16 +1657,15 @@ QByteArray WinUserPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ServiceConfigPacket::ServiceConfigPacket()
-    :Packet(quint8(MS::CMD_ServiceConfig))
+    :MSPacket(quint8(MS::CMD_ServiceConfig))
 {
-    init();
+
 }
 
 ServiceConfigPacket::ServiceConfigPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_ServiceConfig))
+    :MSPacket(quint8(MS::CMD_ServiceConfig))
 {
-    init();
-    convert(base);
+
 }
 
 void ServiceConfigPacket::init(){
@@ -1667,16 +1696,15 @@ QByteArray ServiceConfigPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ProcessMonitorInfoPacket::ProcessMonitorInfoPacket()
-    :Packet(quint8(MS::CMD_ProcessMonitorInfo))
+    :MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
 {
-    init();
+
 }
 
 ProcessMonitorInfoPacket::ProcessMonitorInfoPacket(const PacketBase &base)
-    :Packet(quint8(MS::CMD_ProcessMonitorInfo))
+    :MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
 {
-    init();
-    convert(base);
+
 }
 
 void ProcessMonitorInfoPacket::init(){

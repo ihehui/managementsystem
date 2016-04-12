@@ -1,15 +1,42 @@
 #ifndef PACKETS_H_
 #define PACKETS_H_
 
-#include "HHSharedNetwork/PacketBase"
 #include "sharedmslib.h"
+#include "HHSharedNetwork/PacketBase"
 
 namespace HEHUI {
 
 
+////////////////////////////////////////////////////////////////////////
+class SHAREDMSLIB_API MSPacket : public Packet
+{
+public:
+    MSPacket(quint8 packetType);
+    MSPacket(const PacketBase &base, quint8 packetType);
+    ~MSPacket();
+
+public:
+    static void setSessionEncryptionKey(const QByteArray &key);
+
+private:
+    virtual void init();
+    virtual void parsePacketBody(QByteArray &packetBody) = 0;
+    virtual QByteArray packBodyData() = 0;
+
+protected:
+    QByteArray encrypt(const QByteArray &data);
+    QByteArray decrypt(const QByteArray &encryptedData);
+
+private:
+    static QByteArray sessionEncryptionKey;
+};
+////////////////////////////////////////////////////////////////////////
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ServerDiscoveryPacket : public Packet
+class SHAREDMSLIB_API ServerDiscoveryPacket : public MSPacket
 {
 public:
     ServerDiscoveryPacket();
@@ -33,7 +60,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API MessagePacket : public Packet
+class SHAREDMSLIB_API MessagePacket : public MSPacket
 {
 public:
     MessagePacket();
@@ -54,7 +81,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API JobProgressPacket : public Packet
+class SHAREDMSLIB_API JobProgressPacket : public MSPacket
 {
 public:
     JobProgressPacket();
@@ -75,7 +102,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API AdminLoginPacket : public Packet
+class SHAREDMSLIB_API AdminLoginPacket : public MSPacket
 {
 public:
     AdminLoginPacket();
@@ -109,7 +136,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ClientInfoPacket : public Packet
+class SHAREDMSLIB_API ClientInfoPacket : public MSPacket
 {
 public:
     ClientInfoPacket();
@@ -132,7 +159,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API SystemInfoFromServerPacket : public Packet
+class SHAREDMSLIB_API SystemInfoFromServerPacket : public MSPacket
 {
 public:
     SystemInfoFromServerPacket();
@@ -154,7 +181,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API SysAdminInfoPacket : public Packet
+class SHAREDMSLIB_API SysAdminInfoPacket : public MSPacket
 {
 public:
     SysAdminInfoPacket();
@@ -175,7 +202,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API SystemAlarmsPacket : public Packet
+class SHAREDMSLIB_API SystemAlarmsPacket : public MSPacket
 {
 public:
     SystemAlarmsPacket();
@@ -210,7 +237,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API AnnouncementPacket : public Packet
+class SHAREDMSLIB_API AnnouncementPacket : public MSPacket
 {
 public:
     AnnouncementPacket();
@@ -276,7 +303,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API RemoteConsolePacket : public Packet
+class SHAREDMSLIB_API RemoteConsolePacket : public MSPacket
 {
 public:
     RemoteConsolePacket();
@@ -316,7 +343,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ClientLogPacket : public Packet
+class SHAREDMSLIB_API ClientLogPacket : public MSPacket
 {
 public:
     ClientLogPacket();
@@ -335,7 +362,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API USBDevPacket : public Packet
+class SHAREDMSLIB_API USBDevPacket : public MSPacket
 {
 public:
     USBDevPacket();
@@ -353,7 +380,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API AdminConnectionToClientPacket : public Packet
+class SHAREDMSLIB_API AdminConnectionToClientPacket : public MSPacket
 {
 public:
     AdminConnectionToClientPacket();
@@ -374,7 +401,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API AdminSearchClientPacket : public Packet
+class SHAREDMSLIB_API AdminSearchClientPacket : public MSPacket
 {
 public:
     AdminSearchClientPacket();
@@ -398,7 +425,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API LocalUserOnlineStatusChangedPacket : public Packet
+class SHAREDMSLIB_API LocalUserOnlineStatusChangedPacket : public MSPacket
 {
 public:
     LocalUserOnlineStatusChangedPacket();
@@ -417,7 +444,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API FileTransferPacket : public Packet
+class SHAREDMSLIB_API FileTransferPacket : public MSPacket
 {
 public:
     FileTransferPacket();
@@ -538,7 +565,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ModifyAssetNOPacket : public Packet
+class SHAREDMSLIB_API ModifyAssetNOPacket : public MSPacket
 {
 public:
     ModifyAssetNOPacket();
@@ -559,7 +586,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API RenameComputerPacket : public Packet
+class SHAREDMSLIB_API RenameComputerPacket : public MSPacket
 {
 public:
     RenameComputerPacket();
@@ -580,7 +607,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API JoinOrUnjoinDomainPacket : public Packet
+class SHAREDMSLIB_API JoinOrUnjoinDomainPacket : public MSPacket
 {
 public:
     JoinOrUnjoinDomainPacket();
@@ -602,7 +629,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API TemperaturesPacket : public Packet
+class SHAREDMSLIB_API TemperaturesPacket : public MSPacket
 {
 public:
     TemperaturesPacket();
@@ -634,7 +661,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ScreenshotPacket : public Packet
+class SHAREDMSLIB_API ScreenshotPacket : public MSPacket
 {
 public:
     ScreenshotPacket();
@@ -672,7 +699,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ShutdownPacket : public Packet
+class SHAREDMSLIB_API ShutdownPacket : public MSPacket
 {
 public:
     ShutdownPacket();
@@ -694,7 +721,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API LockWindowsPacket : public Packet
+class SHAREDMSLIB_API LockWindowsPacket : public MSPacket
 {
 public:
     LockWindowsPacket();
@@ -713,7 +740,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API WinUserPacket : public Packet
+class SHAREDMSLIB_API WinUserPacket : public MSPacket
 {
 public:
     WinUserPacket();
@@ -731,7 +758,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ServiceConfigPacket : public Packet
+class SHAREDMSLIB_API ServiceConfigPacket : public MSPacket
 {
 public:
     ServiceConfigPacket();
@@ -752,7 +779,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-class SHAREDMSLIB_API ProcessMonitorInfoPacket : public Packet
+class SHAREDMSLIB_API ProcessMonitorInfoPacket : public MSPacket
 {
 public:
     ProcessMonitorInfoPacket();

@@ -112,7 +112,7 @@ Helper::~Helper(){
     delete resourcesManager;
     resourcesManager = 0;
 
-    PacketHandlerBase::clean();
+//    PacketHandlerBase::clean();
 
     
 }
