@@ -373,7 +373,7 @@ QByteArray SystemInfoFromServerPacket::packBodyData(){
 
 
 ////////////////////////////////////////////////////////////////////////
-SysAdminInfoPacket::SysAdminInfoPacket(const QByteArray &sessionEncryptionKey)
+SysAdminInfoPacket::SysAdminInfoPacket()
     :MSPacket(quint8(MS::CMD_SysAdminInfo))
 {
 
