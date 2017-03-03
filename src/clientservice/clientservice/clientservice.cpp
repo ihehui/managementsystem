@@ -100,7 +100,10 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 
 
     m_procMonEnabled = false;
+
+#ifdef Q_OS_WIN
     m_processMonitor = 0;
+#endif
 
     m_myInfo = 0;
 //    m_myInfo = new ClientInfo(m_localComputerName, this);
@@ -904,8 +907,8 @@ void ClientService::processAdminRequestConnectionToClientPacket(const AdminConne
     }
 
 #else
-    clientPacketsParser->sendClientResponseAdminConnectionResultPacket(adminSocketID, true, "It's NOT M$ Windows!");
-    clientPacketsParser->sendClientResponseClientSummaryInfoPacket(adminSocketID, QByteArray());
+    clientPacketsParser->sendClientResponseAdminConnectionResultPacket(adminSocketID, "It's NOT M$ Windows!", true, MS::ERROR_NO_ERROR);
+    processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_OS);
 
     //m_udtProtocol->closeSocket(adminSocketID);
 #endif
@@ -1169,6 +1172,8 @@ void ClientService::consoleProcessOutputRead(const QString &output){
 
 void ClientService::processAdminRequestTemperaturesPacket(const TemperaturesPacket &packet){
 
+#if defined(Q_OS_WIN32)
+
     if((!packet.TemperaturesRequest.requestCPU) && (!packet.TemperaturesRequest.requestHD)){
         if(m_hardwareMonitor){
             delete m_hardwareMonitor;
@@ -1194,6 +1199,9 @@ void ClientService::processAdminRequestTemperaturesPacket(const TemperaturesPack
 
     clientPacketsParser->sendClientResponseTemperaturesPacket(packet.getSocketID(), cpuTemperature, harddiskTemperature);
 
+#endif
+
+
 }
 
 //void ClientService::processAdminRequestScreenshotPacket(SOCKETID socketID, const QString &userName, bool fullScreen){
@@ -1202,18 +1210,28 @@ void ClientService::processAdminRequestTemperaturesPacket(const TemperaturesPack
 
 
 void ClientService::processAdminRequestShutdownPacket(const ShutdownPacket &packet){
+
+#if defined(Q_OS_WIN32)
     WinUtilities::Shutdown("", packet.message, packet.waitTime, packet.force, packet.reboot);
+#endif
+
 }
 
 void ClientService::processAdminRequestLockWindowsPacket(const LockWindowsPacket &packet){
+
+#if defined(Q_OS_WIN32)
     if(packet.logoff){
         WinUtilities::runAs(packet.userName, "", "", "logoff.exe");
     }else{
         WinUtilities::runAs(packet.userName, "", "", "rundll32.Exe", "user32.dll LockWorkStation", true);
     }
+#endif
+
 }
 
 void ClientService::processWinUserPacket(const WinUserPacket &packet){
+#if defined(Q_OS_WIN32)
+
     SOCKETID adminSocketID = packet.getSocketID();
 
     QJsonParseError error;
@@ -1242,9 +1260,13 @@ void ClientService::processWinUserPacket(const WinUserPacket &packet){
 
     systemInfo->getUsersInfo(adminSocketID);
 
+#endif
+
 }
 
 void ClientService::processAdminRequestDeleteUserPacket(SOCKETID adminSocketID, const QString &userName){
+
+#if defined(Q_OS_WIN32)
     unsigned long errorCode = 0;
     bool ok = WinUtilities::deleteLocalUser(userName, &errorCode);
     if(!ok){
@@ -1252,9 +1274,14 @@ void ClientService::processAdminRequestDeleteUserPacket(SOCKETID adminSocketID, 
         clientPacketsParser->sendClientMessagePacket(adminSocketID, message, MS::MSG_Critical);
     }
 
+#endif
+
 }
 
 void ClientService::processAdminRequestChangeServiceConfigPacket(const ServiceConfigPacket &packet){
+
+#if defined(Q_OS_WIN32)
+
     SOCKETID socketID = packet.getSocketID();
     QString serviceName = packet.serviceName;
 
@@ -1283,9 +1310,13 @@ void ClientService::processAdminRequestChangeServiceConfigPacket(const ServiceCo
         clientPacketsParser->sendClientResponseServiceConfigChangedPacket(socketID, serviceName, info.processID, info.startType);
     }
 
+#endif
+
 }
 
 void ClientService::processRequestChangeProcessMonitorInfoPacket(const ProcessMonitorInfoPacket &packet){
+
+#ifdef Q_OS_WIN
     //SOCKETID socketID = packet.getSocketID();
     QByteArray localRulesData = packet.localRules;
     QByteArray globalRulesData = packet.globalRules;
@@ -1336,6 +1367,8 @@ void ClientService::processRequestChangeProcessMonitorInfoPacket(const ProcessMo
 
     m_myInfo->setProcessMonitorEnabled(m_procMonEnabled);
 
+#endif
+
 }
 
 void ClientService::initProcessMonitorInfo(){
@@ -1364,13 +1397,16 @@ void ClientService::initProcessMonitorInfo(){
         return;
     }
 
+
+
+
+#ifdef Q_OS_WIN
     QByteArray localRules = settings->getValueWithDecryption("ProcMon/LocalRules", m_encryptionKey, QByteArray()).toByteArray();
 
     QByteArray globalRules;
     if(useGlobalRules){
         globalRules = settings->getValueWithDecryption("ProcMon/GlobalRules", m_encryptionKey, QByteArray()).toByteArray();
     }
-
 
     if(!m_processMonitor){
         m_processMonitor = new ProcessMonitor(this);
@@ -1387,6 +1423,7 @@ void ClientService::initProcessMonitorInfo(){
         qCritical()<<QString("ERROR! Failed to init ProcessMonitor. Error code: %1").arg(m_processMonitor->lastErrorCode());
         //TODO
     }
+#endif
 
 
 }
@@ -1694,7 +1731,7 @@ bool ClientService::getServerLastUsed(QString *ip, quint16 *port){
 #if defined(Q_OS_WIN32)
     fileName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\HeHui\\MS";
 #else
-    fileName = SERVICE_NAME;
+    fileName = serviceName();
 #endif
     Settings s(fileName, QSettings::NativeFormat);
     QString serverAddress = s.getValueWithDecryption("ServerAddress", m_encryptionKey, "").toString();
@@ -1718,7 +1755,7 @@ void ClientService::setServerLastUsed(const QString &serverAddress, quint16 serv
 #if defined(Q_OS_WIN32)
     fileName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\HeHui\\MS";
 #else
-    fileName = SERVICE_NAME;
+    fileName = serviceName();
 #endif
     Settings s(fileName, QSettings::NativeFormat);
     if(!serverAddress.isEmpty()){
@@ -2375,9 +2412,9 @@ void ClientService::getLocalAssetNO(QString *newAssetNOToBeUsed){
     }
 
 #else
-    Settings settings(APP_NAME, APP_VERSION, SERVICE_NAME, "./");
-    m_localAssetNO = s.getValueWithDecryption("AssetNO", encryptionKey, "").toString();
-    oldAN = s.getValueWithDecryption("NewAssetNO", m_encryptionKey, "").toString();
+    Settings settings(serviceName());
+    m_localAssetNO = settings.getValueWithDecryption("AssetNO", m_encryptionKey, "").toString();
+    newAN = settings.getValueWithDecryption("NewAssetNO", m_encryptionKey, "").toString();
 #endif
 
     if(m_localAssetNO.trimmed().isEmpty()){
@@ -2412,11 +2449,11 @@ void ClientService::setLocalAssetNO(const QString &assetNO, bool tobeModified){
 
 #else
 
-    Settings settings(SERVICE_NAME, "./");
+    Settings settings(serviceName());
     if(tobeModified){
-        s.setValueWithEncryption("NewAssetNO", assetNO, m_encryptionKey);
+        settings.setValueWithEncryption("NewAssetNO", assetNO, m_encryptionKey);
     }else{
-        s.setValueWithEncryption("AssetNO", assetNO, m_encryptionKey);
+        settings.setValueWithEncryption("AssetNO", assetNO, m_encryptionKey);
     }
 #endif
 

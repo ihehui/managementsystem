@@ -35,7 +35,12 @@
 #include <QAbstractTableModel>
 #include <QSortFilterProxyModel>
 
+#ifdef Q_OS_WIN
 #include "HHSharedSystemUtilities/WinUtilities"
+#else
+#include "HHSharedSystemUtilities/UnixUtilities"
+#endif
+
 
 
 namespace HEHUI {
@@ -51,7 +56,8 @@ public:
 
     void setJsonData(const QByteArray &data);
 
-    typedef WinUtilities::ServiceInfo ServiceInfo;
+
+
     ServiceInfo * getServiceInfo(const QString &serviceName);
     bool updateServiceInfo(const QString &serviceName, quint64 processID, quint64 startupType);
 

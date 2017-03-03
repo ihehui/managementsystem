@@ -9,8 +9,10 @@ QT += core \
     widgets \
     sql \
     network \
-    printsupport \
-    winextras
+    printsupport
+
+
+win32: QT += winextras
 
 # include config file
 include( ../../config.pri )
@@ -57,7 +59,6 @@ HEADERS += \
     softwaremanagement/softwaremamagement.h \
     remotedesktop/remotedesktopmonitor.h \
     remotedesktop/remotedesktopviewer.h \
-    remotedesktop/AviFile.h \
     processmonitor/processmonitor.h \
     processmonitor/processmonitorrulemodel.h \
     processmonitor/ruleinfowidget.h \
@@ -93,7 +94,6 @@ SOURCES += \
     softwaremanagement/softwaremamagement.cpp \
     remotedesktop/remotedesktopmonitor.cpp \
     remotedesktop/remotedesktopviewer.cpp \
-    remotedesktop/avifile.cpp \
     processmonitor/processmonitor.cpp \
     processmonitor/processmonitorrulemodel.cpp \
     processmonitor/ruleinfowidget.cpp \
@@ -131,6 +131,14 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
     servermanagement/servermanagementwidget.ui \
     announcementmanagement/announcementinfowidget.ui \
     announcementmanagement/announcementmanagementwidget.ui
+
+
+win32 {
+HEADERS +=     remotedesktop/avifile.h
+SOURCES +=     remotedesktop/AviFile.cpp
+
+}
+
 
 RESOURCES += controlcenter.qrc
 

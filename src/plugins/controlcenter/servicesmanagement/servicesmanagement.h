@@ -53,7 +53,6 @@ private:
     ServiceInfoSortFilterProxyModel *m_proxyModel;
     ServiceInfoModel *m_serviceInfoModel;
 
-    typedef WinUtilities::ServiceInfo ServiceInfo;
     ServiceInfo *m_selectedService;
 
 

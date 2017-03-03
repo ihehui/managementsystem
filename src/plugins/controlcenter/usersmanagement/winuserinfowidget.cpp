@@ -8,8 +8,11 @@
 
 #include "winuserinfowidget.h"
 
+#ifdef Q_OS_WIN
 #include "HHSharedSystemUtilities/WinUtilities"
-
+#else
+#include "HHSharedSystemUtilities/UnixUtilities"
+#endif
 
 
 namespace HEHUI {

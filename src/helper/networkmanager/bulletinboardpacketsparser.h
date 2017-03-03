@@ -67,7 +67,8 @@ public slots:
         packet.userName = m_userName;
         packet.online = online;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
     
     bool sendUserReplyMessagePacket(SOCKETID socketID, unsigned int announcementID, const QString &receiver, const QString &replyMessage){
@@ -81,7 +82,8 @@ public slots:
         packet.ReplyInfo.receiversAssetNO = "";
         packet.ReplyInfo.replyMessage = replyMessage;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendUserScreenshotPacket(SOCKETID socketID, QList<QPoint> locations, QList<QByteArray> images){
@@ -92,7 +94,8 @@ public slots:
         packet.ScreenshotData.locations = locations;
         packet.ScreenshotData.images = images;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendUserDesktopInfoPacket(SOCKETID socketID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
@@ -105,7 +108,8 @@ public slots:
         packet.DesktopInfo.blockWidth = blockWidth;
         packet.DesktopInfo.blockHeight = blockHeight;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
 

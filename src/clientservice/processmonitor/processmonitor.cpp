@@ -4,13 +4,16 @@
 
 #include <QtConcurrent>
 
+#ifdef Q_OS_WIN
 // Windows Header Files:
 #include <windows.h>
 // C RunTime Header Files
+#include <tchar.h>
+#endif
+
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
-#include <tchar.h>
 
 
 

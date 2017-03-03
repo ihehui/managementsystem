@@ -32,18 +32,23 @@ SOURCES += \
     packetmanager/clientpacketsparser.cpp \
     main.cpp \
     clientservice/clientservice.cpp \
-    clientresourcesmanager.cpp \
-    processmonitor/processmonitor.cpp
+    clientresourcesmanager.cpp
+
 HEADERS += \
     systeminfo.h \
     process.h \
     app_constants.h \
     packetmanager/clientpacketsparser.h \
     clientservice/clientservice.h \
-    clientresourcesmanager.h \
-    processmonitor/processmonitor.h
+    clientresourcesmanager.h
 
 
+
+win32 {
+SOURCES += processmonitor/processmonitor.cpp
+HEADERS += processmonitor/processmonitor.h
+
+}
 
 
 # win32:RC_FILE = iconresource.rc

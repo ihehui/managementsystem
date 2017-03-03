@@ -8,6 +8,8 @@
 
 #include "helper.h"
 
+#include "HHSharedSystemUtilities/SystemUtilities"
+
 #ifdef Q_OS_WIN32
 #include "HHSharedSystemUtilities/WinUtilities"
 #endif
@@ -22,10 +24,10 @@ Helper::Helper(QObject *parent) :
 
     m_userName = "";
     m_logonDomain = "";
-    unsigned long status = 0;
-    bool ok = WinUtilities::getLogonInfoOfCurrentUser(&m_userName, &m_logonDomain, 0, &status);
+    QString errMsg = "";
+    bool ok = SystemUtilities::getLogonInfoOfCurrentUser(&m_userName, &m_logonDomain, 0, &errMsg);
     if(!ok){
-       qCritical()<<QString("ERROR! %1").arg(WinUtilities::WinSysErrorMsg(status));
+       qCritical()<<QString("ERROR! %1").arg(errMsg);
     }
     m_logonDomain = m_logonDomain.toLower();
     m_localComputerName = QHostInfo::localHostName().toLower();

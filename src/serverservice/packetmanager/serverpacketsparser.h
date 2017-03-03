@@ -83,7 +83,8 @@ public slots:
         packet.msgType = messageType;
         packet.message = message;
 
-        return m_rtp->sendReliableData(adminSocketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
     bool sendJobFinishedPacket(int adminSocketID, quint32 jobID, quint8 result, const QVariant &extraData){
@@ -93,7 +94,8 @@ public slots:
         packet.result = result;
         packet.extraData = extraData;
 
-        return m_rtp->sendReliableData(adminSocketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
     bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0){
@@ -111,7 +113,8 @@ public slots:
         packet.IsRequest = 1;
         packet.infoType = infoType;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendAdminLoginResultPacket(SOCKETID socketID, bool result, const QString &message, bool readonly){
@@ -123,7 +126,8 @@ public slots:
         packet.LoginResult.message = message;
         packet.LoginResult.readonly = readonly;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType){
@@ -134,7 +138,8 @@ public slots:
         packet.data = data;
         packet.extraInfo = extraInfo;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
     bool sendServerResponseModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO){
@@ -145,7 +150,8 @@ public slots:
         packet.oldAssetNO = oldAssetNO;
         packet.newAssetNO = newAssetNO;
 
-        return m_rtp->sendReliableData(socketID, &packet.toByteArray());
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(socketID, &ba);
     }
 
 

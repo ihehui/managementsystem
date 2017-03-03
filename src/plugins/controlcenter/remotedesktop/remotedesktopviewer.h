@@ -57,7 +57,10 @@ private:
 
     QImage m_image;
 
+#ifdef Q_OS_WIN
     CAviFile *m_aviFile;
+#endif
+
     QString m_aviFileName;
 
     QAction *m_actionRecord;

@@ -1,6 +1,9 @@
 #ifndef PACKETS_H_
 #define PACKETS_H_
 
+#include <QPoint>
+
+
 #include "sharedmslib.h"
 #include "HHSharedNetwork/PacketBase"
 

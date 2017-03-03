@@ -31,7 +31,7 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
-
+#include <QJsonArray>
 
 #include "serviceinfomodel.h"
 
@@ -94,7 +94,7 @@ void ServiceInfoModel::setJsonData(const QByteArray &data){
     endResetModel();
 }
 
-WinUtilities::ServiceInfo * ServiceInfoModel::getServiceInfo(const QString &serviceName){
+ServiceInfo * ServiceInfoModel::getServiceInfo(const QString &serviceName){
     ServiceInfo *sinfo = 0;
     foreach (ServiceInfo *info, servicesList) {
         if(info->serviceName == serviceName){

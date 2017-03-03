@@ -10,10 +10,11 @@
 #include <QFileDialog>
 #include <QMenu>
 
+#ifdef Q_OS_WIN
 #include <QtWin>
-
-
 #include "AviFile.h"
+#endif
+
 
 #include "HHSharedGUI/himageresourcebase.h"
 
@@ -30,7 +31,9 @@ RemoteDesktopViewer::RemoteDesktopViewer(QWidget *parent, Qt::WindowFlags flag)
     m_userSocketID = 0;
     m_id = "";
 
+#ifdef Q_OS_WIN
     m_aviFile = 0;
+#endif
     m_aviFileName = "";
     m_actionRecord = 0;
 
@@ -78,6 +81,8 @@ void RemoteDesktopViewer::setDesktopInfo(quint32 userSocketID, const QString &id
 void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray> images){
     //qDebug()<<"--RemoteDesktopViewer::updatePixmap(...)";
 
+#ifdef Q_OS_WIN
+
     QPainter painter(&m_image);
 
     for(int i=0;i<locations.size();i++){
@@ -104,6 +109,7 @@ void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray
 
     }
 
+#endif
 
 
 
@@ -146,6 +152,8 @@ void RemoteDesktopViewer::save(){
 
 void RemoteDesktopViewer::startRecord(){
 
+#ifdef Q_OS_WIN
+
     if(m_aviFileName.trimmed().isEmpty()){
 
         QStringList filters;
@@ -182,16 +190,20 @@ void RemoteDesktopViewer::startRecord(){
         m_aviFile = new CAviFile(m_aviFileName.toStdWString().c_str(), dwCodec, dwFrameRate);
     }
 
+#endif
 
 }
 
 void RemoteDesktopViewer::stopRecord(){
+
+#ifdef Q_OS_WIN
     if(m_aviFile){
         delete m_aviFile;
         m_aviFile = 0;
     }
     m_aviFileName = "";
 
+#endif
 
 }
 
@@ -203,20 +215,27 @@ void RemoteDesktopViewer::showContextMenu(const QPoint &pos){
         m_actionRecord = new QAction(tr("Start Recording"), this);
         connect(m_actionRecord, SIGNAL(triggered()), this, SLOT(startOrStopRecording()));
     }
+
+#ifdef Q_OS_WIN
     if(m_aviFile){
         m_actionRecord->setText(tr("Stop Recording"));
     }
+#endif
 
     menu.addAction(m_actionRecord);
     menu.exec(mapToGlobal(pos));
 }
 
 void RemoteDesktopViewer::startOrStopRecording(){
+
+#ifdef Q_OS_WIN
     if(m_aviFile){
         stopRecord();
     }else{
         startRecord();
     }
+#endif
+
 }
 
 

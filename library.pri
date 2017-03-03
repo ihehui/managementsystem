@@ -1,4 +1,5 @@
 
+
 #DEFINES += MYSHAREDLIB_LIBRARY_EXPORT
 win32 {
     contains(TEMPLATE, lib):contains(CONFIG, shared):DEFINES += HHSHAREDLIBS_EXPORT

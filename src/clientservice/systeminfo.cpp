@@ -116,6 +116,7 @@ QByteArray SystemInfo::getOSInfo(){
 
     bool ok = false, readable = true, writeable = true;
     MS::USBSTORStatus status = MS::USBSTOR_ReadWrite;
+#ifdef Q_OS_WIN32
     ok = WinUtilities::readUSBStorageDeviceSettings(&readable, &writeable);
     if(readable && writeable){
         status = MS::USBSTOR_ReadWrite;
@@ -124,6 +125,7 @@ QByteArray SystemInfo::getOSInfo(){
     }else{
         status = MS::USBSTOR_ReadOnly;
     }
+#endif
     obj["USBSD"] = QString::number(quint8(status));
 
 
@@ -169,6 +171,8 @@ void SystemInfo::getHardwareInfo(SOCKETID socketID){
 
 void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID){
 
+#ifdef Q_OS_WIN32
+
     QString rootKey = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 
     QStringList keys64;
@@ -193,9 +197,13 @@ void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID){
     QJsonDocument doc(object);
     emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_SOFTWARE, socketID);
 
+#endif
+
 }
 
 void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView){
+
+#ifdef Q_OS_WIN32
 
     if(!infoArray){return;}
     if(keys.isEmpty()){return;}
@@ -224,9 +232,13 @@ void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringL
 
     }
 
+#endif
+
 }
 
 void SystemInfo::getServicesInfo(SOCKETID socketID){
+
+#ifdef Q_OS_WIN32
 
     QJsonArray infoArray;
     HEHUI::WinUtilities::serviceGetAllServicesInfo(&infoArray);
@@ -236,10 +248,14 @@ void SystemInfo::getServicesInfo(SOCKETID socketID){
     QJsonDocument doc(object);
     emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_SERVICES, socketID);
 
+#endif
+
 }
 
 void SystemInfo::getUsersInfo(SOCKETID socketID){
     qDebug()<<"--SystemInfo::getUsersInfo(...)";
+
+#ifdef Q_OS_WIN32
 
     QJsonArray infoArray;
     HEHUI::WinUtilities::getAllUsersInfo(&infoArray);
@@ -248,6 +264,9 @@ void SystemInfo::getUsersInfo(SOCKETID socketID){
     object["Users"] = infoArray;
     QJsonDocument doc(object);
     emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_OSUSERS, socketID);
+
+#endif
+
 
 }
 
@@ -275,7 +294,7 @@ void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID){
 
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();
-        int memLoad = 0;
+        float memLoad = 0;
         SystemUtilities::getMemoryStatus(0, &memLoad);
         //qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
 

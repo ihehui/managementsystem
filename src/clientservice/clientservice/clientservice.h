@@ -245,7 +245,10 @@ private:
     QStringList logs;
 
     bool m_procMonEnabled;
+
+#ifdef Q_OS_WIN
     ProcessMonitor *m_processMonitor;
+#endif
 
     ClientInfo *m_myInfo;
     SystemInfo *systemInfo;

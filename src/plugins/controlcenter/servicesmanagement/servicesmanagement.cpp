@@ -4,9 +4,10 @@
 #include <QMenu>
 
 #include "../adminuser.h"
-
-
 #include "HHSharedGUI/hdataoutputdialog.h"
+
+#include "HHSharedSystemUtilities/SystemUtilities"
+
 
 namespace HEHUI {
 
@@ -75,7 +76,7 @@ void ServicesManagement::setData(const QByteArray &data){
 
 void ServicesManagement::serviceConfigChanged(const QString &serviceName, quint64 processID, quint64 startupType){
 
-    WinUtilities::ServiceInfo *info = m_serviceInfoModel->getServiceInfo(serviceName);
+    ServiceInfo *info = m_serviceInfoModel->getServiceInfo(serviceName);
     if(!info){return;}
     if(info->processID != processID){
         QMessageBox::information(this, tr("Service"), tr("Service '%1' %2 successfully.").arg(serviceName).arg(processID?tr("started"):tr("stopped")));

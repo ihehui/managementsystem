@@ -1561,7 +1561,7 @@ void ServerService::getRealTimeResourcseLoad(){
 
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();
-        int memLoad = 0;
+        float memLoad = 0;
         SystemUtilities::getMemoryStatus(0, &memLoad);
         //qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
 

@@ -7,9 +7,10 @@
 #include "helper.h"
 
 #include "HHSharedCore/hlogdebug.h"
+
+#ifdef Q_OS_WIN32
 #include "HHSharedSystemUtilities/WinUtilities"
-
-
+#endif
 
 void showSplashMessage(QSplashScreen *s, const QString &str){
     s->showMessage(str, Qt::AlignRight | Qt::AlignBottom, Qt::darkGreen);
@@ -36,6 +37,9 @@ int main(int argc, char *argv[])
     for(int i = 0; i < argc; i++){
         arguments.append(QString(argv[i]));
     }
+
+#ifdef Q_OS_WIN32
+
     if(arguments.contains("-lock")){
         QMessageBox::critical(0, QObject::tr("Error"), QObject::tr("LOCK!"));
 
@@ -48,7 +52,7 @@ int main(int argc, char *argv[])
         HEHUI::WinUtilities::Logoff(true);
         return 0;
     }
-
+#endif
 
     QDate date = QDate::currentDate();
     if(date.year() > 2015 ){
