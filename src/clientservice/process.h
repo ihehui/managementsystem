@@ -13,9 +13,11 @@
 #include <QProcess>
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-class Process : public QObject{
+class Process : public QObject
+{
     Q_OBJECT
 public:
     Process(QObject *parent = 0);

@@ -13,18 +13,22 @@ ShutdownDialog::~ShutdownDialog()
     delete ui;
 }
 
-QString ShutdownDialog::message() const{
+QString ShutdownDialog::message() const
+{
     return ui->textEdit->toPlainText();
 }
 
-quint64 ShutdownDialog::timeout(){
+quint64 ShutdownDialog::timeout()
+{
     return ui->spinBoxTimeout->value();
 }
 
-bool ShutdownDialog::forceAppsClosed(){
+bool ShutdownDialog::forceAppsClosed()
+{
     return ui->checkBoxForceAppsClosed->isChecked();
 }
 
-bool ShutdownDialog::rebootAfterShutdown(){
+bool ShutdownDialog::rebootAfterShutdown()
+{
     return ui->checkBoxReboot->isChecked();
 }

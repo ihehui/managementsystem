@@ -15,7 +15,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class Helper : public QObject
@@ -24,13 +25,13 @@ class Helper : public QObject
 public:
     explicit Helper(QObject *parent = 0);
     ~Helper();
-    
+
 
 signals:
 
-    
+
 public slots:
-    
+
 private slots:
     void startNetwork();
 
@@ -48,13 +49,13 @@ private slots:
 
     void adminRequestScreenshotPacketReceived(const ScreenshotPacket &packet);
     void screenshot();
-    
+
 //    void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
 //    void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
 
     void peerDisconnected(SOCKETID socketID);
     void connectToLocalServer();
-    
+
 
 private slots:
     void setupBulletinBoardWidget();
@@ -69,11 +70,11 @@ private:
 
     ResourcesManagerInstance *resourcesManager;
     BulletinBoardPacketsParser *bulletinBoardPacketsParser;
-    
+
     RemoteAssistance *remoteAssistance;
     BulletinBoardWidget *bulletinBoardWidget;
     UpdatePasswordWidget *updatePasswordWidget;
-    
+
     quint16 localUDTListeningPort;
     RTP *m_rtp;
     SOCKETID m_socketConnectedToLocalServer;
@@ -96,6 +97,6 @@ private:
 
 };
 
-} //namespace HEHUI 
+} //namespace HEHUI
 
 #endif // HELPER_H

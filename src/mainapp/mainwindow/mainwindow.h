@@ -44,10 +44,12 @@
 #include "HHSharedGUI/hmainwindowbase.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
-class MainWindow: public MainWindowBase  {
+class MainWindow: public MainWindowBase
+{
     Q_OBJECT
 
 public:
@@ -89,8 +91,8 @@ private slots:
     void slotUpdateWindowActions();
 
 protected:
-    void closeEvent ( QCloseEvent * event );
-    void changeEvent ( QEvent * event ) ;
+    void closeEvent ( QCloseEvent *event );
+    void changeEvent ( QEvent *event ) ;
 
 
 private:

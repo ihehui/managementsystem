@@ -5,52 +5,62 @@
 #include "HHSharedCore/hcryptography.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ////////////////////////////////////////////////////////////////////////
 
 QByteArray MSPacket::sessionEncryptionKey = QByteArray("HE.HUI");
 MSPacket::MSPacket(quint8 packetType)
-    :Packet(packetType)
+    : Packet(packetType)
 {
     init();
 }
 
 MSPacket::MSPacket(const PacketBase &base, quint8 packetType)
-    :Packet(packetType)
+    : Packet(packetType)
 {
     init();
     convert(base);
 }
 
-MSPacket::~MSPacket(){
+MSPacket::~MSPacket()
+{
 
 }
 
-void MSPacket::setSessionEncryptionKey(const QByteArray &key){
+void MSPacket::setSessionEncryptionKey(const QByteArray &key)
+{
     sessionEncryptionKey = key;
 }
 
-void MSPacket::init(){
+void MSPacket::init()
+{
 
 }
 
-QByteArray MSPacket::encrypt(const QByteArray &data){
-    if(sessionEncryptionKey.isEmpty()){return data;}
+QByteArray MSPacket::encrypt(const QByteArray &data)
+{
+    if(sessionEncryptionKey.isEmpty()) {
+        return data;
+    }
     Cryptography cryptography;
     QByteArray encryptedData;
-    if(cryptography.teaCrypto(&encryptedData, data, sessionEncryptionKey, true)){
+    if(cryptography.teaCrypto(&encryptedData, data, sessionEncryptionKey, true)) {
         return encryptedData;
     }
     return QByteArray();
 }
 
-QByteArray MSPacket::decrypt(const QByteArray &encryptedData){
-    if(sessionEncryptionKey.isEmpty()){return encryptedData;}
+QByteArray MSPacket::decrypt(const QByteArray &encryptedData)
+{
+    if(sessionEncryptionKey.isEmpty()) {
+        return encryptedData;
+    }
     Cryptography cryptography;
     QByteArray decryptedData;
-    if(cryptography.teaCrypto(&decryptedData, encryptedData, sessionEncryptionKey, false)){
+    if(cryptography.teaCrypto(&decryptedData, encryptedData, sessionEncryptionKey, false)) {
         return decryptedData;
     }
     return QByteArray();
@@ -64,22 +74,24 @@ QByteArray MSPacket::decrypt(const QByteArray &encryptedData){
 
 ////////////////////////////////////////////////////////////////////////
 ServerDiscoveryPacket::ServerDiscoveryPacket()
-    :MSPacket(quint8(MS::CMD_ServerDiscovery))
+    : MSPacket(quint8(MS::CMD_ServerDiscovery))
 {
 
 }
 
 ServerDiscoveryPacket::ServerDiscoveryPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_JobProgress))
+    : MSPacket(quint8(MS::CMD_JobProgress))
 {
 
 }
 
-ServerDiscoveryPacket::~ServerDiscoveryPacket(){
+ServerDiscoveryPacket::~ServerDiscoveryPacket()
+{
 
 }
 
-void ServerDiscoveryPacket::init(){
+void ServerDiscoveryPacket::init()
+{
     responseFromServer = 0;
     version = "";
     udpPort = 0;
@@ -88,28 +100,30 @@ void ServerDiscoveryPacket::init(){
     serverInstanceID = 0;
 }
 
-void ServerDiscoveryPacket::parsePacketBody(QByteArray &packetBody){
+void ServerDiscoveryPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> responseFromServer >> version;
-    if(responseFromServer){
+    if(responseFromServer) {
         in >>  rtpPort >> tcpPort >> serverInstanceID;
-    }else{
+    } else {
         in >> udpPort;
     }
 
 }
 
-QByteArray ServerDiscoveryPacket::packBodyData(){
+QByteArray ServerDiscoveryPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
 
     out << responseFromServer << version;
-    if(responseFromServer){
+    if(responseFromServer) {
         out << rtpPort << tcpPort << serverInstanceID;
-    }else{
+    } else {
         out << udpPort;
     }
 
@@ -120,34 +134,38 @@ QByteArray ServerDiscoveryPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 MessagePacket::MessagePacket()
-    :MSPacket(quint8(MS::CMD_Message))
+    : MSPacket(quint8(MS::CMD_Message))
 {
 
 }
 
 MessagePacket::MessagePacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_Message))
+    : MSPacket(quint8(MS::CMD_Message))
 {
 
 }
 
-MessagePacket::~MessagePacket(){
+MessagePacket::~MessagePacket()
+{
 
 }
 
-void MessagePacket::init(){
+void MessagePacket::init()
+{
     msgType = quint8(MS::MSG_Information);
     message = "";
 }
 
-void MessagePacket::parsePacketBody(QByteArray &packetBody){
+void MessagePacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> msgType >> message;
 }
 
-QByteArray MessagePacket::packBodyData(){
+QByteArray MessagePacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -160,35 +178,39 @@ QByteArray MessagePacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 JobProgressPacket::JobProgressPacket()
-    :MSPacket(quint8(MS::CMD_JobProgress))
+    : MSPacket(quint8(MS::CMD_JobProgress))
 {
 
 }
 
 JobProgressPacket::JobProgressPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_JobProgress))
+    : MSPacket(quint8(MS::CMD_JobProgress))
 {
 
 }
 
-JobProgressPacket::~JobProgressPacket(){
+JobProgressPacket::~JobProgressPacket()
+{
 
 }
 
-void JobProgressPacket::init(){
+void JobProgressPacket::init()
+{
     jobID = 0;
     result = 0;
     extraData = QVariant();
 }
 
-void JobProgressPacket::parsePacketBody(QByteArray &packetBody){
+void JobProgressPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> jobID >> result >> extraData;
 }
 
-QByteArray JobProgressPacket::packBodyData(){
+QByteArray JobProgressPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -202,22 +224,24 @@ QByteArray JobProgressPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AdminLoginPacket::AdminLoginPacket()
-    :MSPacket(quint8(MS::CMD_AdminLogin))
+    : MSPacket(quint8(MS::CMD_AdminLogin))
 {
 
 }
 
 AdminLoginPacket::AdminLoginPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_AdminLogin))
+    : MSPacket(quint8(MS::CMD_AdminLogin))
 {
 
 }
 
-AdminLoginPacket::~AdminLoginPacket(){
+AdminLoginPacket::~AdminLoginPacket()
+{
 
 }
 
-void AdminLoginPacket::init(){
+void AdminLoginPacket::init()
+{
     InfoType = LOGIN_REQUEST;
 
     LoginInfo.adminID = "";
@@ -229,7 +253,8 @@ void AdminLoginPacket::init(){
     LoginResult.readonly = 1;
 }
 
-void AdminLoginPacket::parsePacketBody(QByteArray &packetBody){
+void AdminLoginPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
@@ -238,17 +263,15 @@ void AdminLoginPacket::parsePacketBody(QByteArray &packetBody){
     InfoType = PacketInfoType(type);
 
     switch (InfoType) {
-    case LOGIN_REQUEST:
-    {
+    case LOGIN_REQUEST: {
         in >> LoginInfo.adminID >> LoginInfo.password >> LoginInfo.computerName;
     }
-        break;
+    break;
 
-    case LOGIN_RESULT:
-    {
+    case LOGIN_RESULT: {
         in >> LoginResult.loggedIn >> LoginResult.message >> LoginResult.readonly;
     }
-        break;
+    break;
 
     default:
         break;
@@ -256,8 +279,11 @@ void AdminLoginPacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray AdminLoginPacket::packBodyData(){
-    if(InfoType == LOGIN_UNKNOWN){return QByteArray();}
+QByteArray AdminLoginPacket::packBodyData()
+{
+    if(InfoType == LOGIN_UNKNOWN) {
+        return QByteArray();
+    }
 
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
@@ -266,17 +292,15 @@ QByteArray AdminLoginPacket::packBodyData(){
     out << quint8(InfoType);
 
     switch (InfoType) {
-    case LOGIN_REQUEST:
-    {
+    case LOGIN_REQUEST: {
         out << LoginInfo.adminID << LoginInfo.password << LoginInfo.computerName;
     }
-        break;
+    break;
 
-    case LOGIN_RESULT:
-    {
+    case LOGIN_RESULT: {
         out << LoginResult.loggedIn << LoginResult.message << LoginResult.readonly;
     }
-        break;
+    break;
 
     default:
         break;
@@ -289,36 +313,40 @@ QByteArray AdminLoginPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ClientInfoPacket::ClientInfoPacket()
-    :MSPacket(quint8(MS::CMD_ClientInfo))
+    : MSPacket(quint8(MS::CMD_ClientInfo))
 {
 
 }
 
 ClientInfoPacket::ClientInfoPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_ClientInfo))
+    : MSPacket(quint8(MS::CMD_ClientInfo))
 {
 
 }
 
-ClientInfoPacket::~ClientInfoPacket(){
+ClientInfoPacket::~ClientInfoPacket()
+{
     data.clear();
 }
 
-void ClientInfoPacket::init(){
+void ClientInfoPacket::init()
+{
     IsRequest = 0;
     assetNO = "";
     infoType = quint8(MS::SYSINFO_UNKNOWN);
     data = QByteArray();
 }
 
-void ClientInfoPacket::parsePacketBody(QByteArray &packetBody){
+void ClientInfoPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> IsRequest >> assetNO >> infoType >> data;
 }
 
-QByteArray ClientInfoPacket::packBodyData(){
+QByteArray ClientInfoPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -332,35 +360,39 @@ QByteArray ClientInfoPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 SystemInfoFromServerPacket::SystemInfoFromServerPacket()
-    :MSPacket(quint8(MS::CMD_SystemInfoFromServer))
+    : MSPacket(quint8(MS::CMD_SystemInfoFromServer))
 {
 
 }
 
 SystemInfoFromServerPacket::SystemInfoFromServerPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_SystemInfoFromServer))
+    : MSPacket(quint8(MS::CMD_SystemInfoFromServer))
 {
 
 }
 
-SystemInfoFromServerPacket::~SystemInfoFromServerPacket(){
+SystemInfoFromServerPacket::~SystemInfoFromServerPacket()
+{
     data.clear();
 }
 
-void SystemInfoFromServerPacket::init(){
+void SystemInfoFromServerPacket::init()
+{
     infoType = quint8(MS::SYSINFO_UNKNOWN);
     data = QByteArray();
     extraInfo = "";
 }
 
-void SystemInfoFromServerPacket::parsePacketBody(QByteArray &packetBody){
+void SystemInfoFromServerPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> infoType >> data >> extraInfo;
 }
 
-QByteArray SystemInfoFromServerPacket::packBodyData(){
+QByteArray SystemInfoFromServerPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -374,28 +406,31 @@ QByteArray SystemInfoFromServerPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 SysAdminInfoPacket::SysAdminInfoPacket()
-    :MSPacket(quint8(MS::CMD_SysAdminInfo))
+    : MSPacket(quint8(MS::CMD_SysAdminInfo))
 {
 
 }
 
 SysAdminInfoPacket::SysAdminInfoPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_SysAdminInfo))
+    : MSPacket(quint8(MS::CMD_SysAdminInfo))
 {
 
 }
 
-SysAdminInfoPacket::~SysAdminInfoPacket(){
+SysAdminInfoPacket::~SysAdminInfoPacket()
+{
     data.clear();
 }
 
-void SysAdminInfoPacket::init(){
+void SysAdminInfoPacket::init()
+{
     adminID = "";
     data = QByteArray();
     deleteAdmin = 0;
 }
 
-void SysAdminInfoPacket::parsePacketBody(QByteArray &packetBody){
+void SysAdminInfoPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
@@ -403,12 +438,13 @@ void SysAdminInfoPacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray SysAdminInfoPacket::packBodyData(){
+QByteArray SysAdminInfoPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
 
-    out<< adminID << data << deleteAdmin;
+    out << adminID << data << deleteAdmin;
 
     return ba;
 }
@@ -417,22 +453,24 @@ QByteArray SysAdminInfoPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 SystemAlarmsPacket::SystemAlarmsPacket()
-    :MSPacket(quint8(MS::CMD_SystemAlarms))
+    : MSPacket(quint8(MS::CMD_SystemAlarms))
 {
 
 }
 
 SystemAlarmsPacket::SystemAlarmsPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_SystemAlarms))
+    : MSPacket(quint8(MS::CMD_SystemAlarms))
 {
 
 }
 
-SystemAlarmsPacket::~SystemAlarmsPacket(){
+SystemAlarmsPacket::~SystemAlarmsPacket()
+{
 
 }
 
-void SystemAlarmsPacket::init(){
+void SystemAlarmsPacket::init()
+{
     InfoType = SYSTEMALARMS_UNKNOWN;
 
     QueryInfo.assetNO = "";
@@ -445,7 +483,8 @@ void SystemAlarmsPacket::init(){
     ACKInfo.deleteAlarms = 0;
 }
 
-void SystemAlarmsPacket::parsePacketBody(QByteArray &packetBody){
+void SystemAlarmsPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
@@ -454,17 +493,15 @@ void SystemAlarmsPacket::parsePacketBody(QByteArray &packetBody){
     InfoType = PacketInfoType(type);
 
     switch (InfoType) {
-    case SYSTEMALARMS_QUERY:
-    {
+    case SYSTEMALARMS_QUERY: {
         in >> QueryInfo.assetNO >> QueryInfo.type >> QueryInfo.acknowledged >> QueryInfo.startTime >> QueryInfo.endTime;
     }
-        break;
+    break;
 
-    case SYSTEMALARMS_ACK:
-    {
+    case SYSTEMALARMS_ACK: {
         in >> ACKInfo.alarms >> ACKInfo.deleteAlarms;
     }
-        break;
+    break;
 
     default:
         break;
@@ -472,8 +509,11 @@ void SystemAlarmsPacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray SystemAlarmsPacket::packBodyData(){
-    if(InfoType == SYSTEMALARMS_UNKNOWN){return QByteArray();}
+QByteArray SystemAlarmsPacket::packBodyData()
+{
+    if(InfoType == SYSTEMALARMS_UNKNOWN) {
+        return QByteArray();
+    }
 
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
@@ -482,17 +522,15 @@ QByteArray SystemAlarmsPacket::packBodyData(){
     out << quint8(InfoType);
 
     switch (InfoType) {
-    case SYSTEMALARMS_QUERY:
-    {
-        out<< QueryInfo.assetNO << QueryInfo.type << QueryInfo.acknowledged << QueryInfo.startTime << QueryInfo.endTime;
+    case SYSTEMALARMS_QUERY: {
+        out << QueryInfo.assetNO << QueryInfo.type << QueryInfo.acknowledged << QueryInfo.startTime << QueryInfo.endTime;
     }
-        break;
+    break;
 
-    case SYSTEMALARMS_ACK:
-    {
+    case SYSTEMALARMS_ACK: {
         out << ACKInfo.alarms << ACKInfo.deleteAlarms;
     }
-        break;
+    break;
 
     default:
         break;
@@ -505,22 +543,24 @@ QByteArray SystemAlarmsPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AnnouncementPacket::AnnouncementPacket()
-    :MSPacket(quint8(MS::CMD_Announcement))
+    : MSPacket(quint8(MS::CMD_Announcement))
 {
 
 }
 
 AnnouncementPacket::AnnouncementPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_Announcement))
+    : MSPacket(quint8(MS::CMD_Announcement))
 {
 
 }
 
-AnnouncementPacket::~AnnouncementPacket(){
+AnnouncementPacket::~AnnouncementPacket()
+{
 
 }
 
-void AnnouncementPacket::init(){
+void AnnouncementPacket::init()
+{
     InfoType = ANNOUNCEMENT_UNKNOWN;
     JobID = 0;
 
@@ -559,7 +599,8 @@ void AnnouncementPacket::init(){
 
 }
 
-void AnnouncementPacket::parsePacketBody(QByteArray &packetBody){
+void AnnouncementPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
@@ -569,35 +610,30 @@ void AnnouncementPacket::parsePacketBody(QByteArray &packetBody){
     InfoType = PacketInfoType(type);
 
     switch (InfoType) {
-    case ANNOUNCEMENT_QUERY:
-    {
+    case ANNOUNCEMENT_QUERY: {
         in >> QueryInfo.announcementID >> QueryInfo.keyword >> QueryInfo.validity >> QueryInfo.assetNO >> QueryInfo.userName >> QueryInfo.target >> QueryInfo.startTime >> QueryInfo.endTime;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_CREATE:
-    {
+    case ANNOUNCEMENT_CREATE: {
         in >> CreateInfo.localTempID >> CreateInfo.adminID >> CreateInfo.type >> CreateInfo.content >> CreateInfo.confirmationRequired >> CreateInfo.validityPeriod >> CreateInfo.targetType >> CreateInfo.targets;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_UPDATE:
-    {
+    case ANNOUNCEMENT_UPDATE: {
         in << UpdateInfo.adminName << UpdateInfo.announcementID << UpdateInfo.targetType << UpdateInfo.active << UpdateInfo.addedTargets << UpdateInfo.deletedTargets;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_REPLY:
-    {
+    case ANNOUNCEMENT_REPLY: {
         in >> ReplyInfo.announcementID >> ReplyInfo.sender >> ReplyInfo.receiver >> ReplyInfo.receiversAssetNO >> ReplyInfo.replyMessage ;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_QUERY_TARGETS:
-    {
+    case ANNOUNCEMENT_QUERY_TARGETS: {
         in >> QueryTargetsInfo.announcementID;
     }
-        break;
+    break;
 
     default:
         break;
@@ -605,8 +641,11 @@ void AnnouncementPacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray AnnouncementPacket::packBodyData(){
-    if(InfoType == ANNOUNCEMENT_UNKNOWN){return QByteArray();}
+QByteArray AnnouncementPacket::packBodyData()
+{
+    if(InfoType == ANNOUNCEMENT_UNKNOWN) {
+        return QByteArray();
+    }
 
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
@@ -615,35 +654,30 @@ QByteArray AnnouncementPacket::packBodyData(){
     out << quint8(InfoType) << JobID;
 
     switch (InfoType) {
-    case ANNOUNCEMENT_QUERY:
-    {
+    case ANNOUNCEMENT_QUERY: {
         out << QueryInfo.announcementID << QueryInfo.keyword << QueryInfo.validity << QueryInfo.assetNO << QueryInfo.userName << QueryInfo.target << QueryInfo.startTime << QueryInfo.endTime;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_CREATE:
-    {
+    case ANNOUNCEMENT_CREATE: {
         out << CreateInfo.localTempID << CreateInfo.adminID << CreateInfo.type << CreateInfo.content << CreateInfo.confirmationRequired << CreateInfo.validityPeriod << CreateInfo.targetType << CreateInfo.targets;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_UPDATE:
-    {
+    case ANNOUNCEMENT_UPDATE: {
         out << UpdateInfo.adminName << UpdateInfo.announcementID << UpdateInfo.targetType << UpdateInfo.active << UpdateInfo.addedTargets << UpdateInfo.deletedTargets;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_REPLY:
-    {
+    case ANNOUNCEMENT_REPLY: {
         out << ReplyInfo.announcementID << ReplyInfo.sender << ReplyInfo.receiver << ReplyInfo.receiversAssetNO << ReplyInfo.replyMessage ;
     }
-        break;
+    break;
 
-    case ANNOUNCEMENT_QUERY_TARGETS:
-    {
+    case ANNOUNCEMENT_QUERY_TARGETS: {
         out << QueryTargetsInfo.announcementID;
     }
-        break;
+    break;
 
     default:
         break;
@@ -656,18 +690,19 @@ QByteArray AnnouncementPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 RemoteConsolePacket::RemoteConsolePacket()
-    :MSPacket(quint8(MS::CMD_RemoteConsole))
+    : MSPacket(quint8(MS::CMD_RemoteConsole))
 {
 
 }
 
 RemoteConsolePacket::RemoteConsolePacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_RemoteConsole))
+    : MSPacket(quint8(MS::CMD_RemoteConsole))
 {
 
 }
 
-void RemoteConsolePacket::init(){
+void RemoteConsolePacket::init()
+{
     InfoType = REMOTECONSOLE_UNKNOWN;
 
     OpenConsole.applicationPath = "";
@@ -682,7 +717,8 @@ void RemoteConsolePacket::init(){
     Output.output = "";
 }
 
-void RemoteConsolePacket::parsePacketBody(QByteArray &packetBody){
+void RemoteConsolePacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
@@ -691,29 +727,25 @@ void RemoteConsolePacket::parsePacketBody(QByteArray &packetBody){
     InfoType = PacketInfoType(type);
 
     switch (InfoType) {
-    case REMOTECONSOLE_OPEN:
-    {
+    case REMOTECONSOLE_OPEN: {
         in >> OpenConsole.applicationPath >> OpenConsole.startProcess;
     }
-        break;
+    break;
 
-    case REMOTECONSOLE_STATE:
-    {
+    case REMOTECONSOLE_STATE: {
         in >> ConsoleState.isRunning >> ConsoleState.message >> ConsoleState.messageType;
     }
-        break;
+    break;
 
-    case REMOTECONSOLE_COMMAND:
-    {
+    case REMOTECONSOLE_COMMAND: {
         in >> Command.command;
     }
-        break;
+    break;
 
-    case REMOTECONSOLE_OUTPUT:
-    {
+    case REMOTECONSOLE_OUTPUT: {
         in >> Output.output;
     }
-        break;
+    break;
 
     default:
         break;
@@ -721,8 +753,11 @@ void RemoteConsolePacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray RemoteConsolePacket::packBodyData(){
-    if(InfoType == REMOTECONSOLE_UNKNOWN){return QByteArray();}
+QByteArray RemoteConsolePacket::packBodyData()
+{
+    if(InfoType == REMOTECONSOLE_UNKNOWN) {
+        return QByteArray();
+    }
 
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
@@ -731,29 +766,25 @@ QByteArray RemoteConsolePacket::packBodyData(){
     out << quint8(InfoType);
 
     switch (InfoType) {
-    case REMOTECONSOLE_OPEN:
-    {
+    case REMOTECONSOLE_OPEN: {
         out << OpenConsole.applicationPath << OpenConsole.startProcess;
     }
-        break;
+    break;
 
-    case REMOTECONSOLE_STATE:
-    {
+    case REMOTECONSOLE_STATE: {
         out << ConsoleState.isRunning << ConsoleState.message << ConsoleState.messageType;
     }
-        break;
+    break;
 
-    case REMOTECONSOLE_COMMAND:
-    {
+    case REMOTECONSOLE_COMMAND: {
         out << Command.command ;
     }
-        break;
+    break;
 
-    case REMOTECONSOLE_OUTPUT:
-    {
+    case REMOTECONSOLE_OUTPUT: {
         out << Output.output;
     }
-        break;
+    break;
 
     default:
         break;
@@ -766,30 +797,33 @@ QByteArray RemoteConsolePacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ClientLogPacket::ClientLogPacket()
-    :MSPacket(quint8(MS::CMD_ClientLog))
+    : MSPacket(quint8(MS::CMD_ClientLog))
 {
 
 }
 
 ClientLogPacket::ClientLogPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_ClientLog))
+    : MSPacket(quint8(MS::CMD_ClientLog))
 {
 
 }
 
-void ClientLogPacket::init(){
+void ClientLogPacket::init()
+{
     log = "";
     logType = quint8(MS::LOG_Unknown) ;
 }
 
-void ClientLogPacket::parsePacketBody(QByteArray &packetBody){
+void ClientLogPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> logType >> log;
 }
 
-QByteArray ClientLogPacket::packBodyData(){
+QByteArray ClientLogPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -803,29 +837,32 @@ QByteArray ClientLogPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 USBDevPacket::USBDevPacket()
-    :MSPacket(quint8(MS::CMD_FileTransfer))
+    : MSPacket(quint8(MS::CMD_FileTransfer))
 {
 
 }
 
 USBDevPacket::USBDevPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_FileTransfer))
+    : MSPacket(quint8(MS::CMD_FileTransfer))
 {
 
 }
 
-void USBDevPacket::init(){
+void USBDevPacket::init()
+{
     usbSTORStatus = quint8(MS::USBSTOR_Unknown);
 }
 
-void USBDevPacket::parsePacketBody(QByteArray &packetBody){
+void USBDevPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> usbSTORStatus;
 }
 
-QByteArray USBDevPacket::packBodyData(){
+QByteArray USBDevPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -839,32 +876,35 @@ QByteArray USBDevPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AdminConnectionToClientPacket::AdminConnectionToClientPacket()
-    :MSPacket(quint8(MS::CMD_AdminConnectionToClient))
+    : MSPacket(quint8(MS::CMD_AdminConnectionToClient))
 {
 
 }
 
 AdminConnectionToClientPacket::AdminConnectionToClientPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_AdminConnectionToClient))
+    : MSPacket(quint8(MS::CMD_AdminConnectionToClient))
 {
 
 }
 
-void AdminConnectionToClientPacket::init(){
+void AdminConnectionToClientPacket::init()
+{
     computerName = "";
     adminID = "";
     verified = 0;
     errorCode = quint8(MS::ERROR_NO_ERROR);
 }
 
-void AdminConnectionToClientPacket::parsePacketBody(QByteArray &packetBody){
+void AdminConnectionToClientPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> adminID >> computerName >> verified >> errorCode;
 }
 
-QByteArray AdminConnectionToClientPacket::packBodyData(){
+QByteArray AdminConnectionToClientPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -878,18 +918,19 @@ QByteArray AdminConnectionToClientPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 AdminSearchClientPacket::AdminSearchClientPacket()
-    :MSPacket(quint8(MS::CMD_AdminSearchClient))
+    : MSPacket(quint8(MS::CMD_AdminSearchClient))
 {
 
 }
 
 AdminSearchClientPacket::AdminSearchClientPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_AdminSearchClient))
+    : MSPacket(quint8(MS::CMD_AdminSearchClient))
 {
 
 }
 
-void AdminSearchClientPacket::init(){
+void AdminSearchClientPacket::init()
+{
     computerName = "";
     userName = "";
     workgroup = "";
@@ -899,14 +940,16 @@ void AdminSearchClientPacket::init(){
     adminID = "";
 }
 
-void AdminSearchClientPacket::parsePacketBody(QByteArray &packetBody){
+void AdminSearchClientPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> computerName >> userName >> workgroup >> macAddress >> ipAddress >> osVersion >> adminID;
 }
 
-QByteArray AdminSearchClientPacket::packBodyData(){
+QByteArray AdminSearchClientPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -920,30 +963,33 @@ QByteArray AdminSearchClientPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 LocalUserOnlineStatusChangedPacket::LocalUserOnlineStatusChangedPacket()
-    :MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
+    : MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
 {
 
 }
 
 LocalUserOnlineStatusChangedPacket::LocalUserOnlineStatusChangedPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
+    : MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
 {
 
 }
 
-void LocalUserOnlineStatusChangedPacket::init(){
+void LocalUserOnlineStatusChangedPacket::init()
+{
     userName = "";
     online = 0;
 }
 
-void LocalUserOnlineStatusChangedPacket::parsePacketBody(QByteArray &packetBody){
+void LocalUserOnlineStatusChangedPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> userName >> online;
 }
 
-QByteArray LocalUserOnlineStatusChangedPacket::packBodyData(){
+QByteArray LocalUserOnlineStatusChangedPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -957,18 +1003,19 @@ QByteArray LocalUserOnlineStatusChangedPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 FileTransferPacket::FileTransferPacket()
-    :MSPacket(quint8(MS::CMD_FileTransfer))
+    : MSPacket(quint8(MS::CMD_FileTransfer))
 {
 
 }
 
 FileTransferPacket::FileTransferPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_FileTransfer))
+    : MSPacket(quint8(MS::CMD_FileTransfer))
 {
 
 }
 
-void FileTransferPacket::init(){
+void FileTransferPacket::init()
+{
     InfoType = FT_UNKNOWN;
 
     FileSystemInfoRequest.parentDirPath = "";
@@ -1031,7 +1078,8 @@ void FileTransferPacket::init(){
 
 }
 
-void FileTransferPacket::parsePacketBody(QByteArray &packetBody){
+void FileTransferPacket::parsePacketBody(QByteArray &packetBody)
+{
 
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
@@ -1041,89 +1089,75 @@ void FileTransferPacket::parsePacketBody(QByteArray &packetBody){
 
     InfoType = PacketInfoType(type);
     switch (InfoType) {
-    case FT_FileSystemInfoRequest:
-    {
+    case FT_FileSystemInfoRequest: {
         in >> FileSystemInfoRequest.parentDirPath;
     }
-        break;
+    break;
 
-    case FT_FileSystemInfoResponse:
-    {
+    case FT_FileSystemInfoResponse: {
         in >> FileSystemInfoResponse.baseDirPath >> FileSystemInfoResponse.fileSystemInfoData;
     }
-        break;
+    break;
 
-    case FT_FileDeletingRequest:
-    {
+    case FT_FileDeletingRequest: {
         in >> FileDeletingRequest.baseDirPath >> FileDeletingRequest.files;
     }
-        break;
+    break;
 
-    case FT_FileDeletingResponse:
-    {
+    case FT_FileDeletingResponse: {
         in >> FileDeletingResponse.baseDirPath >> FileDeletingResponse.failedFiles;
     }
-        break;
+    break;
 
-    case FT_FileRenamingRequest:
-    {
+    case FT_FileRenamingRequest: {
         in >> FileRenamingRequest.baseDirPath >> FileRenamingRequest.oldFileName >> FileRenamingRequest.newFileName;
     }
-        break;
+    break;
 
-    case FT_FileRenamingResponse:
-    {
+    case FT_FileRenamingResponse: {
         in >> FileRenamingResponse.baseDirPath >> FileRenamingResponse.oldFileName >> FileRenamingResponse.renamed >> FileRenamingResponse.message;
     }
-        break;
+    break;
 
-    case FT_FileDownloadingRequest:
-    {
+    case FT_FileDownloadingRequest: {
         in >> FileDownloadingRequest.baseDir >> FileDownloadingRequest.fileName >> FileDownloadingRequest.dirToSaveFile;
     }
-        break;
+    break;
 
-    case FT_FileDownloadingResponse:
-    {
+    case FT_FileDownloadingResponse: {
         in >> FileDownloadingResponse.accepted >> FileDownloadingResponse.baseDir >> FileDownloadingResponse.fileName >> FileDownloadingResponse.fileMD5Sum >> FileDownloadingResponse.size >> FileDownloadingResponse.pathToSaveFile;
     }
-        break;
+    break;
 
-    case FT_FileUploadingRequest:
-    {
+    case FT_FileUploadingRequest: {
         in >> FileUploadingRequest.fileName >> FileUploadingRequest.fileMD5Sum >> FileUploadingRequest.size >> FileUploadingRequest.fileSaveDir;
     }
-        break;
+    break;
 
-    case FT_FileUploadingResponse:
-    {
+    case FT_FileUploadingResponse: {
         in >> FileUploadingResponse.accepted >> FileUploadingResponse.fileMD5Sum >> FileUploadingResponse.message;
     }
-        break;
+    break;
 
-    case FT_FileDataRequest:
-    {
+    case FT_FileDataRequest: {
         in >> FileDataRequest.fileMD5 >> FileDataRequest.startPieceIndex >> FileDataRequest.endPieceIndex;
     }
-        break;
+    break;
 
-    case FT_FileData:
-    {
+    case FT_FileData: {
         in >> FileDataResponse.fileMD5 >> FileDataResponse.pieceIndex >> FileDataResponse.data >> FileDataResponse.pieceMD5;
     }
-        break;
+    break;
 
-    case FT_FileTXStatus:
-    {
+    case FT_FileTXStatus: {
         in >> FileTXStatus.fileMD5 >> FileTXStatus.status;
     }
-        break;
+    break;
 
-    case FT_FileTXError:
-    {
+    case FT_FileTXError: {
         in >> FileTXError.fileMD5 >> FileTXError.errorCode >> FileTXError.message;
     }
-        break;
+    break;
 
     default:
         break;
@@ -1131,8 +1165,11 @@ void FileTransferPacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray FileTransferPacket::packBodyData(){
-    if(InfoType == FT_UNKNOWN){return QByteArray();}
+QByteArray FileTransferPacket::packBodyData()
+{
+    if(InfoType == FT_UNKNOWN) {
+        return QByteArray();
+    }
 
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
@@ -1140,89 +1177,75 @@ QByteArray FileTransferPacket::packBodyData(){
     out << quint8(InfoType);
 
     switch (InfoType) {
-    case FT_FileSystemInfoRequest:
-    {
+    case FT_FileSystemInfoRequest: {
         out << FileSystemInfoRequest.parentDirPath;
     }
-        break;
+    break;
 
-    case FT_FileSystemInfoResponse:
-    {
+    case FT_FileSystemInfoResponse: {
         out << FileSystemInfoResponse.baseDirPath << FileSystemInfoResponse.fileSystemInfoData;
     }
-        break;
+    break;
 
-    case FT_FileDeletingRequest:
-    {
+    case FT_FileDeletingRequest: {
         out << FileDeletingRequest.baseDirPath << FileDeletingRequest.files;
     }
-        break;
+    break;
 
-    case FT_FileDeletingResponse:
-    {
+    case FT_FileDeletingResponse: {
         out << FileDeletingResponse.baseDirPath << FileDeletingResponse.failedFiles;
     }
-        break;
+    break;
 
-    case FT_FileRenamingRequest:
-    {
+    case FT_FileRenamingRequest: {
         out << FileRenamingRequest.baseDirPath << FileRenamingRequest.oldFileName << FileRenamingRequest.newFileName;
     }
-        break;
+    break;
 
-    case FT_FileRenamingResponse:
-    {
+    case FT_FileRenamingResponse: {
         out << FileRenamingResponse.baseDirPath << FileRenamingResponse.oldFileName << FileRenamingResponse.renamed << FileRenamingResponse.message;
     }
-        break;
+    break;
 
-    case FT_FileDownloadingRequest:
-    {
+    case FT_FileDownloadingRequest: {
         out << FileDownloadingRequest.baseDir << FileDownloadingRequest.fileName << FileDownloadingRequest.dirToSaveFile;
     }
-        break;
+    break;
 
-    case FT_FileDownloadingResponse:
-    {
+    case FT_FileDownloadingResponse: {
         out << FileDownloadingResponse.accepted << FileDownloadingResponse.baseDir << FileDownloadingResponse.fileName << FileDownloadingResponse.fileMD5Sum << FileDownloadingResponse.size << FileDownloadingResponse.pathToSaveFile;
     }
-        break;
+    break;
 
-    case FT_FileUploadingRequest:
-    {
+    case FT_FileUploadingRequest: {
         out << FileUploadingRequest.fileName << FileUploadingRequest.fileMD5Sum << FileUploadingRequest.size << FileUploadingRequest.fileSaveDir;
     }
-        break;
+    break;
 
-    case FT_FileUploadingResponse:
-    {
+    case FT_FileUploadingResponse: {
         out << FileUploadingResponse.accepted << FileUploadingResponse.fileMD5Sum << FileUploadingResponse.message;
     }
-        break;
+    break;
 
-    case FT_FileDataRequest:
-    {
+    case FT_FileDataRequest: {
         out << FileDataRequest.fileMD5 << FileDataRequest.startPieceIndex << FileDataRequest.endPieceIndex;
     }
-        break;
+    break;
 
-    case FT_FileData:
-    {
+    case FT_FileData: {
         out << FileDataResponse.fileMD5 << FileDataResponse.pieceIndex << FileDataResponse.data << FileDataResponse.pieceMD5;
     }
-        break;
+    break;
 
-    case FT_FileTXStatus:
-    {
+    case FT_FileTXStatus: {
         out << FileTXStatus.fileMD5 << FileTXStatus.status;
     }
-        break;
+    break;
 
-    case FT_FileTXError:
-    {
+    case FT_FileTXError: {
         out << FileTXError.fileMD5 << FileTXError.errorCode << FileTXError.message;
     }
-        break;
+    break;
 
     default:
         break;
@@ -1235,32 +1258,35 @@ QByteArray FileTransferPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ModifyAssetNOPacket::ModifyAssetNOPacket()
-    :MSPacket(quint8(MS::CMD_ModifyAssetNO))
+    : MSPacket(quint8(MS::CMD_ModifyAssetNO))
 {
 
 }
 
 ModifyAssetNOPacket::ModifyAssetNOPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_ModifyAssetNO))
+    : MSPacket(quint8(MS::CMD_ModifyAssetNO))
 {
 
 }
 
-void ModifyAssetNOPacket::init(){
+void ModifyAssetNOPacket::init()
+{
     isRequest = 1;
     oldAssetNO = "";
     newAssetNO = "";
     adminID = "";
 }
 
-void ModifyAssetNOPacket::parsePacketBody(QByteArray &packetBody){
+void ModifyAssetNOPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> isRequest >> oldAssetNO >> newAssetNO >> adminID;
 }
 
-QByteArray ModifyAssetNOPacket::packBodyData(){
+QByteArray ModifyAssetNOPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -1274,32 +1300,35 @@ QByteArray ModifyAssetNOPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 RenameComputerPacket::RenameComputerPacket()
-    :MSPacket(quint8(MS::CMD_RenameComputer))
+    : MSPacket(quint8(MS::CMD_RenameComputer))
 {
 
 }
 
 RenameComputerPacket::RenameComputerPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_RenameComputer))
+    : MSPacket(quint8(MS::CMD_RenameComputer))
 {
 
 }
 
-void RenameComputerPacket::init(){
+void RenameComputerPacket::init()
+{
     assetNO = "";
     newComputerName = "";
     domainAdminName = "";
     domainAdminPassword = "";
 }
 
-void RenameComputerPacket::parsePacketBody(QByteArray &packetBody){
+void RenameComputerPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> assetNO >> newComputerName >> domainAdminName >> domainAdminPassword;
 }
 
-QByteArray RenameComputerPacket::packBodyData(){
+QByteArray RenameComputerPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -1313,18 +1342,19 @@ QByteArray RenameComputerPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 JoinOrUnjoinDomainPacket::JoinOrUnjoinDomainPacket()
-    :MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
+    : MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
 {
 
 }
 
 JoinOrUnjoinDomainPacket::JoinOrUnjoinDomainPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
+    : MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
 {
 
 }
 
-void JoinOrUnjoinDomainPacket::init(){
+void JoinOrUnjoinDomainPacket::init()
+{
     assetNO = "";
     domainOrWorkgroupName = "";
     domainAdminName = "";
@@ -1332,14 +1362,16 @@ void JoinOrUnjoinDomainPacket::init(){
     joinWorkgroup = 1;
 }
 
-void JoinOrUnjoinDomainPacket::parsePacketBody(QByteArray &packetBody){
+void JoinOrUnjoinDomainPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> assetNO >> domainOrWorkgroupName >> domainAdminName >> domainAdminPassword >> joinWorkgroup;
 }
 
-QByteArray JoinOrUnjoinDomainPacket::packBodyData(){
+QByteArray JoinOrUnjoinDomainPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -1353,18 +1385,19 @@ QByteArray JoinOrUnjoinDomainPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 TemperaturesPacket::TemperaturesPacket()
-    :MSPacket(quint8(MS::CMD_Temperatures))
+    : MSPacket(quint8(MS::CMD_Temperatures))
 {
 
 }
 
 TemperaturesPacket::TemperaturesPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_Temperatures))
+    : MSPacket(quint8(MS::CMD_Temperatures))
 {
 
 }
 
-void TemperaturesPacket::init(){
+void TemperaturesPacket::init()
+{
     InfoType = TEMPERATURES_UNKNOWN;
 
     TemperaturesRequest.requestCPU = true;
@@ -1374,7 +1407,8 @@ void TemperaturesPacket::init(){
     TemperaturesResponse.harddiskTemperature = "";
 }
 
-void TemperaturesPacket::parsePacketBody(QByteArray &packetBody){
+void TemperaturesPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
@@ -1383,17 +1417,15 @@ void TemperaturesPacket::parsePacketBody(QByteArray &packetBody){
     InfoType = PacketInfoType(type);
 
     switch (InfoType) {
-    case TEMPERATURES_REQUEST:
-    {
+    case TEMPERATURES_REQUEST: {
         in >> TemperaturesRequest.requestCPU >> TemperaturesRequest.requestCPU;
     }
-        break;
+    break;
 
-    case TEMPERATURES_RESPONSE:
-    {
+    case TEMPERATURES_RESPONSE: {
         in >> TemperaturesResponse.cpuTemperature >> TemperaturesResponse.harddiskTemperature;
     }
-        break;
+    break;
 
 
     default:
@@ -1402,8 +1434,11 @@ void TemperaturesPacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray TemperaturesPacket::packBodyData(){
-    if(InfoType == TEMPERATURES_UNKNOWN){return QByteArray();}
+QByteArray TemperaturesPacket::packBodyData()
+{
+    if(InfoType == TEMPERATURES_UNKNOWN) {
+        return QByteArray();
+    }
 
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
@@ -1412,17 +1447,15 @@ QByteArray TemperaturesPacket::packBodyData(){
     out << quint8(InfoType);
 
     switch (InfoType) {
-    case TEMPERATURES_REQUEST:
-    {
+    case TEMPERATURES_REQUEST: {
         out << TemperaturesRequest.requestCPU << TemperaturesRequest.requestCPU;
     }
-        break;
+    break;
 
-    case TEMPERATURES_RESPONSE:
-    {
+    case TEMPERATURES_RESPONSE: {
         out << TemperaturesResponse.cpuTemperature << TemperaturesResponse.harddiskTemperature;
     }
-        break;
+    break;
 
 
     default:
@@ -1436,18 +1469,19 @@ QByteArray TemperaturesPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ScreenshotPacket::ScreenshotPacket()
-    :MSPacket(quint8(MS::CMD_Screenshot))
+    : MSPacket(quint8(MS::CMD_Screenshot))
 {
 
 }
 
 ScreenshotPacket::ScreenshotPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_Screenshot))
+    : MSPacket(quint8(MS::CMD_Screenshot))
 {
 
 }
 
-void ScreenshotPacket::init(){
+void ScreenshotPacket::init()
+{
     InfoType = SCREENSHOT_UNKNOWN;
 
     ScreenshotRequest.adminID = "";
@@ -1460,7 +1494,8 @@ void ScreenshotPacket::init(){
     DesktopInfo.blockHeight = 0;
 }
 
-void ScreenshotPacket::parsePacketBody(QByteArray &packetBody){
+void ScreenshotPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
@@ -1469,20 +1504,17 @@ void ScreenshotPacket::parsePacketBody(QByteArray &packetBody){
     InfoType = PacketInfoType(type);
 
     switch (InfoType) {
-    case SCREENSHOT_REQUEST:
-    {
+    case SCREENSHOT_REQUEST: {
         in >> ScreenshotRequest.adminID >> ScreenshotRequest.userName >> ScreenshotRequest.adminListeningPort;
     }
-        break;
+    break;
 
-    case SCREENSHOT_DESKTOP_INFO:
-    {
+    case SCREENSHOT_DESKTOP_INFO: {
         in >> DesktopInfo.desktopWidth >> DesktopInfo.desktopHeight >> DesktopInfo.blockWidth >> DesktopInfo.blockHeight;
     }
-        break;
+    break;
 
-    case SCREENSHOT_DATA:
-    {
+    case SCREENSHOT_DATA: {
         while (!in.atEnd()) {
             int x = 0, y = 0;
             QByteArray image;
@@ -1493,7 +1525,7 @@ void ScreenshotPacket::parsePacketBody(QByteArray &packetBody){
             ScreenshotData.images.append(image);
         }
     }
-        break;
+    break;
 
 
     default:
@@ -1502,8 +1534,11 @@ void ScreenshotPacket::parsePacketBody(QByteArray &packetBody){
 
 }
 
-QByteArray ScreenshotPacket::packBodyData(){
-    if(InfoType == SCREENSHOT_UNKNOWN){return QByteArray();}
+QByteArray ScreenshotPacket::packBodyData()
+{
+    if(InfoType == SCREENSHOT_UNKNOWN) {
+        return QByteArray();
+    }
 
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
@@ -1512,26 +1547,23 @@ QByteArray ScreenshotPacket::packBodyData(){
     out << quint8(InfoType);
 
     switch (InfoType) {
-    case SCREENSHOT_REQUEST:
-    {
+    case SCREENSHOT_REQUEST: {
         out << ScreenshotRequest.adminID << ScreenshotRequest.userName << ScreenshotRequest.adminListeningPort;
     }
-        break;
+    break;
 
-    case SCREENSHOT_DESKTOP_INFO:
-    {
+    case SCREENSHOT_DESKTOP_INFO: {
         out << DesktopInfo.desktopWidth << DesktopInfo.desktopHeight << DesktopInfo.blockWidth << DesktopInfo.blockHeight;
     }
-        break;
+    break;
 
-    case SCREENSHOT_DATA:
-    {
-        for(int i=0; i<ScreenshotData.locations.size(); i++){
+    case SCREENSHOT_DATA: {
+        for(int i = 0; i < ScreenshotData.locations.size(); i++) {
             QPoint point = ScreenshotData.locations.at(i);
-           out <<  point.x() << point.y() << ScreenshotData.images.at(i);
+            out <<  point.x() << point.y() << ScreenshotData.images.at(i);
         }
     }
-        break;
+    break;
 
 
     default:
@@ -1545,32 +1577,35 @@ QByteArray ScreenshotPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ShutdownPacket::ShutdownPacket()
-    :MSPacket(quint8(MS::CMD_Shutdown))
+    : MSPacket(quint8(MS::CMD_Shutdown))
 {
 
 }
 
 ShutdownPacket::ShutdownPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_Shutdown))
+    : MSPacket(quint8(MS::CMD_Shutdown))
 {
 
 }
 
-void ShutdownPacket::init(){
+void ShutdownPacket::init()
+{
     message = "";
     waitTime = 0;
     force = 1;
     reboot = 0 ;
 }
 
-void ShutdownPacket::parsePacketBody(QByteArray &packetBody){
+void ShutdownPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> message >> waitTime >> force >> reboot ;
 }
 
-QByteArray ShutdownPacket::packBodyData(){
+QByteArray ShutdownPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -1584,30 +1619,33 @@ QByteArray ShutdownPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 LockWindowsPacket::LockWindowsPacket()
-    :MSPacket(quint8(MS::CMD_LockWindows))
+    : MSPacket(quint8(MS::CMD_LockWindows))
 {
 
 }
 
 LockWindowsPacket::LockWindowsPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_LockWindows))
+    : MSPacket(quint8(MS::CMD_LockWindows))
 {
 
 }
 
-void LockWindowsPacket::init(){
+void LockWindowsPacket::init()
+{
     userName = "";
     logoff = 0;
 }
 
-void LockWindowsPacket::parsePacketBody(QByteArray &packetBody){
+void LockWindowsPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> userName >> logoff ;
 }
 
-QByteArray LockWindowsPacket::packBodyData(){
+QByteArray LockWindowsPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -1621,29 +1659,32 @@ QByteArray LockWindowsPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 WinUserPacket::WinUserPacket()
-    :MSPacket(quint8(MS::CMD_WinUser))
+    : MSPacket(quint8(MS::CMD_WinUser))
 {
 
 }
 
 WinUserPacket::WinUserPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_WinUser))
+    : MSPacket(quint8(MS::CMD_WinUser))
 {
 
 }
 
-void WinUserPacket::init(){
+void WinUserPacket::init()
+{
     userData = 0;
 }
 
-void WinUserPacket::parsePacketBody(QByteArray &packetBody){
+void WinUserPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> userData ;
 }
 
-QByteArray WinUserPacket::packBodyData(){
+QByteArray WinUserPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -1657,32 +1698,35 @@ QByteArray WinUserPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ServiceConfigPacket::ServiceConfigPacket()
-    :MSPacket(quint8(MS::CMD_ServiceConfig))
+    : MSPacket(quint8(MS::CMD_ServiceConfig))
 {
 
 }
 
 ServiceConfigPacket::ServiceConfigPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_ServiceConfig))
+    : MSPacket(quint8(MS::CMD_ServiceConfig))
 {
 
 }
 
-void ServiceConfigPacket::init(){
+void ServiceConfigPacket::init()
+{
     serviceName = "";
     startupType = 0xFFFFFFFF;
     startService = 0;
     processID = 0;
 }
 
-void ServiceConfigPacket::parsePacketBody(QByteArray &packetBody){
+void ServiceConfigPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
     in >> serviceName >> startupType >> startService >> processID;
 }
 
-QByteArray ServiceConfigPacket::packBodyData(){
+QByteArray ServiceConfigPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
@@ -1696,18 +1740,19 @@ QByteArray ServiceConfigPacket::packBodyData(){
 
 ////////////////////////////////////////////////////////////////////////
 ProcessMonitorInfoPacket::ProcessMonitorInfoPacket()
-    :MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
+    : MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
 {
 
 }
 
 ProcessMonitorInfoPacket::ProcessMonitorInfoPacket(const PacketBase &base)
-    :MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
+    : MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
 {
 
 }
 
-void ProcessMonitorInfoPacket::init(){
+void ProcessMonitorInfoPacket::init()
+{
     localRules = QByteArray();
     globalRules = QByteArray();
     enableProcMon = 0;
@@ -1718,14 +1763,16 @@ void ProcessMonitorInfoPacket::init(){
     assetNO = "";
 }
 
-void ProcessMonitorInfoPacket::parsePacketBody(QByteArray &packetBody){
+void ProcessMonitorInfoPacket::parsePacketBody(QByteArray &packetBody)
+{
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
-    in >> localRules >> globalRules >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >>useGlobalRules >>assetNO;
+    in >> localRules >> globalRules >> enableProcMon >> enablePassthrough >> enableLogAllowedProcess >> enableLogBlockedProcess >> useGlobalRules >> assetNO;
 }
 
-QByteArray ProcessMonitorInfoPacket::packBodyData(){
+QByteArray ProcessMonitorInfoPacket::packBodyData()
+{
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);

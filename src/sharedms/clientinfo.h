@@ -18,15 +18,17 @@
 #include "../sharedms/global_shared.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-class SHAREDMSLIB_API ClientInfo : public QObject{
+class SHAREDMSLIB_API ClientInfo : public QObject
+{
 
 public:
     ClientInfo(const QString &assetNO = "", QObject *parent = 0);
     virtual ~ClientInfo();
 
-    ClientInfo & operator = (const ClientInfo &clientInfo);
+    ClientInfo &operator = (const ClientInfo &clientInfo);
 
 public:
     bool isValid();
@@ -39,11 +41,13 @@ public:
     QString getAssetNO() const;
 
 
-    void setIsJoinedToDomain(bool joined){
+    void setIsJoinedToDomain(bool joined)
+    {
         this->m_isJoinedToDomain = joined;
     }
 
-    bool isJoinedToDomain() const{
+    bool isJoinedToDomain() const
+    {
         return this->m_isJoinedToDomain;
     }
 
@@ -272,39 +276,49 @@ public:
         this->workgroup = workgroup;
     }
 
-    QString getOnlineUsers() const{
+    QString getOnlineUsers() const
+    {
         return onlineUsers;
     }
-    void setOnlineUsers(const QString &users){
+    void setOnlineUsers(const QString &users)
+    {
         this->onlineUsers = users;
     }
 
 
-    void setIP(const QString &ipInfo){
+    void setIP(const QString &ipInfo)
+    {
         this->ip = ipInfo;
     }
-    QString getIP() const {
+    QString getIP() const
+    {
         return this->ip;
     }
 
-    bool isProcessMonitorEnabled() const{
+    bool isProcessMonitorEnabled() const
+    {
         return processMonitorEnabled;
     }
-    void setProcessMonitorEnabled(bool enable){
+    void setProcessMonitorEnabled(bool enable)
+    {
         this->processMonitorEnabled = enable;
     }
 
-    void setCPULoad(int cpuLoad){
+    void setCPULoad(int cpuLoad)
+    {
         this->cpuLoad = cpuLoad;
     }
-    int getCPULoad(){
+    int getCPULoad()
+    {
         return this->cpuLoad;
     }
 
-    void setMemoryLoad(int memoryLoad){
+    void setMemoryLoad(int memoryLoad)
+    {
         this->memoryLoad = memoryLoad;
     }
-    int getMemoryLoad(){
+    int getMemoryLoad()
+    {
         return memoryLoad;
     }
 

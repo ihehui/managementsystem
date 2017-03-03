@@ -4,11 +4,13 @@
 #include <QObject>
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 typedef unsigned int SOCKETID;
 
-class SystemInfo: public QObject {
+class SystemInfo: public QObject
+{
     Q_OBJECT
 
 public:

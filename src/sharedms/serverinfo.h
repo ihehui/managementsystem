@@ -6,14 +6,15 @@
 #include "sharedmslib.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class SHAREDMSLIB_API ServerInfo
 {
 
 public:
-    enum State{NotTested, Testing, TestOK, TestFailed};
+    enum State {NotTested, Testing, TestOK, TestFailed};
 
     explicit ServerInfo(const QString &ip, quint16 port);
     ~ServerInfo();

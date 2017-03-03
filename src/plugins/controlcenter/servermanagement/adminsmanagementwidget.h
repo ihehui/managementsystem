@@ -9,15 +9,18 @@
 
 
 
-namespace Ui {
+namespace Ui
+{
 class AdminsManagementWidget;
 }
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 
-class AdminUserInfoModel : public QAbstractTableModel {
+class AdminUserInfoModel : public QAbstractTableModel
+{
     Q_OBJECT
 
 public:
@@ -27,12 +30,12 @@ public:
     void clearUsers();
 
     void setJsonData(const QByteArray &data);
-    AdminUserInfo * getUser(const QModelIndex & index);
+    AdminUserInfo *getUser(const QModelIndex &index);
 
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
 
@@ -83,7 +86,7 @@ private slots:
 
     void showUserInfoWidget(AdminUserInfo *adUser, bool readonly = true);
 
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
     void getSelectedUser(const QModelIndex &index);
 
     bool verifyPrivilege();

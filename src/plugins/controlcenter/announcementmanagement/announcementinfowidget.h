@@ -16,14 +16,15 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class AnnouncementInfoWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    enum AnnouncementJobType{CreateAnnouncement, ModifyAnnouncement};
+    enum AnnouncementJobType {CreateAnnouncement, ModifyAnnouncement};
     AnnouncementInfoWidget(bool readonly = true, QWidget *parent = 0);
     ~AnnouncementInfoWidget();
 
@@ -35,7 +36,7 @@ public:
     void setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data);
 
     void addComputerTargets(const QStringList &targets);
-    
+
 signals:
     //void signalSendMessage(quint32 messageID, const QString &message, bool confirmationRequired, int validityPeriod);
     void signalCloseWidget();
@@ -53,18 +54,18 @@ private slots:
     void on_actionAddUser_triggered();
     void on_actionDeleteTarget_triggered();
 
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
     void getSelectedInfo(const QModelIndex &index);
-    void linkClicked(const QUrl & url);
+    void linkClicked(const QUrl &url);
     void jobFinished(quint32 jobID);
     quint32 newJob(AnnouncementJobType jobType, const QString &jobTitle);
 
 
     bool verifyPrivilege();
-    
+
 private:
     Ui::AnnouncementInfoWidgetClass ui;
-    
+
     AdminUser *m_myself;
 
     AnnouncementTargetModel *m_model;
@@ -80,6 +81,6 @@ private:
 
 };
 
-} //namespace HEHUI 
+} //namespace HEHUI
 
 #endif // ANNOUNCEMENT_H

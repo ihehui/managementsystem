@@ -13,7 +13,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class BulletinBoardWidget : public QWidget
 {
@@ -41,7 +42,7 @@ private slots:
     void clearAnnouncements();
     void saveAnnouncementInfo(const QString &announcementID);
     bool isAnnouncementInfoExists(const QString &announcementID);
-    AnnouncementInfo * getAnnouncementInfo(const QString &announcementID);
+    AnnouncementInfo *getAnnouncementInfo(const QString &announcementID);
 
 
     void on_toolButtonPrevious_clicked();
@@ -54,7 +55,7 @@ private:
     Ui::SystemManagementWidgetClass ui;
 
     QString m_userName;
-    
+
     int curAnnouncementIndex;
     QString m_curAnnouncementID;
 

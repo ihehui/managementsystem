@@ -11,7 +11,8 @@
 #include "../../sharedms/processmonitorrule.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 
@@ -66,8 +67,8 @@ private:
     QStringList filePathWhiteList;
     QStringList filePathBlackList;
 
-    QHash<QString /*Rule*/, ProcessMonitorRule*> hashRulesHash;
-    QHash<QString /*Rule*/, ProcessMonitorRule*> pathRulesHash;
+    QHash<QString /*Rule*/, ProcessMonitorRule *> hashRulesHash;
+    QHash<QString /*Rule*/, ProcessMonitorRule *> pathRulesHash;
 
 
 

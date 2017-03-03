@@ -1,10 +1,11 @@
 #include "processmonitorrule.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 ProcessMonitorRule::ProcessMonitorRule(QObject *parent)
-    :QObject(parent)
+    : QObject(parent)
 {
 
     hashRule = true;
@@ -18,7 +19,8 @@ ProcessMonitorRule::~ProcessMonitorRule()
 
 }
 
-ProcessMonitorRule & ProcessMonitorRule::operator= (const ProcessMonitorRule &info){
+ProcessMonitorRule &ProcessMonitorRule::operator= (const ProcessMonitorRule &info)
+{
     ruleString = info.ruleString;
     comment = info.comment;
 

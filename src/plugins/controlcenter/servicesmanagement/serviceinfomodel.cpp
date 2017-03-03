@@ -37,44 +37,53 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ServiceInfoModel::ServiceInfoModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
     // TODO Auto-generated constructor stub
 
 }
 
-ServiceInfoModel::~ServiceInfoModel() {
-    qDebug()<<"--ServiceInfoModel::~ServiceInfoModel()";
+ServiceInfoModel::~ServiceInfoModel()
+{
+    qDebug() << "--ServiceInfoModel::~ServiceInfoModel()";
 
     clearServicesList();
 
 }
 
-void ServiceInfoModel::setJsonData(const QByteArray &data){
+void ServiceInfoModel::setJsonData(const QByteArray &data)
+{
     clearServicesList();
 
-    if(data.isEmpty()){return;}
+    if(data.isEmpty()) {
+        return;
+    }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
-    if(object.isEmpty()){return;}
+    if(object.isEmpty()) {
+        return;
+    }
 
     beginResetModel();
 
     QJsonArray array = object["Service"].toArray();
 
-    for(int i=0;i<array.size();i++){
+    for(int i = 0; i < array.size(); i++) {
         QJsonArray infoArray = array.at(i).toArray();
-        if(infoArray.size() != 9){continue;}
+        if(infoArray.size() != 9) {
+            continue;
+        }
 
         ServiceInfo *info = new ServiceInfo();
         info->serviceName = infoArray.at(0).toString();
@@ -94,26 +103,28 @@ void ServiceInfoModel::setJsonData(const QByteArray &data){
     endResetModel();
 }
 
-ServiceInfo * ServiceInfoModel::getServiceInfo(const QString &serviceName){
+ServiceInfo *ServiceInfoModel::getServiceInfo(const QString &serviceName)
+{
     ServiceInfo *sinfo = 0;
     foreach (ServiceInfo *info, servicesList) {
-        if(info->serviceName == serviceName){
+        if(info->serviceName == serviceName) {
             sinfo = info;
             break;
         }
     }
-    if(!sinfo){
-        qCritical()<<QString("ERROR! Service '%1' Not Found!").arg(serviceName);
+    if(!sinfo) {
+        qCritical() << QString("ERROR! Service '%1' Not Found!").arg(serviceName);
     }
 
     return sinfo;
 }
 
-bool ServiceInfoModel::updateServiceInfo(const QString &serviceName, quint64 processID, quint64 startupType){
+bool ServiceInfoModel::updateServiceInfo(const QString &serviceName, quint64 processID, quint64 startupType)
+{
 
     ServiceInfo *sinfo = getServiceInfo(serviceName);
-    if(!sinfo){
-        qCritical()<<QString("ERROR! Service '%1' Not Found!").arg(serviceName);
+    if(!sinfo) {
+        qCritical() << QString("ERROR! Service '%1' Not Found!").arg(serviceName);
         return false;
     }
 
@@ -128,33 +139,36 @@ bool ServiceInfoModel::updateServiceInfo(const QString &serviceName, quint64 pro
 
 }
 
-int ServiceInfoModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int ServiceInfoModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return servicesList.size();
 
 }
 
-int	 ServiceInfoModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 ServiceInfoModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return 8;
 }
 
-QVariant ServiceInfoModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant ServiceInfoModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= servicesList.size())){
+    if((row < 0) || (row >= servicesList.size())) {
         return QVariant();
     }
 
     ServiceInfo *info = static_cast<ServiceInfo *> (servicesList.at(row));
-    if(role == Qt::DisplayRole || role == Qt::EditRole){
+    if(role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
         case 0:
             return info->serviceName;
@@ -168,11 +182,10 @@ QVariant ServiceInfoModel::data ( const QModelIndex & index, int role) const{
         case 3:
             return info->description;
             break;
-        case 4:
-        {
+        case 4: {
             return getStartTypeString(info->startType);
         }
-            break;
+        break;
         case 5:
             return info->account;
             break;
@@ -192,7 +205,7 @@ QVariant ServiceInfoModel::data ( const QModelIndex & index, int role) const{
             break;
         }
     }
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return info->serviceName;
     }
 
@@ -200,12 +213,13 @@ QVariant ServiceInfoModel::data ( const QModelIndex & index, int role) const{
 
 }
 
-QVariant ServiceInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant ServiceInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("Service Name"));
@@ -246,7 +260,8 @@ QVariant ServiceInfoModel::headerData ( int section, Qt::Orientation orientation
 
 }
 
-QString ServiceInfoModel::getStartTypeString(unsigned long startType) const{
+QString ServiceInfoModel::getStartTypeString(unsigned long startType) const
+{
 
     QString str;
     switch (startType) {
@@ -273,7 +288,8 @@ QString ServiceInfoModel::getStartTypeString(unsigned long startType) const{
     return str;
 }
 
-QString ServiceInfoModel::getServiceTypeString(unsigned long serviceType) const{
+QString ServiceInfoModel::getServiceTypeString(unsigned long serviceType) const
+{
 
     QString str;
     switch (serviceType) {
@@ -298,7 +314,8 @@ QString ServiceInfoModel::getServiceTypeString(unsigned long serviceType) const{
 
 }
 
-void ServiceInfoModel::clearServicesList(){
+void ServiceInfoModel::clearServicesList()
+{
 
     beginResetModel();
 
@@ -317,7 +334,7 @@ void ServiceInfoModel::clearServicesList(){
 ////////////////////////////////////////////////////////////
 
 ServiceInfoSortFilterProxyModel::ServiceInfoSortFilterProxyModel(QObject *parent)
-    :QSortFilterProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 
     serviceName = QRegExp(".*", Qt::CaseInsensitive);
@@ -326,7 +343,8 @@ ServiceInfoSortFilterProxyModel::ServiceInfoSortFilterProxyModel(QObject *parent
 
 }
 
-void ServiceInfoSortFilterProxyModel::cleanFilters(){
+void ServiceInfoSortFilterProxyModel::cleanFilters()
+{
 
     serviceName = QRegExp(".*", Qt::CaseInsensitive);
     serviceDisplayName = QRegExp(".*", Qt::CaseInsensitive);
@@ -335,7 +353,8 @@ void ServiceInfoSortFilterProxyModel::cleanFilters(){
     invalidateFilter();
 }
 
-void ServiceInfoSortFilterProxyModel::setFilters(const QRegExp &computerName, const QRegExp &userName, const QRegExp &workgroup){
+void ServiceInfoSortFilterProxyModel::setFilters(const QRegExp &computerName, const QRegExp &userName, const QRegExp &workgroup)
+{
 
     this->serviceName = computerName;
     this->serviceDisplayName = userName;
@@ -355,7 +374,7 @@ bool ServiceInfoSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QMod
             && index1.data().toString().contains(serviceDisplayName)
             //&& index8.data().toString().contains(serviceType)
 
-            );
+           );
 
 }
 

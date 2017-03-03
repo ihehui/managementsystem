@@ -45,11 +45,12 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ServerPacketsParser::ServerPacketsParser(ResourcesManagerInstance *manager, QObject *parent)
-    :QObject(parent), m_resourcesManager(manager)
+    : QObject(parent), m_resourcesManager(manager)
 {
 
     Q_ASSERT(m_resourcesManager);
@@ -89,7 +90,8 @@ ServerPacketsParser::ServerPacketsParser(ResourcesManagerInstance *manager, QObj
 
 }
 
-ServerPacketsParser::~ServerPacketsParser() {
+ServerPacketsParser::~ServerPacketsParser()
+{
     // TODO Auto-generated destructor stub
 
 
@@ -100,7 +102,8 @@ ServerPacketsParser::~ServerPacketsParser() {
 
 
 
-void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
+void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet)
+{
 
     //QByteArray packetBody = packet.getPacketBody();
     quint8 packetType = packet.getPacketType();
@@ -108,88 +111,81 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet){
     QHostAddress peerAddress = packet.getPeerHostAddress();
     quint16 peerPort = packet.getPeerHostPort();
     SOCKETID socketID = packet.getSocketID();
-    
-    switch(packetType){
 
-    case quint8(MS::CMD_ServerDiscovery):
-    {
+    switch(packetType) {
+
+    case quint8(MS::CMD_ServerDiscovery): {
         ServerDiscoveryPacket p(packet);
-        if(p.responseFromServer){return;}
-        quint16 udpPort= p.udpPort;
-        if(!udpPort){
+        if(p.responseFromServer) {
+            return;
+        }
+        quint16 udpPort = p.udpPort;
+        if(!udpPort) {
             udpPort = peerPort;
         }
         sendServerDeclarePacket(peerAddress, udpPort);
-        qWarning()<<"~~ClientLookForServer--"<<" peerAddress:"<<peerAddress.toString()<<"   peerPort:"<<peerPort <<" Version:"<<p.version << " peerID:" << peerID;
+        qWarning() << "~~ClientLookForServer--" << " peerAddress:" << peerAddress.toString() << "   peerPort:" << peerPort << " Version:" << p.version << " peerID:" << peerID;
     }
     break;
 
-    case quint8(MS::CMD_AdminLogin):
-    {
-        qDebug()<<"~~CMD_AdminLogin";
+    case quint8(MS::CMD_AdminLogin): {
+        qDebug() << "~~CMD_AdminLogin";
 
         AdminLoginPacket p(packet);
         emit signalAdminLogin(p);
     }
     break;
 
-    case quint8(MS::CMD_SystemAlarms):
-    {
-        qDebug()<<"~~CMD_SystemAlarms";
+    case quint8(MS::CMD_SystemAlarms): {
+        qDebug() << "~~CMD_SystemAlarms";
 
         SystemAlarmsPacket p(packet);
         emit signalSystemAlarmsPacketReceived(p);
     }
     break;
 
-    case quint8(MS::CMD_Announcement):
-    {
-        qDebug()<<"~~CMD_Announcement";
+    case quint8(MS::CMD_Announcement): {
+        qDebug() << "~~CMD_Announcement";
 
         AnnouncementPacket p(packet);
         emit signalAnnouncementsPacketReceived(p);
     }
     break;
 
-    case quint8(MS::CMD_ClientInfo):
-    {
-        qDebug()<<"~~CMD_ClientInfo";
+    case quint8(MS::CMD_ClientInfo): {
+        qDebug() << "~~CMD_ClientInfo";
 
         ClientInfoPacket p(packet);
         emit signalClientInfoPacketReceived(p);
     }
     break;
 
-    case quint8(MS::CMD_ClientLog):
-    {
-        qDebug()<<"~~CMD_ClientLog";
+    case quint8(MS::CMD_ClientLog): {
+        qDebug() << "~~CMD_ClientLog";
 
         ClientLogPacket p(packet);
         emit signalClientLogReceived(p);
     }
     break;
 
-    case quint8(MS::CMD_ModifyAssetNO):
-    {
-        qDebug()<<"~~CMD_ModifyAssetNO";
+    case quint8(MS::CMD_ModifyAssetNO): {
+        qDebug() << "~~CMD_ModifyAssetNO";
 
         ModifyAssetNOPacket p(packet);
         emit signalModifyAssetNOPacketReceived(p);
     }
     break;
 
-    case quint8(MS::CMD_ProcessMonitorInfo):
-    {
-        qDebug()<<"~~CMD_ProcessMonitorInfo";
+    case quint8(MS::CMD_ProcessMonitorInfo): {
+        qDebug() << "~~CMD_ProcessMonitorInfo";
 
         ProcessMonitorInfoPacket p(packet);
         emit signalProcessMonitorInfoPacketReceived(p);
     }
     break;
 
-    case quint8(MS::CMD_SysAdminInfo):
-    {
-        qDebug()<<"~~CMD_SysAdminInfo";
+    case quint8(MS::CMD_SysAdminInfo): {
+        qDebug() << "~~CMD_SysAdminInfo";
 
         SysAdminInfoPacket p(packet);
         emit signalUpdateSysAdminInfoPacketReceived(p);

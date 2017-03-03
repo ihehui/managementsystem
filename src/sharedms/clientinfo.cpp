@@ -14,10 +14,11 @@
 #include "clientinfo.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 ClientInfo::ClientInfo(const QString &assetNO, QObject *parent)
-    :QObject(parent)
+    : QObject(parent)
 {
 
     this->assetNO = assetNO;
@@ -58,11 +59,13 @@ ClientInfo::ClientInfo(const QString &assetNO, QObject *parent)
 
 }
 
-ClientInfo::~ClientInfo() {
+ClientInfo::~ClientInfo()
+{
     // TODO Auto-generated destructor stub
 }
 
-ClientInfo & ClientInfo::operator = (const ClientInfo &clientInfo){
+ClientInfo &ClientInfo::operator = (const ClientInfo &clientInfo)
+{
 
     assetNO = clientInfo.getAssetNO();
     computerName = clientInfo.getComputerName();
@@ -103,23 +106,25 @@ ClientInfo & ClientInfo::operator = (const ClientInfo &clientInfo){
     return *this;
 }
 
-bool ClientInfo::isValid(){
+bool ClientInfo::isValid()
+{
     return assetNO.trimmed().size();
 }
 
-void ClientInfo::setJsonData(const QByteArray &data){
+void ClientInfo::setJsonData(const QByteArray &data)
+{
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
 
     QJsonObject osObj = object["OS"].toObject();
-    if(!osObj.isEmpty()){
-        if(osObj.contains("AssetNO")){
+    if(!osObj.isEmpty()) {
+        if(osObj.contains("AssetNO")) {
             assetNO = osObj["AssetNO"].toString();
         }
 
@@ -131,7 +136,7 @@ void ClientInfo::setJsonData(const QByteArray &data){
         m_isJoinedToDomain = osObj["JoinedToDomain"].toBool();
         users = osObj["Users"].toString();
         administrators = osObj["Admins"].toString();
-        if(osObj.contains("IPInfo")){
+        if(osObj.contains("IPInfo")) {
             ip = osObj["IPInfo"].toString();
         }
         clientVersion = osObj["Version"].toString();
@@ -141,7 +146,7 @@ void ClientInfo::setJsonData(const QByteArray &data){
     }
 
     QJsonObject hwObj = object["Hardware"].toObject();
-    if(!hwObj.isEmpty()){
+    if(!hwObj.isEmpty()) {
         cpu = hwObj["Processor"].toString();
         memory = hwObj.value("PhysicalMemory").toString();
         motherboardName = hwObj.value("BaseBoard").toString();
@@ -153,14 +158,15 @@ void ClientInfo::setJsonData(const QByteArray &data){
     }
 
     QJsonObject resLoadObj = object["ResourcsesLoad"].toObject();
-    if(!resLoadObj.isEmpty()){
+    if(!resLoadObj.isEmpty()) {
         cpuLoad = resLoadObj.value("CPULoad").toString().toUInt();
         memoryLoad = resLoadObj.value("MemLoad").toString().toUInt();
     }
 
 }
 
-QByteArray ClientInfo::getOSJsonData() const{
+QByteArray ClientInfo::getOSJsonData() const
+{
 
     QJsonObject osObj;
     osObj["AssetNO"] = assetNO;
@@ -169,12 +175,12 @@ QByteArray ClientInfo::getOSJsonData() const{
     osObj["InstallDate"] = installationDate;
     osObj["Key"] = osKey;
     osObj["Workgroup"] = workgroup;
-    osObj["JoinedToDomain"] = m_isJoinedToDomain?"1":"0";
+    osObj["JoinedToDomain"] = m_isJoinedToDomain ? "1" : "0";
     osObj["Users"] = users;
     osObj["Admins"] = administrators;
     osObj["IPInfo"] = ip;
     osObj["Version"] = clientVersion;
-    osObj["ProcessMonitorEnabled"] = processMonitorEnabled?"1":"0";
+    osObj["ProcessMonitorEnabled"] = processMonitorEnabled ? "1" : "0";
     osObj["USBSD"] = usbSDStatus;
 
 //    QJsonObject hwObj;
@@ -196,7 +202,8 @@ QByteArray ClientInfo::getOSJsonData() const{
 
 }
 
-QByteArray ClientInfo::getHardwareJsonData() const{
+QByteArray ClientInfo::getHardwareJsonData() const
+{
 
 //    QJsonObject osObj;
 //    osObj["AssetNO"] = assetNO;
@@ -217,7 +224,7 @@ QByteArray ClientInfo::getHardwareJsonData() const{
     hwObj["Processor"] = cpu;
     hwObj["PhysicalMemory"] = memory;
     hwObj["BaseBoard"] = motherboardName;
-    hwObj["VideoController"] =video;
+    hwObj["VideoController"] = video;
     hwObj["Monitor"] = monitor;
     hwObj["SoundDevice"] = audio;
     hwObj["DiskDrive"] = storage;
@@ -233,11 +240,13 @@ QByteArray ClientInfo::getHardwareJsonData() const{
 }
 
 
-void ClientInfo::setAssetNO(const QString &assetNO){
+void ClientInfo::setAssetNO(const QString &assetNO)
+{
     this->assetNO = assetNO;
 }
 
-QString ClientInfo::getAssetNO() const{
+QString ClientInfo::getAssetNO() const
+{
     return assetNO;
 }
 

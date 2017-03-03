@@ -5,46 +5,51 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 WinUserInfoModel::WinUserInfoModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
     // TODO Auto-generated constructor stub
 
 }
 
-WinUserInfoModel::~WinUserInfoModel() {
+WinUserInfoModel::~WinUserInfoModel()
+{
     clearUsers();
 }
 
-void WinUserInfoModel::setJsonData(const QByteArray &data){
-    qDebug()<<"--WinUserInfoModel::setJsonData(...)";
+void WinUserInfoModel::setJsonData(const QByteArray &data)
+{
+    qDebug() << "--WinUserInfoModel::setJsonData(...)";
 
     clearUsers();
 
-    if(data.isEmpty()){
-        qCritical()<<"ERROR! Empty user info data.";
+    if(data.isEmpty()) {
+        qCritical() << "ERROR! Empty user info data.";
         return;
     }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
-    if(object.isEmpty()){return;}
+    if(object.isEmpty()) {
+        return;
+    }
 
     beginResetModel();
 
     QJsonArray array = object["Users"].toArray();
 
-    for(int i=0;i<array.size();i++){
+    for(int i = 0; i < array.size(); i++) {
         QJsonArray infoArray = array.at(i).toArray();
-        if(infoArray.size() != 15){
-            qCritical()<<"ERROR! Invalid JSON array.";
+        if(infoArray.size() != 15) {
+            qCritical() << "ERROR! Invalid JSON array.";
             continue;
         }
 
@@ -79,24 +84,27 @@ void WinUserInfoModel::setJsonData(const QByteArray &data){
     endResetModel();
 }
 
-WinUserInfo * WinUserInfoModel::getUser(const QModelIndex & index){
-    if(!index.isValid()){
+WinUserInfo *WinUserInfoModel::getUser(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return 0;
     }
 
     return usersList.at(index.data(Qt::UserRole).toInt());
 }
 
-int WinUserInfoModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int WinUserInfoModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return usersList.size();
 
 }
 
-int	 WinUserInfoModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 WinUserInfoModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
 
@@ -104,18 +112,19 @@ int	 WinUserInfoModel::columnCount ( const QModelIndex & parent) const{
 
 }
 
-QVariant WinUserInfoModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant WinUserInfoModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= usersList.size())){
+    if((row < 0) || (row >= usersList.size())) {
         return QVariant();
     }
 
     WinUserInfo *info = static_cast<WinUserInfo *> (usersList.at(row));
-    if(role == Qt::DisplayRole || role == Qt::EditRole){
+    if(role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
         case 0:
             return info->userName;
@@ -126,11 +135,11 @@ QVariant WinUserInfoModel::data ( const QModelIndex & index, int role) const{
             break;
 
         case 2:
-            return info->accountDisabled?tr("Disabled"):tr("Active");
+            return info->accountDisabled ? tr("Disabled") : tr("Active");
             break;
 
         case 3:
-            return info->loggedon?tr("Yes"):tr("No");
+            return info->loggedon ? tr("Yes") : tr("No");
             break;
 
         case 4:
@@ -147,7 +156,7 @@ QVariant WinUserInfoModel::data ( const QModelIndex & index, int role) const{
         }
     }
 
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return row;
     }
 
@@ -155,12 +164,13 @@ QVariant WinUserInfoModel::data ( const QModelIndex & index, int role) const{
 
 }
 
-QVariant WinUserInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant WinUserInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("User Name"));
@@ -197,9 +207,10 @@ QVariant WinUserInfoModel::headerData ( int section, Qt::Orientation orientation
 }
 
 
-void WinUserInfoModel::clearUsers(){
+void WinUserInfoModel::clearUsers()
+{
 
-    if(usersList.isEmpty()){
+    if(usersList.isEmpty()) {
         return;
     }
 
@@ -221,7 +232,7 @@ void WinUserInfoModel::clearUsers(){
 ////////////////////////////////////////////////////////////
 
 WinUserInfoSortFilterProxyModel::WinUserInfoSortFilterProxyModel(QObject *parent)
-    :QSortFilterProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 
 //    computerName = QRegExp(".*", Qt::CaseInsensitive);

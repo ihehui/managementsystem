@@ -17,7 +17,7 @@
 
 
 
-#include "systemsummaryinfo.h" 
+#include "systemsummaryinfo.h"
 
 
 #include "HHSharedCore/hglobal_core.h"
@@ -25,12 +25,13 @@
 #include "HHSharedNetwork/hnetworkutilities.h"
 
 #ifdef Q_OS_WIN
-#include "HHSharedWindowsManagement/hwindowsmanagement.h"
+    #include "HHSharedWindowsManagement/hwindowsmanagement.h"
 #endif
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 
@@ -59,7 +60,7 @@ SystemSummaryInfo::SystemSummaryInfo(QWidget *parent)
     WindowsManagement wm;
     ui.lineEditWorkgroup->setText(wm.getJoinInformation());
 
-    switch(QSysInfo::windowsVersion()){
+    switch(QSysInfo::windowsVersion()) {
     case QSysInfo::WV_2000:
         osInfo = "WIN_2000";
         break;
@@ -98,25 +99,25 @@ SystemSummaryInfo::SystemSummaryInfo(QWidget *parent)
     int count = ips.count();
 
 
-    if(count>=1){
+    if(count >= 1) {
         QHostAddress ip = ips.at(0);
         ui.lineEditPhysicalAddress1->setText(NetworkUtilities::hardwareAddress(ip));
         ui.lineEditIPAddress1->setText(ip.toString());
     }
 
-    if(count>=2){
+    if(count >= 2) {
         QHostAddress ip = ips.at(1);
         ui.lineEditPhysicalAddress2->setText(NetworkUtilities::hardwareAddress(ip));
         ui.lineEditIPAddress2->setText(ip.toString());
     }
 
-    if(count>=3){
+    if(count >= 3) {
         QHostAddress ip = ips.at(2);
         ui.lineEditPhysicalAddress3->setText(NetworkUtilities::hardwareAddress(ip));
         ui.lineEditIPAddress3->setText(ip.toString());
     }
 
-    if(count>=4){
+    if(count >= 4) {
         QHostAddress ip = ips.at(3);
         ui.lineEditPhysicalAddress4->setText(NetworkUtilities::hardwareAddress(ip));
         ui.lineEditIPAddress4->setText(ip.toString());
@@ -138,11 +139,13 @@ SystemSummaryInfo::~SystemSummaryInfo()
 }
 
 
-void SystemSummaryInfo::languageChange() {
+void SystemSummaryInfo::languageChange()
+{
     retranslateUi();
 }
 
-void SystemSummaryInfo::closeEvent(QCloseEvent *e) {
+void SystemSummaryInfo::closeEvent(QCloseEvent *e)
+{
 
     e->accept();
     deleteLater();
@@ -150,7 +153,8 @@ void SystemSummaryInfo::closeEvent(QCloseEvent *e) {
 }
 
 
-void SystemSummaryInfo::retranslateUi() {
+void SystemSummaryInfo::retranslateUi()
+{
 
     ui.retranslateUi(this);
 

@@ -46,10 +46,12 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
-class ServerPacketsParser : public QObject{
+class ServerPacketsParser : public QObject
+{
     Q_OBJECT
 public:
     ServerPacketsParser(ResourcesManagerInstance *manager, QObject *parent = 0);
@@ -61,7 +63,8 @@ public slots:
     void parseIncomingPacketData(const PacketBase &packet);
 
 
-    bool sendServerDeclarePacket(const QHostAddress peerAddress, quint16 peerPort){
+    bool sendServerDeclarePacket(const QHostAddress peerAddress, quint16 peerPort)
+    {
 
         qsrand(QDateTime::currentDateTime().toTime_t());
         static int serverInstanceID = qrand();
@@ -77,7 +80,8 @@ public slots:
         return m_udpServer->sendDatagram(packet.toByteArray(), peerAddress, peerPort);
     }
 
-    bool sendServerMessagePacket(int adminSocketID, const QString &message, quint8 messageType = quint8(MS::MSG_Information)){
+    bool sendServerMessagePacket(int adminSocketID, const QString &message, quint8 messageType = quint8(MS::MSG_Information))
+    {
 
         MessagePacket packet;
         packet.msgType = messageType;
@@ -87,7 +91,8 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendJobFinishedPacket(int adminSocketID, quint32 jobID, quint8 result, const QVariant &extraData){
+    bool sendJobFinishedPacket(int adminSocketID, quint32 jobID, quint8 result, const QVariant &extraData)
+    {
 
         JobProgressPacket packet;
         packet.jobID = jobID;
@@ -98,7 +103,8 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0){
+    bool sendRequestClientInfoPacket(const QString &peerAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 clientPort = quint16(IP_MULTICAST_GROUP_PORT), const QString &assetNO = "", quint8 infoType = 0)
+    {
 
         ClientInfoPacket packet;
         packet.IsRequest = 1;
@@ -107,7 +113,8 @@ public slots:
         return m_udpServer->sendDatagram(packet.toByteArray(), QHostAddress(peerAddress), clientPort);
     }
 
-    bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &assetNO = "", quint8 infoType = 0){
+    bool sendRequestClientInfoPacket(SOCKETID socketID, const QString &assetNO = "", quint8 infoType = 0)
+    {
 
         ClientInfoPacket packet;
         packet.IsRequest = 1;
@@ -117,8 +124,9 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendAdminLoginResultPacket(SOCKETID socketID, bool result, const QString &message, bool readonly){
-        qDebug()<<"----sendAdminLoginResultPacket(...)";
+    bool sendAdminLoginResultPacket(SOCKETID socketID, bool result, const QString &message, bool readonly)
+    {
+        qDebug() << "----sendAdminLoginResultPacket(...)";
 
         AdminLoginPacket packet;
         packet.InfoType = AdminLoginPacket::LOGIN_RESULT;
@@ -130,7 +138,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType){
+    bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType)
+    {
         //qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
 
         SystemInfoFromServerPacket packet;
@@ -142,8 +151,9 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendServerResponseModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO){
-        qWarning()<<"----sendServerResponseModifyAssetNOPacket(...) newAssetNO:"<<newAssetNO<<" oldAssetNO:"<<oldAssetNO;
+    bool sendServerResponseModifyAssetNOPacket(SOCKETID socketID, const QString &newAssetNO, const QString &oldAssetNO)
+    {
+        qWarning() << "----sendServerResponseModifyAssetNOPacket(...) newAssetNO:" << newAssetNO << " oldAssetNO:" << oldAssetNO;
 
         ModifyAssetNOPacket packet;
         packet.isRequest = 0;

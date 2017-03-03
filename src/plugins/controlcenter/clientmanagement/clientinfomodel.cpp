@@ -33,16 +33,18 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 ClientInfoModel::ClientInfoModel(QObject *parent)
-	:QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
-	// TODO Auto-generated constructor stub
+    // TODO Auto-generated constructor stub
 
 }
 
-ClientInfoModel::~ClientInfoModel() {
+ClientInfoModel::~ClientInfoModel()
+{
     clear();
 }
 
@@ -58,18 +60,20 @@ void ClientInfoModel::setClientList(QList<ClientInfo *> &clientsList)
     endResetModel();
 }
 
-void ClientInfoModel::addClientInfo(ClientInfo *clientInfo){
-    
-    if(!clientsList.contains(clientInfo)){
+void ClientInfoModel::addClientInfo(ClientInfo *clientInfo)
+{
+
+    if(!clientsList.contains(clientInfo)) {
         beginResetModel();
         this->clientsList.append(clientInfo);
         endResetModel();
     }
-        
+
 }
 
-void ClientInfoModel::updateClientInfo(ClientInfo *clientInfo){
-    if(!clientsList.contains(clientInfo)){
+void ClientInfoModel::updateClientInfo(ClientInfo *clientInfo)
+{
+    if(!clientsList.contains(clientInfo)) {
         return;
     }
 
@@ -78,9 +82,10 @@ void ClientInfoModel::updateClientInfo(ClientInfo *clientInfo){
     endResetModel();
 }
 
-ClientInfo* ClientInfoModel::getClientInfo(const QModelIndex & index){
+ClientInfo *ClientInfoModel::getClientInfo(const QModelIndex &index)
+{
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         return 0;
     }
 
@@ -88,10 +93,11 @@ ClientInfo* ClientInfoModel::getClientInfo(const QModelIndex & index){
 
 }
 
-ClientInfo * ClientInfoModel::getClientInfo(const QString &assetNO){
+ClientInfo *ClientInfoModel::getClientInfo(const QString &assetNO)
+{
 
     foreach (ClientInfo *info, clientsList) {
-        if(info->getAssetNO() == assetNO){
+        if(info->getAssetNO() == assetNO) {
             return info;
         }
     }
@@ -99,7 +105,8 @@ ClientInfo * ClientInfoModel::getClientInfo(const QString &assetNO){
     return 0;
 }
 
-void ClientInfoModel::clear(){
+void ClientInfoModel::clear()
+{
     beginResetModel();
 
     foreach (ClientInfo *info, clientsList) {
@@ -112,111 +119,114 @@ void ClientInfoModel::clear(){
     endResetModel();
 }
 
-int ClientInfoModel::rowCount ( const QModelIndex & parent) const {
-	if(parent.isValid()){
-		return 0;
-	}
-	return clientsList.size();
+int ClientInfoModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
+        return 0;
+    }
+    return clientsList.size();
 
 }
 
-int	 ClientInfoModel::columnCount ( const QModelIndex & parent) const{
-	if(parent.isValid()){
-		return 0;
-	}
+int	 ClientInfoModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
+        return 0;
+    }
 
     return 13;
 
 
 }
 
-QVariant ClientInfoModel::data ( const QModelIndex & index, int role) const{
-	if(!index.isValid()){
-		return QVariant();
-	}
+QVariant ClientInfoModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
+        return QVariant();
+    }
 
-	int row = index.row();
-	if((row < 0) || (row >= clientsList.size())){
-		return QVariant();
-	}
+    int row = index.row();
+    if((row < 0) || (row >= clientsList.size())) {
+        return QVariant();
+    }
 
     ClientInfo *info = static_cast<ClientInfo *> (clientsList.at(row));
     Q_ASSERT(info);
 
-    if(role == Qt::DisplayRole){
-            switch (index.column()) {
-            case 0:
-                return info->getAssetNO();
-                break;
+    if(role == Qt::DisplayRole) {
+        switch (index.column()) {
+        case 0:
+            return info->getAssetNO();
+            break;
 
-            case 1:
-                return info->getComputerName();
-                break;
+        case 1:
+            return info->getComputerName();
+            break;
 
-            case 2:
-                return info->getOSVersion();
-                break;
+        case 2:
+            return info->getOSVersion();
+            break;
 
-            case 3:
-                return info->getInstallationDate();
-                break;
+        case 3:
+            return info->getInstallationDate();
+            break;
 
-            case 4:
-                return info->getOsKey();
-                break;
+        case 4:
+            return info->getOsKey();
+            break;
 
-            case 5:
-                return info->getWorkgroup();
-                break;
+        case 5:
+            return info->getWorkgroup();
+            break;
 
-            case 6:
-                return info->isJoinedToDomain()?tr("Yes"):tr("No");
-                break;
+        case 6:
+            return info->isJoinedToDomain() ? tr("Yes") : tr("No");
+            break;
 
-            case 7:
-                return info->getUsers();
-                break;
+        case 7:
+            return info->getUsers();
+            break;
 
-            case 8:
-                return info->getAdministrators();
-                break;
+        case 8:
+            return info->getAdministrators();
+            break;
 
-            case 9:
-                return info->getIP();
-                break;
+        case 9:
+            return info->getIP();
+            break;
 
-            case 10:
-                return info->getClientVersion();
-                break;
+        case 10:
+            return info->getClientVersion();
+            break;
 
-            case 11:
-                return info->isProcessMonitorEnabled()?tr("Enabled"):tr("Disabled");
-                break;
+        case 11:
+            return info->isProcessMonitorEnabled() ? tr("Enabled") : tr("Disabled");
+            break;
 
-            case 12:
-                return getUsbSDStatusString(quint8(info->getUsbSDStatus()));
-                break;
+        case 12:
+            return getUsbSDStatusString(quint8(info->getUsbSDStatus()));
+            break;
 
-            case 13:
-                return info->getLastOnlineTime().toString("yyyy.MM.dd hh:mm:ss");
-                break;
+        case 13:
+            return info->getLastOnlineTime().toString("yyyy.MM.dd hh:mm:ss");
+            break;
 
-            default:
-                return QVariant();
-                break;
-            }
+        default:
+            return QVariant();
+            break;
+        }
     }
 
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return row;
     }
 
-    if(role == Qt::EditRole){
-        if(index.column() == 11){
-            return info->isProcessMonitorEnabled()?"1":"0";
+    if(role == Qt::EditRole) {
+        if(index.column() == 11) {
+            return info->isProcessMonitorEnabled() ? "1" : "0";
         }
 
-        if(index.column() == 12){
+        if(index.column() == 12) {
             return QString::number(quint8(info->getUsbSDStatus()));
         }
 
@@ -224,84 +234,86 @@ QVariant ClientInfoModel::data ( const QModelIndex & index, int role) const{
     }
 
 
-	return QVariant();
+    return QVariant();
 
 }
 
-QVariant ClientInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-	if(role != Qt::DisplayRole){
-		return QVariant();
-	}
+QVariant ClientInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
+        return QVariant();
+    }
 
-	if(orientation ==  Qt::Horizontal){
-            switch (section) {
-            case 0:
-                return QString(tr("Asset NO."));
-                break;
+    if(orientation ==  Qt::Horizontal) {
+        switch (section) {
+        case 0:
+            return QString(tr("Asset NO."));
+            break;
 
-            case 1:
-                return QString(tr("Computer Name"));
-                break;
+        case 1:
+            return QString(tr("Computer Name"));
+            break;
 
-            case 2:
-                return QString(tr("OS Version"));
-                break;
+        case 2:
+            return QString(tr("OS Version"));
+            break;
 
-            case 3:
-                return QString(tr("Installation Date"));
-                break;
+        case 3:
+            return QString(tr("Installation Date"));
+            break;
 
-            case 4:
-                return QString(tr("Product Key"));
-                break;
+        case 4:
+            return QString(tr("Product Key"));
+            break;
 
-            case 5:
-                return QString(tr("Workgroup"));
-                break; 
-            case 6:
-                return QString(tr("Joined To Domain"));
-                break; 
+        case 5:
+            return QString(tr("Workgroup"));
+            break;
+        case 6:
+            return QString(tr("Joined To Domain"));
+            break;
 
-            case 7:
-                return QString(tr("Users"));
-                break;
+        case 7:
+            return QString(tr("Users"));
+            break;
 
-            case 8:
-                return QString(tr("Administrators"));
-                break; 
+        case 8:
+            return QString(tr("Administrators"));
+            break;
 
-            case 9:
-                return QString(tr("IP"));
-                break;
+        case 9:
+            return QString(tr("IP"));
+            break;
 
-            case 10:
-                return QString(tr("ClientVersion"));
-                break; 
+        case 10:
+            return QString(tr("ClientVersion"));
+            break;
 
-            case 11:
-                return QString(tr("Process Monitor"));
-                break;
+        case 11:
+            return QString(tr("Process Monitor"));
+            break;
 
-            case 12:
-                return QString(tr("USB"));
-                break;
+        case 12:
+            return QString(tr("USB"));
+            break;
 
-            case 13:
-                return QString(tr("Last Online Time"));
-                break;
-                
-            default:
-                return QVariant();
-                break;
-            }
-            
-	}
+        case 13:
+            return QString(tr("Last Online Time"));
+            break;
 
-	return QVariant();
+        default:
+            return QVariant();
+            break;
+        }
+
+    }
+
+    return QVariant();
 
 }
 
-QString ClientInfoModel::getUsbSDStatusString(quint8 status) const{
+QString ClientInfoModel::getUsbSDStatusString(quint8 status) const
+{
 
     switch (status) {
     case quint8(MS::USBSTOR_ReadWrite):
@@ -329,7 +341,7 @@ QString ClientInfoModel::getUsbSDStatusString(quint8 status) const{
 ////////////////////////////////////////////////////////////
 
 ClientInfoSortFilterProxyModel::ClientInfoSortFilterProxyModel(QObject *parent)
-    :QSortFilterProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 
     assetNO = QRegExp(".*", Qt::CaseInsensitive);
@@ -342,7 +354,8 @@ ClientInfoSortFilterProxyModel::ClientInfoSortFilterProxyModel(QObject *parent)
     procMon = QRegExp(".*", Qt::CaseInsensitive);
 }
 
-void ClientInfoSortFilterProxyModel::cleanFilters(){
+void ClientInfoSortFilterProxyModel::cleanFilters()
+{
 
     assetNO = QRegExp(".*", Qt::CaseInsensitive);
     computerName = QRegExp(".*", Qt::CaseInsensitive);
@@ -356,7 +369,8 @@ void ClientInfoSortFilterProxyModel::cleanFilters(){
     invalidateFilter();
 }
 
-void ClientInfoSortFilterProxyModel::setFilters(const QRegExp &assetNO, const QRegExp &computerName, const QRegExp &os, const QRegExp &workgroup, const QRegExp &userName, const QRegExp &ip, const QRegExp &usbSD, const QRegExp &procMon){
+void ClientInfoSortFilterProxyModel::setFilters(const QRegExp &assetNO, const QRegExp &computerName, const QRegExp &os, const QRegExp &workgroup, const QRegExp &userName, const QRegExp &ip, const QRegExp &usbSD, const QRegExp &procMon)
+{
 
     this->assetNO = assetNO;
     this->computerName = computerName;
@@ -391,7 +405,7 @@ bool ClientInfoSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QMode
             && index5.data().toString().contains(ip)
             && indexProcMon.data(Qt::EditRole).toString().contains(procMon)
             && indexUSB.data(Qt::EditRole).toString().contains(procMon)
-            );
+           );
 
 }
 

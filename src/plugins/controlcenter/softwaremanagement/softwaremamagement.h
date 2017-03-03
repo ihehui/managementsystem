@@ -8,11 +8,13 @@
 
 
 
-namespace Ui {
+namespace Ui
+{
 class SoftwareMamagement;
 }
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class SoftwareMamagement : public QWidget
@@ -35,7 +37,7 @@ public slots:
     void setData(const QByteArray &data);
 
 private slots:
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
 
     void slotExportQueryResult();
     void slotPrintQueryResult();

@@ -47,7 +47,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 WinUserManagerWidget::WinUserManagerWidget(QWidget *parent) :
     QWidget(parent)
@@ -89,8 +90,9 @@ WinUserManagerWidget::WinUserManagerWidget(QWidget *parent) :
 
 }
 
-WinUserManagerWidget::~WinUserManagerWidget(){
-    qDebug()<<"--WinUserManagerWidget::~WinUserManagerWidget()";
+WinUserManagerWidget::~WinUserManagerWidget()
+{
+    qDebug() << "--WinUserManagerWidget::~WinUserManagerWidget()";
 
     activityTimer->stop();
     delete activityTimer;
@@ -98,24 +100,24 @@ WinUserManagerWidget::~WinUserManagerWidget(){
 
 }
 
-bool WinUserManagerWidget::eventFilter(QObject *obj, QEvent *event) {
+bool WinUserManagerWidget::eventFilter(QObject *obj, QEvent *event)
+{
 
-    switch(event->type()){
-    case QEvent::KeyRelease:
-    {
+    switch(event->type()) {
+    case QEvent::KeyRelease: {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *> (event);
 
-        if(keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down){
+        if(keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down) {
             getSelectedUser(ui.tableViewUsers->currentIndex());
         }
 
-        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_O){
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_O) {
             slotExportQueryResult();
         }
-        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_P){
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_P) {
             slotPrintQueryResult();
         }
-        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_E){
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_E) {
             //getSelectedADUser(ui.tableViewUsers->currentIndex());
             slotViewWinUserInfo(ui.tableViewUsers->currentIndex());
         }
@@ -126,27 +128,26 @@ bool WinUserManagerWidget::eventFilter(QObject *obj, QEvent *event) {
         activityTimer->start();
         return true;
     }
-        break;
+    break;
     case QEvent::MouseButtonPress:
-    case QEvent::Leave:
-    {
+    case QEvent::Leave: {
         activityTimer->start();
         //return QObject::eventFilter(obj, event);
     }
-        break;
-        //    case QEvent::ToolTip:
-        //    {
-        //        if(obj == ui.userPSWDLineEdit){
-        //            QString pwd = ui.userPSWDLineEdit->text();
-        //            if(pwd.isEmpty()){pwd = tr("Password");}
-        //            QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
-        //            QString tip = QString("<b><h1>%1</h1></b>").arg(pwd);
-        //            QToolTip::showText(helpEvent->globalPos(), tip);
-        //            return true;
-        //        }
+    break;
+    //    case QEvent::ToolTip:
+    //    {
+    //        if(obj == ui.userPSWDLineEdit){
+    //            QString pwd = ui.userPSWDLineEdit->text();
+    //            if(pwd.isEmpty()){pwd = tr("Password");}
+    //            QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+    //            QString tip = QString("<b><h1>%1</h1></b>").arg(pwd);
+    //            QToolTip::showText(helpEvent->globalPos(), tip);
+    //            return true;
+    //        }
 
-        //    }
-        //        break;
+    //    }
+    //        break;
     default:
         break;
         //return QObject::eventFilter(obj, event);
@@ -170,37 +171,44 @@ void WinUserManagerWidget::changeEvent(QEvent *e)
     }
 }
 
-void WinUserManagerWidget::setData(const QByteArray &data){
+void WinUserManagerWidget::setData(const QByteArray &data)
+{
     m_selectedWinUser = 0;
     m_userInfoModel->setJsonData(data);
 }
 
-bool WinUserManagerWidget::isActive(){
+bool WinUserManagerWidget::isActive()
+{
     return m_userInfoModel->rowCount();
 }
 
-void WinUserManagerWidget::on_actionExport_triggered(){
+void WinUserManagerWidget::on_actionExport_triggered()
+{
     slotExportQueryResult();
 }
 
-void WinUserManagerWidget::on_actionPrint_triggered(){
+void WinUserManagerWidget::on_actionPrint_triggered()
+{
     slotPrintQueryResult();
 }
 
 
 
-void WinUserManagerWidget::on_actionProperties_triggered(){
+void WinUserManagerWidget::on_actionProperties_triggered()
+{
     slotViewWinUserInfo(ui.tableViewUsers->currentIndex());
 }
 
-void WinUserManagerWidget::on_actionCreateNewAccount_triggered(){
+void WinUserManagerWidget::on_actionCreateNewAccount_triggered()
+{
     slotCreateUser(0);
 }
 
-void WinUserManagerWidget::on_actionDeleteAccount_triggered(){
+void WinUserManagerWidget::on_actionDeleteAccount_triggered()
+{
 
     QModelIndex index = ui.tableViewUsers->currentIndex();
-    if(!index.isValid()){
+    if(!index.isValid()) {
         return;
     }
 
@@ -208,34 +216,41 @@ void WinUserManagerWidget::on_actionDeleteAccount_triggered(){
     slotDeleteUser();
 }
 
-void WinUserManagerWidget::on_actionSendMessage_triggered(){
+void WinUserManagerWidget::on_actionSendMessage_triggered()
+{
     emit signalSendMessageToUser(m_selectedWinUser->userName);
 }
 
-void WinUserManagerWidget::on_actionMonitorDesktop_triggered(){
+void WinUserManagerWidget::on_actionMonitorDesktop_triggered()
+{
     emit signalMonitorUserDesktop(m_selectedWinUser->userName);
 }
 
-void WinUserManagerWidget::on_actionLogoff_triggered(){
+void WinUserManagerWidget::on_actionLogoff_triggered()
+{
     emit signalLockWindows(m_selectedWinUser->userName, true);
 }
 
-void WinUserManagerWidget::on_actionLockDesktop_triggered(){
+void WinUserManagerWidget::on_actionLockDesktop_triggered()
+{
     emit signalLockWindows(m_selectedWinUser->userName, false);
 }
 
-void WinUserManagerWidget::on_actionRefresh_triggered(){
+void WinUserManagerWidget::on_actionRefresh_triggered()
+{
     slotRefresh();
 }
 
-void WinUserManagerWidget::slotExportQueryResult(){
+void WinUserManagerWidget::slotExportQueryResult()
+{
 
     DataOutputDialog dlg(ui.tableViewUsers, DataOutputDialog::EXPORT, this);
     dlg.exec();
 
 }
 
-void WinUserManagerWidget::slotPrintQueryResult(){
+void WinUserManagerWidget::slotPrintQueryResult()
+{
 
 #ifndef QT_NO_PRINTER
     //TODO
@@ -245,8 +260,9 @@ void WinUserManagerWidget::slotPrintQueryResult(){
 
 }
 
-void WinUserManagerWidget::slotViewWinUserInfo(const QModelIndex &index){
-    if(!index.isValid()){
+void WinUserManagerWidget::slotViewWinUserInfo(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return;
     }
 
@@ -255,36 +271,38 @@ void WinUserManagerWidget::slotViewWinUserInfo(const QModelIndex &index){
 
 }
 
-void WinUserManagerWidget::slotCreateUser(WinUserInfo *adUser){
+void WinUserManagerWidget::slotCreateUser(WinUserInfo *adUser)
+{
     showUserInfoWidget(adUser, true);
 }
 
-void WinUserManagerWidget::slotDeleteUser(){
+void WinUserManagerWidget::slotDeleteUser()
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
-    if(!m_selectedWinUser){
+    if(!m_selectedWinUser) {
         return;
     }
 
     QString sAMAccountName = m_selectedWinUser->userName;
-    if(sAMAccountName.isEmpty()){
+    if(sAMAccountName.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Failed to find SAM AccountName"));
         return;
     }
 
     int ret = QMessageBox::warning(this, tr("Warning"),
                                    tr("<font color=red><b> Deletion is not reversible! <p>Do you want to delete user '%1'?<p> </b></font>").arg(sAMAccountName),
-                                   QMessageBox::Yes|QMessageBox::No,
+                                   QMessageBox::Yes | QMessageBox::No,
                                    QMessageBox::No
-                                   );
-    if(ret == QMessageBox::No){
+                                  );
+    if(ret == QMessageBox::No) {
         return;
     }
 
-    if(m_selectedWinUser->loggedon){
+    if(m_selectedWinUser->loggedon) {
         emit signalLockWindows(m_selectedWinUser->userName, true);
     }
     emit signalDeleteUser(sAMAccountName);
@@ -293,14 +311,16 @@ void WinUserManagerWidget::slotDeleteUser(){
 
 }
 
-void WinUserManagerWidget::slotRefresh(){
+void WinUserManagerWidget::slotRefresh()
+{
     emit signalGetUsersInfo();
 }
 
-void WinUserManagerWidget::showUserInfoWidget(WinUserInfo *adUser, bool creareNewUser){
-    qDebug()<<"--WinUserManagerWidget::showADUserInfoWidget(...)";
+void WinUserManagerWidget::showUserInfoWidget(WinUserInfo *adUser, bool creareNewUser)
+{
+    qDebug() << "--WinUserManagerWidget::showADUserInfoWidget(...)";
 
-    if(creareNewUser && !verifyPrivilege()){
+    if(creareNewUser && !verifyPrivilege()) {
         return;
     }
 
@@ -311,31 +331,32 @@ void WinUserManagerWidget::showUserInfoWidget(WinUserInfo *adUser, bool creareNe
     WinUserInfoWidget wgt(adUser, &dlg);
     connect(&wgt, SIGNAL(signalChangesSaved()), this, SLOT(slotRefresh()));
     connect(&wgt, SIGNAL(signalCloseWidget()), &dlg, SLOT(accept()));
-    connect(&wgt, SIGNAL(signalCreateOrModifyWinUser(const QByteArray&)), this, SIGNAL(signalCreateOrModifyWinUser(const QByteArray&)));
+    connect(&wgt, SIGNAL(signalCreateOrModifyWinUser(const QByteArray &)), this, SIGNAL(signalCreateOrModifyWinUser(const QByteArray &)));
 
     connect(activityTimer, SIGNAL(timeout()), &dlg, SLOT(accept()));
 
     vbl.addWidget(&wgt);
     dlg.setLayout(&vbl);
     dlg.updateGeometry();
-    if(creareNewUser){
+    if(creareNewUser) {
         dlg.setWindowTitle(tr("Create New User"));
-    }else{
+    } else {
         dlg.setWindowTitle(tr("User Info"));
     }
     dlg.exec();
 
 }
 
-void WinUserManagerWidget::slotResetUserPassword(){
+void WinUserManagerWidget::slotResetUserPassword()
+{
 
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
     QString sAMAccountName = m_selectedWinUser->userName;
-    if(sAMAccountName.isEmpty()){
+    if(sAMAccountName.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Failed to find SAM AccountName"));
         return;
     }
@@ -346,14 +367,14 @@ void WinUserManagerWidget::slotResetUserPassword(){
         QString text = QInputDialog::getText(this, tr("Reset Password"),
                                              tr("New Password(8 Characters MIN.):"), QLineEdit::Password,
                                              "", &ok);
-        if (ok && !text.isEmpty()){
+        if (ok && !text.isEmpty()) {
             newPassword = text.trimmed();
-            if(newPassword.size() < 8){
+            if(newPassword.size() < 8) {
                 QMessageBox::critical(this, tr("Error"), tr("At least 8 characters are required fro the password!"));
-            }else{
+            } else {
                 break;
             }
-        }else{
+        } else {
             return;
         }
 
@@ -364,13 +385,13 @@ void WinUserManagerWidget::slotResetUserPassword(){
         QString text = QInputDialog::getText(this, tr("Reset Password"),
                                              tr("Confirm Password:"), QLineEdit::Password,
                                              "", &ok);
-        if (ok && !text.isEmpty()){
-            if(newPassword != text.trimmed() ){
+        if (ok && !text.isEmpty()) {
+            if(newPassword != text.trimmed() ) {
                 QMessageBox::critical(this, tr("Error"), tr("Passwords do not match!"));
-            }else{
+            } else {
                 break;
             }
-        }else{
+        } else {
             return;
         }
 
@@ -386,17 +407,18 @@ void WinUserManagerWidget::slotResetUserPassword(){
 
 }
 
-void WinUserManagerWidget::slotShowCustomContextMenu(const QPoint & pos){
+void WinUserManagerWidget::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *tableView = qobject_cast<QTableView*> (sender());
-    if (!tableView){
+    QTableView *tableView = qobject_cast<QTableView *> (sender());
+    if (!tableView) {
         return;
     }
 
 
     QMenu menu(this);
     menu.addAction(ui.actionRefresh);
-    if(!m_selectedWinUser){
+    if(!m_selectedWinUser) {
         menu.exec(tableView->viewport()->mapToGlobal(pos));
         return;
     }
@@ -438,10 +460,11 @@ void WinUserManagerWidget::slotShowCustomContextMenu(const QPoint & pos){
 
 }
 
-void WinUserManagerWidget::getSelectedUser(const QModelIndex &index){
+void WinUserManagerWidget::getSelectedUser(const QModelIndex &index)
+{
 
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         m_selectedWinUser = 0;
         return;
     }
@@ -457,11 +480,11 @@ void WinUserManagerWidget::getSelectedUser(const QModelIndex &index){
     bool enableModify = true;
     bool userSelected = false;
     bool userLoggedon = false;
-    if(m_selectedWinUser){
-        if(m_selectedWinUser->userName .toLower() == "administrator"){
+    if(m_selectedWinUser) {
+        if(m_selectedWinUser->userName .toLower() == "administrator") {
             enableModify = false;
         }
-        if(m_selectedWinUser->loggedon){
+        if(m_selectedWinUser->loggedon) {
             userLoggedon = true;
         }
         userSelected = true;
@@ -478,17 +501,19 @@ void WinUserManagerWidget::getSelectedUser(const QModelIndex &index){
 
 }
 
-void WinUserManagerWidget::activityTimeout(){
+void WinUserManagerWidget::activityTimeout()
+{
     m_verified = false;
 }
 
-bool WinUserManagerWidget::verifyPrivilege(){
+bool WinUserManagerWidget::verifyPrivilege()
+{
 
     AdminUser *adminUser = AdminUser::instance();
-    if(!adminUser->isAdminVerified()){
+    if(!adminUser->isAdminVerified()) {
         return false;
     }
-    if(adminUser->isReadonly()){
+    if(adminUser->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }

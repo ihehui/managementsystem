@@ -26,13 +26,13 @@ int main(int argc, char **argv)
 //    qWarning("(Example uses dummy settings file: %s/QtSoftware.conf)", QDir::tempPath().toLatin1().constData());
 //#endif
 
-     //QCoreApplication app(argc, argv);
+    //QCoreApplication app(argc, argv);
 
 
     //HEHUI::ClientService service(argc, argv, "ClientService", "Client Service For Computer Management System");
     HEHUI::ClientService service(argc, argv, SERVICE_NAME, APP_NAME);
 
-    std::cout<<qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION))<<std::endl<<std::endl;
+    std::cout << qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION)) << std::endl << std::endl;
 
 
 

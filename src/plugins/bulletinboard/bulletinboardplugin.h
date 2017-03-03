@@ -48,64 +48,66 @@
 
 #include "bulletinboardobject.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-class BulletinBoardPlugin : public GUIPluginBase/*, public QObject*/   {
-	Q_OBJECT
+class BulletinBoardPlugin : public GUIPluginBase/*, public QObject*/
+{
+    Q_OBJECT
 
     //Export Plugin
     Q_PLUGIN_METADATA(IID AbstractPluginInterface_IID)
     Q_PLUGIN_METADATA(IID GUIInterface_IID)
 
-    
+
 public:
     BulletinBoardPlugin();
     virtual ~BulletinBoardPlugin();
-    
+
     bool isSingle();
     QString name () const;
     QString version() const;
     QString description() const;
-    
+
     QIcon icon () const;
     QString whatsThis () const;
     QString toolTip () const;
-    
-    QAction * mainActionForMenu();    
-    
+
+    QAction *mainActionForMenu();
+
     bool unload();
-    
+
 signals:
 
-    
+
 public slots:
-    void sloSystemSummaryInfoWidgetDestoryed(QObject * obj);
-    
+    void sloSystemSummaryInfoWidgetDestoryed(QObject *obj);
+
 private slots:
     void retranslateUi();
     void slotMainActionForMenuTriggered();
-    
+
 //    void networkReady();
 
 //    void adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName);
 //    void AdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword );
 //    void serverAnnouncementPacketReceived(const QString &adminName, const QString &announcement);
-    
+
 //    void test(const QString &msg);
-     
+
 private:
     QList<SystemSummaryInfo *> systemSummaryInfoWidgetList;
-    
+
     QAction *actionMain;
-    
+
 //    bool m_networkReady;
 //    NetworkManager *networkManager;
 //    BulletinBoardPacketsParser *bulletinBoardPacketsParser;
-    
+
 //    RemoteAssistance *remoteAssistance;
 //    BulletinBoardWidget *bulletinBoardWidget;
 //    UpdatePasswordWidget *updatePasswordWidget;
-    
+
 
     BulletinBoardObject *bulletinBoardObject;
 

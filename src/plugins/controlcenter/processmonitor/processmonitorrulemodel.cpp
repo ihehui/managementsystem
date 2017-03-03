@@ -5,30 +5,33 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 ProcessMonitorRuleModel::ProcessMonitorRuleModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
     // TODO Auto-generated constructor stub
 
 }
 
-ProcessMonitorRuleModel::~ProcessMonitorRuleModel() {
+ProcessMonitorRuleModel::~ProcessMonitorRuleModel()
+{
     clearRules();
 }
 
-void ProcessMonitorRuleModel::setJsonData(const QJsonArray &array){
-    qDebug()<<"--ProcessMonitorRuleModel::setJsonData(...)";
+void ProcessMonitorRuleModel::setJsonData(const QJsonArray &array)
+{
+    qDebug() << "--ProcessMonitorRuleModel::setJsonData(...)";
 
     clearRules();
 
     beginResetModel();
 
-    for(int i=0;i<array.size();i++){
+    for(int i = 0; i < array.size(); i++) {
         QJsonArray infoArray = array.at(i).toArray();
-        if(infoArray.size() != 5){
-            qCritical()<<"ERROR! Invalid JSON array.";
+        if(infoArray.size() != 5) {
+            qCritical() << "ERROR! Invalid JSON array.";
             continue;
         }
 
@@ -47,11 +50,14 @@ void ProcessMonitorRuleModel::setJsonData(const QJsonArray &array){
     endResetModel();
 }
 
-QJsonArray ProcessMonitorRuleModel::getLocalRulesJsonData(){
+QJsonArray ProcessMonitorRuleModel::getLocalRulesJsonData()
+{
     QJsonArray array;
 
     foreach (ProcessMonitorRule *rule, rulesList) {
-        if(rule->globalRule){continue;}
+        if(rule->globalRule) {
+            continue;
+        }
         QJsonArray infoArray;
         infoArray.append(rule->ruleString);
         infoArray.append(rule->comment);
@@ -65,9 +71,12 @@ QJsonArray ProcessMonitorRuleModel::getLocalRulesJsonData(){
 
 }
 
-void ProcessMonitorRuleModel::addLocalRule(const QString &ruleString, const QString &comment, bool  hashRule, bool blacklistRule){
+void ProcessMonitorRuleModel::addLocalRule(const QString &ruleString, const QString &comment, bool  hashRule, bool blacklistRule)
+{
 
-    if(ruleExists(ruleString)){return;}
+    if(ruleExists(ruleString)) {
+        return;
+    }
 
     beginResetModel();
 
@@ -83,12 +92,13 @@ void ProcessMonitorRuleModel::addLocalRule(const QString &ruleString, const QStr
 
 }
 
-void ProcessMonitorRuleModel::deleteRule(const QString &ruleString){
+void ProcessMonitorRuleModel::deleteRule(const QString &ruleString)
+{
 
     beginResetModel();
 
     foreach (ProcessMonitorRule *rule, rulesList) {
-        if(rule->ruleString.toLower() == ruleString.toLower()){
+        if(rule->ruleString.toLower() == ruleString.toLower()) {
             rulesList.removeAll(rule);
             delete rule;
             return;
@@ -99,8 +109,9 @@ void ProcessMonitorRuleModel::deleteRule(const QString &ruleString){
 
 }
 
-void ProcessMonitorRuleModel::deleteRule(const QModelIndex & index){
-    if(!index.isValid()){
+void ProcessMonitorRuleModel::deleteRule(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return;
     }
 
@@ -112,18 +123,20 @@ void ProcessMonitorRuleModel::deleteRule(const QModelIndex & index){
 
 }
 
-ProcessMonitorRule * ProcessMonitorRuleModel::getRule(const QModelIndex & index){
-    if(!index.isValid()){
+ProcessMonitorRule *ProcessMonitorRuleModel::getRule(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return 0;
     }
 
     return rulesList.at(index.data(Qt::UserRole).toInt());
 }
 
-bool ProcessMonitorRuleModel::ruleExists(const QString &ruleString){
+bool ProcessMonitorRuleModel::ruleExists(const QString &ruleString)
+{
 
     foreach (ProcessMonitorRule *rule, rulesList) {
-        if(rule->ruleString.toLower() == ruleString.toLower()){
+        if(rule->ruleString.toLower() == ruleString.toLower()) {
             return true;
         }
     }
@@ -132,16 +145,18 @@ bool ProcessMonitorRuleModel::ruleExists(const QString &ruleString){
 
 }
 
-int ProcessMonitorRuleModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int ProcessMonitorRuleModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return rulesList.size();
 
 }
 
-int	 ProcessMonitorRuleModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 ProcessMonitorRuleModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
 
@@ -149,29 +164,30 @@ int	 ProcessMonitorRuleModel::columnCount ( const QModelIndex & parent) const{
 
 }
 
-QVariant ProcessMonitorRuleModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant ProcessMonitorRuleModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= rulesList.size())){
+    if((row < 0) || (row >= rulesList.size())) {
         return QVariant();
     }
 
     ProcessMonitorRule *info = static_cast<ProcessMonitorRule *> (rulesList.at(row));
-    if(role == Qt::DisplayRole || role == Qt::EditRole){
+    if(role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
         case 0:
             return info->ruleString;
             break;
 
         case 1:
-            return info->globalRule?tr("Global"):tr("Local");
+            return info->globalRule ? tr("Global") : tr("Local");
             break;
 
         case 2:
-            return info->hashRule?tr("Hash"):tr("Path");
+            return info->hashRule ? tr("Hash") : tr("Path");
             break;
 
         case 3:
@@ -184,7 +200,7 @@ QVariant ProcessMonitorRuleModel::data ( const QModelIndex & index, int role) co
         }
     }
 
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return row;
     }
 
@@ -192,12 +208,13 @@ QVariant ProcessMonitorRuleModel::data ( const QModelIndex & index, int role) co
 
 }
 
-QVariant ProcessMonitorRuleModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant ProcessMonitorRuleModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("Rule"));
@@ -228,9 +245,10 @@ QVariant ProcessMonitorRuleModel::headerData ( int section, Qt::Orientation orie
 }
 
 
-void ProcessMonitorRuleModel::clearRules(){
+void ProcessMonitorRuleModel::clearRules()
+{
 
-    if(rulesList.isEmpty()){
+    if(rulesList.isEmpty()) {
         return;
     }
 
@@ -252,7 +270,7 @@ void ProcessMonitorRuleModel::clearRules(){
 ////////////////////////////////////////////////////////////
 
 ProcessMonitorRuleSortFilterProxyModel::ProcessMonitorRuleSortFilterProxyModel(QObject *parent)
-    :QSortFilterProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 
     //    computerName = QRegExp(".*", Qt::CaseInsensitive);

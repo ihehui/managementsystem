@@ -3,7 +3,7 @@
 TaskManagement::TaskManagement(QWidget *parent)
     : QWidget(parent)
 {
-	ui.setupUi(this);
+    ui.setupUi(this);
 }
 
 TaskManagement::~TaskManagement()

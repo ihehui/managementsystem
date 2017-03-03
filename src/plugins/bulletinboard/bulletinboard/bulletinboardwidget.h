@@ -10,7 +10,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class BulletinBoardWidget : public QWidget
 {
@@ -23,7 +24,7 @@ public:
 
     void showServerAnnouncement(const QString &adminName, quint32 announcementID, const QString &serverAnnouncement);
 
- 
+
 public slots:
 
 
@@ -39,11 +40,11 @@ private:
     Ui::SystemManagementWidgetClass ui;
 
     QHash<quint32/*announcementID*/, QString/*Announcement*/> announcements;
-    
+
     int curAnnouncementIndex;
     int totalCount;
 
-  
+
 
 
 };

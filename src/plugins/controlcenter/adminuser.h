@@ -9,7 +9,8 @@
 #include "../../sharedms/rtp.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class AdminUser : public UserBase
@@ -17,10 +18,10 @@ class AdminUser : public UserBase
     Q_OBJECT
 
 private:
-     AdminUser();
+    AdminUser();
 
 public:
-    static AdminUser * instance();
+    static AdminUser *instance();
     ~AdminUser();
 
     void init(RTP *rtp, ControlCenterPacketsParser *controlCenterPacketsParser, QObject *parent);

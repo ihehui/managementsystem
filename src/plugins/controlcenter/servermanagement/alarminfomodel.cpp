@@ -7,11 +7,12 @@
 
 #include "../../sharedms/global_shared.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AlarmInfoModel::AlarmInfoModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
 
 }
@@ -26,12 +27,14 @@ void AlarmInfoModel::setJsonData(const QByteArray &jsonData)
 
     clear();
 
-    if(jsonData.isEmpty()){return;}
+    if(jsonData.isEmpty()) {
+        return;
+    }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
@@ -39,10 +42,10 @@ void AlarmInfoModel::setJsonData(const QByteArray &jsonData)
 
     beginResetModel();
 
-    for(int i=0;i<jsonArray.size(); i++){
+    for(int i = 0; i < jsonArray.size(); i++) {
         QJsonArray infoArray = jsonArray.at(i).toArray();
-        if(infoArray.size() != 8){
-            qCritical()<<"ERROR! Invalid JSON array.";
+        if(infoArray.size() != 8) {
+            qCritical() << "ERROR! Invalid JSON array.";
             continue;
         }
 
@@ -64,7 +67,8 @@ void AlarmInfoModel::setJsonData(const QByteArray &jsonData)
     endResetModel();
 }
 
-void AlarmInfoModel::clear(){
+void AlarmInfoModel::clear()
+{
     beginResetModel();
 
     foreach (AlarmInfo *info, infolist) {
@@ -76,32 +80,36 @@ void AlarmInfoModel::clear(){
     endResetModel();
 }
 
-AlarmInfo * AlarmInfoModel::getAlarmInfo(const QModelIndex &index){
-    if(!index.isValid()){
+AlarmInfo *AlarmInfoModel::getAlarmInfo(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return 0;
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt());
 }
 
-QString AlarmInfoModel::getAlarmInfoID(const QModelIndex & index){
-    if(!index.isValid()){
+QString AlarmInfoModel::getAlarmInfoID(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return "0";
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt())->ID;
 }
 
-int AlarmInfoModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int AlarmInfoModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return infolist.size();
 
 }
 
-int	 AlarmInfoModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 AlarmInfoModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
 
@@ -109,25 +117,25 @@ int	 AlarmInfoModel::columnCount ( const QModelIndex & parent) const{
 
 }
 
-QVariant AlarmInfoModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant AlarmInfoModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= infolist.size())){
+    if((row < 0) || (row >= infolist.size())) {
         return QVariant();
     }
 
     AlarmInfo *info = static_cast<AlarmInfo *> (infolist.at(row));
-    if(role == Qt::DisplayRole){
+    if(role == Qt::DisplayRole) {
         switch (index.column()) {
         case 0:
             return info->AssetNO;
             break;
 
-        case 1:
-        {
+        case 1: {
             switch (info->AlarmType) {
             case quint8(MS::ALARM_HARDWARECHANGE):
                 return QString(tr("Hardware Changed"));
@@ -143,7 +151,7 @@ QVariant AlarmInfoModel::data ( const QModelIndex & index, int role) const{
             }
 
         }
-            break;
+        break;
 
         case 2:
             return info->Message;
@@ -154,7 +162,7 @@ QVariant AlarmInfoModel::data ( const QModelIndex & index, int role) const{
             break;
 
         case 4:
-            return info->Acknowledged?tr("Yes"):tr("No");
+            return info->Acknowledged ? tr("Yes") : tr("No");
             break;
 
         case 5:
@@ -171,19 +179,19 @@ QVariant AlarmInfoModel::data ( const QModelIndex & index, int role) const{
         }
     }
 
-    if(role == Qt::EditRole){
-        if(index.column() == 1){
+    if(role == Qt::EditRole) {
+        if(index.column() == 1) {
             return QString::number(info->AlarmType);
         }
 
-        if(index.column() == 4){
-            return info->Acknowledged?"1":"0";
+        if(index.column() == 4) {
+            return info->Acknowledged ? "1" : "0";
         }
 
         return index.data(Qt::DisplayRole);
     }
 
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return row;
     }
 
@@ -191,12 +199,13 @@ QVariant AlarmInfoModel::data ( const QModelIndex & index, int role) const{
 
 }
 
-QVariant AlarmInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant AlarmInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("Asset NO."));
@@ -244,7 +253,7 @@ QVariant AlarmInfoModel::headerData ( int section, Qt::Orientation orientation, 
 ////////////////////////////////////////////////////////////
 
 AlarmInfoSortFilterProxyModel::AlarmInfoSortFilterProxyModel(QObject *parent)
-    :QSortFilterProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 
     assetNO = QRegExp(".*", Qt::CaseInsensitive);
@@ -253,7 +262,8 @@ AlarmInfoSortFilterProxyModel::AlarmInfoSortFilterProxyModel(QObject *parent)
 
 }
 
-void AlarmInfoSortFilterProxyModel::cleanFilters(){
+void AlarmInfoSortFilterProxyModel::cleanFilters()
+{
 
     assetNO = QRegExp(".*", Qt::CaseInsensitive);
     type = QRegExp(".*", Qt::CaseInsensitive);
@@ -262,7 +272,8 @@ void AlarmInfoSortFilterProxyModel::cleanFilters(){
     invalidateFilter();
 }
 
-void AlarmInfoSortFilterProxyModel::setFilters(const QRegExp &assetNO, const QRegExp &type, const QRegExp &acknowledged){
+void AlarmInfoSortFilterProxyModel::setFilters(const QRegExp &assetNO, const QRegExp &type, const QRegExp &acknowledged)
+{
 
     this->assetNO = assetNO;
     this->type = type;
@@ -282,7 +293,7 @@ bool AlarmInfoSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QModel
             && indexType.data(Qt::EditRole).toString().contains(type)
             && indexAcknowledged.data(Qt::EditRole).toString().contains(acknowledged)
 
-            );
+           );
 
 }
 

@@ -39,38 +39,41 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-class ClientInfoModel : public QAbstractTableModel {
-	Q_OBJECT
+class ClientInfoModel : public QAbstractTableModel
+{
+    Q_OBJECT
 
 public:
-	ClientInfoModel(QObject *parent = 0);
-	virtual ~ClientInfoModel();
+    ClientInfoModel(QObject *parent = 0);
+    virtual ~ClientInfoModel();
 
-    void setClientList(QList<ClientInfo*> &clientsList);
+    void setClientList(QList<ClientInfo *> &clientsList);
     void addClientInfo(ClientInfo *clientInfo);
     void updateClientInfo(ClientInfo *clientInfo);
-    ClientInfo * getClientInfo(const QModelIndex & index);
-    ClientInfo * getClientInfo(const QString &assetNO);
+    ClientInfo *getClientInfo(const QModelIndex &index);
+    ClientInfo *getClientInfo(const QString &assetNO);
 
     void clear();
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
 private:
     QString getUsbSDStatusString(quint8 status) const;
 
 private:
-	QList<ClientInfo *> clientsList;
+    QList<ClientInfo *> clientsList;
 
 
 };
 
-class ClientInfoSortFilterProxyModel : public QSortFilterProxyModel{
+class ClientInfoSortFilterProxyModel : public QSortFilterProxyModel
+{
     Q_OBJECT
 
 public:

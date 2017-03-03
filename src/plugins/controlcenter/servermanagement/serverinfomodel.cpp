@@ -29,36 +29,40 @@
 
 #include "serverinfomodel.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 ServerInfoModel::ServerInfoModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
     // TODO Auto-generated constructor stub
 
 }
 
-ServerInfoModel::~ServerInfoModel() {
+ServerInfoModel::~ServerInfoModel()
+{
     serversList.clear();
 }
 
-void ServerInfoModel::setServersList(QList<ServerInfo*> serversList)
+void ServerInfoModel::setServersList(QList<ServerInfo *> serversList)
 {
     beginResetModel();
     this->serversList = serversList;
     endResetModel();
 }
 
-int ServerInfoModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int ServerInfoModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return serversList.size();
 
 }
 
-int	 ServerInfoModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 ServerInfoModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
 
@@ -67,17 +71,18 @@ int	 ServerInfoModel::columnCount ( const QModelIndex & parent) const{
 
 }
 
-QVariant ServerInfoModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant ServerInfoModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= serversList.size())){
+    if((row < 0) || (row >= serversList.size())) {
         return QVariant();
     }
 
-    if(role == Qt::DisplayRole || role == Qt::EditRole){
+    if(role == Qt::DisplayRole || role == Qt::EditRole) {
         ServerInfo *info = static_cast<ServerInfo *> (serversList.at(row));
         switch (index.column()) {
         case 0:
@@ -88,8 +93,7 @@ QVariant ServerInfoModel::data ( const QModelIndex & index, int role) const{
             return info->serverPort;
             break;
 
-        case 2:
-        {
+        case 2: {
             switch (info->currentState) {
             case ServerInfo::NotTested:
                 return QString(tr("Unknown"));
@@ -108,7 +112,7 @@ QVariant ServerInfoModel::data ( const QModelIndex & index, int role) const{
                 break;
             }
         }
-            break;
+        break;
 
         case 3:
             return info->version;
@@ -129,12 +133,13 @@ QVariant ServerInfoModel::data ( const QModelIndex & index, int role) const{
 
 }
 
-QVariant ServerInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant ServerInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("IP"));

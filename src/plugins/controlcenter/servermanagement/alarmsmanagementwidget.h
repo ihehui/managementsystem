@@ -7,11 +7,13 @@
 #include "../adminuser.h"
 
 
-namespace Ui {
+namespace Ui
+{
 class AlarmsManagementWidget;
 }
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class AlarmsManagementWidget : public QWidget
@@ -40,7 +42,7 @@ private slots:
     void requestAcknowledgeAlarms(bool deleteAlarms = false);
 
 
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
     void getSelectedInfo(const QModelIndex &index);
 
     bool verifyPrivilege();
@@ -63,7 +65,7 @@ private:
 
     QStringList m_selectedInfoList;
 
-    enum Period{
+    enum Period {
         Period_Custom = 0,
         Period_Today,
         Period_Last_24_Hours,

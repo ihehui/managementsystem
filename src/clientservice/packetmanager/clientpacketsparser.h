@@ -44,10 +44,12 @@
 #include "HHSharedNetwork/hnetworkutilities.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
-class ClientPacketsParser : public QObject{
+class ClientPacketsParser : public QObject
+{
     Q_OBJECT
 public:
     ClientPacketsParser(const QString &assetNO, ClientResourcesManager *manager, QObject *parent = 0);
@@ -71,18 +73,19 @@ public slots:
     void setAssetNO(const QString &assetNO);
 
 
-    bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = IP_MULTICAST_GROUP_PORT){
-        qDebug()<<"----sendClientLookForServerPacket(...) targetAddress:"<<targetAddress;
+    bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = IP_MULTICAST_GROUP_PORT)
+    {
+        qDebug() << "----sendClientLookForServerPacket(...) targetAddress:" << targetAddress;
 
         QHostAddress address = QHostAddress(targetAddress);
-        if(address.isNull()){
+        if(address.isNull()) {
             address = QHostAddress(QString(IP_MULTICAST_GROUP_ADDRESS));
         }
         quint16 port = targetPort;
-        if(!port){
+        if(!port) {
             port = IP_MULTICAST_GROUP_PORT;
         }
-        
+
         ServerDiscoveryPacket packet;
         packet.responseFromServer = 0;
         packet.version = QString(APP_VERSION);
@@ -93,13 +96,15 @@ public slots:
     }
 
 
-    bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &userName){
-        qDebug()<<"----sendRequestAnnouncementsPacket(...)";
+    bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &userName)
+    {
+        qDebug() << "----sendRequestAnnouncementsPacket(...)";
         return sendRequestAnnouncementsPacket(serverSocketID, "", "", "1", m_assetNO, userName, "-1", "1970-01-01", "2099-01-01");
     }
 
-    bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime){
-        qDebug()<<"----sendRequestAnnouncementsPacket(...)";
+    bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime)
+    {
+        qDebug() << "----sendRequestAnnouncementsPacket(...)";
 
         AnnouncementPacket packet;
         packet.InfoType = AnnouncementPacket::ANNOUNCEMENT_QUERY;
@@ -116,8 +121,9 @@ public slots:
         return m_rtp->sendReliableData(serverSocketID, &ba);
     }
 
-    bool sendUserReplyMessagePacket(SOCKETID socketID, unsigned int announcementID, const QString &sender, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage){
-        qWarning()<<"----sendUserReplyMessagePacket(...):";
+    bool sendUserReplyMessagePacket(SOCKETID socketID, unsigned int announcementID, const QString &sender, const QString &receiver, const QString &receiversAssetNO, const QString &replyMessage)
+    {
+        qWarning() << "----sendUserReplyMessagePacket(...):";
 
         AnnouncementPacket packet;
         packet.InfoType = AnnouncementPacket::ANNOUNCEMENT_REPLY;
@@ -131,8 +137,9 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientResponseRemoteConsoleStatusPacket(int adminSocketID, bool running, const QString &extraMessage, quint8 messageType = quint8(MS::MSG_Information)){
-        qDebug()<<"----sendClientResponseRemoteConsolePacket(...)";
+    bool sendClientResponseRemoteConsoleStatusPacket(int adminSocketID, bool running, const QString &extraMessage, quint8 messageType = quint8(MS::MSG_Information))
+    {
+        qDebug() << "----sendClientResponseRemoteConsolePacket(...)";
 
         RemoteConsolePacket packet;
         packet.InfoType = RemoteConsolePacket::REMOTECONSOLE_STATE;
@@ -144,8 +151,9 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendRemoteConsoleCMDResultFromClientPacket(int adminSocketID, const QString &output){
-        qDebug()<<"----sendRemoteConsoleCMDResultFromClientPacket(...)";
+    bool sendRemoteConsoleCMDResultFromClientPacket(int adminSocketID, const QString &output)
+    {
+        qDebug() << "----sendRemoteConsoleCMDResultFromClientPacket(...)";
 
         RemoteConsolePacket packet;
         packet.InfoType = RemoteConsolePacket::REMOTECONSOLE_OUTPUT;
@@ -155,7 +163,8 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendClientLogPacket(SOCKETID socketID, quint8 logType, const QString &log){
+    bool sendClientLogPacket(SOCKETID socketID, quint8 logType, const QString &log)
+    {
         //qWarning()<<"----sendClientLogPacket(...) log:"<<log;
 
         ClientLogPacket packet;
@@ -166,7 +175,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientInfoPacket(SOCKETID socketID, const QByteArray &data, quint8 infoType){
+    bool sendClientInfoPacket(SOCKETID socketID, const QByteArray &data, quint8 infoType)
+    {
 
         ClientInfoPacket packet;
         packet.IsRequest = 0;
@@ -177,7 +187,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientInfoPacket(const QString &targetAddress, quint16 targetPort, const QByteArray &data, quint8 infoType){
+    bool sendClientInfoPacket(const QString &targetAddress, quint16 targetPort, const QByteArray &data, quint8 infoType)
+    {
         //qWarning()<<"----sendClientInfoPacket(...)"<<" targetAddress:"<<targetAddress<<" targetPort:"<<targetPort;
 
         ClientInfoPacket packet;
@@ -189,7 +200,8 @@ public slots:
         return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
-    bool sendClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool verified, quint8 errorCode){
+    bool sendClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool verified, quint8 errorCode)
+    {
         //qWarning()<<"----sendClientResponseAdminConnectionResultPacket(...):"<<adminAddress.toString()<<" "<<adminPort;
 
         AdminConnectionToClientPacket packet;
@@ -201,7 +213,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendClientMessagePacket(int adminSocketID, const QString &message, quint8 clientMessageType = quint8(MS::MSG_Information)){
+    bool sendClientMessagePacket(int adminSocketID, const QString &message, quint8 clientMessageType = quint8(MS::MSG_Information))
+    {
 
         MessagePacket packet;
         packet.msgType = clientMessageType;
@@ -211,8 +224,9 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendLocalUserOnlineStatusChangedPacket(SOCKETID adminSocketID, const QString &userName, bool online){
-        qDebug()<<"--sendLocalUserOnlineStatusChangedPacket(...)"<<" userSocketID:"<<adminSocketID<<" adminName:"<<userName<<" online:"<<online;
+    bool sendLocalUserOnlineStatusChangedPacket(SOCKETID adminSocketID, const QString &userName, bool online)
+    {
+        qDebug() << "--sendLocalUserOnlineStatusChangedPacket(...)" << " userSocketID:" << adminSocketID << " adminName:" << userName << " online:" << online;
 
         LocalUserOnlineStatusChangedPacket packet;
         packet.userName = userName;
@@ -221,9 +235,10 @@ public slots:
         QByteArray ba = packet.toByteArray();
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
-    
-    bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType){
-        qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
+
+    bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType)
+    {
+        qDebug() << "----sendSystemInfoPacket(...)" << " socketID:" << socketID << " infoType:" << infoType;
 
         SystemInfoFromServerPacket packet;
         packet.infoType = infoType;
@@ -234,8 +249,9 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendModifyAssetNOPacket(SOCKETID socketID, bool isRequest, const QString &oldAssetNO, const QString &newAssetNO, const QString &adminID){
-        qWarning()<<"----sendClientResponseModifyAssetNOPacket(...) oldAssetNO"<<oldAssetNO<<" newAssetNO:"<<newAssetNO;
+    bool sendModifyAssetNOPacket(SOCKETID socketID, bool isRequest, const QString &oldAssetNO, const QString &newAssetNO, const QString &adminID)
+    {
+        qWarning() << "----sendClientResponseModifyAssetNOPacket(...) oldAssetNO" << oldAssetNO << " newAssetNO:" << newAssetNO;
 
         ModifyAssetNOPacket packet;
         packet.isRequest = isRequest;
@@ -248,8 +264,9 @@ public slots:
     }
 
 
-    bool sendClientResponseTemperaturesPacket(SOCKETID socketID, const QString &cpuTemperature, const QString &harddiskTemperature){
-        qWarning()<<"----sendClientResponseTemperaturesPacket(...):"<<cpuTemperature<<" "<<harddiskTemperature;
+    bool sendClientResponseTemperaturesPacket(SOCKETID socketID, const QString &cpuTemperature, const QString &harddiskTemperature)
+    {
+        qWarning() << "----sendClientResponseTemperaturesPacket(...):" << cpuTemperature << " " << harddiskTemperature;
 
         TemperaturesPacket packet;
         packet.InfoType = TemperaturesPacket::TEMPERATURES_RESPONSE;
@@ -261,7 +278,8 @@ public slots:
     }
 
 
-    bool sendAdminRequestScreenshotPacket(SOCKETID userSocketID, const QString &userName, quint16 adminPort){
+    bool sendAdminRequestScreenshotPacket(SOCKETID userSocketID, const QString &userName, quint16 adminPort)
+    {
         //qDebug()<<"----sendAdminRequestScreenshotPacket(...):";
 
         ScreenshotPacket packet;
@@ -273,8 +291,9 @@ public slots:
         return m_rtp->sendReliableData(userSocketID, &ba);
     }
 
-    bool sendClientResponseServiceConfigChangedPacket(SOCKETID socketID, const QString &serviceName, quint64 processID, quint64 startupType){
-        qWarning()<<"----sendClientResponseServiceConfigChangedPacket(...):";
+    bool sendClientResponseServiceConfigChangedPacket(SOCKETID socketID, const QString &serviceName, quint64 processID, quint64 startupType)
+    {
+        qWarning() << "----sendClientResponseServiceConfigChangedPacket(...):";
 
         ServiceConfigPacket packet;
         packet.serviceName = serviceName;
@@ -286,7 +305,8 @@ public slots:
     }
 
 //////////////////////////////
-    bool responseFileSystemInfo(SOCKETID socketID, const QString &baseDirPath, const QByteArray &fileSystemInfoData){
+    bool responseFileSystemInfo(SOCKETID socketID, const QString &baseDirPath, const QByteArray &fileSystemInfoData)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileSystemInfoResponse;
@@ -297,7 +317,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool responseDeletingFiles(SOCKETID socketID, const QString &baseDirPath, const QStringList &failedFiles){
+    bool responseDeletingFiles(SOCKETID socketID, const QString &baseDirPath, const QStringList &failedFiles)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileDeletingResponse;
@@ -308,7 +329,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool responseRenamingFiles(SOCKETID socketID, const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message){
+    bool responseRenamingFiles(SOCKETID socketID, const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileRenamingResponse;
@@ -321,7 +343,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool requestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &remoteFileSaveDir = ""){
+    bool requestUploadFile(SOCKETID socketID, const QByteArray &fileMD5Sum, const QString &fileName, quint64 size, const QString &remoteFileSaveDir = "")
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileUploadingRequest;
@@ -334,7 +357,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool requestDownloadFile(SOCKETID socketID, const QString &remoteBaseDir, const QString &remoteFileName, const QString &localFileSaveDir){
+    bool requestDownloadFile(SOCKETID socketID, const QString &remoteBaseDir, const QString &remoteFileName, const QString &localFileSaveDir)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileDownloadingRequest;
@@ -346,7 +370,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool responseFileDownloadRequest(SOCKETID socketID, bool accepted, const QString &baseDir, const QString &fileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile){
+    bool responseFileDownloadRequest(SOCKETID socketID, bool accepted, const QString &baseDir, const QString &fileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileDownloadingResponse;
@@ -361,7 +386,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool responseFileUploadRequest(SOCKETID socketID, bool accepted, const QByteArray &fileMD5Sum, const QString &message){
+    bool responseFileUploadRequest(SOCKETID socketID, bool accepted, const QByteArray &fileMD5Sum, const QString &message)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileUploadingResponse;
@@ -373,7 +399,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool requestFileData(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex){
+    bool requestFileData(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex)
+    {
         //qDebug()<<"--requestFileData(...) "<<" startPieceIndex:"<<startPieceIndex<<" endPieceIndex:"<<endPieceIndex;
 
         FileTransferPacket packet;
@@ -386,7 +413,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendFileData(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray *data, const QByteArray *pieceMD5){
+    bool sendFileData(SOCKETID socketID, const QByteArray &fileMD5, int pieceIndex, const QByteArray *data, const QByteArray *pieceMD5)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileData;
@@ -398,8 +426,9 @@ public slots:
         QByteArray ba = packet.toByteArray();
         return m_rtp->sendReliableData(socketID, &ba);
     }
-    
-    bool fileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status){
+
+    bool fileTXStatusChanged(SOCKETID socketID, const QByteArray &fileMD5, quint8 status)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileTXStatus;
@@ -410,7 +439,8 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool fileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString){
+    bool fileTXError(SOCKETID socketID, const QByteArray &fileMD5, quint8 errorCode, const QString &errorString)
+    {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileTXError;
@@ -422,7 +452,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    
+
 private slots:
 
 

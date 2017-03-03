@@ -37,11 +37,11 @@
 
 #include <QtCore/QtGlobal>
 
- #if defined(SHAREDMSLIB_LIBRARY_EXPORT)
- #  define SHAREDMSLIB_API Q_DECL_EXPORT
- #else
- #  define SHAREDMSLIB_API Q_DECL_IMPORT
- #endif
+#if defined(SHAREDMSLIB_LIBRARY_EXPORT)
+    #define SHAREDMSLIB_API Q_DECL_EXPORT
+#else
+    #define SHAREDMSLIB_API Q_DECL_IMPORT
+#endif
 
 
 /*

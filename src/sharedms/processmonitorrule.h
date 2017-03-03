@@ -9,7 +9,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class SHAREDMSLIB_API ProcessMonitorRule : public QObject
@@ -19,7 +20,7 @@ public:
     ProcessMonitorRule(QObject *parent = 0);
     ~ProcessMonitorRule();
 
-    ProcessMonitorRule & operator= (const ProcessMonitorRule &info);
+    ProcessMonitorRule &operator= (const ProcessMonitorRule &info);
 
 
 public:

@@ -14,22 +14,25 @@
 #include "HHSharedGUI/hdataoutputdialog.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AdminUserInfoModel::AdminUserInfoModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
     // TODO Auto-generated constructor stub
 }
 
-AdminUserInfoModel::~AdminUserInfoModel() {
+AdminUserInfoModel::~AdminUserInfoModel()
+{
     clearUsers();
 }
 
-void AdminUserInfoModel::clearUsers(){
+void AdminUserInfoModel::clearUsers()
+{
 
-    if(usersList.isEmpty()){
+    if(usersList.isEmpty()) {
         return;
     }
 
@@ -45,31 +48,36 @@ void AdminUserInfoModel::clearUsers(){
 
 }
 
-void AdminUserInfoModel::setJsonData(const QByteArray &data){
-    qDebug()<<"--AdminUserInfoModel::setJsonData(...)";
+void AdminUserInfoModel::setJsonData(const QByteArray &data)
+{
+    qDebug() << "--AdminUserInfoModel::setJsonData(...)";
 
     clearUsers();
 
-    if(data.isEmpty()){
-        qCritical()<<"ERROR! Empty user info data.";
+    if(data.isEmpty()) {
+        qCritical() << "ERROR! Empty user info data.";
         return;
     }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
-    if(object.isEmpty()){return;}
+    if(object.isEmpty()) {
+        return;
+    }
 
     beginResetModel();
 
     QJsonArray infoArray = object["Administators"].toArray();
-    if(infoArray.isEmpty()){return;}
+    if(infoArray.isEmpty()) {
+        return;
+    }
 
-    for(int i=0;i<infoArray.size();i++){
+    for(int i = 0; i < infoArray.size(); i++) {
         QByteArray data = infoArray.at(i).toString().toUtf8();
         AdminUserInfo *info = new AdminUserInfo();
         info->setJsonData(data);
@@ -79,24 +87,27 @@ void AdminUserInfoModel::setJsonData(const QByteArray &data){
     endResetModel();
 }
 
-AdminUserInfo *AdminUserInfoModel::getUser(const QModelIndex & index){
-    if(!index.isValid()){
+AdminUserInfo *AdminUserInfoModel::getUser(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return 0;
     }
 
     return usersList.at(index.data(Qt::UserRole).toInt());
 }
 
-int AdminUserInfoModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int AdminUserInfoModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return usersList.size();
 
 }
 
-int	 AdminUserInfoModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 AdminUserInfoModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
 
@@ -104,18 +115,19 @@ int	 AdminUserInfoModel::columnCount ( const QModelIndex & parent) const{
 
 }
 
-QVariant AdminUserInfoModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant AdminUserInfoModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= usersList.size())){
+    if((row < 0) || (row >= usersList.size())) {
         return QVariant();
     }
 
     AdminUserInfo *info = static_cast<AdminUserInfo *> (usersList.at(row));
-    if(role == Qt::DisplayRole || role == Qt::EditRole){
+    if(role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
         case 0:
             return info->getUserID();
@@ -142,11 +154,11 @@ QVariant AdminUserInfoModel::data ( const QModelIndex & index, int role) const{
             break;
 
         case 6:
-            return info->readonly?tr("Yes"):tr("No");
+            return info->readonly ? tr("Yes") : tr("No");
             break;
 
         case 7:
-            return info->active?tr("Yes"):tr("No");
+            return info->active ? tr("Yes") : tr("No");
             break;
 
         case 8:
@@ -160,7 +172,7 @@ QVariant AdminUserInfoModel::data ( const QModelIndex & index, int role) const{
         }
     }
 
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return row;
     }
 
@@ -168,12 +180,13 @@ QVariant AdminUserInfoModel::data ( const QModelIndex & index, int role) const{
 
 }
 
-QVariant AdminUserInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant AdminUserInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("User ID"));
@@ -259,7 +272,7 @@ AdminsManagementWidget::AdminsManagementWidget(QWidget *parent) :
 
 AdminsManagementWidget::~AdminsManagementWidget()
 {
-    qDebug()<<"--AdminsManagementWidget::~AdminsManagementWidget()";
+    qDebug() << "--AdminsManagementWidget::~AdminsManagementWidget()";
 
 
     QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
@@ -271,17 +284,20 @@ AdminsManagementWidget::~AdminsManagementWidget()
     delete ui;
 }
 
-void AdminsManagementWidget::setData(const QByteArray &data){
+void AdminsManagementWidget::setData(const QByteArray &data)
+{
     m_selectedAdmin = 0;
     m_userInfoModel->setJsonData(data);
 }
 
-void AdminsManagementWidget::on_actionExport_triggered(){
+void AdminsManagementWidget::on_actionExport_triggered()
+{
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::EXPORT, this);
     dlg.exec();
 }
 
-void AdminsManagementWidget::on_actionPrint_triggered(){
+void AdminsManagementWidget::on_actionPrint_triggered()
+{
 #ifndef QT_NO_PRINTER
     //TODO
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::PRINT, this);
@@ -291,19 +307,21 @@ void AdminsManagementWidget::on_actionPrint_triggered(){
 
 
 
-void AdminsManagementWidget::on_actionProperties_triggered(){
+void AdminsManagementWidget::on_actionProperties_triggered()
+{
     slotViewAdminInfo(ui->tableView->currentIndex());
 }
 
-void AdminsManagementWidget::on_actionCreateNewAccount_triggered(){
-    if(!verifyPrivilege()){
+void AdminsManagementWidget::on_actionCreateNewAccount_triggered()
+{
+    if(!verifyPrivilege()) {
         return;
     }
 
     AdminUserInfo info;
     showUserInfoWidget(&info, false);
     QString adminID = info.getUserID();
-    if(adminID.isEmpty()){
+    if(adminID.isEmpty()) {
         return;
     }
 
@@ -313,9 +331,10 @@ void AdminsManagementWidget::on_actionCreateNewAccount_triggered(){
 
 }
 
-void AdminsManagementWidget::on_actionModifyAccount_triggered(){
+void AdminsManagementWidget::on_actionModifyAccount_triggered()
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
@@ -327,10 +346,11 @@ void AdminsManagementWidget::on_actionModifyAccount_triggered(){
 
 }
 
-void AdminsManagementWidget::on_actionDeleteAccount_triggered(){
+void AdminsManagementWidget::on_actionDeleteAccount_triggered()
+{
 
     QModelIndex index = ui->tableView->currentIndex();
-    if(!index.isValid()){
+    if(!index.isValid()) {
         return;
     }
 
@@ -339,9 +359,10 @@ void AdminsManagementWidget::on_actionDeleteAccount_triggered(){
 }
 
 
-void AdminsManagementWidget::on_actionRefresh_triggered(){
+void AdminsManagementWidget::on_actionRefresh_triggered()
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
@@ -349,8 +370,9 @@ void AdminsManagementWidget::on_actionRefresh_triggered(){
 
 }
 
-void AdminsManagementWidget::slotViewAdminInfo(const QModelIndex &index){
-    if(!index.isValid()){
+void AdminsManagementWidget::slotViewAdminInfo(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return;
     }
 
@@ -359,28 +381,29 @@ void AdminsManagementWidget::slotViewAdminInfo(const QModelIndex &index){
 
 }
 
-void AdminsManagementWidget::slotDeleteAdmin(){
+void AdminsManagementWidget::slotDeleteAdmin()
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
-    if(!m_selectedAdmin){
+    if(!m_selectedAdmin) {
         return;
     }
 
     QString adminID = m_selectedAdmin->getUserID();
-    if(adminID.isEmpty()){
+    if(adminID.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Invalid admin ID"));
         return;
     }
 
     int ret = QMessageBox::warning(this, tr("Warning"),
                                    tr("<font color=red><b> Deletion is not reversible! <p>Do you want to delete admin '%1'?<p> </b></font>").arg(adminID),
-                                   QMessageBox::Yes|QMessageBox::No,
+                                   QMessageBox::Yes | QMessageBox::No,
                                    QMessageBox::No
-                                   );
-    if(ret == QMessageBox::No){
+                                  );
+    if(ret == QMessageBox::No) {
         return;
     }
 
@@ -391,10 +414,11 @@ void AdminsManagementWidget::slotDeleteAdmin(){
 }
 
 
-void AdminsManagementWidget::showUserInfoWidget(AdminUserInfo *adminUser, bool readonly){
-    qDebug()<<"--AdminsManagementWidget::showADUserInfoWidget(...)";
+void AdminsManagementWidget::showUserInfoWidget(AdminUserInfo *adminUser, bool readonly)
+{
+    qDebug() << "--AdminsManagementWidget::showADUserInfoWidget(...)";
 
-    if(readonly && (!verifyPrivilege()) ){
+    if(readonly && (!verifyPrivilege()) ) {
         return;
     }
 
@@ -409,28 +433,29 @@ void AdminsManagementWidget::showUserInfoWidget(AdminUserInfo *adminUser, bool r
     vbl.addWidget(&wgt);
     dlg.setLayout(&vbl);
     dlg.updateGeometry();
-    if(readonly){
+    if(readonly) {
         dlg.setWindowTitle(tr("Admin Info"));
-    }else if(adminUser->getUserID().isEmpty()){
+    } else if(adminUser->getUserID().isEmpty()) {
         dlg.setWindowTitle(tr("Create New Admin"));
-    }else{
+    } else {
         dlg.setWindowTitle(tr("Modify Admin Info"));
     }
     dlg.exec();
 
 }
 
-void AdminsManagementWidget::slotShowCustomContextMenu(const QPoint & pos){
+void AdminsManagementWidget::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *tableView = qobject_cast<QTableView*> (sender());
-    if (!tableView){
+    QTableView *tableView = qobject_cast<QTableView *> (sender());
+    if (!tableView) {
         return;
     }
 
 
     QMenu menu(this);
     menu.addAction(ui->actionRefresh);
-    if(!m_selectedAdmin){
+    if(!m_selectedAdmin) {
         menu.exec(tableView->viewport()->mapToGlobal(pos));
         return;
     }
@@ -459,10 +484,11 @@ void AdminsManagementWidget::slotShowCustomContextMenu(const QPoint & pos){
 
 }
 
-void AdminsManagementWidget::getSelectedUser(const QModelIndex &index){
+void AdminsManagementWidget::getSelectedUser(const QModelIndex &index)
+{
 
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         m_selectedAdmin = 0;
         return;
     }
@@ -477,8 +503,8 @@ void AdminsManagementWidget::getSelectedUser(const QModelIndex &index){
 
     bool enableModify = true;
     bool userSelected = false;
-    if(m_selectedAdmin){
-        if(m_selectedAdmin->getUserID().toLower() == "root"){
+    if(m_selectedAdmin) {
+        if(m_selectedAdmin->getUserID().toLower() == "root") {
             enableModify = false;
         }
         userSelected = true;
@@ -490,12 +516,13 @@ void AdminsManagementWidget::getSelectedUser(const QModelIndex &index){
 
 }
 
-bool AdminsManagementWidget::verifyPrivilege(){
+bool AdminsManagementWidget::verifyPrivilege()
+{
 
-    if(!m_myself->isAdminVerified()){
+    if(!m_myself->isAdminVerified()) {
         return false;
     }
-    if(m_myself->isReadonly()){
+    if(m_myself->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }

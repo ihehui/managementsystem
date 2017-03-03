@@ -3,11 +3,13 @@
 
 #include <QWidget>
 
-namespace Ui {
+namespace Ui
+{
 class RuleInfoWidget;
 }
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class RuleInfoWidget : public QWidget

@@ -3,7 +3,7 @@
 TaskInfoViewWidget::TaskInfoViewWidget(QWidget *parent)
     : QWidget(parent)
 {
-	ui.setupUi(this);
+    ui.setupUi(this);
 }
 
 TaskInfoViewWidget::~TaskInfoViewWidget()

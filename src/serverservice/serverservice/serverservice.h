@@ -46,7 +46,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class ServerService : public Service

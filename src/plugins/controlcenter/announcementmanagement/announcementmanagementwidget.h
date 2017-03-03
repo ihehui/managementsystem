@@ -9,12 +9,14 @@
 #include "../adminuser.h"
 
 
-namespace Ui {
+namespace Ui
+{
 class AnnouncementManagementWidget;
 }
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class AnnouncementManagementWidget : public QWidget
@@ -50,7 +52,7 @@ private slots:
     void showAnnouncementInfo(const QModelIndex &index);
     void showAnnouncementInfoWidget(AnnouncementInfo *info, bool readonly = true);
 
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
     void getSelectedInfo(const QModelIndex &index);
 
     bool verifyPrivilege();
@@ -65,7 +67,7 @@ private:
 private:
     Ui::AnnouncementManagementWidget *ui;
 
-    enum Period{
+    enum Period {
         Period_Custom = 0,
         Period_Today,
         Period_Last_24_Hours,

@@ -10,11 +10,13 @@
 #include "processmonitorrulemodel.h"
 
 
-namespace Ui {
+namespace Ui
+{
 class ProcessMonitor;
 }
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class ProcessMonitor : public QWidget
@@ -41,7 +43,7 @@ public slots:
 
 
 private slots:
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
     void getSelectedRule(const QModelIndex &index);
     void slotViewRuleInfo(const QModelIndex &index);
 

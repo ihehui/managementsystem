@@ -35,7 +35,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class ClientService : public Service
@@ -81,7 +82,7 @@ private slots:
 
     void processAdminRequestConnectionToClientPacket(const AdminConnectionToClientPacket &packet);
     void processAdminSearchClientPacket(const AdminSearchClientPacket &packet);
-    
+
 
 
     void processShowAdminPacket(bool show);
@@ -162,7 +163,7 @@ private slots:
     void pieceVerified(const QByteArray &fileMD5, int pieceIndex, bool verified, int verificationProgress);
 
     void deleteFiles(SOCKETID socketID, const QString &localBaseDir, const QStringList files);
-    void deleteLocalFiles(const QString &path, QStringList *failedFiles = 0, const QStringList &nameFilters = QStringList(), const QStringList & ignoredFiles = QStringList(), const QStringList & ignoredDirs = QStringList());
+    void deleteLocalFiles(const QString &path, QStringList *failedFiles = 0, const QStringList &nameFilters = QStringList(), const QStringList &ignoredFiles = QStringList(), const QStringList &ignoredDirs = QStringList());
     void renameFile(SOCKETID socketID, const QString &localBaseDir, const QString &oldFileName, const QString &newFileName);
 
 private:
@@ -228,7 +229,7 @@ private:
     QString m_adminAddress;
     quint16 m_adminPort;
     QString m_adminID;
-    
+
 
     QTimer *lookForServerTimer;
 

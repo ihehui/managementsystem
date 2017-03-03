@@ -10,9 +10,11 @@
 
 #include "../../sharedms/processmonitorrule.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-class ProcessMonitorRuleModel : public QAbstractTableModel {
+class ProcessMonitorRuleModel : public QAbstractTableModel
+{
     Q_OBJECT
 
 public:
@@ -24,16 +26,16 @@ public:
 
     void addLocalRule(const QString &ruleString, const QString &comment, bool  hashRule, bool blacklistRule);
     void deleteRule(const QString &ruleString);
-    void deleteRule(const QModelIndex & index);
+    void deleteRule(const QModelIndex &index);
 
-    ProcessMonitorRule * getRule(const QModelIndex & index);
+    ProcessMonitorRule *getRule(const QModelIndex &index);
     bool ruleExists(const QString &ruleString);
 
 
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
 
@@ -47,7 +49,8 @@ private:
 
 };
 
-class ProcessMonitorRuleSortFilterProxyModel : public QSortFilterProxyModel{
+class ProcessMonitorRuleSortFilterProxyModel : public QSortFilterProxyModel
+{
     Q_OBJECT
 
 public:

@@ -1,6 +1,7 @@
 #include "serverinfo.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ServerInfo::ServerInfo(const QString &ip, quint16 port)

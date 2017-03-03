@@ -39,18 +39,20 @@
 #include "HHSharedGUI/hloginbase.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ControlCenterPlugin::ControlCenterPlugin()
-    :GUIPluginBase()
+    : GUIPluginBase()
 {
     widgetList = QList<QWidget *> ();
 
 }
 
-ControlCenterPlugin::~ControlCenterPlugin() {
-    qDebug()<<"--ControlCenterPlugin::~ControlCenterPlugin()";
+ControlCenterPlugin::~ControlCenterPlugin()
+{
+    qDebug() << "--ControlCenterPlugin::~ControlCenterPlugin()";
 }
 
 
@@ -90,41 +92,51 @@ QWidget * SystemInfoPlugin::parentWidgetOfPlugin(){
 
 */
 
-bool ControlCenterPlugin::isSingle(){
+bool ControlCenterPlugin::isSingle()
+{
     return true;
 }
 
-QString ControlCenterPlugin::name () const{
+QString ControlCenterPlugin::name () const
+{
     return QString(tr("Control Center"));
 }
 
-QString ControlCenterPlugin::version() const{
+QString ControlCenterPlugin::version() const
+{
     return "2010.05.10";
 }
 
-QString ControlCenterPlugin::description() const{
+QString ControlCenterPlugin::description() const
+{
     return QString(tr("Control Center Plugin"));
 }
 
-QIcon ControlCenterPlugin::icon () const{
+QIcon ControlCenterPlugin::icon () const
+{
     return QIcon(":/icon/resources/images/controlcenter.png");
 }
 
-QString ControlCenterPlugin::whatsThis () const{
+QString ControlCenterPlugin::whatsThis () const
+{
     return QString(tr("Control Center"));
 }
 
-QString ControlCenterPlugin::toolTip () const{
+QString ControlCenterPlugin::toolTip () const
+{
     return QString(tr("Control Center"));
 }
 
-bool ControlCenterPlugin::unload(){
+bool ControlCenterPlugin::unload()
+{
 
     //    emit signalPluginToBeUnloaded();
 
-    foreach(QWidget *wgt, widgetList){
-        if(!wgt){continue;}
-        if(wgt->close()){
+    foreach(QWidget *wgt, widgetList) {
+        if(!wgt) {
+            continue;
+        }
+        if(wgt->close()) {
             //widgetList.removeAll(wgt);
             delete wgt;
             wgt = 0;
@@ -150,8 +162,9 @@ bool ControlCenterPlugin::unload(){
     return widgetList.isEmpty();
 }
 
-void ControlCenterPlugin::slotMainActionForMenuTriggered(){
-    if(isSingle() && ControlCenter::isRunning()){
+void ControlCenterPlugin::slotMainActionForMenuTriggered()
+{
+    if(isSingle() && ControlCenter::isRunning()) {
         //TODO: Activate the widget
         return;
     }
@@ -162,17 +175,17 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
     //connect(controlCenter, SIGNAL(destroyed(QObject *)), SLOT(slotControlCenterWidgetDestoryed(QObject *)));
 
     AdminUser *m_myself = AdminUser::instance();
-    if(!m_myself->isAdminVerified()){
+    if(!m_myself->isAdminVerified()) {
         wgt->close();
         wgt->deleteLater();
         return;
     }
 
     QMdiArea *mdiArea = 0;
-    if(parentWidget){
+    if(parentWidget) {
         mdiArea = qobject_cast<QMdiArea *>(parentWidget);
     }
-    if(mdiArea){
+    if(mdiArea) {
         QMdiSubWindow *subWindow = new QMdiSubWindow;
         subWindow->setWidget(wgt);
         subWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -181,7 +194,7 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
 
         connect(subWindow, SIGNAL(destroyed(QObject *)), this, SLOT(slotWidgetDestoryed(QObject *)));
         widgetList.append(subWindow);
-    }else{
+    } else {
         connect(wgt, SIGNAL(destroyed(QObject *)), this, SLOT(slotWidgetDestoryed(QObject *)));
         widgetList.append(wgt);
     }
@@ -205,11 +218,12 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered(){
     wgt->show();
 }
 
-void ControlCenterPlugin::slotWidgetDestoryed(QObject * obj){
-    qDebug()<<"--ControlCenterPlugin::slotWidgetDestoryed(...)";
+void ControlCenterPlugin::slotWidgetDestoryed(QObject *obj)
+{
+    qDebug() << "--ControlCenterPlugin::slotWidgetDestoryed(...)";
 
     QWidget *wgt = static_cast<QWidget *> (sender());
-    if(wgt){
+    if(wgt) {
         widgetList.removeAll(wgt);
     }
 

@@ -7,7 +7,8 @@
 #include "sharedmslib.h"
 #include "HHSharedNetwork/PacketBase"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -118,17 +119,17 @@ private:
     QByteArray packBodyData();
 
 public:
-    enum PacketInfoType{LOGIN_UNKNOWN = 0, LOGIN_REQUEST, LOGIN_RESULT};
+    enum PacketInfoType {LOGIN_UNKNOWN = 0, LOGIN_REQUEST, LOGIN_RESULT};
 
     PacketInfoType InfoType;
 
-    struct LoginInfoStruct{
+    struct LoginInfoStruct {
         QString adminID;
         QString password;
         QString computerName;
     } LoginInfo;
 
-    struct LoginResultStruct{
+    struct LoginResultStruct {
         quint8 loggedIn;
         QString message;
         quint8 readonly;
@@ -218,11 +219,11 @@ private:
     QByteArray packBodyData();
 
 public:
-    enum PacketInfoType{SYSTEMALARMS_UNKNOWN = 0, SYSTEMALARMS_QUERY, SYSTEMALARMS_ACK};
+    enum PacketInfoType {SYSTEMALARMS_UNKNOWN = 0, SYSTEMALARMS_QUERY, SYSTEMALARMS_ACK};
 
     PacketInfoType InfoType;
 
-    struct QueryInfoStruct{
+    struct QueryInfoStruct {
         QString assetNO;
         QString type;
         QString acknowledged;
@@ -230,7 +231,7 @@ public:
         QString endTime;
     } QueryInfo;
 
-    struct ACKInfoStruct{
+    struct ACKInfoStruct {
         QString alarms;
         quint8 deleteAlarms;
     } ACKInfo;
@@ -253,11 +254,11 @@ private:
     QByteArray packBodyData();
 
 public:
-    enum PacketInfoType{ANNOUNCEMENT_UNKNOWN = 0, ANNOUNCEMENT_QUERY, ANNOUNCEMENT_CREATE, ANNOUNCEMENT_UPDATE, ANNOUNCEMENT_REPLY, ANNOUNCEMENT_QUERY_TARGETS};
+    enum PacketInfoType {ANNOUNCEMENT_UNKNOWN = 0, ANNOUNCEMENT_QUERY, ANNOUNCEMENT_CREATE, ANNOUNCEMENT_UPDATE, ANNOUNCEMENT_REPLY, ANNOUNCEMENT_QUERY_TARGETS};
     PacketInfoType InfoType;
     quint32 JobID;
 
-    struct QueryInfoStruct{
+    struct QueryInfoStruct {
         QString announcementID;
         QString keyword;
         QString validity;
@@ -268,7 +269,7 @@ public:
         QString endTime;
     } QueryInfo;
 
-    struct CreateInfoStruct{
+    struct CreateInfoStruct {
         unsigned int localTempID;
         QString adminID;
         quint8 type;
@@ -279,7 +280,7 @@ public:
         QString targets;
     } CreateInfo;
 
-    struct UpdateInfoStruct{
+    struct UpdateInfoStruct {
         QString adminName;
         unsigned int announcementID;
         quint8 targetType;
@@ -288,7 +289,7 @@ public:
         QString deletedTargets;
     } UpdateInfo;
 
-    struct ReplyInfoStruct{
+    struct ReplyInfoStruct {
         unsigned int announcementID;
         QString sender;
         QString receiver;
@@ -296,7 +297,7 @@ public:
         QString replyMessage;
     } ReplyInfo;
 
-    struct QueryTargetsInfoStruct{
+    struct QueryTargetsInfoStruct {
         unsigned int announcementID;
     } QueryTargetsInfo;
 
@@ -318,26 +319,26 @@ private:
     QByteArray packBodyData();
 
 public:
-    enum PacketInfoType{REMOTECONSOLE_UNKNOWN = 0, REMOTECONSOLE_OPEN, REMOTECONSOLE_STATE, REMOTECONSOLE_COMMAND, REMOTECONSOLE_OUTPUT};
+    enum PacketInfoType {REMOTECONSOLE_UNKNOWN = 0, REMOTECONSOLE_OPEN, REMOTECONSOLE_STATE, REMOTECONSOLE_COMMAND, REMOTECONSOLE_OUTPUT};
 
     PacketInfoType InfoType;
 
-    struct OpenConsoleStruct{
+    struct OpenConsoleStruct {
         QString applicationPath;
         quint8 startProcess;
     } OpenConsole;
 
-    struct ConsoleStateStruct{
+    struct ConsoleStateStruct {
         quint8 isRunning;
         QString message;
         quint8 messageType;
     } ConsoleState;
 
-    struct CommandStruct{
+    struct CommandStruct {
         QString command;
     } Command;
 
-    struct OutputStruct{
+    struct OutputStruct {
         QString output;
     } Output;
 
@@ -459,7 +460,7 @@ private:
     QByteArray packBodyData();
 
 public:
-    enum PacketInfoType{
+    enum PacketInfoType {
         FT_UNKNOWN = 0,
         FT_FileSystemInfoRequest,
         FT_FileSystemInfoResponse,
@@ -484,41 +485,41 @@ public:
     };
     PacketInfoType InfoType;
 
-    struct FileSystemInfoRequestStruct{
+    struct FileSystemInfoRequestStruct {
         QString parentDirPath;
     } FileSystemInfoRequest;
-    struct FileSystemInfoResponseStruct{
+    struct FileSystemInfoResponseStruct {
         QString baseDirPath;
         QByteArray fileSystemInfoData;
     } FileSystemInfoResponse;
 
-    struct FileDeletingRequestStruct{
+    struct FileDeletingRequestStruct {
         QString baseDirPath;
         QStringList files;
     } FileDeletingRequest;
-    struct FileDeletingResponseStruct{
+    struct FileDeletingResponseStruct {
         QString baseDirPath;
         QStringList failedFiles;
     } FileDeletingResponse;
 
-    struct FileRenamingRequestStruct{
+    struct FileRenamingRequestStruct {
         QString baseDirPath;
         QString oldFileName;
         QString newFileName;
     } FileRenamingRequest;
-    struct FileRenamingResponseStruct{
+    struct FileRenamingResponseStruct {
         QString baseDirPath;
         QString oldFileName;
         quint8 renamed;
         QString message;
     } FileRenamingResponse;
 
-    struct FileDownloadingRequestStruct{
+    struct FileDownloadingRequestStruct {
         QString baseDir;
         QString fileName;
         QString dirToSaveFile;
     } FileDownloadingRequest;
-    struct FileDownloadingResponseStruct{
+    struct FileDownloadingResponseStruct {
         quint8 accepted;
         QString baseDir;
         QString fileName;
@@ -527,36 +528,36 @@ public:
         QString pathToSaveFile;
     } FileDownloadingResponse;
 
-    struct FileUploadingRequestStruct{
+    struct FileUploadingRequestStruct {
         QString fileName;
         QByteArray fileMD5Sum;
         quint64 size;
         QString fileSaveDir;
     } FileUploadingRequest;
-    struct FileUploadingResponseStruct{
+    struct FileUploadingResponseStruct {
         QByteArray fileMD5Sum;
         quint8 accepted;
         QString message;
     } FileUploadingResponse;
 
-    struct FileDataRequestStruct{
+    struct FileDataRequestStruct {
         QByteArray fileMD5;
         int startPieceIndex;
         int endPieceIndex;
     } FileDataRequest;
-    struct FileDataResponseStruct{
+    struct FileDataResponseStruct {
         QByteArray fileMD5;
         int pieceIndex;
         QByteArray data;
         QByteArray pieceMD5;
     } FileDataResponse;
 
-    struct FileTXStatusStruct{
+    struct FileTXStatusStruct {
         QByteArray fileMD5;
         quint8 status;
     } FileTXStatus;
 
-    struct FileTXErrorStruct{
+    struct FileTXErrorStruct {
         QByteArray fileMD5;
         quint8 errorCode;
         QString message;
@@ -644,16 +645,16 @@ private:
     QByteArray packBodyData();
 
 public:
-    enum PacketInfoType{TEMPERATURES_UNKNOWN = 0, TEMPERATURES_REQUEST, TEMPERATURES_RESPONSE};
+    enum PacketInfoType {TEMPERATURES_UNKNOWN = 0, TEMPERATURES_REQUEST, TEMPERATURES_RESPONSE};
 
     PacketInfoType InfoType;
 
-    struct TemperaturesRequestStruct{
+    struct TemperaturesRequestStruct {
         quint8 requestCPU;
         quint8 requestHD;
     } TemperaturesRequest;
 
-    struct TemperaturesResponseStruct{
+    struct TemperaturesResponseStruct {
         QString cpuTemperature;
         QString harddiskTemperature;
     } TemperaturesResponse;
@@ -676,23 +677,23 @@ private:
     QByteArray packBodyData();
 
 public:
-    enum PacketInfoType{SCREENSHOT_UNKNOWN = 0, SCREENSHOT_REQUEST, SCREENSHOT_DESKTOP_INFO, SCREENSHOT_DATA};
+    enum PacketInfoType {SCREENSHOT_UNKNOWN = 0, SCREENSHOT_REQUEST, SCREENSHOT_DESKTOP_INFO, SCREENSHOT_DATA};
     PacketInfoType InfoType;
 
-    struct ScreenshotRequestStruct{
+    struct ScreenshotRequestStruct {
         QString adminID;
         QString userName;
         quint16 adminListeningPort;
     } ScreenshotRequest;
 
-    struct DesktopInfoStruct{
+    struct DesktopInfoStruct {
         int desktopWidth;
         int desktopHeight;
         int blockWidth;
         int blockHeight;
     } DesktopInfo;
 
-    struct ScreenshotDataStruct{
+    struct ScreenshotDataStruct {
         QList<QPoint> locations;
         QList<QByteArray> images;
     } ScreenshotData;

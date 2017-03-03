@@ -15,7 +15,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class BulletinBoardObject : public QObject
@@ -24,39 +25,39 @@ class BulletinBoardObject : public QObject
 public:
     explicit BulletinBoardObject(QObject *parent = 0);
     ~BulletinBoardObject();
-    
-    
+
+
 signals:
 
-    
+
 public slots:
-    
+
 private slots:
     void startNetwork();
 
     void adminRequestRemoteAssistancePacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName);
     void AdminInformUserNewPasswordPacketReceived(const QString &adminAddress, quint16 adminPort, const QString &adminName, const QString &oldPassword, const QString &newPassword );
     void serverAnnouncementPacketReceived(const QString &adminName, quint32 announcementID, const QString &announcement);
-    
+
     void newPasswordRetreved();
-    
+
 //    void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
 //    void peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose);
 
     void peerDisconnected(int socketID);
     void connectToLocalServer();
-    
+
 private:
 
     //bool m_networkReady;
 
     ResourcesManagerInstance *resourcesManager;
     BulletinBoardPacketsParser *bulletinBoardPacketsParser;
-    
+
     RemoteAssistance *remoteAssistance;
     BulletinBoardWidget *bulletinBoardWidget;
     UpdatePasswordWidget *updatePasswordWidget;
-    
+
     quint16 localUDTListeningPort;
     RTP *m_rtp;
     int m_socketConnectedToLocalServer;
@@ -67,6 +68,6 @@ private:
 
 };
 
-} //namespace HEHUI 
+} //namespace HEHUI
 
 #endif // BULLETINBOARDOBJECT_H

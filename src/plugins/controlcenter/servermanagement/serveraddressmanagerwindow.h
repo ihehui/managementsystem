@@ -39,11 +39,13 @@
 #include "serverinfomodel.h"
 
 
-namespace Ui {
+namespace Ui
+{
 class ServerAddressManagerWindowClass;
 }
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class ServerDiscoveryPacket;
 
@@ -62,15 +64,15 @@ protected:
 private:
     void updateModel();
     bool isIPAddressValid();
-    
+
 signals:
     void signalLookForServer(const QString &targetAddress, quint16 targetPort);
     void signalServerSelected(const QString &serverAddress, quint16 serverPort, const QString &serverName, const QString &version);
-    
+
 
 public slots:
     void serverFound(const ServerDiscoveryPacket &packet);
-    
+
 private slots:
     void slotRequestForLANServer(const QString &ip, quint16 port);
     void slotTestServers();

@@ -8,7 +8,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 //namespace Ui {
@@ -18,11 +19,11 @@ namespace HEHUI {
 class WinUserInfoWidget : public QWidget
 {
     Q_OBJECT
-    
+
 public:
     explicit WinUserInfoWidget(WinUserInfo *winUser, QWidget *parent = 0);
     ~WinUserInfoWidget();
-    
+
 signals:
     void signalCloseWidget();
     void signalChangesSaved();

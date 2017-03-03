@@ -5,7 +5,8 @@
 #include <QObject>
 #include <QString>
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class WinUserInfo : public QObject
@@ -15,7 +16,7 @@ public:
     WinUserInfo(QObject *parent = 0);
     ~WinUserInfo();
 
-    WinUserInfo & operator= (const WinUserInfo &info);
+    WinUserInfo &operator= (const WinUserInfo &info);
 
 
 public:

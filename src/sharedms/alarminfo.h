@@ -5,7 +5,8 @@
 
 #include "sharedmslib.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class SHAREDMSLIB_API AlarmInfo
@@ -16,14 +17,14 @@ public:
 
 
 public:
-   QString ID;
-   QString AssetNO;
-   quint8 AlarmType;
-   QString Message;
-   QString UpdateTime;
-   quint8 Acknowledged;
-   QString AcknowledgedBy;
-   QString AcknowledgedTime;
+    QString ID;
+    QString AssetNO;
+    quint8 AlarmType;
+    QString Message;
+    QString UpdateTime;
+    quint8 Acknowledged;
+    QString AcknowledgedBy;
+    QString AcknowledgedTime;
 
 
 

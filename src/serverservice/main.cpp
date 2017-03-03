@@ -35,11 +35,11 @@ int main(int argc, char **argv)
 
     //HEHUI::ServerService service(argc, argv, "ServerService", "Server Service For Computer Management System");
     HEHUI::ServerService service(argc, argv, SERVICE_NAME, APP_NAME);
-    cout<<qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION))<<endl<<endl;
+    cout << qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION)) << endl << endl;
 
 
 
-    //reset the message handler     
+    //reset the message handler
     qInstallMessageHandler(0);
 
     return service.exec();

@@ -49,11 +49,13 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 MainWindow::MainWindow(QWidget *parent, HEHUI::WindowPosition positon) :
-    MainWindowBase(parent) {
+    MainWindowBase(parent)
+{
     ui.setupUi(this);
 
     setWindowTitle(QString(APP_NAME) + " Build " + QString(APP_VERSION));
@@ -82,9 +84,9 @@ MainWindow::MainWindow(QWidget *parent, HEHUI::WindowPosition positon) :
     //Create the system tray
     setupSystemTray();
 
-    if(Settings::instance()->getRestoreWindowStateOnStartup()){
+    if(Settings::instance()->getRestoreWindowStateOnStartup()) {
         Settings::instance()->restoreState(this);
-    }else{
+    } else {
         //使窗口居中
         //Center the window
         moveWindow(positon);
@@ -102,10 +104,11 @@ MainWindow::MainWindow(QWidget *parent, HEHUI::WindowPosition positon) :
 
 }
 
-MainWindow::~MainWindow() {
-    qDebug()<<"--MainWindow::~MainWindow()";
+MainWindow::~MainWindow()
+{
+    qDebug() << "--MainWindow::~MainWindow()";
 
-    if(Settings::instance()->getRestoreWindowStateOnStartup()){
+    if(Settings::instance()->getRestoreWindowStateOnStartup()) {
         Settings::instance()->saveState(this);
     }
 
@@ -113,10 +116,11 @@ MainWindow::~MainWindow() {
     DatabaseUtility::closeAllDBConnections();
 }
 
-void MainWindow::closeEvent(QCloseEvent * event) {
+void MainWindow::closeEvent(QCloseEvent *event)
+{
     //Close all subwindows
     ui.mdiArea->closeAllSubWindows();
-    if(ui.mdiArea->activeSubWindow()){
+    if(ui.mdiArea->activeSubWindow()) {
         event->ignore();
         return;
     }
@@ -127,8 +131,9 @@ void MainWindow::closeEvent(QCloseEvent * event) {
 }
 
 
-void MainWindow::changeEvent ( QEvent * event ){
-    if(event->type() == QEvent::WindowStateChange){
+void MainWindow::changeEvent ( QEvent *event )
+{
+    if(event->type() == QEvent::WindowStateChange) {
         switch (windowState ()) {
         case Qt::WindowNoState:
             ui.actionShowMaximized->setEnabled(true);
@@ -166,7 +171,8 @@ void MainWindow::changeEvent ( QEvent * event ){
 
 }
 
-void MainWindow::initUI(){
+void MainWindow::initUI()
+{
 
     ui.menuView->addSeparator();
     ui.menuView->addMenu(getStyleMenu(Settings::instance()->getStyle(), Settings::instance()->getPalette()));
@@ -202,15 +208,16 @@ void MainWindow::initUI(){
 
 }
 
-void MainWindow::slotInitPlugin(AbstractPluginInterface *plugin){
+void MainWindow::slotInitPlugin(AbstractPluginInterface *plugin)
+{
     qDebug("----MainWindow::slotInitPlugin(AbstractPluginInterface *plugin)");
 
-    if(!plugin){
+    if(!plugin) {
         return;
     }
 
     GUIInterface *guiPlugin = static_cast<GUIInterface *> (plugin);
-    if(guiPlugin){
+    if(guiPlugin) {
         guiPlugin->initialize(ui.mdiArea, pluginsMenu, ui.toolBarPlugins, systemTray, APP_NAME, APP_VERSION);
         pluginsMenu->addMenu(guiPlugin->menu());
         ui.toolBarPlugins->addAction(guiPlugin->menu()->menuAction());
@@ -316,9 +323,10 @@ void MainWindow::saveWindowState() {
 */
 
 
-void MainWindow::setupSystemTray() {
+void MainWindow::setupSystemTray()
+{
     systemTray = new QSystemTrayIcon(this);
-    systemTray->setIcon(QIcon(QString(RESOURCE_PATH)+QString(APP_ICON_PATH)));
+    systemTray->setIcon(QIcon(QString(RESOURCE_PATH) + QString(APP_ICON_PATH)));
     systemTray->setToolTip(APP_NAME);
     connect(systemTray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(slotIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -338,7 +346,8 @@ void MainWindow::setupSystemTray() {
 
 }
 
-QSystemTrayIcon* MainWindow::SystemTrayIcon() {
+QSystemTrayIcon *MainWindow::SystemTrayIcon()
+{
     if (!systemTray) {
         setupSystemTray();
     }
@@ -346,7 +355,8 @@ QSystemTrayIcon* MainWindow::SystemTrayIcon() {
     return systemTray;
 }
 
-void MainWindow::setTrayIconVisible(bool visible) {
+void MainWindow::setTrayIconVisible(bool visible)
+{
     visible = true;
 }
 
@@ -464,30 +474,35 @@ void MainWindow::slotSqlExplorer(){
 
 
 
-void MainWindow::slotSystemConfig() {
-    QMessageBox::information(this,tr("~_~"),tr(" Not accomplished !"));
+void MainWindow::slotSystemConfig()
+{
+    QMessageBox::information(this, tr("~_~"), tr(" Not accomplished !"));
     qDebug() << "----MainWindow::slotSystemConfig()";
 }
 
 
 
-void MainWindow::slotBugReport() {
-    QMessageBox::information(this,tr("~_~"),tr(" Not accomplished !"));
+void MainWindow::slotBugReport()
+{
+    QMessageBox::information(this, tr("~_~"), tr(" Not accomplished !"));
     qDebug() << "----MainWindow::slotBugReport()";
 }
 
-void MainWindow::slotHelp() {
-    QMessageBox::information(this,tr("~_~"),tr(" Not accomplished !"));
+void MainWindow::slotHelp()
+{
+    QMessageBox::information(this, tr("~_~"), tr(" Not accomplished !"));
     qDebug() << "----MainWindow::slotHelp()";
 }
 
-void MainWindow::slotAbout() {
+void MainWindow::slotAbout()
+{
     AboutDialog aboutDlg(this);
     aboutDlg.exec();
 
 }
 
-void MainWindow::slotQuit() {
+void MainWindow::slotQuit()
+{
     //Closes all database connections
     //dbo->closeAllDBConnections();
 
@@ -501,29 +516,34 @@ void MainWindow::slotQuit() {
 }
 
 
-void MainWindow::savePreferedStyle(const QString &preferedStyle, bool useStylePalette){
+void MainWindow::savePreferedStyle(const QString &preferedStyle, bool useStylePalette)
+{
     Settings::instance()->setStyle(preferedStyle);
     Settings::instance()->setPalette(useStylePalette);
 }
 
-void MainWindow::savePreferedLanguage(const QString &preferedLanguage){
+void MainWindow::savePreferedLanguage(const QString &preferedLanguage)
+{
     Settings::instance()->setLanguage(preferedLanguage);
 }
 
-void MainWindow::retranslateUi() {
+void MainWindow::retranslateUi()
+{
     //重新翻译UI
     //Retranslate UI
     ui.retranslateUi(this);
 }
 
-bool MainWindow::hasActiveMDIChild(){
-    if (ui.mdiArea->activeSubWindow()){
+bool MainWindow::hasActiveMDIChild()
+{
+    if (ui.mdiArea->activeSubWindow()) {
         return true;
     }
     return false;
 }
 
-void MainWindow::slotUpdateWindowActions(){
+void MainWindow::slotUpdateWindowActions()
+{
     bool hasSubWindow = (ui.mdiArea->subWindowList().size() > 0);
     bool hasSubWindows = (ui.mdiArea->subWindowList().size() > 1);
 
@@ -561,7 +581,7 @@ void MainWindow::slotUpdateWindowActions(){
        connect(action, SIGNAL(triggered()), ui.mdiArea, SLOT(setActiveSubWindow(child)));
 
     }
-*/
+    */
 
 }
 

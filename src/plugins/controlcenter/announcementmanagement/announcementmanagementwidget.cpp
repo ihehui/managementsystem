@@ -11,7 +11,8 @@
 #include "HHSharedGUI/hdataoutputdialog.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AnnouncementManagementWidget::AnnouncementManagementWidget(QWidget *parent) :
@@ -67,7 +68,7 @@ AnnouncementManagementWidget::~AnnouncementManagementWidget()
 
     m_selectedInfoList.clear();
 
-    if(m_infoWidget){
+    if(m_infoWidget) {
         delete m_infoWidget;
     }
 
@@ -76,48 +77,56 @@ AnnouncementManagementWidget::~AnnouncementManagementWidget()
 
 }
 
-void AnnouncementManagementWidget::setAnnouncementsData(const QByteArray &data){
+void AnnouncementManagementWidget::setAnnouncementsData(const QByteArray &data)
+{
     m_selectedInfoList.clear();
     m_model->setJsonData(data);
 
     ui->toolButtonFilter->setEnabled(true);
 }
 
-void AnnouncementManagementWidget::setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data){
-    if(!m_infoWidget){return;}
+void AnnouncementManagementWidget::setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data)
+{
+    if(!m_infoWidget) {
+        return;
+    }
     m_infoWidget->setAnnouncementTargetsData(announcementID, data);
 }
 
-void AnnouncementManagementWidget::setAnnouncementReplies(const QByteArray &data){
+void AnnouncementManagementWidget::setAnnouncementReplies(const QByteArray &data)
+{
     m_model->setAnnouncementRepliesData(data);
 }
 
-void AnnouncementManagementWidget::on_toolButtonQuery_clicked(){
+void AnnouncementManagementWidget::on_toolButtonQuery_clicked()
+{
     on_actionRefresh_triggered();
 }
 
-void AnnouncementManagementWidget::on_toolButtonFilter_clicked(){
+void AnnouncementManagementWidget::on_toolButtonFilter_clicked()
+{
     filter();
 }
 
-void AnnouncementManagementWidget::filter(){
+void AnnouncementManagementWidget::filter()
+{
 
     QRegExp assetNORegExp;
     QRegExp typeRegExp;
     QRegExp acknowledgedRegExp;
 
     QString filterString = ui->lineEditAssetNO->text();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         assetNORegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = validityString();
-    if(filterString != "-1"){
+    if(filterString != "-1") {
         typeRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = targetString();
-    if(filterString != "-1"){
+    if(filterString != "-1") {
         acknowledgedRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
@@ -125,16 +134,17 @@ void AnnouncementManagementWidget::filter(){
 
 }
 
-void AnnouncementManagementWidget::on_actionRefresh_triggered(){
+void AnnouncementManagementWidget::on_actionRefresh_triggered()
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
     QString assetNOs = ui->lineEditAssetNO->text().trimmed();
     QString userNames = ui->lineEditUserName->text().trimmed();
     MS::AnnouncementTarget tp = MS::AnnouncementTarget(ui->comboBoxTarget->currentData().toUInt());
-    if(tp == MS::ANNOUNCEMENT_TARGET_EVERYONE){
+    if(tp == MS::ANNOUNCEMENT_TARGET_EVERYONE) {
         assetNOs = "";
         userNames = "";
     }
@@ -143,31 +153,34 @@ void AnnouncementManagementWidget::on_actionRefresh_triggered(){
     periodString(&startTime, &endTime);
 
     m_myself->packetsParser()->sendRequestAnnouncementsPacket(m_myself->socketConnectedToServer(),
-                                                              ui->lineEditID->text().trimmed(),
-                                                              ui->lineEditKeyword->text(),
-                                                              validityString(),
-                                                              assetNOs,
-                                                              userNames,
-                                                              targetString(),
-                                                              startTime,
-                                                              endTime
-                                                              );
+            ui->lineEditID->text().trimmed(),
+            ui->lineEditKeyword->text(),
+            validityString(),
+            assetNOs,
+            userNames,
+            targetString(),
+            startTime,
+            endTime
+                                                             );
 
 }
 
-void AnnouncementManagementWidget::on_comboBoxPeriod_currentIndexChanged(int index){
+void AnnouncementManagementWidget::on_comboBoxPeriod_currentIndexChanged(int index)
+{
     periodString(0, 0);
     Period period = Period(ui->comboBoxPeriod->currentData().toUInt());
     ui->dateTimeEditStartTime->setReadOnly((period != Period_Custom));
     ui->dateTimeEditEndTime->setReadOnly((period != Period_Custom));
 }
 
-void AnnouncementManagementWidget::on_actionExport_triggered(){
+void AnnouncementManagementWidget::on_actionExport_triggered()
+{
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::EXPORT, this);
     dlg.exec();
 }
 
-void AnnouncementManagementWidget::on_actionPrint_triggered(){
+void AnnouncementManagementWidget::on_actionPrint_triggered()
+{
 #ifndef QT_NO_PRINTER
     //TODO
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::PRINT, this);
@@ -175,17 +188,21 @@ void AnnouncementManagementWidget::on_actionPrint_triggered(){
 #endif
 }
 
-void AnnouncementManagementWidget::on_actionCreate_triggered(){
+void AnnouncementManagementWidget::on_actionCreate_triggered()
+{
     AnnouncementInfo info;
     showAnnouncementInfoWidget(&info, false);
 }
 
-void AnnouncementManagementWidget::on_actionClone_triggered(){
+void AnnouncementManagementWidget::on_actionClone_triggered()
+{
 
     QModelIndexList indexList =  ui->tableView->selectionModel()->selectedRows(0);
-    if(indexList.isEmpty()){return;}
+    if(indexList.isEmpty()) {
+        return;
+    }
     QModelIndex index = indexList.first();
-    if(!index.isValid()){
+    if(!index.isValid()) {
         return;
     }
 
@@ -199,13 +216,15 @@ void AnnouncementManagementWidget::on_actionClone_triggered(){
     showAnnouncementInfoWidget(&info, false);
 }
 
-void AnnouncementManagementWidget::on_actionDisable_triggered(){
+void AnnouncementManagementWidget::on_actionDisable_triggered()
+{
 
 }
 
-void AnnouncementManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms){
+void AnnouncementManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms)
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
@@ -215,9 +234,10 @@ void AnnouncementManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms){
 
 }
 
-void AnnouncementManagementWidget::showAnnouncementInfo(const QModelIndex &index){
+void AnnouncementManagementWidget::showAnnouncementInfo(const QModelIndex &index)
+{
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         return;
     }
 
@@ -225,13 +245,14 @@ void AnnouncementManagementWidget::showAnnouncementInfo(const QModelIndex &index
     showAnnouncementInfoWidget(info, true);
 }
 
-void AnnouncementManagementWidget::showAnnouncementInfoWidget(AnnouncementInfo *info, bool readonly){
+void AnnouncementManagementWidget::showAnnouncementInfoWidget(AnnouncementInfo *info, bool readonly)
+{
 
-    if(readonly && (!verifyPrivilege()) ){
+    if(readonly && (!verifyPrivilege()) ) {
         return;
     }
 
-    if(!m_infoWidget){
+    if(!m_infoWidget) {
         m_infoWidget = new AnnouncementInfoWidget(readonly);
         connect(m_infoWidget, SIGNAL(signalAnnouncementUpdated()), this, SLOT(on_toolButtonQuery_clicked()));
         //connect(&m_infoWidget, SIGNAL(signalOK()), &dlg, SLOT(accept()));
@@ -245,10 +266,11 @@ void AnnouncementManagementWidget::showAnnouncementInfoWidget(AnnouncementInfo *
 
 }
 
-void AnnouncementManagementWidget::slotShowCustomContextMenu(const QPoint & pos){
+void AnnouncementManagementWidget::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *tableView = qobject_cast<QTableView*> (sender());
-    if (!tableView){
+    QTableView *tableView = qobject_cast<QTableView *> (sender());
+    if (!tableView) {
         return;
     }
 
@@ -256,7 +278,7 @@ void AnnouncementManagementWidget::slotShowCustomContextMenu(const QPoint & pos)
 
     QMenu menu(this);
     menu.addAction(ui->actionRefresh);
-    if(m_selectedInfoList.isEmpty()){
+    if(m_selectedInfoList.isEmpty()) {
         menu.addSeparator();
         menu.addAction(ui->actionCreate);
         menu.exec(tableView->viewport()->mapToGlobal(pos));
@@ -282,17 +304,20 @@ void AnnouncementManagementWidget::slotShowCustomContextMenu(const QPoint & pos)
 
 }
 
-void AnnouncementManagementWidget::getSelectedInfo(const QModelIndex &index){
+void AnnouncementManagementWidget::getSelectedInfo(const QModelIndex &index)
+{
 
     m_selectedInfoList.clear();
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         m_selectedInfoList.clear();
         return;
     }
 
     QModelIndexList indexList =  ui->tableView->selectionModel()->selectedRows(0);
-    if(indexList.isEmpty()){return;}
+    if(indexList.isEmpty()) {
+        return;
+    }
     foreach (QModelIndex idx, indexList) {
         m_selectedInfoList.append(m_model->getInfoID(idx));
     }
@@ -302,7 +327,7 @@ void AnnouncementManagementWidget::getSelectedInfo(const QModelIndex &index){
     ui->actionPrint->setEnabled(enableExp);
 
     bool enableModify = false;
-    if(!m_myself->isReadonly()){
+    if(!m_myself->isReadonly()) {
         enableModify = true;
     }
 
@@ -313,12 +338,13 @@ void AnnouncementManagementWidget::getSelectedInfo(const QModelIndex &index){
 }
 
 
-bool AnnouncementManagementWidget::verifyPrivilege(){
+bool AnnouncementManagementWidget::verifyPrivilege()
+{
 
-    if(!m_myself->isAdminVerified()){
+    if(!m_myself->isAdminVerified()) {
         return false;
     }
-    if(m_myself->isReadonly()){
+    if(m_myself->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }
@@ -326,79 +352,76 @@ bool AnnouncementManagementWidget::verifyPrivilege(){
     return true;
 }
 
-QString AnnouncementManagementWidget::validityString() const{
+QString AnnouncementManagementWidget::validityString() const
+{
     return QString::number(ui->comboBoxValidity->currentData().toInt());
 }
 
-QString AnnouncementManagementWidget::targetString() const{
+QString AnnouncementManagementWidget::targetString() const
+{
 
     MS::AnnouncementTarget tp = MS::AnnouncementTarget(ui->comboBoxTarget->currentData().toUInt());
-    if(tp == MS::ANNOUNCEMENT_TARGET_ALL){
+    if(tp == MS::ANNOUNCEMENT_TARGET_ALL) {
         return "-1";
     }
     return QString::number(quint8(tp));
 }
 
-void AnnouncementManagementWidget::periodString(QString *startTime, QString *endTime){
+void AnnouncementManagementWidget::periodString(QString *startTime, QString *endTime)
+{
 
     QDateTime curTime = QDateTime::currentDateTime();
     QTime zeroTime = QTime(0, 0);
 
     Period period = Period(ui->comboBoxPeriod->currentData().toUInt());
     switch (period) {
-    case Period_Custom:
-    {
+    case Period_Custom: {
 
     }
-        break;
+    break;
 
-    case Period_Today:
-    {
+    case Period_Today: {
         ui->dateTimeEditStartTime->setDate(curTime.date());
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
-    case Period_Last_24_Hours:
-    {
-        QDateTime dateTime = curTime.addSecs(-(24*3600));
+    case Period_Last_24_Hours: {
+        QDateTime dateTime = curTime.addSecs(-(24 * 3600));
         ui->dateTimeEditStartTime->setDateTime(dateTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
-    case Period_Yesterday:
-    {
+    case Period_Yesterday: {
         QDate date = curTime.date().addDays(-1);
         ui->dateTimeEditStartTime->setDate(date);
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDate(date);
         ui->dateTimeEditEndTime->setTime(QTime(23, 59));
     }
-        break;
+    break;
 
-    case Period_This_Week:
-    {
+    case Period_This_Week: {
         QDate date = curTime.date();
         int dayOfWeek = date.dayOfWeek();
-        date = date.addDays(-1*(dayOfWeek-1));
+        date = date.addDays(-1 * (dayOfWeek - 1));
         ui->dateTimeEditStartTime->setDate(date);
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
-    case Period_This_Month:
-    {
+    case Period_This_Month: {
         QDate date = curTime.date();
         int day = date.day();
-        date = date.addDays(-1*(day-1));
+        date = date.addDays(-1 * (day - 1));
         ui->dateTimeEditStartTime->setDate(date);
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
     default:
         ui->dateTimeEditStartTime->setDate(curTime.date());
@@ -407,10 +430,10 @@ void AnnouncementManagementWidget::periodString(QString *startTime, QString *end
         break;
     }
 
-    if(startTime){
+    if(startTime) {
         *startTime = ui->dateTimeEditStartTime->dateTime().toString("yyyy-MM-dd hh:mm:ss");
     }
-    if(endTime){
+    if(endTime) {
         *endTime = ui->dateTimeEditEndTime->dateTime().toString("yyyy-MM-dd hh:mm:ss");
     }
 

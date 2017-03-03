@@ -44,10 +44,12 @@
 #include "HHSharedCore/hutilities.h"
 #include "HHSharedNetwork/hpackethandlerbase.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
-class BulletinBoardPacketsParser : public QObject{
+class BulletinBoardPacketsParser : public QObject
+{
     Q_OBJECT
 
 public:
@@ -59,8 +61,9 @@ public slots:
     void parseIncomingPacketData(Packet *packet);
 
 
-    bool sendLocalUserOnlinePacket(int socketID){
-        qDebug()<<"--sendLocalUserOnlinePacket(...)";
+    bool sendLocalUserOnlinePacket(int socketID)
+    {
+        qDebug() << "--sendLocalUserOnlinePacket(...)";
 
         Packet *packet = PacketHandlerBase::getPacket(socketID);
 
@@ -99,10 +102,11 @@ public slots:
 
 //    }
 
-    bool sendUserResponseRemoteAssistancePacket(int adminSocketID, bool accept){
+    bool sendUserResponseRemoteAssistancePacket(int adminSocketID, bool accept)
+    {
 
         Packet *packet = m_packetHandlerBase->getPacket(adminSocketID);
-        
+
         packet->setPacketType(quint8(MS::UserResponseRemoteAssistance));
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
@@ -120,10 +124,11 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendNewPasswordRetrevedByUserPacket(int adminSocketID){
+    bool sendNewPasswordRetrevedByUserPacket(int adminSocketID)
+    {
 
         Packet *packet = m_packetHandlerBase->getPacket(adminSocketID);
-        
+
         packet->setPacketType(quint8(MS::NewPasswordRetrevedByUser));
         packet->setTransmissionProtocol(TP_UDT);
         QByteArray ba;
@@ -141,8 +146,8 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    
-    
+
+
 
     /////////////////////////////////////////////////////
 

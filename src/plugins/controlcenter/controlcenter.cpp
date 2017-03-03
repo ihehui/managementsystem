@@ -30,7 +30,8 @@
 #include "HHSharedNetwork/hnetworkutilities.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 bool ControlCenter::running = false;
@@ -155,16 +156,16 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
     startNetwork();
 
     vncProcess = 0;
-    
 
-    
+
+
     //    ui.toolButtonUpdatePassword->setEnabled(false);
     //    ui.toolButtonAnnouncement->setEnabled(false);
-    
-    
+
+
 //    localUDPListeningPort = 0;
 //    localRUDPListeningPort = 0;
-    
+
 
 //    m_serverInstanceID = 0;
 
@@ -174,7 +175,7 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
     m_adminUser = AdminUser::instance();
     m_adminUser->init(m_rtp, controlCenterPacketsParser, this);
     connect(m_adminUser, SIGNAL(signalVerified()), this, SLOT(adminVerified()));
-    
+
 
 
     slotInitTabWidget();
@@ -183,22 +184,22 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
 
 ControlCenter::~ControlCenter()
 {
-    qDebug()<<"--ControlCenter::~ControlCenter()";
+    qDebug() << "--ControlCenter::~ControlCenter()";
 
-    if(vncProcess){
+    if(vncProcess) {
         vncProcess->terminate();
         delete vncProcess;
         vncProcess = 0;
     }
 
-    if(query){
+    if(query) {
         query->clear();
         delete query;
         query = 0;
     }
 
     QSqlDatabase db = QSqlDatabase::database(databaseConnectionName);
-    if(db.isOpen()){
+    if(db.isOpen()) {
         db.close();
     }
     QSqlDatabase::removeDatabase(databaseConnectionName);
@@ -220,7 +221,7 @@ ControlCenter::~ControlCenter()
     delete clientInfoModel;
     clientInfoModel = 0;
 
-    if(m_remoteDesktopMonitor){
+    if(m_remoteDesktopMonitor) {
         delete m_remoteDesktopMonitor;
         m_remoteDesktopMonitor = 0;
     }
@@ -228,19 +229,20 @@ ControlCenter::~ControlCenter()
     delete m_adminUser;
     m_adminUser = 0;
 
-    running = false;   
+    running = false;
 
 }
 
-bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
+bool ControlCenter::eventFilter(QObject *obj, QEvent *event)
+{
     if (event->type() == QEvent::KeyRelease ) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *> (event);
-        if(keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down){
+        if(keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down) {
             //slotShowClientInfo(ui.tableViewClientList->currentIndex());
         }
 
-        if(keyEvent->key() == Qt::Key_Escape){
-            if(ui.lineEditComputerName->isReadOnly()){
+        if(keyEvent->key() == Qt::Key_Escape) {
+            if(ui.lineEditComputerName->isReadOnly()) {
 
                 ui.lineEditAssetNO->setReadOnly(false);
 
@@ -258,7 +260,7 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
                 //ui.lineEditComputerName->setFocus();
                 ui.lineEditUserName->setFocus();
 
-            }else{
+            } else {
                 ui.lineEditAssetNO->clear();
                 ui.lineEditComputerName->clear();
                 ui.lineEditUserName->clear();
@@ -278,37 +280,41 @@ bool ControlCenter::eventFilter(QObject *obj, QEvent *event) {
 
         }
 
-        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_O){
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_O) {
             slotExportQueryResult();
         }
-        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_P){
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_P) {
             slotPrintQueryResult();
         }
 
         return true;
-    }else{
+    } else {
         // standard event processing
         return QObject::eventFilter(obj, event);
     }
 
 }
 
-void ControlCenter::languageChange() {
+void ControlCenter::languageChange()
+{
     retranslateUi();
 }
 
-void ControlCenter::closeEvent(QCloseEvent *e) {
-    qDebug()<<"--ControlCenter::closeEvent(...)";
+void ControlCenter::closeEvent(QCloseEvent *e)
+{
+    qDebug() << "--ControlCenter::closeEvent(...)";
 
     //Close all related TabPage
     int tabPages = ui.tabWidget->count();
-    for(int i = tabPages; i >= 0; --i){
+    for(int i = tabPages; i >= 0; --i) {
         //SystemManagementWidget *systemManagementWidget = qobject_cast<SystemManagementWidget *>(ui.tabWidget->widget(i));
         //if(!systemManagementWidget){continue;}
         //systemManagementWidget->close();
 
         QWidget *widget = qobject_cast<QWidget *>(ui.tabWidget->widget(i));
-        if(!widget){continue;}
+        if(!widget) {
+            continue;
+        }
         widget->close();
 
         ui.tabWidget->removeTab(i);
@@ -316,12 +322,12 @@ void ControlCenter::closeEvent(QCloseEvent *e) {
     }
 
 
-    if(controlCenterPacketsParser && m_socketConnectedToServer){
+    if(controlCenterPacketsParser && m_socketConnectedToServer) {
         m_rtp->closeSocket(m_socketConnectedToServer);
     }
-    
+
     clientInfoModel->clear();
-    
+
 //    clientSocketsHash.clear();
 
 
@@ -331,13 +337,15 @@ void ControlCenter::closeEvent(QCloseEvent *e) {
 }
 
 
-void ControlCenter::retranslateUi() {
+void ControlCenter::retranslateUi()
+{
 
     ui.retranslateUi(this);
 
 }
 
-void ControlCenter::slotInitTabWidget(){
+void ControlCenter::slotInitTabWidget()
+{
 
     connect(ui.tabWidget, SIGNAL(currentChanged(int)), this, SLOT(slotTabPageChanged()));
 
@@ -393,18 +401,19 @@ void ControlCenter::slotInitTabWidget(){
 
 }
 
-void ControlCenter::slotTabPageChanged(){
+void ControlCenter::slotTabPageChanged()
+{
 
     QWidget *currentWidget = ui.tabWidget->currentWidget();
 
     SystemManagementWidget *systemManagementWidget = qobject_cast<SystemManagementWidget *>(currentWidget);
-    if(systemManagementWidget){
+    if(systemManagementWidget) {
 //        if(systemManagementWidget == localSystemManagementWidget){
 //            ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(false);
 //        }else{
-            ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(true);
+        ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(true);
 //        }
-    }else{      
+    } else {
         ui.tabWidget->cornerWidget(Qt::TopRightCorner)->setEnabled(false);
     }
 
@@ -412,10 +421,11 @@ void ControlCenter::slotTabPageChanged(){
 
 }
 
-void ControlCenter::slotNewTab(ClientInfo *info){
+void ControlCenter::slotNewTab(ClientInfo *info)
+{
 
     SystemManagementWidget *systemManagementWidget = new SystemManagementWidget(m_rtp, controlCenterPacketsParser, info, this);
-    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget*)), this, SLOT(updateTabText(SystemManagementWidget*)));
+    connect(systemManagementWidget, SIGNAL(updateTitle(SystemManagementWidget *)), this, SLOT(updateTabText(SystemManagementWidget *)));
     connect(systemManagementWidget, SIGNAL(signalSetProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)), this, SLOT(changProcessMonitorInfo(const QByteArray &, const QByteArray &, bool, bool, bool, bool, bool, const QString &)));
 
     ui.tabWidget->addTab(systemManagementWidget, tr("System Management"));
@@ -426,7 +436,8 @@ void ControlCenter::slotNewTab(ClientInfo *info){
 
 }
 
-void ControlCenter::slotcloseTab(){
+void ControlCenter::slotcloseTab()
+{
 
     //   if(ui.tabWidget->count()==1){
     //        return;
@@ -437,7 +448,7 @@ void ControlCenter::slotcloseTab(){
     //delete page;
 
     SystemManagementWidget *systemManagementWidget = qobject_cast<SystemManagementWidget *>(ui.tabWidget->currentWidget());
-    if(systemManagementWidget){
+    if(systemManagementWidget) {
         ui.tabWidget->removeTab(ui.tabWidget->currentIndex());
         systemManagementWidget->close();
         //systemManagementWidget->deleteLater();
@@ -448,13 +459,17 @@ void ControlCenter::slotcloseTab(){
 
 }
 
-void ControlCenter::updateWindowTitle(){
+void ControlCenter::updateWindowTitle()
+{
     QString title = ui.tabWidget->tabText(ui.tabWidget->currentIndex());
     setWindowTitle(tr("%1[%2]").arg(m_appName).arg(title));
 }
 
-void ControlCenter::updateTabText(SystemManagementWidget *wgt){
-    if(!wgt){return;}
+void ControlCenter::updateTabText(SystemManagementWidget *wgt)
+{
+    if(!wgt) {
+        return;
+    }
     QString title = wgt->peerAssetNO();
     ui.tabWidget->setTabText(ui.tabWidget->indexOf(wgt), title);
 
@@ -462,15 +477,18 @@ void ControlCenter::updateTabText(SystemManagementWidget *wgt){
 }
 
 
-void ControlCenter::slotRemoteManagement(const QModelIndex &index){
+void ControlCenter::slotRemoteManagement(const QModelIndex &index)
+{
 
     QModelIndex idx = index;
-    if(!idx.isValid()){
+    if(!idx.isValid()) {
         QModelIndexList  indexList = ui.tableViewClientList->selectionModel()->selectedIndexes();
-        if(indexList.isEmpty()){return;}
+        if(indexList.isEmpty()) {
+            return;
+        }
         idx = indexList.at(0);
     }
-    if(!idx.isValid()){
+    if(!idx.isValid()) {
         return;
     }
 
@@ -485,10 +503,12 @@ void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 //    }
 
     int tabPages = ui.tabWidget->count();
-    for(int i = tabPages; i >= 0; --i){
+    for(int i = tabPages; i >= 0; --i) {
         SystemManagementWidget *wgt = qobject_cast<SystemManagementWidget *>(ui.tabWidget->widget(i));
-        if(!wgt){continue;}
-        if(wgt->peerAssetNO() == assetNO){
+        if(!wgt) {
+            continue;
+        }
+        if(wgt->peerAssetNO() == assetNO) {
             ui.tabWidget->setCurrentIndex(i);
             return;
         }
@@ -506,20 +526,21 @@ void ControlCenter::slotRemoteManagement(const QModelIndex &index){
 
 }
 
-bool ControlCenter::openDatabase(bool reopen){
+bool ControlCenter::openDatabase(bool reopen)
+{
 
-    if(query){
+    if(query) {
         query->clear();
         delete query;
         query = 0;
     }
 
     QSqlDatabase db;
-    if(!openDatabase(&db, reopen)){
+    if(!openDatabase(&db, reopen)) {
         return false;
     }
 
-    if(!query){
+    if(!query) {
         query = new QSqlQuery(db);
     }
 
@@ -527,13 +548,14 @@ bool ControlCenter::openDatabase(bool reopen){
 
 }
 
-bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *errorString){
-    if(!database){
+bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *errorString)
+{
+    if(!database) {
         return false;
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    if(reopen){
+    if(reopen) {
         database->close();
         QSqlDatabase::removeDatabase(DB_CONNECTION_NAME);
     }
@@ -549,7 +571,7 @@ bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *e
     HEHUI::DatabaseType databaseType = HEHUI::MYSQL ;
 
     host = settings.getDBServerHost();
-    if(!host.isEmpty()){
+    if(!host.isEmpty()) {
         driver = settings.getDBDriver();
         port = settings.getDBServerPort();
         user = settings.getDBServerUserName();
@@ -567,14 +589,14 @@ bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *e
                             passwd,
                             databaseName,
                             databaseType
-                            )){
+                           )) {
         QApplication::restoreOverrideCursor();
         QMessageBox::critical(this, tr("Error"), tr("Database Connection Failed!"));
         qCritical() << QString("Error: Database Connection Failed! Query Failed!");
         return false;
     }
 
-    if(dc.settingsModified()){
+    if(dc.settingsModified()) {
         settings.setDBDriver(dc.dbDriver());
         settings.setDBServerHost(dc.dbServerHost());
         settings.setDBServerPort(dc.dbServerPort());
@@ -592,27 +614,28 @@ bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *e
 
 
 
-bool ControlCenter::execQuery(const QString &statement ){
+bool ControlCenter::execQuery(const QString &statement )
+{
 
-    if(!query){
-        if(!openDatabase()){
+    if(!query) {
+        if(!openDatabase()) {
             return false;
         }
-    }else{
+    } else {
         query->clear();
     }
 
-    if(!query->exec(statement)){
+    if(!query->exec(statement)) {
         QSqlError error = query->lastError();
         QString msg = tr("Can not execute the SQL statement! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
         QMessageBox::critical(this, tr("Error"), msg);
 
-        qCritical()<<msg;
-        qCritical()<<"statement:";
-        qCritical()<<statement;
-        qCritical()<<"";
+        qCritical() << msg;
+        qCritical() << "statement:";
+        qCritical() << statement;
+        qCritical() << "";
         //MySQL数据库重启，重新连接
-        if(error.number() == 2006){
+        if(error.number() == 2006) {
             query->clear();
             openDatabase(true);
         }
@@ -624,45 +647,54 @@ bool ControlCenter::execQuery(const QString &statement ){
 
 }
 
-inline QString ControlCenter::assetNO() const {
+inline QString ControlCenter::assetNO() const
+{
     return ui.lineEditAssetNO->text().trimmed();
 }
 
-inline QString ControlCenter::computerName() const {
+inline QString ControlCenter::computerName() const
+{
     return ui.lineEditComputerName->text().trimmed();
 }
 
-inline QString ControlCenter::osVersion() const{
+inline QString ControlCenter::osVersion() const
+{
     return ui.comboBoxOSVersion->currentData().toString();
 }
 
-inline QString ControlCenter::workgroup() const {
+inline QString ControlCenter::workgroup() const
+{
     return ui.comboBoxWorkgroup->currentText();
 }
 
-inline QString ControlCenter::userName() const {
+inline QString ControlCenter::userName() const
+{
     return ui.lineEditUserName->text().trimmed();
 }
 
-inline QString ControlCenter::ipAddress() const {
+inline QString ControlCenter::ipAddress() const
+{
     return ui.lineEditIPAddress->text().trimmed();
 }
 
-int ControlCenter::usbsdStatus(){
+int ControlCenter::usbsdStatus()
+{
     return ui.comboBoxUSBSD->currentData().toInt();
 }
 
-int ControlCenter::procMonEnabled() const{
+int ControlCenter::procMonEnabled() const
+{
     return ui.comboBoxProcMon->currentData().toInt();
 }
 
-void ControlCenter::updateActions() {
+void ControlCenter::updateActions()
+{
 
     bool selected = ui.tableViewClientList->currentIndex().isValid() && ui.tableViewClientList->selectionModel()->selectedIndexes().size();
 
-    if(osVersion().contains("2000", Qt::CaseInsensitive)){
+    if(osVersion().contains("2000", Qt::CaseInsensitive)) {
         ui.actionRemoteDesktop->setEnabled(false);
-    }else{
+    } else {
         ui.actionRemoteDesktop->setEnabled(selected);
     }
 
@@ -673,12 +705,13 @@ void ControlCenter::updateActions() {
 
 }
 
-void ControlCenter::slotQueryDatabase(){
-    if(!m_adminUser->isAdminVerified()){
+void ControlCenter::slotQueryDatabase()
+{
+    if(!m_adminUser->isAdminVerified()) {
         return;
     }
-    
-    ui.toolButtonQuery->setDefaultAction(ui.actionQueryDatabase);  
+
+    ui.toolButtonQuery->setDefaultAction(ui.actionQueryDatabase);
 
     clientInfoModel->clear();
     proxyModel->cleanFilters();
@@ -688,11 +721,12 @@ void ControlCenter::slotQueryDatabase(){
 
 
     //statusBar()->showMessage(tr("Matched In Database:%1").arg(QString::number(queryModel->rowCount())));
-    
+
 }
 
-void ControlCenter::slotSearchNetwork() {
-    if(!m_adminUser->isAdminVerified()){
+void ControlCenter::slotSearchNetwork()
+{
+    if(!m_adminUser->isAdminVerified()) {
         return;
     }
 
@@ -706,13 +740,14 @@ void ControlCenter::slotSearchNetwork() {
     foreach (QHostAddress address, broadcastAddresses) {
         controlCenterPacketsParser->sendAdminSearchClientPacket(address, computerName(), userName(), workgroup(), assetNO(), ipAddress(), osVersion(), m_adminUser->getUserID());
     }
-    
+
     //statusBar()->showMessage(tr("Matched:%1 Total:%2").arg(QString::number(proxyModel->rowCount())).arg(clientInfoHash.size()));
     statusBar()->showMessage(tr("Matched In Network:%1").arg(QString::number(proxyModel->rowCount())));
 
 }
 
-void ControlCenter::filter(){
+void ControlCenter::filter()
+{
 
     QRegExp assetNORegExp = QRegExp(".*", Qt::CaseInsensitive);
     QRegExp computerNameRegExp = QRegExp(".*", Qt::CaseInsensitive);
@@ -725,42 +760,42 @@ void ControlCenter::filter(){
 
 
     QString filterString = assetNO();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         assetNORegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = computerName();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         computerNameRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = osVersion();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         osRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = workgroup();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         workgroupRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = userName();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         userNameRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = ipAddress();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         ipRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = QString::number(usbsdStatus());
-    if(filterString != "-1"){
+    if(filterString != "-1") {
         usbSDRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = QString::number(procMonEnabled());
-    if(filterString != "-1"){
+    if(filterString != "-1") {
         procMonRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
@@ -776,7 +811,8 @@ void ControlCenter::filter(){
 //}
 
 
-void ControlCenter::slotShowClientInfo(const QModelIndex &index) {
+void ControlCenter::slotShowClientInfo(const QModelIndex &index)
+{
 
 //    if(!index.isValid()){
 //        return;
@@ -829,14 +865,16 @@ void ControlCenter::slotShowClientInfo(const QModelIndex &index) {
 
 }
 
-void ControlCenter::slotExportQueryResult(){
+void ControlCenter::slotExportQueryResult()
+{
 
     DataOutputDialog dlg(ui.tableViewClientList, DataOutputDialog::EXPORT, this);
     dlg.exec();
 
 }
 
-void ControlCenter::slotPrintQueryResult(){
+void ControlCenter::slotPrintQueryResult()
+{
 
 #ifndef QT_NO_PRINTER
     //TODO
@@ -846,16 +884,17 @@ void ControlCenter::slotPrintQueryResult(){
 
 }
 
-void ControlCenter::slotRemoteDesktop(){
+void ControlCenter::slotRemoteDesktop()
+{
 
     //    QDesktopWidget *desktop = QApplication::desktop();
     //    QRect rect = desktop->screenGeometry();
-    
-    
+
+
     //    QProcess *rdpProcess = new QProcess(this);
     //    connect(rdpProcess, SIGNAL(finished(int)), rdpProcess, SLOT(deleteLater()));
 
-    QString cmdString = ""; 
+    QString cmdString = "";
 
 #ifdef Q_OS_WIN32
 
@@ -869,26 +908,27 @@ void ControlCenter::slotRemoteDesktop(){
 
     //    rdpProcess->start(cmdString);
 
-    if(!QProcess::startDetached(cmdString)){
+    if(!QProcess::startDetached(cmdString)) {
         QMessageBox::critical(this, tr("Error"), tr("Can not start RDP client process!"));
     }
 
 }
 
-void ControlCenter::slotVNC(){
+void ControlCenter::slotVNC()
+{
     QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
     return;
 
-    if(!vncProcess){
+    if(!vncProcess) {
         vncProcess = new QProcess(this);
     }
-    
-    if(vncProcess->state() == QProcess::Running){
+
+    if(vncProcess->state() == QProcess::Running) {
         return;
     }
-    
-    
-    QString cmdString = ""; 
+
+
+    QString cmdString = "";
 
 #ifdef Q_OS_WIN32
 
@@ -904,88 +944,92 @@ void ControlCenter::slotVNC(){
     //    if(!QProcess::startDetached(cmdString)){
     //        QMessageBox::critical(this, tr("Error"), tr("Can not start VNC client process!"));
     //    }
-    
+
 
     vncProcess->start(cmdString);
-    if(!vncProcess->waitForStarted(5000)){
+    if(!vncProcess->waitForStarted(5000)) {
         QMessageBox::critical(this, tr("Error"), tr("Can not start VNC client process!"));
     }
-    
-    
+
+
     //TODO:
-    
+
 }
 
 
-void ControlCenter::changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO){
+void ControlCenter::changProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO)
+{
 
-    if(INVALID_SOCK_ID == m_socketConnectedToServer){
+    if(INVALID_SOCK_ID == m_socketConnectedToServer) {
         QMessageBox::critical(this, tr("Error"), tr("Server is offline! Can not sync process monitor data to server!"));
         return;
     }
 
     bool ok = controlCenterPacketsParser->sendRequestChangeProcessMonitorInfoPacket(m_socketConnectedToServer, localRulesData, globalRulesData, enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, assetNO);
-    if(!ok){
+    if(!ok) {
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to server!<br>%1").arg(m_rtp->lastErrorString()));
     }
 
 }
 
-void ControlCenter::slotUpdateUserLogonPassword(){
+void ControlCenter::slotUpdateUserLogonPassword()
+{
     QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
     return;
-    
-    if(m_adminUser->isReadonly()){
+
+    if(m_adminUser->isReadonly()) {
         QMessageBox::critical(this, tr("Error"), tr("You dont have the access permissions!"));
         return;
     }
 
-    if(ui.comboBoxWorkgroup->currentText().isEmpty()){
+    if(ui.comboBoxWorkgroup->currentText().isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Please select the workgroup!"));
         ui.comboBoxWorkgroup->setFocus();
         return;
     }
-    
-    int ret = QMessageBox::question(this, tr("Confirm"), tr("Do you really want to inform the clients to update the password?"), QMessageBox::Yes|QMessageBox::No);
-    if(ret == QMessageBox::No){
+
+    int ret = QMessageBox::question(this, tr("Confirm"), tr("Do you really want to inform the clients to update the password?"), QMessageBox::Yes | QMessageBox::No);
+    if(ret == QMessageBox::No) {
         return;
     }
-    
-    
+
+
     //controlCenterPacketsParser->sendUpdateMSUserPasswordPacket("", 0, workgroup(), m_adminUser->getUserID());
 }
 
-void ControlCenter::slotInformUserNewLogonPassword(){
+void ControlCenter::slotInformUserNewLogonPassword()
+{
 
     QMessageBox::critical(this, tr("Error"), tr("Function Disabled!"));
     return;
-    
-    if(m_adminUser->isReadonly()){
+
+    if(m_adminUser->isReadonly()) {
         QMessageBox::critical(this, tr("Error"), tr("You dont have the access permissions!"));
         return;
     }
 
-    if(ui.comboBoxWorkgroup->currentText().isEmpty()){
+    if(ui.comboBoxWorkgroup->currentText().isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Please select the workgroup!"));
         ui.comboBoxWorkgroup->setFocus();
         return;
     }
-    
-    int ret = QMessageBox::question(this, tr("Confirm"), tr("Do you really want to inform the clients to retrieve the new password?"), QMessageBox::Yes|QMessageBox::No);
-    if(ret == QMessageBox::No){
+
+    int ret = QMessageBox::question(this, tr("Confirm"), tr("Do you really want to inform the clients to retrieve the new password?"), QMessageBox::Yes | QMessageBox::No);
+    if(ret == QMessageBox::No) {
         return;
     }
-    
-    
+
+
     //controlCenterPacketsParser->sendInformUpdatePasswordPacket("", 0, workgroup(), m_adminUser->getUserID());
-    
+
 }
 
-void ControlCenter::slotShowCustomContextMenu(const QPoint & pos){
+void ControlCenter::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *tableView = qobject_cast<QTableView*> (sender());
+    QTableView *tableView = qobject_cast<QTableView *> (sender());
 
-    if (!tableView){
+    if (!tableView) {
         return;
     }
 
@@ -1014,14 +1058,15 @@ void ControlCenter::slotShowCustomContextMenu(const QPoint & pos){
 }
 
 
-void ControlCenter::startNetwork(){
+void ControlCenter::startNetwork()
+{
 
     QString errorMessage = "";
     m_udpServer = resourcesManager->startUDPServer(QHostAddress::Any, m_localUDPListeningPort, true, &errorMessage);
-    if(!m_udpServer){
+    if(!m_udpServer) {
         QMessageBox::critical(this, tr("Error"), tr("Can not start UDP listening on port %1! %2").arg(m_localUDPListeningPort).arg(errorMessage));
-    }else{
-        qWarning()<<QString("UDP listening on port %1!").arg(m_localUDPListeningPort);
+    } else {
+        qWarning() << QString("UDP listening on port %1!").arg(m_localUDPListeningPort);
     }
 
     m_rtp = resourcesManager->startRTP(QHostAddress::Any, m_localRTPListeningPort, true, &errorMessage);
@@ -1066,15 +1111,16 @@ void ControlCenter::startNetwork(){
 
 }
 
-void ControlCenter::showReceivedMessage(const MessagePacket &packet){
+void ControlCenter::showReceivedMessage(const MessagePacket &packet)
+{
 
     QString message = packet.message;
     quint8 messageType = packet.msgType;
 
-    QString msg = QString(tr("<p>Message From %1 <b>%2</b> :</p>").arg((packet.getSocketID() == m_socketConnectedToServer)?tr("Server"):tr("Computer")).arg(packet.getPeerID()));
+    QString msg = QString(tr("<p>Message From %1 <b>%2</b> :</p>").arg((packet.getSocketID() == m_socketConnectedToServer) ? tr("Server") : tr("Computer")).arg(packet.getPeerID()));
 
     msg += message;
-    switch(messageType){
+    switch(messageType) {
     case quint8(MS::MSG_Information):
         QMessageBox::information(this, tr("Message"), msg);
         break;
@@ -1090,7 +1136,8 @@ void ControlCenter::showReceivedMessage(const MessagePacket &packet){
 
 }
 
-void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
+void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet)
+{
     //qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...)";
 
     QString assetNO = packet.getPeerID();
@@ -1098,7 +1145,7 @@ void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
     quint8 infoType = packet.infoType;
 
     ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
-    if(!info){
+    if(!info) {
         info = new ClientInfo(assetNO, this);
     }
 
@@ -1112,7 +1159,7 @@ void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
         break;
 
     default:
-        qCritical()<<"ERROR! Unknown client info type!";
+        qCritical() << "ERROR! Unknown client info type!";
         break;
     }
 
@@ -1122,21 +1169,21 @@ void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet){
 
 }
 
-void ControlCenter::processSystemInfoFromServer(const SystemInfoFromServerPacket &packet){
+void ControlCenter::processSystemInfoFromServer(const SystemInfoFromServerPacket &packet)
+{
     QString extraInfo = packet.extraInfo;
     QByteArray infoData = packet.data;
     quint8 infoType = packet.infoType;
 
     switch (infoType) {
     case quint8(MS::SYSINFO_OS):
-    case quint8(MS::SYSINFO_HARDWARE):
-    {
-        if(!extraInfo.isEmpty()){
+    case quint8(MS::SYSINFO_HARDWARE): {
+        if(!extraInfo.isEmpty()) {
             updateClientInfoFromServer(extraInfo, infoData, infoType);
             return;
         }
     }
-        break;
+    break;
 
     default:
         break;
@@ -1148,28 +1195,34 @@ void ControlCenter::processSystemInfoFromServer(const SystemInfoFromServerPacket
 
 }
 
-void ControlCenter::updateSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType){
+void ControlCenter::updateSystemInfoFromServer(const QString &extraInfo, const QByteArray &infoData, quint8 infoType)
+{
     //qDebug()<<"--ControlCenter::updateSystemInfoFromServer(...)"<<" infoType:"<<infoType;
 
     switch (infoType) {
-    case quint8(MS::SYSINFO_OS):
-    {
-        QList<ClientInfo*> clientsList;
-        if(infoData.isEmpty()){return;}
+    case quint8(MS::SYSINFO_OS): {
+        QList<ClientInfo *> clientsList;
+        if(infoData.isEmpty()) {
+            return;
+        }
 
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
-        if(error.error != QJsonParseError::NoError){
-            qCritical()<<error.errorString();
+        if(error.error != QJsonParseError::NoError) {
+            qCritical() << error.errorString();
             return;
         }
         QJsonObject object = doc.object();
-        if(object.isEmpty()){return;}
+        if(object.isEmpty()) {
+            return;
+        }
 
         QJsonArray infoArray = object["OS"].toArray();
-        if(infoArray.isEmpty()){return;}
+        if(infoArray.isEmpty()) {
+            return;
+        }
 
-        for(int i=0;i<infoArray.size();i++){
+        for(int i = 0; i < infoArray.size(); i++) {
             QByteArray data = infoArray.at(i).toString().toUtf8();
             ClientInfo *info = new ClientInfo("", this);
             info->setJsonData(data);
@@ -1181,63 +1234,57 @@ void ControlCenter::updateSystemInfoFromServer(const QString &extraInfo, const Q
         ui.toolButtonfilter->setEnabled(true);
 
     }
-        break;
+    break;
 
-    case quint8(MS::SYSINFO_SYSADMINS):
-    {
+    case quint8(MS::SYSINFO_SYSADMINS): {
         ui.tabServer->setAdminsData(infoData);
     }
-        break;
+    break;
 
-    case quint8(MS::SYSINFO_SYSALARMS):
-    {
+    case quint8(MS::SYSINFO_SYSALARMS): {
         ui.tabServer->setAlarmsData(infoData);
     }
-        break;
+    break;
 
-    case quint8(MS::SYSINFO_SERVER_INFO):
-    {
+    case quint8(MS::SYSINFO_SERVER_INFO): {
         ui.tabServer->updateServerInfo(infoData);
     }
-        break;
+    break;
 
-    case quint8(MS::SYSINFO_REALTIME_INFO):
-    {
+    case quint8(MS::SYSINFO_REALTIME_INFO): {
         ui.tabServer->updateRealtimeInfo(infoData);
     }
-        break;
+    break;
 
-    case quint8(MS::SYSINFO_ANNOUNCEMENTS):
-    {
+    case quint8(MS::SYSINFO_ANNOUNCEMENTS): {
         ui.tabServer->setAnnouncementsData(infoData);
     }
-        break;
+    break;
 
-    case quint8(MS::SYSINFO_ANNOUNCEMENTTARGETS):
-    {
-        ui.tabServer->setAnnouncementTargetsData(extraInfo,infoData);
+    case quint8(MS::SYSINFO_ANNOUNCEMENTTARGETS): {
+        ui.tabServer->setAnnouncementTargetsData(extraInfo, infoData);
     }
-        break;
+    break;
 
-    case quint8(MS::SYSINFO_ANNOUNCEMENTREPLIES):
-    {
+    case quint8(MS::SYSINFO_ANNOUNCEMENTREPLIES): {
         ui.tabServer->setAnnouncementReplies(infoData);
     }
-        break;
+    break;
 
     default:
-        qCritical()<<"ERROR! Invalid info from server!";
+        qCritical() << "ERROR! Invalid info from server!";
         break;
     }
 
 
 }
 
-void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType){
-    qDebug()<<"--ControlCenter::updateClientInfoFromServer(...)"<<" assetNO:"<<assetNO<<" infoType:"<<infoType;
+void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QByteArray &infoData, quint8 infoType)
+{
+    qDebug() << "--ControlCenter::updateClientInfoFromServer(...)" << " assetNO:" << assetNO << " infoType:" << infoType;
 
     ClientInfo *info = clientInfoModel->getClientInfo(assetNO);
-    if(!info){
+    if(!info) {
         info = new ClientInfo(assetNO, this);
         clientInfoModel->addClientInfo(info);
     }
@@ -1255,7 +1302,7 @@ void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QBy
 //        updateServicesInfo(object);
 //        break;
     default:
-        qCritical()<<"ERROR! Unknown client info type!";
+        qCritical() << "ERROR! Unknown client info type!";
         break;
     }
 
@@ -1263,22 +1310,26 @@ void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QBy
 
 }
 
-void ControlCenter::processAssetNOModifiedPacket(const ModifyAssetNOPacket &packet){
+void ControlCenter::processAssetNOModifiedPacket(const ModifyAssetNOPacket &packet)
+{
 
     QString oldAssetNO = packet.oldAssetNO;
     QString newAssetNO = packet.newAssetNO;
-    if(oldAssetNO == newAssetNO){return;}
+    if(oldAssetNO == newAssetNO) {
+        return;
+    }
 
     ClientInfo *info = clientInfoModel->getClientInfo(oldAssetNO);
-    if(!info){
+    if(!info) {
         return;
     }
     info->setAssetNO(newAssetNO);
     clientInfoModel->updateClientInfo(info);
 }
 
-void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online){
-    qDebug()<<"--ControlCenter::processClientOnlineStatusChangedPacket(...)";
+void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientName, bool online)
+{
+    qDebug() << "--ControlCenter::processClientOnlineStatusChangedPacket(...)";
 
 //    QString ip = "";
 //    quint16 port = 0;
@@ -1309,14 +1360,14 @@ void ControlCenter::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
 
 }
 
-void ControlCenter::processScreenshotPacket(const ScreenshotPacket &packet){
+void ControlCenter::processScreenshotPacket(const ScreenshotPacket &packet)
+{
 
 
     switch (packet.InfoType) {
-    case ScreenshotPacket::SCREENSHOT_DESKTOP_INFO :
-    {
+    case ScreenshotPacket::SCREENSHOT_DESKTOP_INFO : {
 
-    if(!m_remoteDesktopMonitor){
+        if(!m_remoteDesktopMonitor) {
             m_remoteDesktopMonitor = new RemoteDesktopMonitor(this);
             connect(m_remoteDesktopMonitor, SIGNAL(closeUserSocket(quint32)), this, SLOT(closeUserSocket(quint32)));
             connect(m_remoteDesktopMonitor, SIGNAL(signalClose()), this, SLOT(closeRemoteDesktopMonitor()));
@@ -1327,17 +1378,16 @@ void ControlCenter::processScreenshotPacket(const ScreenshotPacket &packet){
 
         m_remoteDesktopMonitor->setDesktopInfo(packet.getSocketID(), packet.getPeerID(), packet.DesktopInfo.desktopWidth, packet.DesktopInfo.desktopHeight, packet.DesktopInfo.blockWidth, packet.DesktopInfo.blockHeight);
     }
-        break;
+    break;
 
-    case ScreenshotPacket::SCREENSHOT_DATA :
-    {
-        if(!m_remoteDesktopMonitor){
-            qCritical()<<QString("ERROR! Remote Desktop Monitor Not Initialized.");
+    case ScreenshotPacket::SCREENSHOT_DATA : {
+        if(!m_remoteDesktopMonitor) {
+            qCritical() << QString("ERROR! Remote Desktop Monitor Not Initialized.");
             return;
         }
         m_remoteDesktopMonitor->updateScreenshot(packet.getPeerID(), packet.ScreenshotData.locations, packet.ScreenshotData.images);
     }
-        break;
+    break;
 
     default:
         break;
@@ -1346,10 +1396,11 @@ void ControlCenter::processScreenshotPacket(const ScreenshotPacket &packet){
 
 }
 
-void ControlCenter::closeRemoteDesktopMonitor(){
-    qDebug()<<"--ControlCenter::closeRemoteDesktopMonitor()";
+void ControlCenter::closeRemoteDesktopMonitor()
+{
+    qDebug() << "--ControlCenter::closeRemoteDesktopMonitor()";
 
-    if(!m_remoteDesktopMonitor){
+    if(!m_remoteDesktopMonitor) {
         return;
     }
 
@@ -1360,22 +1411,26 @@ void ControlCenter::closeRemoteDesktopMonitor(){
 
 }
 
-void ControlCenter::closeUserSocket(quint32 userSocketID){
-    qDebug()<<"--ControlCenter::closeUserSocket(...) userSocketID:"<<userSocketID;
+void ControlCenter::closeUserSocket(quint32 userSocketID)
+{
+    qDebug() << "--ControlCenter::closeUserSocket(...) userSocketID:" << userSocketID;
     m_rtp->closeSocket(userSocketID);
 }
 
-void ControlCenter::peerConnected(const QHostAddress &peerAddress, quint16 peerPort){
-    qWarning()<<QString("Connected! "+peerAddress.toString()+":"+QString::number(peerPort));
+void ControlCenter::peerConnected(const QHostAddress &peerAddress, quint16 peerPort)
+{
+    qWarning() << QString("Connected! " + peerAddress.toString() + ":" + QString::number(peerPort));
 
 }
 
-void ControlCenter::signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort){
-    qCritical()<<QString("Connecting Timeout! "+peerAddress.toString()+":"+QString::number(peerPort));
+void ControlCenter::signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort)
+{
+    qCritical() << QString("Connecting Timeout! " + peerAddress.toString() + ":" + QString::number(peerPort));
 }
 
-void ControlCenter::peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose){
-    qDebug()<<QString("Disconnected! "+peerAddress.toString()+":"+QString::number(peerPort));
+void ControlCenter::peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose)
+{
+    qDebug() << QString("Disconnected! " + peerAddress.toString() + ":" + QString::number(peerPort));
 
 //    if(!normalClose){
 //        qCritical()<<QString("ERROR! Peer %1:%2 Closed Unexpectedly!").arg(peerAddress.toString()).arg(peerPort);
@@ -1393,8 +1448,9 @@ void ControlCenter::peerDisconnected(const QHostAddress &peerAddress, quint16 pe
 
 }
 
-void ControlCenter::peerDisconnected(SOCKETID socketID){
-    qDebug()<<"--ControlCenter::peerDisconnected(...) socketID:"<<socketID;
+void ControlCenter::peerDisconnected(SOCKETID socketID)
+{
+    qDebug() << "--ControlCenter::peerDisconnected(...) socketID:" << socketID;
 
 //    if(clientSocketsHash.contains(socketID)){
 //        qCritical()<<QString("ERROR! Peer %1 Closed Unexpectedly!").arg(clientSocketsHash.value(socketID).toString());
@@ -1412,20 +1468,21 @@ void ControlCenter::peerDisconnected(SOCKETID socketID){
 //    }
 
 
-    if(socketID == m_socketConnectedToServer){
+    if(socketID == m_socketConnectedToServer) {
         m_socketConnectedToServer = INVALID_SOCK_ID;
 //        m_adminUser->setVerified(false);
 //        m_readonly = true;
         return;
     }
 
-    if(m_remoteDesktopMonitor){
+    if(m_remoteDesktopMonitor) {
         m_remoteDesktopMonitor->peerDisconnected(socketID);
     }
 
 }
 
-void ControlCenter::adminVerified(){
+void ControlCenter::adminVerified()
+{
     m_socketConnectedToServer = m_adminUser->socketConnectedToServer();
     Packet::setLocalID(m_adminUser->getUserID());
 }

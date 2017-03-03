@@ -10,7 +10,8 @@
 #include "HHSharedGUI/hdataoutputdialog.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 
@@ -35,27 +36,29 @@ SoftwareMamagement::~SoftwareMamagement()
     delete ui;
 }
 
-QTableWidget *SoftwareMamagement::softwareTable(){
+QTableWidget *SoftwareMamagement::softwareTable()
+{
     return ui->tableWidgetSoftware;
 }
 
-void SoftwareMamagement::setData(const QByteArray &data){
-    qDebug()<<"--SoftwareMamagement::setData(...)";
+void SoftwareMamagement::setData(const QByteArray &data)
+{
+    qDebug() << "--SoftwareMamagement::setData(...)";
 
-    if(data.isEmpty()){
-        qCritical()<<"ERROR! Invalid softwares data.";
+    if(data.isEmpty()) {
+        qCritical() << "ERROR! Invalid softwares data.";
         return;
     }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
-    if(object.isEmpty()){
-        qCritical()<<"ERROR! Invalid softwares data.";
+    if(object.isEmpty()) {
+        qCritical() << "ERROR! Invalid softwares data.";
         return;
     }
 
@@ -65,30 +68,33 @@ void SoftwareMamagement::setData(const QByteArray &data){
     int softwareCount = array.size();
     ui->tableWidgetSoftware->setRowCount(softwareCount);
 
-    for(int i=0;i<softwareCount;i++){
+    for(int i = 0; i < softwareCount; i++) {
         QJsonArray infoArray = array.at(i).toArray();
-        if(infoArray.size() != 4){continue;}
+        if(infoArray.size() != 4) {
+            continue;
+        }
         //        qDebug()<<infoArray.at(0).toString();
         //        qDebug()<<infoArray.at(1).toString();
         //        qDebug()<<infoArray.at(2).toString();
         //        qDebug()<<infoArray.at(3).toString();
 
-        for(int j=0; j<4; j++){
+        for(int j = 0; j < 4; j++) {
             ui->tableWidgetSoftware->setItem(i, j, new QTableWidgetItem(infoArray.at(j).toString()));
         }
     }
 }
 
-void SoftwareMamagement::slotShowCustomContextMenu(const QPoint & pos){
+void SoftwareMamagement::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableWidget *wgt = qobject_cast<QTableWidget*> (sender());
-    if (!wgt){
+    QTableWidget *wgt = qobject_cast<QTableWidget *> (sender());
+    if (!wgt) {
         return;
     }
 
     QMenu menu(this);
     menu.addAction(ui->actionRefresh);
-    if(!wgt->rowCount()){
+    if(!wgt->rowCount()) {
         menu.exec(wgt->viewport()->mapToGlobal(pos));
         return;
     }
@@ -112,14 +118,16 @@ void SoftwareMamagement::slotShowCustomContextMenu(const QPoint & pos){
 
 }
 
-void SoftwareMamagement::slotExportQueryResult(){
+void SoftwareMamagement::slotExportQueryResult()
+{
 
     DataOutputDialog dlg(ui->tableWidgetSoftware, DataOutputDialog::EXPORT, this);
     dlg.exec();
 
 }
 
-void SoftwareMamagement::slotPrintQueryResult(){
+void SoftwareMamagement::slotPrintQueryResult()
+{
 
 #ifndef QT_NO_PRINTER
     //TODO

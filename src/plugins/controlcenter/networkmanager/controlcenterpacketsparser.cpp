@@ -45,11 +45,12 @@
 //#endif
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance *manager, QObject *parent)
-    :QObject(parent), m_resourcesManager(manager)
+    : QObject(parent), m_resourcesManager(manager)
 {
 
     Q_ASSERT(m_resourcesManager);
@@ -98,16 +99,18 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
 
 }
 
-ControlCenterPacketsParser::~ControlCenterPacketsParser() {
+ControlCenterPacketsParser::~ControlCenterPacketsParser()
+{
     // TODO Auto-generated destructor stub
-    qDebug()<<"~ControlCenterPacketsParser()";
+    qDebug() << "~ControlCenterPacketsParser()";
 
     disconnect();
 
 }
 
 
-void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packet){
+void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packet)
+{
     //qDebug()<<"----ControlCenterPacketsParser::parseIncomingPacketData(Packet *packet)";
 
 
@@ -119,11 +122,10 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
     quint16 peerPort = packet.getPeerHostPort();
     SOCKETID socketID = packet.getSocketID();
 
-    switch(packetType){
+    switch(packetType) {
 
-    case quint8(MS::CMD_ServerDiscovery):
-    {
-        qDebug()<<"~~CMD_ServerDiscovery";
+    case quint8(MS::CMD_ServerDiscovery): {
+        qDebug() << "~~CMD_ServerDiscovery";
 
         ServerDiscoveryPacket p(packet);
         serverAddress = peerAddress;
@@ -131,130 +133,116 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
         serverName = peerID;
         emit signalServerDeclarePacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_JobProgress):
-    {
-        qDebug()<<"~~CMD_JobProgress--";
+    case quint8(MS::CMD_JobProgress): {
+        qDebug() << "~~CMD_JobProgress--";
 
         JobProgressPacket p(packet);
         emit signalJobFinished(p.jobID, p.result, p.extraData);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_Message):
-    {
-        qDebug()<<"~~CMD_Message--";
+    case quint8(MS::CMD_Message): {
+        qDebug() << "~~CMD_Message--";
 
         MessagePacket p(packet);
         emit signalMessagePacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_ClientInfo):
-    {
+    case quint8(MS::CMD_ClientInfo): {
         //qDebug()<<"~~CMD_ClientInfo";
         ClientInfoPacket p(packet);
         emit signalClientInfoPacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_SystemInfoFromServer):
-    {
+    case quint8(MS::CMD_SystemInfoFromServer): {
         //qDebug()<<"~~CMD_SystemInfoFromServer";
 
         SystemInfoFromServerPacket p(packet);
         emit signalSystemInfoFromServerReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_USBDev):
-    {
-        qDebug()<<"~~CMD_USBDev";
+    case quint8(MS::CMD_USBDev): {
+        qDebug() << "~~CMD_USBDev";
 
         USBDevPacket p(packet);
         emit signalClientResponseUSBInfoPacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_RemoteConsole):
-    {
-        qDebug()<<"~~ClientResponseRemoteConsole";
+    case quint8(MS::CMD_RemoteConsole): {
+        qDebug() << "~~ClientResponseRemoteConsole";
 
         RemoteConsolePacket p(packet);
         emit signalRemoteConsolePacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_AdminLogin):
-    {
-        qDebug()<<"~~CMD_AdminLogin";
+    case quint8(MS::CMD_AdminLogin): {
+        qDebug() << "~~CMD_AdminLogin";
 
         AdminLoginPacket p(packet);
         emit signalServerResponseAdminLoginResultPacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_AdminConnectionToClient):
-    {
+    case quint8(MS::CMD_AdminConnectionToClient): {
         AdminConnectionToClientPacket p(packet);
         emit signalClientResponseAdminConnectionResultPacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_ModifyAssetNO):
-    {
+    case quint8(MS::CMD_ModifyAssetNO): {
         ModifyAssetNOPacket p(packet);
         emit signalAssetNOModifiedPacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_LocalUserOnlineStatusChanged):
-    {
+    case quint8(MS::CMD_LocalUserOnlineStatusChanged): {
         LocalUserOnlineStatusChangedPacket p(packet);
         emit signalUserOnlineStatusChanged(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_Temperatures):
-    {
+    case quint8(MS::CMD_Temperatures): {
         TemperaturesPacket p(packet);
         emit signalTemperaturesPacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_Screenshot):
-    {
+    case quint8(MS::CMD_Screenshot): {
         ScreenshotPacket p(packet);
         emit signalScreenshotPacketReceived(p);
     }
-        break;
+    break;
 
-    case quint8(MS::CMD_ServiceConfig):
-    {
+    case quint8(MS::CMD_ServiceConfig): {
         ServiceConfigPacket p(packet);
         emit signalServiceConfigChangedPacketReceived(p);
     }
-        break;
+    break;
 
 
-        ////////////////////////////////////////////
-    case quint8(MS::CMD_FileTransfer):
-    {
+    ////////////////////////////////////////////
+    case quint8(MS::CMD_FileTransfer): {
         //qDebug()<<"~~CMD_FileTransfer";
 
         FileTransferPacket p(packet);
         emit signalFileTransferPacketReceived(p);
     }
-        break;
+    break;
 
 
 
     default:
-        qWarning()<<"ControlCenterPacketsParser! Unknown Packet Type: "<<packetType
-                    //                 <<"    Serial Number: "<<packetSerialNumber
-                 <<"    From: "<<peerAddress.toString()
-                <<":"<<peerPort;
+        qWarning() << "ControlCenterPacketsParser! Unknown Packet Type: " << packetType
+                   //                 <<"    Serial Number: "<<packetSerialNumber
+                   << "    From: " << peerAddress.toString()
+                   << ":" << peerPort;
         break;
 
     }

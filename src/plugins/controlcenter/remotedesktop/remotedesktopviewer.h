@@ -9,7 +9,8 @@
 
 class CAviFile;
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class RemoteDesktopViewer : public ImageViewer

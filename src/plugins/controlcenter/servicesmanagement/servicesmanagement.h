@@ -6,12 +6,14 @@
 #include "serviceinfomodel.h"
 #include "../../sharedms/global_shared.h"
 
-namespace Ui {
+namespace Ui
+{
 class ServicesManagement;
 }
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class ServicesManagement : public QWidget
@@ -24,7 +26,7 @@ public:
 
 
 
- signals:
+signals:
     void signalGetServicesInfo(quint8 infoType = MS::SYSINFO_SERVICES);
     void signalChangServiceConfig(const QString &serviceName, bool start, quint64 startupType);
 
@@ -34,7 +36,7 @@ public slots:
 
 
 private slots:
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
 
     void slotExportQueryResult();
     void slotPrintQueryResult();

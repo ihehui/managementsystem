@@ -3,7 +3,8 @@
 
 #include <QMessageBox>
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AdminInfoWidget::AdminInfoWidget(AdminUserInfo *info, bool readonly, QWidget *parent) :
@@ -30,7 +31,7 @@ AdminInfoWidget::AdminInfoWidget(AdminUserInfo *info, bool readonly, QWidget *pa
 
     setReadonly(readonly);
 
-    if(!userID.isEmpty()){
+    if(!userID.isEmpty()) {
         ui->lineEditID->setReadOnly(true);
     }
 
@@ -41,7 +42,8 @@ AdminInfoWidget::~AdminInfoWidget()
     delete ui;
 }
 
-void AdminInfoWidget::setReadonly(bool readonly){
+void AdminInfoWidget::setReadonly(bool readonly)
+{
 
     ui->lineEditID->setReadOnly(readonly);
     ui->lineEditName->setReadOnly(readonly);
@@ -57,23 +59,24 @@ void AdminInfoWidget::setReadonly(bool readonly){
 
 }
 
-void AdminInfoWidget::on_pushButtonOK_clicked(){
+void AdminInfoWidget::on_pushButtonOK_clicked()
+{
     QString adminID =  m_admininfo->getUserID();
     QString password = ui->lineEditPassword->text();
 
-    if(adminID.isEmpty()){
+    if(adminID.isEmpty()) {
         adminID = ui->lineEditID->text().trimmed();
-        if(adminID.isEmpty()){
+        if(adminID.isEmpty()) {
             QMessageBox::critical(this, tr("Error"), tr("Invalid admin ID!"));
             ui->lineEditID->setFocus();
             return;
         }
-        if(password.size() < 8){
+        if(password.size() < 8) {
             QMessageBox::critical(this, tr("Error"), tr("At least 8 characters are required fro the password!"));
             ui->lineEditPassword->setFocus();
             return;
         }
-        if(password != ui->lineEditPassword2->text()){
+        if(password != ui->lineEditPassword2->text()) {
             QMessageBox::critical(this, tr("Error"), tr("Passwords do not match!"));
             ui->lineEditPassword2->setFocus();
             return;
@@ -82,14 +85,14 @@ void AdminInfoWidget::on_pushButtonOK_clicked(){
         m_admininfo->setUserID(adminID);
         m_admininfo->setPassword(password, true);
 
-    }else{
-        if(!password.isEmpty()){
-            if(password.size() < 8){
+    } else {
+        if(!password.isEmpty()) {
+            if(password.size() < 8) {
                 QMessageBox::critical(this, tr("Error"), tr("At least 8 characters are required fro the password!"));
                 ui->lineEditPassword->setFocus();
                 return;
             }
-            if(password != ui->lineEditPassword2->text()){
+            if(password != ui->lineEditPassword2->text()) {
                 QMessageBox::critical(this, tr("Error"), tr("Passwords do not match!"));
                 ui->lineEditPassword2->setFocus();
                 return;
@@ -108,7 +111,8 @@ void AdminInfoWidget::on_pushButtonOK_clicked(){
     emit signalOK();
 }
 
-void AdminInfoWidget::on_pushButtonCancel_clicked(){
+void AdminInfoWidget::on_pushButtonCancel_clicked()
+{
     emit signalCancel();
 }
 

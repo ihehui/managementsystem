@@ -5,12 +5,14 @@
 #include "../../sharedms/adminuserinfo.h"
 
 
-namespace Ui {
+namespace Ui
+{
 class AdminInfoWidget;
 }
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class AdminInfoWidget : public QWidget

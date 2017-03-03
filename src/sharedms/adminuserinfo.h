@@ -9,7 +9,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class SHAREDMSLIB_API AdminUserInfo : public UserBase

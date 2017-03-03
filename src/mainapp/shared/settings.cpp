@@ -4,9 +4,10 @@
 #include "settings.h"
 #include <QDebug>
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-Settings::Settings(const QString fileBaseName, const QString fileDirPath, QObject* parent )
+Settings::Settings(const QString fileBaseName, const QString fileDirPath, QObject *parent )
     : SettingsBase(fileBaseName, fileDirPath, parent )
 {
 

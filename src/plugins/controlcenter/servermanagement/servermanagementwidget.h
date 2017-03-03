@@ -9,11 +9,13 @@
 #include "../announcementmanagement/announcementmanagementwidget.h"
 
 
-namespace Ui {
+namespace Ui
+{
 class ServerManagementWidget;
 }
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class ServerManagementWidget : public QWidget
@@ -46,7 +48,7 @@ private slots:
     void slotcloseTab();
 
     void showTabMenu();
-    void showMenu(const QPoint & pos);
+    void showMenu(const QPoint &pos);
 
     void manageAdmins();
     void manageAlarms();

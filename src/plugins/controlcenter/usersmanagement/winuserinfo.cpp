@@ -1,10 +1,11 @@
 #include "winuserinfo.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 WinUserInfo::WinUserInfo(QObject *parent)
-    :QObject(parent)
+    : QObject(parent)
 {
 
     accountDisabled = false;
@@ -24,7 +25,8 @@ WinUserInfo::~WinUserInfo()
 
 }
 
-WinUserInfo & WinUserInfo::operator= (const WinUserInfo &info){
+WinUserInfo &WinUserInfo::operator= (const WinUserInfo &info)
+{
     userName = info.userName;
     homeDir = info.homeDir;
     comment = info.comment;

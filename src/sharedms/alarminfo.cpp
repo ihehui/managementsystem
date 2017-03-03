@@ -1,7 +1,8 @@
 #include "alarminfo.h"
 #include "global_shared.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AlarmInfo::AlarmInfo()

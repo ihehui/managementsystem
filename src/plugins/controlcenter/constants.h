@@ -12,7 +12,7 @@
 #define DB_NAME	"managementsystem"
 
 #ifndef APP_VERSION
-#define APP_VERSION	"2015.4.15.1"
+    #define APP_VERSION	"2015.4.15.1"
 #endif
 
 

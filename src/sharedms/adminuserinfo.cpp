@@ -6,11 +6,12 @@
 #include <QDebug>
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AdminUserInfo::AdminUserInfo(const QString &adminUserID, QObject *parent)
-    :UserBase(adminUserID, "", "", parent)
+    : UserBase(adminUserID, "", "", parent)
 {
 
     businessAddress = "";
@@ -30,66 +31,68 @@ AdminUserInfo::~AdminUserInfo()
 
 }
 
-void AdminUserInfo::setJsonData(const QByteArray &data){
+void AdminUserInfo::setJsonData(const QByteArray &data)
+{
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
 
-    if(object.contains("ID")){
+    if(object.contains("ID")) {
         setUserID( object["ID"].toString() );
     }
 
-    if(object.contains("Name")){
+    if(object.contains("Name")) {
         setUserName( object["Name"].toString() );
     }
 
-    if(object.contains("PWD")){
+    if(object.contains("PWD")) {
         setPassword( object["PWD"].toString() );
     }
 
-    if(object.contains("BAddress")){
+    if(object.contains("BAddress")) {
         businessAddress = object["BAddress"].toString();
     }
 
-    if(object.contains("IP")){
+    if(object.contains("IP")) {
         lastLoginIP = object["IP"].toString();
     }
 
-    if(object.contains("PC")){
+    if(object.contains("PC")) {
         lastLoginPC = object["PC"].toString();
     }
 
-    if(object.contains("Time")){
+    if(object.contains("Time")) {
         lastLoginTime = object["Time"].toString();
     }
 
-    if(object.contains("Readonly")){
+    if(object.contains("Readonly")) {
         readonly = object["Readonly"].toString().toUInt();
     }
 
-    if(object.contains("Active")){
+    if(object.contains("Active")) {
         active = object["Active"].toString().toUInt();
     }
 
-    if(object.contains("Remark")){
+    if(object.contains("Remark")) {
         remark = object["Remark"].toString();
     }
 
 
 }
 
-QByteArray AdminUserInfo::getJsonData(bool withPassword){
+QByteArray AdminUserInfo::getJsonData(bool withPassword)
+{
 
     QJsonObject object;
 
     object["ID"] = getUserID();
     object["Name"] = getUserName();
-    if(withPassword){
+    if(withPassword) {
         object["PWD"] = getPassword();
     }
 
@@ -97,8 +100,8 @@ QByteArray AdminUserInfo::getJsonData(bool withPassword){
     object["IP"] = lastLoginIP;
     object["PC"] = lastLoginPC;
     object["Time"] = lastLoginTime;
-    object["Readonly"] = readonly?"1":"0";
-    object["Active"] = active?"1":"0";
+    object["Readonly"] = readonly ? "1" : "0";
+    object["Active"] = active ? "1" : "0";
     object["Remark"] = remark;
 
     QJsonDocument doc(object);

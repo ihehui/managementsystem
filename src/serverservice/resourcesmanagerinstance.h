@@ -14,7 +14,8 @@
 
 #include "HHSharedCore/hsingleton.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class ResourcesManagerInstance: public ResourcesManager, public Singleton<ResourcesManagerInstance>

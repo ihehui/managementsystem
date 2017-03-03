@@ -9,7 +9,8 @@
 #include "HHSharedSystemUtilities/SystemUtilities"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 
@@ -57,32 +58,36 @@ ServicesManagement::~ServicesManagement()
 {
     delete ui;
 
-    if(m_proxyModel){
+    if(m_proxyModel) {
         delete m_proxyModel;
         m_proxyModel = 0;
     }
 
-    if(m_serviceInfoModel){
+    if(m_serviceInfoModel) {
         delete m_serviceInfoModel;
         m_serviceInfoModel = 0;
     }
 
 }
 
-void ServicesManagement::setData(const QByteArray &data){
+void ServicesManagement::setData(const QByteArray &data)
+{
     m_selectedService = 0;
     m_serviceInfoModel->setJsonData(data);
 }
 
-void ServicesManagement::serviceConfigChanged(const QString &serviceName, quint64 processID, quint64 startupType){
+void ServicesManagement::serviceConfigChanged(const QString &serviceName, quint64 processID, quint64 startupType)
+{
 
     ServiceInfo *info = m_serviceInfoModel->getServiceInfo(serviceName);
-    if(!info){return;}
-    if(info->processID != processID){
-        QMessageBox::information(this, tr("Service"), tr("Service '%1' %2 successfully.").arg(serviceName).arg(processID?tr("started"):tr("stopped")));
+    if(!info) {
+        return;
+    }
+    if(info->processID != processID) {
+        QMessageBox::information(this, tr("Service"), tr("Service '%1' %2 successfully.").arg(serviceName).arg(processID ? tr("started") : tr("stopped")));
     }
 
-    if(info->startType != startupType){
+    if(info->startType != startupType) {
         QMessageBox::information(this, tr("Service"), tr("Service '%1' startup type changed successfully.").arg(serviceName));
     }
 
@@ -91,16 +96,17 @@ void ServicesManagement::serviceConfigChanged(const QString &serviceName, quint6
 
 }
 
-void ServicesManagement::slotShowCustomContextMenu(const QPoint & pos){
+void ServicesManagement::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *tableView = qobject_cast<QTableView*> (sender());
-    if (!tableView){
+    QTableView *tableView = qobject_cast<QTableView *> (sender());
+    if (!tableView) {
         return;
     }
 
     QMenu menu(this);
     menu.addAction(ui->actionRefresh);
-    if(!m_selectedService){
+    if(!m_selectedService) {
         menu.exec(tableView->viewport()->mapToGlobal(pos));
         return;
     }
@@ -118,7 +124,7 @@ void ServicesManagement::slotShowCustomContextMenu(const QPoint & pos){
     //  menu.addAction(ui.actionPrintPreview);
 
 #endif
-    if(AdminUser::instance()->isReadonly()){
+    if(AdminUser::instance()->isReadonly()) {
         menu.exec(tableView->viewport()->mapToGlobal(pos));
         return;
     }
@@ -145,14 +151,16 @@ void ServicesManagement::slotShowCustomContextMenu(const QPoint & pos){
 
 }
 
-void ServicesManagement::slotExportQueryResult(){
+void ServicesManagement::slotExportQueryResult()
+{
 
     DataOutputDialog dlg(ui->tableViewServices, DataOutputDialog::EXPORT, this);
     dlg.exec();
 
 }
 
-void ServicesManagement::slotPrintQueryResult(){
+void ServicesManagement::slotPrintQueryResult()
+{
 
 #ifndef QT_NO_PRINTER
     //TODO
@@ -162,15 +170,18 @@ void ServicesManagement::slotPrintQueryResult(){
 
 }
 
-void ServicesManagement::updateSelectedServiceInfo(const QModelIndex &index) {
+void ServicesManagement::updateSelectedServiceInfo(const QModelIndex &index)
+{
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         return;
     }
 
-    QString serviceName = index.sibling(index.row(),0).data().toString();
+    QString serviceName = index.sibling(index.row(), 0).data().toString();
     m_selectedService = m_serviceInfoModel->getServiceInfo(serviceName);
-    if(!m_selectedService){return;}
+    if(!m_selectedService) {
+        return;
+    }
 
     //bool selected = ui->tableViewServices->currentIndex().isValid() && ui->tableViewServices->selectionModel()->selectedIndexes().size();
 
@@ -184,59 +195,74 @@ void ServicesManagement::updateSelectedServiceInfo(const QModelIndex &index) {
 
 }
 
-void ServicesManagement::changServiceStartupType(){
+void ServicesManagement::changServiceStartupType()
+{
 
-    if(!verifyPrivilege()){return;}
-
-
-    if(!m_selectedService){return;}
-
-    QAction *action = qobject_cast<QAction*>(sender());
-    if(!action){return;}
-
-    AdminUser *adminUser = AdminUser::instance();
-    if(!adminUser->isAdminVerified()){
+    if(!verifyPrivilege()) {
         return;
     }
-    if(adminUser->isReadonly()){
+
+
+    if(!m_selectedService) {
+        return;
+    }
+
+    QAction *action = qobject_cast<QAction *>(sender());
+    if(!action) {
+        return;
+    }
+
+    AdminUser *adminUser = AdminUser::instance();
+    if(!adminUser->isAdminVerified()) {
+        return;
+    }
+    if(adminUser->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return;
     }
 
     unsigned long startupType;
-    if(action == ui->actionAutoStart){
+    if(action == ui->actionAutoStart) {
         startupType = SERVICE_AUTO_START;
-    }else if(action == ui->actionManuallyStart){
+    } else if(action == ui->actionManuallyStart) {
         startupType = SERVICE_DEMAND_START;
-    }else{
-        startupType =SERVICE_DISABLED;
+    } else {
+        startupType = SERVICE_DISABLED;
     }
 
     emit signalChangServiceConfig(m_selectedService->serviceName, m_selectedService->processID, startupType);
 
 }
 
-void ServicesManagement::changServiceStatus(){
+void ServicesManagement::changServiceStatus()
+{
 
-    if(!verifyPrivilege()){return;}
+    if(!verifyPrivilege()) {
+        return;
+    }
 
-    if(!m_selectedService){return;}
+    if(!m_selectedService) {
+        return;
+    }
 
-    QAction *action = qobject_cast<QAction*>(sender());
-    if(!action){return;}
+    QAction *action = qobject_cast<QAction *>(sender());
+    if(!action) {
+        return;
+    }
 
     unsigned long startupType = 0xFFFFFFFF;
     emit signalChangServiceConfig(m_selectedService->serviceName, !m_selectedService->processID, startupType);
 
 }
 
-bool ServicesManagement::verifyPrivilege(){
+bool ServicesManagement::verifyPrivilege()
+{
 
     AdminUser *adminUser = AdminUser::instance();
-    if(!adminUser->isAdminVerified()){
+    if(!adminUser->isAdminVerified()) {
         return false;
     }
-    if(adminUser->isReadonly()){
+    if(adminUser->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }

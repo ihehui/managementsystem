@@ -18,18 +18,20 @@
 #include "HHSharedCore/hutilities.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ResourcesManagerInstance::ResourcesManagerInstance(QObject *parent)
-    :ResourcesManager(parent)//, mainWindow(mainWindow)
+    : ResourcesManager(parent) //, mainWindow(mainWindow)
 {
 
     setParent(parent);
 
 }
 
-ResourcesManagerInstance::~ResourcesManagerInstance() {
+ResourcesManagerInstance::~ResourcesManagerInstance()
+{
     // TODO Auto-generated destructor stub
 }
 

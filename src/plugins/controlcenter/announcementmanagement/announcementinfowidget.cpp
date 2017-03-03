@@ -9,7 +9,8 @@
 
 #include "HHSharedGUI/hdataoutputdialog.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AnnouncementInfoWidget::AnnouncementInfoWidget(bool readonly, QWidget *parent)
@@ -69,8 +70,11 @@ AnnouncementInfoWidget::~AnnouncementInfoWidget()
     delete m_model;
 }
 
-void AnnouncementInfoWidget::setAnnouncementInfo(const AnnouncementInfo *info){
-    if(!info){return;}
+void AnnouncementInfoWidget::setAnnouncementInfo(const AnnouncementInfo *info)
+{
+    if(!info) {
+        return;
+    }
 
     m_info = *info;
 
@@ -86,15 +90,15 @@ void AnnouncementInfoWidget::setAnnouncementInfo(const AnnouncementInfo *info){
 
     ui.textEdit->setText(info->Content);
 
-    if(info->ID.isEmpty()){
+    if(info->ID.isEmpty()) {
         ui.tabReplies->setEnabled(false);
         ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabReplies));
-    }else{
+    } else {
         on_actionRefresh_triggered();
         m_localTempID = info->ID.toUInt();
 
-        if(!info->Replies.isEmpty()){
-            if(ui.tabWidget->indexOf(ui.tabReplies) < 0){
+        if(!info->Replies.isEmpty()) {
+            if(ui.tabWidget->indexOf(ui.tabReplies) < 0) {
                 ui.textBrowserReplies->setText(info->Replies);
                 ui.tabWidget->addTab(ui.tabReplies, tr("Replies"));
             }
@@ -103,8 +107,11 @@ void AnnouncementInfoWidget::setAnnouncementInfo(const AnnouncementInfo *info){
 
 }
 
-void AnnouncementInfoWidget::getAnnouncementInfo(AnnouncementInfo *info){
-    if(!info){return;}
+void AnnouncementInfoWidget::getAnnouncementInfo(AnnouncementInfo *info)
+{
+    if(!info) {
+        return;
+    }
 
     info->ID = ui.lineEditAnnouncementID->text().trimmed();
     info->Type = ui.comboBoxAnnouncementType->currentData().toUInt();
@@ -113,7 +120,7 @@ void AnnouncementInfoWidget::getAnnouncementInfo(AnnouncementInfo *info){
     info->Admin = ui.lineEditAdmin->text().trimmed();
     //info->PublishDate = ui.dateTimeEditPublishDate->dateTime().toString("yyyy-MM-dd hh:mm:ss");
     info->ValidityPeriod = ui.spinBoxValidityPeriod->value();
-    info->TargetType = ui.groupBoxTargets->isChecked()?quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC):quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
+    info->TargetType = ui.groupBoxTargets->isChecked() ? quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC) : quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE);
     info->DisplayTimes = ui.spinBoxDisplayTimes->value();
     info->Active = ui.checkBoxActive->isChecked();
     info->Targets = m_model->getNewTargetsStringForSQL();
@@ -122,19 +129,20 @@ void AnnouncementInfoWidget::getAnnouncementInfo(AnnouncementInfo *info){
 
 }
 
-void AnnouncementInfoWidget::setReadonly(bool readonly){
+void AnnouncementInfoWidget::setReadonly(bool readonly)
+{
 
     m_readonly = readonly;
     ui.frameID->setVisible(true);
     ui.checkBoxActive->setEnabled(!readonly);
     bool createMode = ui.lineEditAnnouncementID->text().trimmed().isEmpty();
 
-    if(readonly){
+    if(readonly) {
         setWindowTitle(tr("Announcement Info"));
-    }else if(createMode){
+    } else if(createMode) {
         setWindowTitle(tr("Create New Announcement"));
         ui.frameID->setVisible(false);
-    }else{
+    } else {
         setWindowTitle(tr("Modify Announcement Info"));
     }
 
@@ -152,29 +160,34 @@ void AnnouncementInfoWidget::setReadonly(bool readonly){
     ui.pushButtonSave->setEnabled(!readonly);
 
     QHeaderView *view = ui.tableView->horizontalHeader();
-    if(readonly){
+    if(readonly) {
         view->showSection(2);
         view->showSection(3);
-    }else{
+    } else {
         view->hideSection(2);
         view->hideSection(3);
     }
 
 }
 
-bool AnnouncementInfoWidget::isReadonly(){
+bool AnnouncementInfoWidget::isReadonly()
+{
     return m_readonly;
 }
 
-void AnnouncementInfoWidget::addComputerTargets(const QStringList &targets){
-    if(m_readonly){return;}
+void AnnouncementInfoWidget::addComputerTargets(const QStringList &targets)
+{
+    if(m_readonly) {
+        return;
+    }
     m_model->addComputerTargets(targets);
 }
 
-void AnnouncementInfoWidget::setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data){
-    qDebug()<<"--AnnouncementInfoWidget::setAnnouncementTargetsData(...) announcementID:"<<announcementID;
+void AnnouncementInfoWidget::setAnnouncementTargetsData(const QString &announcementID, const QByteArray &data)
+{
+    qDebug() << "--AnnouncementInfoWidget::setAnnouncementTargetsData(...) announcementID:" << announcementID;
 
-    if(announcementID != ui.lineEditAnnouncementID->text().trimmed()){
+    if(announcementID != ui.lineEditAnnouncementID->text().trimmed()) {
         return;
     }
 
@@ -183,7 +196,8 @@ void AnnouncementInfoWidget::setAnnouncementTargetsData(const QString &announcem
     m_targetsTouched = true;
 }
 
-void AnnouncementInfoWidget::on_pushButtonClone_clicked(){
+void AnnouncementInfoWidget::on_pushButtonClone_clicked()
+{
 
     m_info.ID = "";
     m_info.Admin = m_myself->getUserID();
@@ -200,7 +214,8 @@ void AnnouncementInfoWidget::on_pushButtonClone_clicked(){
     m_model->switchToCloneMode();
 }
 
-void AnnouncementInfoWidget::on_pushButtonEdit_clicked(){
+void AnnouncementInfoWidget::on_pushButtonEdit_clicked()
+{
     //setReadonly(false);
 
     ui.pushButtonClone->setEnabled(false);
@@ -217,37 +232,38 @@ void AnnouncementInfoWidget::on_pushButtonEdit_clicked(){
 
 }
 
-void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
-    
+void AnnouncementInfoWidget::on_pushButtonSave_clicked()
+{
+
     QString announcementString = ui.textEdit->toPlainText();
-    if(announcementString.trimmed().isEmpty()){
+    if(announcementString.trimmed().isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Invalid Content!"));
         return;
     }
 
-    if(ui.groupBoxTargets->isChecked() && (!m_model->rowCount())){
+    if(ui.groupBoxTargets->isChecked() && (!m_model->rowCount())) {
         int ret = QMessageBox::question(this, tr("Question"),
                                         tr("You chose to send the announcement to specific targets, but no target has been appointed!<br>Do you want to specify the targets?"),
-                                        QMessageBox::Yes|QMessageBox::No,
+                                        QMessageBox::Yes | QMessageBox::No,
                                         QMessageBox::Yes);
-        if(ret == QMessageBox::Yes){
+        if(ret == QMessageBox::Yes) {
             ui.tabWidget->setCurrentWidget(ui.tabTargets);
             return;
         }
     }
-    
+
     int ret = QMessageBox::question(this, tr("Confirm"),
                                     tr("Do you really want to save the content?"),
-                                    QMessageBox::Yes|QMessageBox::Cancel,
+                                    QMessageBox::Yes | QMessageBox::Cancel,
                                     QMessageBox::Cancel);
-    if(ret == QMessageBox::Cancel){
+    if(ret == QMessageBox::Cancel) {
         return;
     }
 
     ui.pushButtonSave->setEnabled(false);
 
     unsigned int announcementID = m_info.ID.toUInt();
-    if(!announcementID){
+    if(!announcementID) {
         m_info.Active = ui.checkBoxActive->isChecked();
         m_info.Type = ui.comboBoxAnnouncementType->currentData().toUInt();
         m_info.ValidityPeriod = ui.spinBoxValidityPeriod->value();
@@ -258,33 +274,33 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
     }
 
     bool ok = false;
-    if(!announcementID){
+    if(!announcementID) {
         ok = m_myself->packetsParser()->sendCreateAnnouncementPacket(
-                    m_myself->socketConnectedToServer(),
-                    newJob(CreateAnnouncement, tr("Creating Announcement")),
-                    m_localTempID,
-                    m_myself->getUserID(),
-                    ui.comboBoxAnnouncementType->currentData().toUInt(),
-                    announcementString,
-                    ui.checkBoxConfirmationRequired->isChecked(),
-                    ui.spinBoxValidityPeriod->value(),
-                    ui.groupBoxTargets->isChecked()?quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC):quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE),
-                    m_model->getNewTargetsStringForSQL()
-                    );
-    }else{
+                 m_myself->socketConnectedToServer(),
+                 newJob(CreateAnnouncement, tr("Creating Announcement")),
+                 m_localTempID,
+                 m_myself->getUserID(),
+                 ui.comboBoxAnnouncementType->currentData().toUInt(),
+                 announcementString,
+                 ui.checkBoxConfirmationRequired->isChecked(),
+                 ui.spinBoxValidityPeriod->value(),
+                 ui.groupBoxTargets->isChecked() ? quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC) : quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE),
+                 m_model->getNewTargetsStringForSQL()
+             );
+    } else {
         ok = m_myself->packetsParser()->sendUpdateAnnouncementPacket(
-                    m_myself->socketConnectedToServer(),
-                    newJob(ModifyAnnouncement, tr("Modifying Announcement")),
-                    m_myself->getUserID(),
-                    announcementID,
-                    ui.groupBoxTargets->isChecked()?quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC):quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE),
-                    ui.checkBoxActive->isChecked(),
-                    m_model->getNewTargetsStringForSQL(),
-                    m_model->getDeletedTargetsStringForSQL()
-                    );
+                 m_myself->socketConnectedToServer(),
+                 newJob(ModifyAnnouncement, tr("Modifying Announcement")),
+                 m_myself->getUserID(),
+                 announcementID,
+                 ui.groupBoxTargets->isChecked() ? quint8(MS::ANNOUNCEMENT_TARGET_SPECIFIC) : quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE),
+                 ui.checkBoxActive->isChecked(),
+                 m_model->getNewTargetsStringForSQL(),
+                 m_model->getDeletedTargetsStringForSQL()
+             );
     }
 
-    if(!ok){
+    if(!ok) {
         QMessageBox::critical(this, tr("Error"), tr("Failed to send data!"));
         return;
     }
@@ -296,16 +312,19 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked(){
 
 }
 
-void AnnouncementInfoWidget::on_actionRefresh_triggered(){
+void AnnouncementInfoWidget::on_actionRefresh_triggered()
+{
     m_myself->packetsParser()->sendRequestAnnouncementTargetsPacket(m_myself->socketConnectedToServer(), ui.lineEditAnnouncementID->text());
 }
 
-void AnnouncementInfoWidget::on_actionExport_triggered(){
+void AnnouncementInfoWidget::on_actionExport_triggered()
+{
     DataOutputDialog dlg(ui.tableView, DataOutputDialog::EXPORT, this);
     dlg.exec();
 }
 
-void AnnouncementInfoWidget::on_actionPrint_triggered(){
+void AnnouncementInfoWidget::on_actionPrint_triggered()
+{
 #ifndef QT_NO_PRINTER
     //TODO
     DataOutputDialog dlg(ui.tableView, DataOutputDialog::PRINT, this);
@@ -313,7 +332,8 @@ void AnnouncementInfoWidget::on_actionPrint_triggered(){
 #endif
 }
 
-void AnnouncementInfoWidget::on_actionAddComputer_triggered(){
+void AnnouncementInfoWidget::on_actionAddComputer_triggered()
+{
     QString tip = tr("Format:<br>1. Computer<br>Use ',' to seprate multi items.");
 
     bool ok;
@@ -323,14 +343,15 @@ void AnnouncementInfoWidget::on_actionAddComputer_triggered(){
                                          QLineEdit::Normal,
                                          "",
                                          &ok
-                                         ).trimmed();
-    if (ok && !text.isEmpty()){
+                                        ).trimmed();
+    if (ok && !text.isEmpty()) {
         m_model->addComputerTargets(text.split(","));
     }
 
 }
 
-void AnnouncementInfoWidget::on_actionAddUser_triggered(){
+void AnnouncementInfoWidget::on_actionAddUser_triggered()
+{
     QString tip = tr("Format:<br> 1. Computer\\User<br> 2. User<br>Use ',' to seprate multi items.");
     bool ok;
     QString text = QInputDialog::getText(this,
@@ -339,26 +360,30 @@ void AnnouncementInfoWidget::on_actionAddUser_triggered(){
                                          QLineEdit::Normal,
                                          "",
                                          &ok
-                                         ).trimmed();
-    if (ok && !text.isEmpty()){
+                                        ).trimmed();
+    if (ok && !text.isEmpty()) {
         m_model->addUserTargets(text.split(","));
     }
 }
 
-void AnnouncementInfoWidget::on_actionDeleteTarget_triggered(){
+void AnnouncementInfoWidget::on_actionDeleteTarget_triggered()
+{
 
     QModelIndexList indexList =  ui.tableView->selectionModel()->selectedRows(0);
-    if(indexList.isEmpty()){return;}
+    if(indexList.isEmpty()) {
+        return;
+    }
     foreach (QModelIndex idx, indexList) {
         m_model->deleteTarget(idx);
     }
 
 }
 
-void AnnouncementInfoWidget::slotShowCustomContextMenu(const QPoint & pos){
+void AnnouncementInfoWidget::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *tableView = qobject_cast<QTableView*> (sender());
-    if (!tableView){
+    QTableView *tableView = qobject_cast<QTableView *> (sender());
+    if (!tableView) {
         return;
     }
 
@@ -366,9 +391,9 @@ void AnnouncementInfoWidget::slotShowCustomContextMenu(const QPoint & pos){
     QMenu menu(this);
 
 
-    if(m_readonly){
+    if(m_readonly) {
         menu.addAction(ui.actionRefresh);
-        if(!m_model->rowCount()){
+        if(!m_model->rowCount()) {
             menu.exec(tableView->viewport()->mapToGlobal(pos));
             return;
         }
@@ -381,12 +406,12 @@ void AnnouncementInfoWidget::slotShowCustomContextMenu(const QPoint & pos){
         menu.addAction(ui.actionPrint);
 #endif
 
-    }else if(m_targetsTouched || ui.lineEditAnnouncementID->text().trimmed().isEmpty()){
+    } else if(m_targetsTouched || ui.lineEditAnnouncementID->text().trimmed().isEmpty()) {
         menu.addSeparator();
         menu.addAction(ui.actionAddComputer);
         menu.addAction(ui.actionAddUser);
         menu.addAction(ui.actionDelete);
-    }else{
+    } else {
         menu.addAction(ui.actionRefresh);
     }
 
@@ -395,10 +420,11 @@ void AnnouncementInfoWidget::slotShowCustomContextMenu(const QPoint & pos){
 
 }
 
-void AnnouncementInfoWidget::getSelectedInfo(const QModelIndex &index){
+void AnnouncementInfoWidget::getSelectedInfo(const QModelIndex &index)
+{
 
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         return;
     }
 
@@ -412,7 +438,7 @@ void AnnouncementInfoWidget::getSelectedInfo(const QModelIndex &index){
     ui.actionPrint->setEnabled(enableExp);
 
     bool enableModify = false;
-    if(!m_myself->isReadonly()){
+    if(!m_myself->isReadonly()) {
         enableModify = true;
     }
 
@@ -422,22 +448,23 @@ void AnnouncementInfoWidget::getSelectedInfo(const QModelIndex &index){
 
 }
 
-void AnnouncementInfoWidget::linkClicked(const QUrl & url){
+void AnnouncementInfoWidget::linkClicked(const QUrl &url)
+{
     QString scheme = url.scheme();
 
-    if(scheme == URLScheme_Reply){
+    if(scheme == URLScheme_Reply) {
         QString sender = url.userInfo();
         QString sendersAssetNO = url.host();
 
         bool ok;
         QString text = QInputDialog::getMultiLineText(this, tr("Reply to %1").arg(sender),
-                                                      tr("Message:"), "", &ok);
-        if (!ok || text.isEmpty()){
+                       tr("Message:"), "", &ok);
+        if (!ok || text.isEmpty()) {
             return;
         }
 
         ok = m_myself->packetsParser()->sendAdminReplyMessagePacket(m_myself->socketConnectedToServer(), m_info.ID.toUInt(), m_myself->getUserID(), sender, sendersAssetNO, text);
-        if(!ok){
+        if(!ok) {
             QMessageBox::critical(this, tr("Error"), tr("Failed to send data!"));
             return;
         }
@@ -447,25 +474,29 @@ void AnnouncementInfoWidget::linkClicked(const QUrl & url){
 
     }
 
-    qDebug()<<"URL scheme:"<<scheme<<" host:"<<url.host()<<" userInfo:"<<url.userInfo();
+    qDebug() << "URL scheme:" << scheme << " host:" << url.host() << " userInfo:" << url.userInfo();
 
 }
 
-void AnnouncementInfoWidget::jobFinished(quint32 jobID){
+void AnnouncementInfoWidget::jobFinished(quint32 jobID)
+{
     Job *job = m_jobMonitor->getJob(jobID);
-    if(!job){return;}
-    if(jobID != m_jobID){return;}
+    if(!job) {
+        return;
+    }
+    if(jobID != m_jobID) {
+        return;
+    }
 
     QMessageBox msgbox(this);
     bool createAnnouncement = (job->Type == quint32(CreateAnnouncement));
     QString message = "";
     Job::JobResult result = Job::JobResult(job->Result);
     switch (result) {
-    case Job::FinishedWithError:
-    {
-        if(createAnnouncement){
+    case Job::FinishedWithError: {
+        if(createAnnouncement) {
             unsigned int id = job->ExtraData.toUInt();
-            if(id){
+            if(id) {
                 m_info.ID = QString::number(id);
                 m_info.Admin = m_myself->getUserID();
                 m_info.PublishDate = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
@@ -477,31 +508,28 @@ void AnnouncementInfoWidget::jobFinished(quint32 jobID){
         setReadonly(true);
         emit signalAnnouncementUpdated();
 
-        message = tr("Error occured when %1 the announcement!<br>%2").arg(createAnnouncement?tr("creating"):tr("modifying"));
+        message = tr("Error occured when %1 the announcement!<br>%2").arg(createAnnouncement ? tr("creating") : tr("modifying"));
         msgbox.setIcon(QMessageBox::Warning);
 
     }
-        break;
+    break;
 
-    case Job::Failed:
-    {
-        message = tr("Failed to %1 the announcement!<br>%2").arg(createAnnouncement?tr("creat"):tr("modify"));
+    case Job::Failed: {
+        message = tr("Failed to %1 the announcement!<br>%2").arg(createAnnouncement ? tr("creat") : tr("modify"));
         msgbox.setIcon(QMessageBox::Critical);
     }
-        break;
+    break;
 
-    case Job::Timeout:
-    {
-        message = tr("Timed out when %1 the announcement!<br>%2").arg(createAnnouncement?tr("creating"):tr("modifying"));
+    case Job::Timeout: {
+        message = tr("Timed out when %1 the announcement!<br>%2").arg(createAnnouncement ? tr("creating") : tr("modifying"));
         msgbox.setIcon(QMessageBox::Critical);
     }
-        break;
+    break;
 
-    case Job::Finished:
-    {
-        if(createAnnouncement){
+    case Job::Finished: {
+        if(createAnnouncement) {
             unsigned int id = job->ExtraData.toUInt();
-            if(id){
+            if(id) {
                 m_info.ID = QString::number(id);
                 m_info.Admin = m_myself->getUserID();
                 m_info.PublishDate = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
@@ -514,7 +542,7 @@ void AnnouncementInfoWidget::jobFinished(quint32 jobID){
         emit signalAnnouncementUpdated();
 
     }
-        break;
+    break;
 
 
     default:
@@ -524,7 +552,7 @@ void AnnouncementInfoWidget::jobFinished(quint32 jobID){
     m_jobID = 0;
     m_jobMonitor->deleteJob(jobID);
 
-    if(!message.isEmpty()){
+    if(!message.isEmpty()) {
         msgbox.setText(message);
         msgbox.exec();
     }
@@ -533,17 +561,19 @@ void AnnouncementInfoWidget::jobFinished(quint32 jobID){
 
 }
 
-quint32 AnnouncementInfoWidget::newJob(AnnouncementJobType jobType, const QString &jobTitle){
+quint32 AnnouncementInfoWidget::newJob(AnnouncementJobType jobType, const QString &jobTitle)
+{
     m_jobMonitor->deleteJob(m_jobID);
     return (m_jobID = m_jobMonitor->newJob(quint32(jobType), jobTitle));
 }
 
-bool AnnouncementInfoWidget::verifyPrivilege(){
+bool AnnouncementInfoWidget::verifyPrivilege()
+{
 
-    if(!m_myself->isAdminVerified()){
+    if(!m_myself->isAdminVerified()) {
         return false;
     }
-    if(m_myself->isReadonly()){
+    if(m_myself->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }

@@ -16,10 +16,11 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 Process::Process(QObject *parent)
-    :QObject(parent)
+    : QObject(parent)
 {
     process = new QProcess(this);
     process->setReadChannelMode(QProcess::MergedChannels);
@@ -36,22 +37,25 @@ Process::Process(QObject *parent)
 
 }
 
-Process::~Process() {
+Process::~Process()
+{
     // TODO Auto-generated destructor stub
 }
 
-bool Process::isRunning(){
+bool Process::isRunning()
+{
     return m_running;
 
 }
 
 
-void Process::startProcess(const QString &exeFilePath){
+void Process::startProcess(const QString &exeFilePath)
+{
 
-    if(process->state() == QProcess::NotRunning){
+    if(process->state() == QProcess::NotRunning) {
         m_exeFilePath = exeFilePath;
         process->start(exeFilePath);
-    }else{
+    } else {
         m_running = true;
         emit signalProcessStateChanged(true, QString("The Process '%1' is already running!").arg(m_exeFilePath));
         //emit signalProcessOutputRead("Process is already running!");
@@ -63,9 +67,10 @@ void Process::startProcess(const QString &exeFilePath){
 
 }
 
-void Process::stopProcess(){
+void Process::stopProcess()
+{
 
-    if(process && (process->state() != QProcess::NotRunning)){
+    if(process && (process->state() != QProcess::NotRunning)) {
         process->kill();
         //emit signalProcessStateChanged(false, "Process Killed.");
     }
@@ -82,7 +87,8 @@ void Process::stopProcess(){
 
 }
 
-void Process::readProcessOutput(){
+void Process::readProcessOutput()
+{
 
     QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
     emit signalProcessOutputRead(output);
@@ -90,7 +96,8 @@ void Process::readProcessOutput(){
 
 }
 
-void Process::readProcessError(){
+void Process::readProcessError()
+{
 
     QString output = QString::fromLocal8Bit(process->readAllStandardError());
     emit signalProcessOutputRead(output);
@@ -98,9 +105,10 @@ void Process::readProcessError(){
 
 }
 
-void Process::writeDataToProcess(const QString &data){
+void Process::writeDataToProcess(const QString &data)
+{
 
-    process->write((data+"\n").toLocal8Bit());
+    process->write((data + "\n").toLocal8Bit());
     //process->write((data+"\n").toLatin1();
 
     //    QTextCodec *codec = QTextCodec::codecForName("UTF-16LE");
@@ -113,10 +121,11 @@ void Process::writeDataToProcess(const QString &data){
 
 }
 
-void Process::processErrorOccured(QProcess::ProcessError error){
+void Process::processErrorOccured(QProcess::ProcessError error)
+{
     QString errorString = "";
 
-    switch(error){
+    switch(error) {
     case QProcess::FailedToStart:
         errorString = "The process failed to start. Either the invoked program is missing, or you may have insufficient permissions to invoke the program.";
         break;
@@ -140,10 +149,10 @@ void Process::processErrorOccured(QProcess::ProcessError error){
 
     }
 
-    if(process->state() == QProcess::NotRunning){
+    if(process->state() == QProcess::NotRunning) {
         m_running = false;
         emit signalProcessStateChanged(m_running, errorString);
-    }else{
+    } else {
         emit signalProcessOutputRead(errorString);
 
     }
@@ -152,7 +161,8 @@ void Process::processErrorOccured(QProcess::ProcessError error){
 
 }
 
-void Process::processStarted(){
+void Process::processStarted()
+{
 
     m_running = true;
     emit signalProcessStateChanged(m_running);

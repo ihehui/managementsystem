@@ -24,10 +24,12 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
-class SHAREDMSLIB_API ResourcesManager : public QObject {
+class SHAREDMSLIB_API ResourcesManager : public QObject
+{
     Q_OBJECT
 
 public:
@@ -35,11 +37,17 @@ public:
     virtual ~ResourcesManager();
 
 
-    UDPServer * getIPMCServer(){return m_ipmcServer;}
-    UDPServer * startIPMCServer(const QHostAddress &ipmcGroupAddress = QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16 ipmcGroupPort = quint16(IP_MULTICAST_GROUP_PORT), QString *errorMessage = 0);
+    UDPServer *getIPMCServer()
+    {
+        return m_ipmcServer;
+    }
+    UDPServer *startIPMCServer(const QHostAddress &ipmcGroupAddress = QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16 ipmcGroupPort = quint16(IP_MULTICAST_GROUP_PORT), QString *errorMessage = 0);
 
-    UDPServer * getUDPServer(){return m_udpServer;}
-    UDPServer * startUDPServer(const QHostAddress &address = QHostAddress::Any, quint16 port = 0, bool tryOtherPort = true, QString *errorMessage = 0);
+    UDPServer *getUDPServer()
+    {
+        return m_udpServer;
+    }
+    UDPServer *startUDPServer(const QHostAddress &address = QHostAddress::Any, quint16 port = 0, bool tryOtherPort = true, QString *errorMessage = 0);
 
 //    UDTProtocol * getUDTProtocol(){return udtProtocol;}
 //    UDTProtocol * startUDTProtocol(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
@@ -50,8 +58,8 @@ public:
 //    bool sendReliableData(int socketID, const QByteArray *byteArray);
 
 
-    RTP * getRTP();
-    RTP * startRTP(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
+    RTP *getRTP();
+    RTP *startRTP(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
     quint16 getRTPPort();
 
     FileManager *getFileManager();
@@ -74,7 +82,7 @@ private:
     FileManager *m_fileManager;
 
 //    UDTProtocolForFileTransmission *m_udtProtocolForFileTransmission;
-    
+
 
 };
 

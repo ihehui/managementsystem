@@ -9,7 +9,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ServerManagementWidget::ServerManagementWidget(QWidget *parent) :
@@ -46,14 +47,15 @@ ServerManagementWidget::~ServerManagementWidget()
     delete ui;
 }
 
-bool ServerManagementWidget::eventFilter(QObject *obj, QEvent *event) {
+bool ServerManagementWidget::eventFilter(QObject *obj, QEvent *event)
+{
     if (event->type() == QEvent::ContextMenu ) {
         QContextMenuEvent *contextMenuEvent = static_cast<QContextMenuEvent *> (event);
 
         showMenu(contextMenuEvent->globalPos());
 
         return true;
-    }else{
+    } else {
         // standard event processing
         return QObject::eventFilter(obj, event);
     }
@@ -61,15 +63,18 @@ bool ServerManagementWidget::eventFilter(QObject *obj, QEvent *event) {
 }
 
 
-void ServerManagementWidget::closeEvent(QCloseEvent *e) {
+void ServerManagementWidget::closeEvent(QCloseEvent *e)
+{
 
     //Close all related TabPage
     int tabPages = ui->tabWidgetServer->count();
-    for(int i = tabPages; i >= 0; --i){
+    for(int i = tabPages; i >= 0; --i) {
         ui->tabWidgetServer->removeTab(i);
 
         QWidget *widget = qobject_cast<QWidget *>(ui->tabWidgetServer->widget(i));
-        if(!widget){continue;}
+        if(!widget) {
+            continue;
+        }
         widget->close();
 
     }
@@ -79,42 +84,48 @@ void ServerManagementWidget::closeEvent(QCloseEvent *e) {
 
 }
 
-void ServerManagementWidget::setAdminsData(const QByteArray &infoData){
+void ServerManagementWidget::setAdminsData(const QByteArray &infoData)
+{
     manageAdmins();
     m_adminsWidget->setData(infoData);
 }
 
-void ServerManagementWidget::setAlarmsData(const QByteArray &infoData){
+void ServerManagementWidget::setAlarmsData(const QByteArray &infoData)
+{
     manageAlarms();
     m_alarmsWidget->setData(infoData);
 }
 
-void ServerManagementWidget::setAnnouncementsData(const QByteArray &infoData){
+void ServerManagementWidget::setAnnouncementsData(const QByteArray &infoData)
+{
     manageAnnouncements();
     m_announcementManagementWidget->setAnnouncementsData(infoData);
 }
 
-void ServerManagementWidget::setAnnouncementTargetsData(const QString &extraInfo, const QByteArray &infoData){
+void ServerManagementWidget::setAnnouncementTargetsData(const QString &extraInfo, const QByteArray &infoData)
+{
     manageAnnouncements();
     m_announcementManagementWidget->setAnnouncementTargetsData(extraInfo, infoData);
 }
 
-void ServerManagementWidget::setAnnouncementReplies(const QByteArray &infoData){
+void ServerManagementWidget::setAnnouncementReplies(const QByteArray &infoData)
+{
     manageAnnouncements();
     m_announcementManagementWidget->setAnnouncementReplies(infoData);
 }
 
-void ServerManagementWidget::updateServerInfo(const QByteArray &infoData){
+void ServerManagementWidget::updateServerInfo(const QByteArray &infoData)
+{
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
 
     QJsonObject resLoadObj = object["ServerInfo"].toObject();
-    if(resLoadObj.isEmpty()){
+    if(resLoadObj.isEmpty()) {
         return;
     }
 
@@ -125,7 +136,7 @@ void ServerManagementWidget::updateServerInfo(const QByteArray &infoData){
     ui->labelCPUType->setText(resLoadObj.value("CPU").toString());
 
     quint64 memory = resLoadObj.value("Memory").toString().toULong();
-    memory = memory/(1024*1024);
+    memory = memory / (1024 * 1024);
     ui->labelMemory->setText(QString("%1 MB").arg(memory));
 
     unsigned int startupUTCTime = resLoadObj.value("StartupUTCTime").toString().toUInt();
@@ -138,19 +149,19 @@ void ServerManagementWidget::updateServerInfo(const QByteArray &infoData){
     unsigned int curLocalUTCTime = curLocalTime.toTime_t();
     if(abs((long)curServerUTCTime - (long)curLocalUTCTime) > 600
             || abs((long)curDBUTCTime - (long)curLocalUTCTime) > 600
-            ){
+      ) {
         QString message = tr("The server time and local time are too different!<br>Application Server Time: %1<br>Database Server Time: %2<br>Local Time: %3")
-                .arg(QDateTime::fromTime_t(startupUTCTime).toString("yyyy-MM-dd hh:mm"))
-                .arg(QDateTime::fromTime_t(curDBUTCTime).toString("yyyy-MM-dd hh:mm"))
-                .arg(curLocalTime.toString("yyyy-MM-dd hh:mm"))
-                ;
+                          .arg(QDateTime::fromTime_t(startupUTCTime).toString("yyyy-MM-dd hh:mm"))
+                          .arg(QDateTime::fromTime_t(curDBUTCTime).toString("yyyy-MM-dd hh:mm"))
+                          .arg(curLocalTime.toString("yyyy-MM-dd hh:mm"))
+                          ;
         QMessageBox::warning(0, tr("Warning"), message);
     }
 
     ui->labelDatabaseServerIP->setText(resLoadObj.value("DBServerIP").toString());
 
     QString driver = resLoadObj.value("DBDriver").toString().toUpper();
-    if(driver.startsWith("Q")){
+    if(driver.startsWith("Q")) {
         driver = driver.remove(0, 1);
         ui->labelDatabaseDriver->setText(driver);
     }
@@ -158,23 +169,24 @@ void ServerManagementWidget::updateServerInfo(const QByteArray &infoData){
 
 }
 
-void ServerManagementWidget::updateRealtimeInfo(const QByteArray &infoData){
+void ServerManagementWidget::updateRealtimeInfo(const QByteArray &infoData)
+{
     //qDebug()<<"--ServerManagementWidget::updateRealtimeInfo(...)";
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(infoData, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
 
     QJsonObject realtimeInfoObj = object["Realtime"].toObject();
-    if(!realtimeInfoObj.isEmpty()){
+    if(!realtimeInfoObj.isEmpty()) {
         ui->progressBarCPUUsage->setValue(realtimeInfoObj.value("CPULoad").toString().toUInt());
         ui->progressBarMemoryUsage->setValue(realtimeInfoObj.value("MemLoad").toString().toUInt());
 
-        if(realtimeInfoObj.contains("Disks")){
+        if(realtimeInfoObj.contains("Disks")) {
             QString html = convertDisksInfoToHTML(realtimeInfoObj.value("Disks").toString());
             ui->labelDiskUsage->setText(html);
         }
@@ -193,7 +205,8 @@ void ServerManagementWidget::updateRealtimeInfo(const QByteArray &infoData){
 
 }
 
-void ServerManagementWidget::initTabWidget(){
+void ServerManagementWidget::initTabWidget()
+{
 
     connect(ui->tabWidgetServer, SIGNAL(currentChanged(int)), this, SLOT(slotTabPageChanged()));
 
@@ -225,41 +238,48 @@ void ServerManagementWidget::initTabWidget(){
 
 }
 
-void ServerManagementWidget::slotTabPageChanged(){
+void ServerManagementWidget::slotTabPageChanged()
+{
 
     QWidget *currentWidget = ui->tabWidgetServer->currentWidget();
-    if(currentWidget == ui->tabServerInfo){
+    if(currentWidget == ui->tabServerInfo) {
         ui->tabWidgetServer->cornerWidget(Qt::TopRightCorner)->setEnabled(false);
-    }else{
+    } else {
         ui->tabWidgetServer->cornerWidget(Qt::TopRightCorner)->setEnabled(true);
     }
 
 }
 
-void ServerManagementWidget::slotcloseTab(){
+void ServerManagementWidget::slotcloseTab()
+{
 
     QWidget *currentWidget = ui->tabWidgetServer->currentWidget();
-    if(currentWidget == ui->tabServerInfo){return;}
-    if(!currentWidget->close()){return;}
+    if(currentWidget == ui->tabServerInfo) {
+        return;
+    }
+    if(!currentWidget->close()) {
+        return;
+    }
     ui->tabWidgetServer->removeTab(ui->tabWidgetServer->currentIndex());
 
-    if(currentWidget == m_adminsWidget){
+    if(currentWidget == m_adminsWidget) {
         delete m_adminsWidget;
         m_adminsWidget = 0;
     }
-    if(currentWidget == m_alarmsWidget){
+    if(currentWidget == m_alarmsWidget) {
         delete m_alarmsWidget;
         m_alarmsWidget = 0;
     }
 
-    if(currentWidget == m_announcementManagementWidget){
+    if(currentWidget == m_announcementManagementWidget) {
         delete m_announcementManagementWidget;
         m_announcementManagementWidget = 0;
     }
 
 }
 
-void ServerManagementWidget::showTabMenu(){
+void ServerManagementWidget::showTabMenu()
+{
     QWidget *cornerWidget = ui->tabWidgetServer->cornerWidget(Qt::TopLeftCorner);
     QPoint pos = cornerWidget->mapToGlobal(QPoint(0, 0));
     pos.setY(pos.y() + cornerWidget->height());
@@ -268,13 +288,14 @@ void ServerManagementWidget::showTabMenu(){
 
 }
 
-void ServerManagementWidget::showMenu(const QPoint & pos){
+void ServerManagementWidget::showMenu(const QPoint &pos)
+{
 
     QMenu menu;
 
-    if(!m_myself->isVerified()){
+    if(!m_myself->isVerified()) {
         menu.addAction(ui->actionLogin);
-    }else{
+    } else {
         menu.addAction(ui->actionAdministrators);
         menu.addAction(ui->actionAlarms);
         menu.addAction(ui->actionAnnouncement);
@@ -284,12 +305,13 @@ void ServerManagementWidget::showMenu(const QPoint & pos){
 
 }
 
-void ServerManagementWidget::manageAdmins(){
-    if(!verifyPrivilege()){
+void ServerManagementWidget::manageAdmins()
+{
+    if(!verifyPrivilege()) {
         return;
     }
 
-    if(!m_adminsWidget){
+    if(!m_adminsWidget) {
         m_adminsWidget = new AdminsManagementWidget(this);
         ui->tabWidgetServer->addTab(m_adminsWidget, tr("Administrators"));
     }
@@ -298,8 +320,9 @@ void ServerManagementWidget::manageAdmins(){
 
 }
 
-void ServerManagementWidget::manageAlarms(){
-    if(!m_alarmsWidget){
+void ServerManagementWidget::manageAlarms()
+{
+    if(!m_alarmsWidget) {
         m_alarmsWidget = new AlarmsManagementWidget(this);
         ui->tabWidgetServer->addTab(m_alarmsWidget, tr("Alarms"));
     }
@@ -308,8 +331,9 @@ void ServerManagementWidget::manageAlarms(){
 
 }
 
-void ServerManagementWidget::manageAnnouncements(){
-    if(!m_announcementManagementWidget){
+void ServerManagementWidget::manageAnnouncements()
+{
+    if(!m_announcementManagementWidget) {
         m_announcementManagementWidget = new AnnouncementManagementWidget(this);
         ui->tabWidgetServer->addTab(m_announcementManagementWidget, tr("Announcements"));
     }
@@ -318,12 +342,13 @@ void ServerManagementWidget::manageAnnouncements(){
 
 }
 
-bool ServerManagementWidget::verifyPrivilege(){
+bool ServerManagementWidget::verifyPrivilege()
+{
 
-    if(!m_myself->isAdminVerified()){
+    if(!m_myself->isAdminVerified()) {
         return false;
     }
-    if(m_myself->isReadonly()){
+    if(m_myself->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }
@@ -331,7 +356,8 @@ bool ServerManagementWidget::verifyPrivilege(){
     return true;
 }
 
-void ServerManagementWidget::adminVerified(){
+void ServerManagementWidget::adminVerified()
+{
     //m_socketConnectedToServer = m_myself->socketConnectedToServer();
 
     ui->labelServerIP->setText(m_myself->serverAddress());
@@ -340,7 +366,8 @@ void ServerManagementWidget::adminVerified(){
 
 }
 
-QString ServerManagementWidget::convertDisksInfoToHTML(const QString &disksInfo){
+QString ServerManagementWidget::convertDisksInfoToHTML(const QString &disksInfo)
+{
 
     //// disksInfo Sample:
     /// WIN
@@ -363,21 +390,23 @@ QString ServerManagementWidget::convertDisksInfoToHTML(const QString &disksInfo)
 
 
     QString html = "<html><head><meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\"><title>Disks</title>"
-           "<style type=\"text/css\">"
-            "table{ background-color: #b2b2b2; margin-top: 1px; margin-bottom: 1px; margin-left: 1px; margin-right: 1px; width: 100%; font-size: 16px;}"
-            "table tr{background-color: #FFFFFF;}"
-            "</style>"
-            "</head><body>"
-            ;
+                   "<style type=\"text/css\">"
+                   "table{ background-color: #b2b2b2; margin-top: 1px; margin-bottom: 1px; margin-left: 1px; margin-right: 1px; width: 100%; font-size: 16px;}"
+                   "table tr{background-color: #FFFFFF;}"
+                   "</style>"
+                   "</head><body>"
+                   ;
 
     html += "<table  border=\"0\" cellpadding=\"5\" cellspacing=\"1\"  >";
 
     QStringList list = disksInfo.split("\n");
     foreach (QString row, list) {
-        if(row.isEmpty()){continue;}
+        if(row.isEmpty()) {
+            continue;
+        }
         html += "<tr>";
         QString sep = "\t";
-        if(row.contains(" ")){
+        if(row.contains(" ")) {
             sep = " ";
         }
         QStringList infoList = row.split(sep);

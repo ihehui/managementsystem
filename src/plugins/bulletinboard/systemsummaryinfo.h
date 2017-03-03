@@ -18,10 +18,11 @@
 //#include "HHSharedCore/huser.h"
 //#include "HHSharedCore/hmysharedlib_global.h"
 
-   
 
 
-namespace HEHUI {
+
+namespace HEHUI
+{
 
 
 class SystemSummaryInfo : public QMainWindow
@@ -34,11 +35,14 @@ public:
 
 
 
-    static bool isRunning(){return running;}
-    
+    static bool isRunning()
+    {
+        return running;
+    }
 
 
-    
+
+
 
     void retranslateUi();
 

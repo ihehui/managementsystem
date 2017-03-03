@@ -45,11 +45,12 @@
 #include "HHSharedSystemUtilities/SystemUtilities"
 #include "HHSharedCore/JobMonitor"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ServerService::ServerService(int argc, char **argv, const QString &serviceName, const QString &description )
-    :Service(argc, argv, serviceName, description)
+    : Service(argc, argv, serviceName, description)
 {
 
 
@@ -91,14 +92,15 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
 
 }
 
-ServerService::~ServerService(){
-    qDebug()<<"ServerService::~ServerService()";
+ServerService::~ServerService()
+{
+    qDebug() << "ServerService::~ServerService()";
 
-    if(resourcesManager){
+    if(resourcesManager) {
         //resourcesManager->closeAllServers();
     }
 
-    if(serverPacketsParser){
+    if(serverPacketsParser) {
         delete serverPacketsParser;
         serverPacketsParser = 0;
     }
@@ -113,9 +115,9 @@ ServerService::~ServerService(){
 //    PacketHandlerBase::clean();
 
 
-    QList<ClientInfo*> clientInfoList = clientInfoHash.values();
+    QList<ClientInfo *> clientInfoList = clientInfoHash.values();
     clientInfoHash.clear();
-    foreach(ClientInfo *info, clientInfoList){
+    foreach(ClientInfo *info, clientInfoList) {
         delete info;
         info = 0;
     }
@@ -132,11 +134,12 @@ ServerService::~ServerService(){
 
 }
 
-bool ServerService::startMainService(){
-    qDebug()<<"----ServerService::startMainService()";
+bool ServerService::startMainService()
+{
+    qDebug() << "----ServerService::startMainService()";
 
-    if(mainServiceStarted){
-        qWarning()<<"Main service has already started!";
+    if(mainServiceStarted) {
+        qWarning() << "Main service has already started!";
         return true;
     }
 
@@ -154,14 +157,14 @@ bool ServerService::startMainService(){
     //    }
 
     m_udpServer = resourcesManager->startUDPServer(QHostAddress::Any, quint16(IP_MULTICAST_GROUP_PORT), true, &errorMessage);
-    if(!m_udpServer){
+    if(!m_udpServer) {
         logMessage(QString("Can not start UDP listening on port %1! %2").arg(IP_MULTICAST_GROUP_PORT).arg(errorMessage), QtServiceBase::Error);
-    }else{
-        qWarning()<<QString("UDP listening on port %1!").arg(IP_MULTICAST_GROUP_PORT);
+    } else {
+        qWarning() << QString("UDP listening on port %1!").arg(IP_MULTICAST_GROUP_PORT);
     }
 
 
-    m_rtp = resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT+1, true, &errorMessage);
+    m_rtp = resourcesManager->startRTP(QHostAddress::Any, RTP_LISTENING_PORT + 1, true, &errorMessage);
     connect(m_rtp, SIGNAL(disconnected(SOCKETID)), this, SLOT(peerDisconnected(SOCKETID)), Qt::QueuedConnection);
 
     //    m_udtProtocol = m_rtp->getUDTProtocol();
@@ -185,7 +188,7 @@ bool ServerService::startMainService(){
 
 
     connect(serverPacketsParser, SIGNAL(signalAdminLogin(const AdminLoginPacket &)), this, SLOT(processAdminLoginPacket(const AdminLoginPacket &)), Qt::QueuedConnection);
-    connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString&, const QString&, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString&, const QString&, bool)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString &, const QString &, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString &, const QString &, bool)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalSystemAlarmsPacketReceived(const SystemAlarmsPacket &)), this, SLOT(processSystemAlarmsPacket(const SystemAlarmsPacket &)), Qt::QueuedConnection);
 
@@ -216,7 +219,7 @@ bool ServerService::startMainService(){
 
     sendServerOnlinePacketTimer = new QTimer(this);
     sendServerOnlinePacketTimer->setSingleShot(false);
-    sendServerOnlinePacketTimer->setInterval(15*60000);
+    sendServerOnlinePacketTimer->setInterval(15 * 60000);
     connect(sendServerOnlinePacketTimer, SIGNAL(timeout()), this, SLOT(sendServerOnlinePacket()));
     sendServerOnlinePacketTimer->start();
 
@@ -225,7 +228,8 @@ bool ServerService::startMainService(){
     return true;
 }
 
-void ServerService::saveClientLog(const ClientLogPacket &packet){
+void ServerService::saveClientLog(const ClientLogPacket &packet)
+{
 
     QString assetNO = packet.getPeerID();
     QString clientAddress = packet.getPeerHostAddress().toString();
@@ -233,29 +237,30 @@ void ServerService::saveClientLog(const ClientLogPacket &packet){
     QString log = packet.log;
 
     QString statement = QString("call sp_Logs_Save('%1', '%2', %3, '%4', '%5', '%6');")
-            .arg(assetNO)
-            .arg(clientAddress)
-            .arg(logType)
-            .arg(log)
-            .arg("NULL")
-            .arg("1970-01-01")
-            ;
+                        .arg(assetNO)
+                        .arg(clientAddress)
+                        .arg(logType)
+                        .arg(log)
+                        .arg("NULL")
+                        .arg("1970-01-01")
+                        ;
 
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString error = QString("ERROR! An error occurred when saving client log to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
 
 }
 
-void ServerService::sendServerOnlinePacket(){
-    qDebug()<<"----ServerService::sendServerOnlinePacket()";
+void ServerService::sendServerOnlinePacket()
+{
+    qDebug() << "----ServerService::sendServerOnlinePacket()";
 
     serverPacketsParser->sendServerDeclarePacket(QHostAddress::Broadcast, quint16(IP_MULTICAST_GROUP_PORT));
     serverPacketsParser->sendServerDeclarePacket(QHostAddress(IP_MULTICAST_GROUP_ADDRESS), quint16(IP_MULTICAST_GROUP_PORT));
 
     //serverPacketsParser->sendServerOnlinePacket();
-    
+
     //updateOrSaveAllClientsInfoToDatabase();
 
 }
@@ -398,17 +403,19 @@ void ServerService::sendServerOnlinePacket(){
 
 //}
 
-void ServerService::processClientInfoPacket(const ClientInfoPacket &packet){
+void ServerService::processClientInfoPacket(const ClientInfoPacket &packet)
+{
 
-    if(packet.IsRequest){
+    if(packet.IsRequest) {
         clientInfoRequested(packet.getSocketID(), packet.assetNO, packet.infoType);
-    }else{
+    } else {
         clientInfoPacketReceived(packet.getPeerID(), packet.data, packet.infoType);
     }
 
 }
 
-void ServerService::clientInfoRequested(SOCKETID socketID, const QString &assetNO, quint8 infoType){
+void ServerService::clientInfoRequested(SOCKETID socketID, const QString &assetNO, quint8 infoType)
+{
 
     switch (infoType) {
     case quint8(MS::SYSINFO_OS):
@@ -427,31 +434,32 @@ void ServerService::clientInfoRequested(SOCKETID socketID, const QString &assetN
         sendAdminsInfo(socketID);
         break;
 
-        //    case quint8(MS::SYSINFO_USERS):
-        //        systemInfo->getUsersInfo(socketID);
-        //        break;
+    //    case quint8(MS::SYSINFO_USERS):
+    //        systemInfo->getUsersInfo(socketID);
+    //        break;
 
 
     default:
-        qCritical()<<"ERROR! Unknown info type:"<<infoType;
+        qCritical() << "ERROR! Unknown info type:" << infoType;
         break;
     }
 
 }
 
 
-void ServerService::clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType){
-    qDebug()<<"--ServerService::clientInfoPacketReceived(...) "<<" assetNO:"<<assetNO;
+void ServerService::clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType)
+{
+    qDebug() << "--ServerService::clientInfoPacketReceived(...) " << " assetNO:" << assetNO;
 
-    if(assetNO.trimmed().isEmpty()){
-        qCritical()<<"Invalid Asset NO. !";
+    if(assetNO.trimmed().isEmpty()) {
+        qCritical() << "Invalid Asset NO. !";
         return;
     }
 
     ClientInfo *info = 0;
-    if(clientInfoHash.contains(assetNO)){
+    if(clientInfoHash.contains(assetNO)) {
         info = clientInfoHash.value(assetNO);
-    }else{
+    } else {
         info = new ClientInfo(assetNO, this);
         clientInfoHash.insert(assetNO, info);
     }
@@ -477,8 +485,9 @@ void ServerService::clientInfoPacketReceived(const QString &assetNO, const QByte
 
 }
 
-void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
-    if(!info){
+void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
+{
+    if(!info) {
         return;
     }
 
@@ -511,7 +520,7 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
     QString newclientVersion = info->getClientVersion();
     quint8 newUsbSDStatus = quint8(info->getUsbSDStatus());
 
-    if(m_isUsingMySQL){
+    if(m_isUsingMySQL) {
         newUsers = newUsers.replace("\\", "\\\\");
         newadmins = newadmins.replace("\\", "\\\\");
     }
@@ -590,21 +599,21 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
 
 
     statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11', %12 ); ")
-            .arg(assetNO)
-            .arg(newComputerName)
-            .arg(newOSInfo)
-            .arg(newinstallationDate)
-            .arg(newOSKey)
-            .arg(newworkgroupName)
-            .arg(QVariant(newJoinedToDomain).toUInt())
-            .arg(newUsers)
-            .arg(newadmins)
-            .arg(newipInfo)
-            .arg(newclientVersion)
-            .arg(newUsbSDStatus)
-            ;
+                .arg(assetNO)
+                .arg(newComputerName)
+                .arg(newOSInfo)
+                .arg(newinstallationDate)
+                .arg(newOSKey)
+                .arg(newworkgroupName)
+                .arg(QVariant(newJoinedToDomain).toUInt())
+                .arg(newUsers)
+                .arg(newadmins)
+                .arg(newipInfo)
+                .arg(newclientVersion)
+                .arg(newUsbSDStatus)
+                ;
 
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString error = QString("ERROR! An error occurred when saving OS info to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -624,10 +633,11 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData){
 
 }
 
-void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData){
-    qDebug()<<"--ServerService::processHardwareInfo(...)";
+void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData)
+{
+    qDebug() << "--ServerService::processHardwareInfo(...)";
 
-    if(!info){
+    if(!info) {
         return;
     }
 
@@ -647,65 +657,65 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     statement = "UPDATE Hardware SET UpdateTime = NULL ";
 
     QString newCPU = info->getCpu();
-    if(cpu != newCPU){
+    if(cpu != newCPU) {
         statement += QString(", CPU = '%1' ").arg(newCPU);
-        if(!cpu.isEmpty()){
+        if(!cpu.isEmpty()) {
             changes.append(QString("CPU Changed from '%1' to '%2'").arg(cpu).arg(newCPU));
         }
     }
 
     QString newMemory = info->getMemory();
-    if(memory != newMemory){
+    if(memory != newMemory) {
         statement += QString(", Memory = '%1' ").arg(newMemory);
-        if(!memory.isEmpty()){
+        if(!memory.isEmpty()) {
             changes.append(QString("Memory Changed from '%1' to '%2'").arg(memory).arg(newCPU));
         }
     }
 
     QString newMotherboardName = info->getMotherboardName();
-    if(motherboardName != newMotherboardName){
+    if(motherboardName != newMotherboardName) {
         statement += QString(", Motherboard = '%1' ").arg(newMotherboardName);
-        if(!motherboardName.isEmpty()){
+        if(!motherboardName.isEmpty()) {
             changes.append(QString("Motherboard Changed from '%1' to '%2'").arg(motherboardName).arg(newMotherboardName));
         }
     }
 
     QString newVideo = info->getVideo();
-    if(video != newVideo){
+    if(video != newVideo) {
         statement += QString(", Video = '%1' ").arg(newVideo);
-        if(!video.isEmpty()){
+        if(!video.isEmpty()) {
             changes.append(QString("Video Changed from '%1' to '%2'").arg(video).arg(newVideo));
         }
     }
 
     QString newMonitor = info->getMonitor();
-    if(monitor != newMonitor){
+    if(monitor != newMonitor) {
         statement += QString(", Monitor = '%1' ").arg(newMonitor);
-        if(!monitor.isEmpty()){
+        if(!monitor.isEmpty()) {
             changes.append(QString("Monitor Changed from '%1' to '%2'").arg(monitor).arg(newMonitor));
         }
     }
 
     QString newAudio = info->getAudio();
-    if(audio != newAudio){
+    if(audio != newAudio) {
         statement += QString(", Audio = '%1' ").arg(newAudio);
-        if(!audio.isEmpty()){
+        if(!audio.isEmpty()) {
             changes.append(QString("Audio Changed from '%1' to '%2'").arg(audio).arg(newAudio));
         }
     }
 
     QString newStorage = info->getStorage();
-    if(storage != newStorage){
+    if(storage != newStorage) {
         statement += QString(", Storage = '%1' ").arg(newStorage);
-        if(!storage.isEmpty()){
+        if(!storage.isEmpty()) {
             changes.append(QString("Storage Changed from '%1' to '%2'").arg(storage).arg(newStorage));
         }
     }
 
     QString newNIC = info->getNetwork();
-    if(network != newNIC){
+    if(network != newNIC) {
         statement += QString(", NIC = '%1' ").arg(newNIC);
-        if(!network.isEmpty()){
+        if(!network.isEmpty()) {
             changes.append(QString("NIC Changed from '%1' to '%2'").arg(network).arg(newNIC));
         }
     }
@@ -714,7 +724,7 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     QString assetNO = info->getAssetNO();
     statement += QString("WHERE AssetNO = '%1'").arg(assetNO);
 
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString error = QString("ERROR! An error occurred when saving hardware info to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -730,19 +740,21 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     //        }
     //    //}
 
-    if(changes.isEmpty()){return;}
+    if(changes.isEmpty()) {
+        return;
+    }
 
     QString alarmStatement ;
     quint8 alarmType = quint8(MS::ALARM_HARDWARECHANGE);
     foreach (QString change, changes) {
         alarmStatement += QString("call sp_Alarms_Insert('%1', %2, '%3' ); ")
-                .arg(assetNO)
-                .arg(alarmType)
-                .arg(change)
-                ;
+                          .arg(assetNO)
+                          .arg(alarmType)
+                          .arg(change)
+                          ;
     }
 
-    if(!execQuery(alarmStatement)){
+    if(!execQuery(alarmStatement)) {
         QString error = QString("ERROR! An error occurred when saving hardware alarm info to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -750,24 +762,27 @@ void ServerService::processHardwareInfo(ClientInfo *info, const QByteArray &hard
     //    info->setUpdateAlarmsInfoStatement(alarmStatement);
 
 
-    qCritical()<<"!!!!!!!!!!!!!Hardware Changed!!!!!!!!!!!!!";
-    qCritical()<<"Asset NO.:"<<assetNO;
-    qCritical()<<changes.join("\n");
+    qCritical() << "!!!!!!!!!!!!!Hardware Changed!!!!!!!!!!!!!";
+    qCritical() << "Asset NO.:" << assetNO;
+    qCritical() << changes.join("\n");
 
 
 
 }
 
-void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data){
+void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data)
+{
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
-    if(object.isEmpty()){return;}
+    if(object.isEmpty()) {
+        return;
+    }
 
     QJsonArray array = object["Software"].toArray();
 
@@ -776,17 +791,19 @@ void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data
     QString assetNO = info->getAssetNO();
     QString statement = QString("START TRANSACTION; delete from InstalledSoftware where AssetNO = '%1'; ").arg(assetNO);
 
-    for(int i=0;i<softwareCount;i++){
+    for(int i = 0; i < softwareCount; i++) {
         QJsonArray infoArray = array.at(i).toArray();
-        if(infoArray.size() != 4){continue;}
+        if(infoArray.size() != 4) {
+            continue;
+        }
 
         statement += QString(" insert into InstalledSoftware values(NULL, '%1', '%2', '%3', '%4', '%5'); ")
-                .arg(assetNO)
-                .arg(infoArray.at(0).toString())
-                .arg(infoArray.at(1).toString())
-                .arg(infoArray.at(2).toString())
-                .arg(infoArray.at(3).toString())
-                ;
+                     .arg(assetNO)
+                     .arg(infoArray.at(0).toString())
+                     .arg(infoArray.at(1).toString())
+                     .arg(infoArray.at(2).toString())
+                     .arg(infoArray.at(3).toString())
+                     ;
     }
     statement += "COMMIT;";
 
@@ -794,7 +811,7 @@ void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data
     //    info->setInstalledSoftwaresInfoSavedTODatabase(false);
     //    info->setUpdateInstalledSoftwaresInfoStatement(statement);
 
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString error = QString("ERROR! An error occurred when saving installed software info to database. Asset NO.: %1.").arg(assetNO);
         logMessage(error, QtServiceBase::Error);
     }
@@ -802,7 +819,8 @@ void ServerService::processSoftwareInfo(ClientInfo *info, const QByteArray &data
 
 }
 
-void ServerService::processUpdateSysAdminInfoPacket(const SysAdminInfoPacket &packet){
+void ServerService::processUpdateSysAdminInfoPacket(const SysAdminInfoPacket &packet)
+{
     QString sysAdminID = packet.adminID;
     QByteArray infoData = packet.data;
     bool deleteAdmin = packet.deleteAdmin;
@@ -810,14 +828,14 @@ void ServerService::processUpdateSysAdminInfoPacket(const SysAdminInfoPacket &pa
 
     AdminUserInfo *info = 0;
     bool newAdmin = false;
-    if(adminsHash.contains(sysAdminID)){
+    if(adminsHash.contains(sysAdminID)) {
         info = adminsHash.value(sysAdminID);
-        if(deleteAdmin){
+        if(deleteAdmin) {
             QString statement = QString("call sp_Admin_Delete('%1'); ").arg(sysAdminID);
-            if(!execQuery(statement)){
+            if(!execQuery(statement)) {
                 QString message = QString("Failed to delete admin! Admin ID:%1").arg(sysAdminID);
                 serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
-            }else{
+            } else {
                 QString message = QString("Admin '%1' deleted!").arg(sysAdminID);
                 serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Information));
                 adminsHash.remove(sysAdminID);
@@ -826,37 +844,37 @@ void ServerService::processUpdateSysAdminInfoPacket(const SysAdminInfoPacket &pa
             }
             return;
         }
-    }else{
+    } else {
         info = new AdminUserInfo(sysAdminID, this);
         newAdmin = true;
     }
     info->setJsonData(infoData);
 
     QString statement = QString("call sp_Admin_Update_Info('%1', '%2', '%3', '%4', %5, %6, '%7'); ")
-            .arg(sysAdminID)
-            .arg(info->getUserName())
-            .arg(info->getPassword())
-            .arg(info->businessAddress)
-            .arg(info->readonly?1:0)
-            .arg(info->active?1:0)
-            .arg(info->remark)
-            ;
+                        .arg(sysAdminID)
+                        .arg(info->getUserName())
+                        .arg(info->getPassword())
+                        .arg(info->businessAddress)
+                        .arg(info->readonly ? 1 : 0)
+                        .arg(info->active ? 1 : 0)
+                        .arg(info->remark)
+                        ;
 
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString message = QString("Failed to update admin info! Admin ID:%1").arg(sysAdminID);
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
-        if(newAdmin){
+        if(newAdmin) {
             delete info;
             info = 0;
         }
-    }else{
+    } else {
         QString message = QString("Admin info updated! Admin ID:%1").arg(sysAdminID);
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Information));
-        if(newAdmin){
+        if(newAdmin) {
             adminsHash.insert(sysAdminID, info);
-        }else{
+        } else {
             SOCKETID socketID = info->socketID;
-            if(INVALID_SOCK_ID != socketID){
+            if(INVALID_SOCK_ID != socketID) {
                 m_rtp->closeSocket(socketID);
                 info->socketID = INVALID_SOCK_ID;
             }
@@ -865,22 +883,23 @@ void ServerService::processUpdateSysAdminInfoPacket(const SysAdminInfoPacket &pa
 
 }
 
-void ServerService::processModifyAssetNOPacket(const ModifyAssetNOPacket &packet){
+void ServerService::processModifyAssetNOPacket(const ModifyAssetNOPacket &packet)
+{
     SOCKETID socketID = packet.getSocketID();
     QString newAssetNO = packet.newAssetNO;
     QString oldAssetNO = packet.oldAssetNO;
     QString adminName = packet.adminID;
 
-    if(newAssetNO.isEmpty() || oldAssetNO.isEmpty()){
+    if(newAssetNO.isEmpty() || oldAssetNO.isEmpty()) {
         //QString message = "Invalid asset NO.";
         serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, oldAssetNO, oldAssetNO);
         return;
     }
 
     ClientInfo *info = 0;
-    if(clientInfoHash.contains(oldAssetNO)){
+    if(clientInfoHash.contains(oldAssetNO)) {
         info = clientInfoHash.value(oldAssetNO);
-    }else{
+    } else {
         //QString message = QString("Asset NO. '%1' not found!").arg(oldAssetNO);
         serverPacketsParser->sendServerResponseModifyAssetNOPacket(socketID, oldAssetNO, oldAssetNO);
         return;
@@ -888,12 +907,12 @@ void ServerService::processModifyAssetNOPacket(const ModifyAssetNOPacket &packet
 
 
     QString statement = QString("call sp_OS_AssetNO_Update('%1', '%2'); ")
-            .arg(newAssetNO)
-            .arg(oldAssetNO)
-            ;
+                        .arg(newAssetNO)
+                        .arg(oldAssetNO)
+                        ;
 
     QString errStr = "";
-    if(!execQuery(statement, &errStr)){
+    if(!execQuery(statement, &errStr)) {
         QString message = QString("An error occurred when updating asset NO. to database. Old asset NO.:%1, new Asset No.:%2. %3").arg(oldAssetNO).arg(newAssetNO).arg(errStr);
         logMessage(errStr, QtServiceBase::Error);
 
@@ -906,37 +925,40 @@ void ServerService::processModifyAssetNOPacket(const ModifyAssetNOPacket &packet
 }
 
 
-void ServerService::processProcessMonitorInfoPacket(const ProcessMonitorInfoPacket &packet){
+void ServerService::processProcessMonitorInfoPacket(const ProcessMonitorInfoPacket &packet)
+{
 
     QString adminID = "";
     foreach (AdminUserInfo *info, adminsHash) {
-        if(info->socketID == packet.getSocketID()){
+        if(info->socketID == packet.getSocketID()) {
             adminID = info->getUserID();
             break;
         }
     }
     Q_ASSERT(!adminID.isEmpty());
-    if(adminID.isEmpty()){return;}
+    if(adminID.isEmpty()) {
+        return;
+    }
 
     QString rules;
-    if(packet.assetNO.isEmpty()){
+    if(packet.assetNO.isEmpty()) {
         rules = QString(packet.globalRules);
-    }else{
+    } else {
         rules = QString(packet.localRules);
     }
 
     QString statement = QString("call sp_ProcessMonitorSettings_Update('%1', %2, '%3', %4, %5, %6, %7, '%8');")
-            .arg(packet.assetNO)
-            .arg(packet.enableProcMon)
-            .arg(rules)
-            .arg(packet.enablePassthrough)
-            .arg(packet.enableLogAllowedProcess)
-            .arg(packet.enableLogBlockedProcess)
-            .arg(packet.useGlobalRules)
-            .arg(adminID)
-            ;
+                        .arg(packet.assetNO)
+                        .arg(packet.enableProcMon)
+                        .arg(rules)
+                        .arg(packet.enablePassthrough)
+                        .arg(packet.enableLogAllowedProcess)
+                        .arg(packet.enableLogBlockedProcess)
+                        .arg(packet.useGlobalRules)
+                        .arg(adminID)
+                        ;
 
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString error = QString("ERROR! An error occurred when saving process monitor info to database. Admin: %1.").arg(adminID);
         logMessage(error, QtServiceBase::Error);
 
@@ -946,16 +968,17 @@ void ServerService::processProcessMonitorInfoPacket(const ProcessMonitorInfoPack
 
 }
 
-void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port){
-    qDebug()<<"ServerService::processClientOnlineStatusChangedPacket(...)"<<" socketID:"<<socketID<<" clientAssetNO:"<<clientAssetNO<<" online:"<<online;
+void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &clientAssetNO, bool online, const QString &ip, quint16 port)
+{
+    qDebug() << "ServerService::processClientOnlineStatusChangedPacket(...)" << " socketID:" << socketID << " clientAssetNO:" << clientAssetNO << " online:" << online;
 
 
-    if(online){
+    if(online) {
 
-        if(clientSocketsHash.values().contains(clientAssetNO)){
+        if(clientSocketsHash.values().contains(clientAssetNO)) {
             SOCKETID preSocketID = clientSocketsHash.key(clientAssetNO);
-            qDebug()<<"---------preSocketID:"<<preSocketID<<" socketID:"<<socketID;
-            if(preSocketID != socketID){
+            qDebug() << "---------preSocketID:" << preSocketID << " socketID:" << socketID;
+            if(preSocketID != socketID) {
                 m_rtp->closeSocket(preSocketID);
                 //peerDisconnected(preSocketID);
                 clientSocketsHash.remove(preSocketID);
@@ -966,15 +989,15 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
         }
         clientSocketsHash.insert(socketID, clientAssetNO);
 
-    }else{
+    } else {
         clientSocketsHash.remove(socketID);
         m_rtp->closeSocket(socketID);
     }
 
     ClientInfo *info = 0;
-    if(clientInfoHash.contains(clientAssetNO)){
+    if(clientInfoHash.contains(clientAssetNO)) {
         info = clientInfoHash.value(clientAssetNO);
-    }else{
+    } else {
         info =  new ClientInfo(clientAssetNO, this);
         clientInfoHash.insert(clientAssetNO, info);
 
@@ -987,19 +1010,20 @@ void ServerService::processClientOnlineStatusChangedPacket(SOCKETID socketID, co
 
     info->setIP(ip);
     info->setOnline(online);
-    if(online){
+    if(online) {
         info->setClientUDTListeningAddress(ip);
         info->setClientUDTListeningPort(port);
     }
 
     qWarning();
-    qWarning()<<QString("Client '%1' From %2:%3 %4 via %5! Time:%6 Socket: %7").arg(clientAssetNO).arg(ip).arg(port).arg(online?"Online":"Offline").arg(m_rtp->socketProtocolString(socketID)).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")).arg(socketID);
-    qWarning()<<QString("Total Online Clients:%1").arg(clientSocketsHash.size());
+    qWarning() << QString("Client '%1' From %2:%3 %4 via %5! Time:%6 Socket: %7").arg(clientAssetNO).arg(ip).arg(port).arg(online ? "Online" : "Offline").arg(m_rtp->socketProtocolString(socketID)).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")).arg(socketID);
+    qWarning() << QString("Total Online Clients:%1").arg(clientSocketsHash.size());
 
 
 }
 
-void ServerService::processAdminLoginPacket(const AdminLoginPacket &packet){
+void ServerService::processAdminLoginPacket(const AdminLoginPacket &packet)
+{
 
     SOCKETID socketID = packet.getSocketID();
     QString adminID = packet.LoginInfo.adminID;
@@ -1007,33 +1031,33 @@ void ServerService::processAdminLoginPacket(const AdminLoginPacket &packet){
     QString adminIP = packet.getPeerHostAddress().toString();
     QString adminComputerName = packet.LoginInfo.computerName;
 
-    qDebug()<<"--ServerService::processAdminLoginPacket(...) "<<" adminName:"<<adminID<<" password:"<<password;
+    qDebug() << "--ServerService::processAdminLoginPacket(...) " << " adminName:" << adminID << " password:" << password;
     bool verified = false, readonly = true;
     QString message = "";
 
     AdminUserInfo *info = adminsHash.value(adminID);
-    if(!info){
+    if(!info) {
         message = "Invalid user name or password.";
-    }else if(info->getPassword() != password){
+    } else if(info->getPassword() != password) {
         message = "Invalid user name or password.";
-    }else{
+    } else {
         verified = true;
         readonly = info->readonly;
         info->socketID = socketID;
     }
     serverPacketsParser->sendAdminLoginResultPacket(socketID, verified, message, readonly);
 
-    if(!verified){
+    if(!verified) {
         return;
     }
 
     QString statement = QString("call sp_Admin_Update_Login_Info('%1', '%2', '%3' );")
-            .arg(adminID)
-            .arg(adminIP)
-            .arg(adminComputerName)
-            ;
+                        .arg(adminID)
+                        .arg(adminIP)
+                        .arg(adminComputerName)
+                        ;
 
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString error = QString("ERROR! An error occurred when querying admin info. Admin: %1.").arg(adminID);
         logMessage(error, QtServiceBase::Error);
     }
@@ -1044,75 +1068,80 @@ void ServerService::processAdminLoginPacket(const AdminLoginPacket &packet){
 
 }
 
-void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminID, bool online){
+void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminID, bool online)
+{
 
     QString ip = "";
     quint16 port = 0;
 
-    if(!m_rtp->getAddressInfoFromSocket(socketID, &ip, &port)){
-        qCritical()<<m_rtp->lastErrorString();
+    if(!m_rtp->getAddressInfoFromSocket(socketID, &ip, &port)) {
+        qCritical() << m_rtp->lastErrorString();
 
         return;
     }
 
-    qWarning()<<QString(" Admin %1@%2 %3! %4").arg(adminID).arg(adminComputerName).arg(online?"Online":"Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+    qWarning() << QString(" Admin %1@%2 %3! %4").arg(adminID).arg(adminComputerName).arg(online ? "Online" : "Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
 
     foreach (AdminUserInfo *info, adminsHash) {
-        if(info->getUserID() == adminID){
-            info->socketID = (online?socketID:0);
+        if(info->getUserID() == adminID) {
+            info->socketID = (online ? socketID : 0);
             return;
         }
     }
 
     onlineAdminSockets.remove(socketID);
-    if(!onlineAdminSockets.size()){
+    if(!onlineAdminSockets.size()) {
         stopGetingRealTimeResourcesLoad();
     }
 
 }
 
-void ServerService::peerConnected(const QHostAddress &peerAddress, quint16 peerPort){
-    qDebug()<<QString("Connected! "+peerAddress.toString()+":"+QString::number(peerPort));
+void ServerService::peerConnected(const QHostAddress &peerAddress, quint16 peerPort)
+{
+    qDebug() << QString("Connected! " + peerAddress.toString() + ":" + QString::number(peerPort));
 
 }
 
-void ServerService::signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort){
-    qCritical()<<QString("Connecting Timeout! "+peerAddress.toString()+":"+QString::number(peerPort));
+void ServerService::signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort)
+{
+    qCritical() << QString("Connecting Timeout! " + peerAddress.toString() + ":" + QString::number(peerPort));
 
 }
 
-void ServerService::peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose){
-    qDebug()<<QString("Disconnected! "+peerAddress.toString()+":"+QString::number(peerPort));
+void ServerService::peerDisconnected(const QHostAddress &peerAddress, quint16 peerPort, bool normalClose)
+{
+    qDebug() << QString("Disconnected! " + peerAddress.toString() + ":" + QString::number(peerPort));
 
-    if(!normalClose){
-        qCritical()<<QString("ERROR! Peer %1:%2 Closed Unexpectedly!").arg(peerAddress.toString()).arg(peerPort);
+    if(!normalClose) {
+        qCritical() << QString("ERROR! Peer %1:%2 Closed Unexpectedly!").arg(peerAddress.toString()).arg(peerPort);
     }
 
 
 }
 
-void ServerService::peerDisconnected(SOCKETID socketID){
-    qDebug()<<"ServerService::peerDisconnected(...) "<<" socketID:"<<socketID<<" Time:"<<QDateTime::currentDateTime().toString("mm:ss:zzz")<<" ThreadID:"<<QThread::currentThreadId();
+void ServerService::peerDisconnected(SOCKETID socketID)
+{
+    qDebug() << "ServerService::peerDisconnected(...) " << " socketID:" << socketID << " Time:" << QDateTime::currentDateTime().toString("mm:ss:zzz") << " ThreadID:" << QThread::currentThreadId();
 
     //    m_rtp->closeSocket(socketID);
 
-    if(clientSocketsHash.contains(socketID)){
+    if(clientSocketsHash.contains(socketID)) {
         QString address = "Unknown Address";
         ClientInfo *info = clientInfoHash.value(clientSocketsHash.value(socketID));
-        if(info){
+        if(info) {
             address = info->getClientUDTListeningAddress() + ":" + QString::number(info->getClientUDTListeningPort());
         }
-        qCritical()<<QString("ERROR! Client '%1' From %2 Closed Connection Unexpectedly! %3").arg(clientSocketsHash.value(socketID)).arg(address).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+        qCritical() << QString("ERROR! Client '%1' From %2 Closed Connection Unexpectedly! %3").arg(clientSocketsHash.value(socketID)).arg(address).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         clientSocketsHash.remove(socketID);
     }
 
     onlineAdminSockets.remove(socketID);
-    if(!onlineAdminSockets.size()){
+    if(!onlineAdminSockets.size()) {
         stopGetingRealTimeResourcesLoad();
     }
 
     foreach (AdminUserInfo *info, adminsHash) {
-        if(info->socketID == socketID){
+        if(info->socketID == socketID) {
             info->socketID = INVALID_SOCK_ID;
             return;
         }
@@ -1123,10 +1152,11 @@ void ServerService::peerDisconnected(SOCKETID socketID){
 
 
 
-bool ServerService::openDatabase(bool reopen){
+bool ServerService::openDatabase(bool reopen)
+{
 
-    if(reopen){
-        if(query){
+    if(reopen) {
+        if(query) {
             query->clear();
             delete query;
             query = 0;
@@ -1146,7 +1176,7 @@ bool ServerService::openDatabase(bool reopen){
 
 
     QSqlDatabase db = QSqlDatabase::database(SERVERSERVICE_DB_CONNECTION_NAME);
-    if(!db.isValid()){
+    if(!db.isValid()) {
         QSqlError err;
         //        err = databaseUtility->openDatabase(MYSQL_DB_CONNECTION_NAME,
         //                                            REMOTE_SITOY_COMPUTERS_DB_DRIVER,
@@ -1174,12 +1204,12 @@ bool ServerService::openDatabase(bool reopen){
     }
 
     db = QSqlDatabase::database(SERVERSERVICE_DB_CONNECTION_NAME);
-    if(!db.isOpen()){
-        qCritical()<<QString("Database is not open! %1").arg(db.lastError().text());
+    if(!db.isOpen()) {
+        qCritical() << QString("Database is not open! %1").arg(db.lastError().text());
         return false;
     }
 
-    if(!query){
+    if(!query) {
         query = new QSqlQuery(db);
 
         //        recordsInDatabase.clear();
@@ -1193,9 +1223,9 @@ bool ServerService::openDatabase(bool reopen){
 
     }
 
-    if(db.driverName().toUpper() == "QMYSQL"){
+    if(db.driverName().toUpper() == "QMYSQL") {
         m_isUsingMySQL = true;
-    }else{
+    } else {
         m_isUsingMySQL = false;
     }
 
@@ -1206,33 +1236,34 @@ bool ServerService::openDatabase(bool reopen){
 
 }
 
-bool ServerService::execQuery(const QString &statement, QString *errorString ){
+bool ServerService::execQuery(const QString &statement, QString *errorString )
+{
 
-    qCritical()<<"statement:";
-    qCritical()<<statement;
-    qCritical()<<"";
+    qCritical() << "statement:";
+    qCritical() << statement;
+    qCritical() << "";
 
-    if(!query){
-        if(!openDatabase()){
+    if(!query) {
+        if(!openDatabase()) {
             return false;
         }
     }
     query->clear();
 
-    if(!query->exec(statement)){
+    if(!query->exec(statement)) {
         QSqlError error = query->lastError();
         QString msg = QString("Can not execute the SQL statement! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
         logMessage(msg, QtServiceBase::Error);
-        if(errorString){
+        if(errorString) {
             *errorString = msg;
         }
 
-        qCritical()<<msg;
+        qCritical() << msg;
         //MySQL数据库重启，重新连接
-        if(error.number() == 2006){
+        if(error.number() == 2006) {
             query->clear();
             openDatabase(true);
-        }else{
+        } else {
             getAllClientsInfoFromDB();
             getAllAdminsInfoFromDB();
             getSystemAlarmsCount();
@@ -1246,18 +1277,19 @@ bool ServerService::execQuery(const QString &statement, QString *errorString ){
 
 }
 
-void ServerService::getAllClientsInfoFromDB(){
+void ServerService::getAllClientsInfoFromDB()
+{
 
     QString statement = QString("call sp_OS_Query('', '', '', '', '', '', -1, -1 ); ");
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         return;
     }
-    while(query->next()){
+    while(query->next()) {
         QString assetNO = query->value("AssetNO").toString();
         ClientInfo *info = 0;
-        if(clientInfoHash.contains(assetNO)){
+        if(clientInfoHash.contains(assetNO)) {
             info = clientInfoHash.value(assetNO);
-        }else{
+        } else {
             info = new ClientInfo(assetNO, this);
             clientInfoHash.insert(assetNO, info);
         }
@@ -1281,18 +1313,18 @@ void ServerService::getAllClientsInfoFromDB(){
     query->clear();
 
     statement = QString("call sp_Hardware_Query('%'); ");
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         return;
     }
-    while(query->next()){
+    while(query->next()) {
         QString assetNO = query->value("AssetNO").toString();
         ClientInfo *info = 0;
-        if(clientInfoHash.contains(assetNO)){
+        if(clientInfoHash.contains(assetNO)) {
             info = clientInfoHash.value(assetNO);
-        }else{
+        } else {
             info = new ClientInfo(assetNO, this);
             clientInfoHash.insert(assetNO, info);
-            qCritical()<<QString("ERROR! Client '%1' OS info not found!").arg(assetNO);
+            qCritical() << QString("ERROR! Client '%1' OS info not found!").arg(assetNO);
         }
 
         info->setCpu(query->value("CPU").toString());
@@ -1310,18 +1342,19 @@ void ServerService::getAllClientsInfoFromDB(){
 
 }
 
-void ServerService::getAllAdminsInfoFromDB(){
+void ServerService::getAllAdminsInfoFromDB()
+{
 
     QString statement = QString("call sp_Admins_Query(); ");
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         return;
     }
-    while(query->next()){
+    while(query->next()) {
         QString adminID = query->value("UserID").toString();
         AdminUserInfo *info = 0;
-        if(adminsHash.contains(adminID)){
+        if(adminsHash.contains(adminID)) {
             info = adminsHash.value(adminID);
-        }else{
+        } else {
             info = new AdminUserInfo(adminID, this);
             adminsHash.insert(adminID, info);
         }
@@ -1335,9 +1368,9 @@ void ServerService::getAllAdminsInfoFromDB(){
         info->readonly = query->value("Readonly").toUInt();
         info->remark = query->value("Remark").toString();
 
-        if(info->getPassword().isEmpty()){
+        if(info->getPassword().isEmpty()) {
             QString log = QString("ERROR! Empty admin password! Admin:%1").arg(adminID);
-            qCritical()<<log;
+            qCritical() << log;
             logMessage(log, QtService::Error);
         }
 
@@ -1347,12 +1380,13 @@ void ServerService::getAllAdminsInfoFromDB(){
 }
 
 
-void ServerService::getSystemAlarmsCount(){
+void ServerService::getSystemAlarmsCount()
+{
     QString statement = QString("call sp_Alarms_GetCount(); ");
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         return;
     }
-    if(!query->first()){
+    if(!query->first()) {
         return;
     }
 
@@ -1363,25 +1397,28 @@ void ServerService::getSystemAlarmsCount(){
 
 }
 
-bool ServerService::getAnnouncementsInfo(QByteArray *data, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime){
-    if(!data){return false;}
+bool ServerService::getAnnouncementsInfo(QByteArray *data, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime)
+{
+    if(!data) {
+        return false;
+    }
 
     QString statement = QString("call sp_Announcements_Query('%1', '%2', %3, '%4', '%5', %6, '%7', '%8' ); ")
-            .arg(id)
-            .arg(keyword)
-            .arg(validity)
-            .arg(assetNO)
-            .arg(userName)
-            .arg(target)
-            .arg(startTime)
-            .arg(endTime)
-            ;
-    if(!execQuery(statement)){
+                        .arg(id)
+                        .arg(keyword)
+                        .arg(validity)
+                        .arg(assetNO)
+                        .arg(userName)
+                        .arg(target)
+                        .arg(startTime)
+                        .arg(endTime)
+                        ;
+    if(!execQuery(statement)) {
         return false;
     }
 
     QJsonArray jsonArray;
-    while(query->next()){
+    while(query->next()) {
         QJsonArray infoArray;
         infoArray.append(query->value("ID").toString());
         infoArray.append(query->value("AnnouncementType").toString());
@@ -1408,13 +1445,14 @@ bool ServerService::getAnnouncementsInfo(QByteArray *data, const QString &id, co
 
 }
 
-unsigned int ServerService::getCurrentDBUTCTime(){
+unsigned int ServerService::getCurrentDBUTCTime()
+{
 
     QString statement = QString("call sp_CurrentUTCTimestamp(); ");
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         return 0;
     }
-    if(!query->first()){
+    if(!query->first()) {
         return 0;
     }
     QString timeStr = query->value(0).toString();
@@ -1429,11 +1467,12 @@ unsigned int ServerService::getCurrentDBUTCTime(){
 }
 
 
-void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO){
+void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO)
+{
 
     QByteArray data;
 
-    if(assetNO.isEmpty()){
+    if(assetNO.isEmpty()) {
         QJsonArray infoArray;
         foreach (ClientInfo *info, clientInfoHash.values()) {
             infoArray.append(QString(info->getOSJsonData()));
@@ -1443,9 +1482,11 @@ void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO){
         object["OS"] = infoArray;
         QJsonDocument doc(object);
         data = doc.toJson(QJsonDocument::Compact);
-    }else{
+    } else {
         ClientInfo *info = clientInfoHash.value(assetNO);
-        if(!info){return;}
+        if(!info) {
+            return;
+        }
         data = info->getOSJsonData();
     }
 
@@ -1453,10 +1494,11 @@ void ServerService::getOSInfo(SOCKETID socketID, const QString &assetNO){
 
 }
 
-void ServerService::getHardwareInfo(SOCKETID socketID, const QString &assetNO){
+void ServerService::getHardwareInfo(SOCKETID socketID, const QString &assetNO)
+{
     QByteArray data;
 
-    if(assetNO.isEmpty()){
+    if(assetNO.isEmpty()) {
         QJsonArray infoArray;
         foreach (ClientInfo *info, clientInfoHash.values()) {
             infoArray.append(QString(info->getHardwareJsonData()));
@@ -1466,9 +1508,11 @@ void ServerService::getHardwareInfo(SOCKETID socketID, const QString &assetNO){
         object["Hardware"] = infoArray;
         QJsonDocument doc(object);
         data = doc.toJson(QJsonDocument::Compact);
-    }else{
+    } else {
         ClientInfo *info = clientInfoHash.value(assetNO);
-        if(!info){return;}
+        if(!info) {
+            return;
+        }
         data = info->getHardwareJsonData();
     }
 
@@ -1476,11 +1520,13 @@ void ServerService::getHardwareInfo(SOCKETID socketID, const QString &assetNO){
 
 }
 
-void ServerService::getSoftwareInfo(SOCKETID socketID, const QString &assetNO){
+void ServerService::getSoftwareInfo(SOCKETID socketID, const QString &assetNO)
+{
 
 }
 
-void ServerService::sendAdminsInfo(SOCKETID socketID){
+void ServerService::sendAdminsInfo(SOCKETID socketID)
+{
 
     QJsonArray infoArray;
     foreach (AdminUserInfo *info, adminsHash.values()) {
@@ -1496,7 +1542,8 @@ void ServerService::sendAdminsInfo(SOCKETID socketID){
 
 }
 
-void ServerService::sendServerInfo(SOCKETID adminSocketID){
+void ServerService::sendServerInfo(SOCKETID adminSocketID)
+{
 
     QJsonObject obj;
     obj["Version"] = APP_VERSION;
@@ -1535,29 +1582,34 @@ void ServerService::sendServerInfo(SOCKETID adminSocketID){
 
 }
 
-void ServerService::startGetingRealTimeResourcesLoad(){
-    qDebug()<<"ServerService::startGetingRealTimeResourcesLoad(...)";
+void ServerService::startGetingRealTimeResourcesLoad()
+{
+    qDebug() << "ServerService::startGetingRealTimeResourcesLoad(...)";
 
-    if(m_getRealTimeResourcesLoad){return;}
+    if(m_getRealTimeResourcesLoad) {
+        return;
+    }
     m_getRealTimeResourcesLoad = true;
 
-    connect(this, SIGNAL(signalSendRealtimeInfo(int,int)), this, SLOT(sendRealtimeInfo(int,int)), Qt::QueuedConnection);
+    connect(this, SIGNAL(signalSendRealtimeInfo(int, int)), this, SLOT(sendRealtimeInfo(int, int)), Qt::QueuedConnection);
 
-    QThreadPool * pool = QThreadPool::globalInstance();
+    QThreadPool *pool = QThreadPool::globalInstance();
     int maxThreadCount = pool->maxThreadCount();
-    if(pool->activeThreadCount() == pool->maxThreadCount()){
+    if(pool->activeThreadCount() == pool->maxThreadCount()) {
         pool->setMaxThreadCount(++maxThreadCount);
     }
     QtConcurrent::run(this, &ServerService::getRealTimeResourcseLoad);
 
 }
 
-void ServerService::stopGetingRealTimeResourcesLoad(){
+void ServerService::stopGetingRealTimeResourcesLoad()
+{
     m_getRealTimeResourcesLoad = false;
 }
 
-void ServerService::getRealTimeResourcseLoad(){
-    qDebug()<<"--SystemInfo::getRealTimeResourcseLoad(...)";
+void ServerService::getRealTimeResourcseLoad()
+{
+    qDebug() << "--SystemInfo::getRealTimeResourcseLoad(...)";
 
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();
@@ -1585,20 +1637,19 @@ void ServerService::getRealTimeResourcseLoad(){
 
 }
 
-void ServerService::processSystemAlarmsPacket(const SystemAlarmsPacket &packet){
+void ServerService::processSystemAlarmsPacket(const SystemAlarmsPacket &packet)
+{
 
     switch (packet.InfoType) {
-    case SystemAlarmsPacket::SYSTEMALARMS_QUERY:
-    {
+    case SystemAlarmsPacket::SYSTEMALARMS_QUERY: {
         sendAlarmsInfo(packet.getSocketID(), packet.QueryInfo.assetNO, packet.QueryInfo.type, packet.QueryInfo.acknowledged, packet.QueryInfo.startTime, packet.QueryInfo.endTime);
     }
-        break;
+    break;
 
-    case SystemAlarmsPacket::SYSTEMALARMS_ACK:
-    {
+    case SystemAlarmsPacket::SYSTEMALARMS_ACK: {
         acknowledgeSystemAlarms(packet.getSocketID(), packet.ACKInfo.alarms, packet.ACKInfo.deleteAlarms);
     }
-        break;
+    break;
 
     default:
         break;
@@ -1607,20 +1658,21 @@ void ServerService::processSystemAlarmsPacket(const SystemAlarmsPacket &packet){
 
 }
 
-void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime){
+void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, const QString &type, const QString &acknowledged, const QString &startTime, const QString &endTime)
+{
 
     QString statement = QString("call sp_Alarms_Query('%1', %2, %3, '%4', '%5' ); ")
-            .arg(assetNO)
-            .arg(type)
-            .arg(acknowledged)
-            .arg(startTime)
-            .arg(endTime)
-            ;
-    if(!execQuery(statement)){
+                        .arg(assetNO)
+                        .arg(type)
+                        .arg(acknowledged)
+                        .arg(startTime)
+                        .arg(endTime)
+                        ;
+    if(!execQuery(statement)) {
         return;
     }
     QJsonArray jsonArray;
-    while(query->next()){
+    while(query->next()) {
         QJsonArray infoArray;
         infoArray.append(query->value("ID").toString());
         infoArray.append(query->value("AssetNO").toString());
@@ -1645,17 +1697,20 @@ void ServerService::sendAlarmsInfo(SOCKETID socketID, const QString &assetNO, co
 
 }
 
-void ServerService::acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &alarms, bool deleteAlarms){
+void ServerService::acknowledgeSystemAlarms(SOCKETID adminSocketID, const QString &alarms, bool deleteAlarms)
+{
 
     QString adminID = onlineAdminSockets.value(adminSocketID);
-    if(adminID.isEmpty()){return;}
+    if(adminID.isEmpty()) {
+        return;
+    }
 
     QString statement = QString("call sp_Alarms_Acknowledge('%1', '%2', %3); ")
-            .arg(adminID)
-            .arg(alarms)
-            .arg(deleteAlarms?1:0)
-            ;
-    if(!execQuery(statement)){
+                        .arg(adminID)
+                        .arg(alarms)
+                        .arg(deleteAlarms ? 1 : 0)
+                        ;
+    if(!execQuery(statement)) {
         QString error = QString("ERROR! An error occurred when saving acknowledged alarms info to database. Admin: %1.").arg(adminID);
         logMessage(error, QtServiceBase::Error);
 
@@ -1669,20 +1724,21 @@ void ServerService::acknowledgeSystemAlarms(SOCKETID adminSocketID, const QStrin
 
 }
 
-void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad){
+void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad)
+{
 
     QJsonObject obj;
     obj["CPULoad"] = QString::number(cpuLoad);
     obj["MemLoad"] = QString::number(memoryLoad);
 
     static quint8 count = 0;
-    if(!count){
+    if(!count) {
         m_disksInfo = SystemUtilities::getDisksInfo();;
     }
     obj["Disks"] = m_disksInfo;
 
     count++;
-    if(count == 300){
+    if(count == 300) {
         count = 0;
     }
 
@@ -1709,39 +1765,35 @@ void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad){
 
 }
 
-void ServerService::processAnnouncementPacket(const AnnouncementPacket &packet){
+void ServerService::processAnnouncementPacket(const AnnouncementPacket &packet)
+{
 
     SOCKETID socketID = packet.getSocketID();
 
     switch (packet.InfoType) {
-    case AnnouncementPacket::ANNOUNCEMENT_QUERY :
-    {
+    case AnnouncementPacket::ANNOUNCEMENT_QUERY : {
         sendAnnouncementsInfo(socketID, packet.QueryInfo.announcementID, packet.QueryInfo.keyword, packet.QueryInfo.validity, packet.QueryInfo.assetNO, packet.QueryInfo.userName, packet.QueryInfo.target, packet.QueryInfo.startTime, packet.QueryInfo.endTime);
     }
-        break;
+    break;
 
-    case AnnouncementPacket::ANNOUNCEMENT_CREATE :
-    {
+    case AnnouncementPacket::ANNOUNCEMENT_CREATE : {
         createAnnouncement(socketID, packet.JobID, packet.CreateInfo.localTempID, packet.CreateInfo.adminID, packet.CreateInfo.type, packet.CreateInfo.content, packet.CreateInfo.confirmationRequired, packet.CreateInfo.validityPeriod, packet.CreateInfo.targetType, packet.CreateInfo.targets);
     }
-        break;
+    break;
 
-    case AnnouncementPacket::ANNOUNCEMENT_UPDATE :
-    {
+    case AnnouncementPacket::ANNOUNCEMENT_UPDATE : {
         updateAnnouncement(socketID, packet.JobID, packet.UpdateInfo.adminName, packet.UpdateInfo.announcementID, packet.UpdateInfo.targetType, packet.UpdateInfo.active, packet.UpdateInfo.addedTargets, packet.UpdateInfo.deletedTargets);
     }
-        break;
+    break;
 
-    case AnnouncementPacket::ANNOUNCEMENT_REPLY :
-    {
+    case AnnouncementPacket::ANNOUNCEMENT_REPLY : {
         replyMessageReceived(socketID, packet.getPeerID(), packet.ReplyInfo.announcementID, packet.ReplyInfo.sender, packet.ReplyInfo.receiver, packet.ReplyInfo.receiversAssetNO, packet.ReplyInfo.replyMessage);
     }
-        break;
-    case AnnouncementPacket::ANNOUNCEMENT_QUERY_TARGETS :
-    {
+    break;
+    case AnnouncementPacket::ANNOUNCEMENT_QUERY_TARGETS : {
         sendAnnouncementTargetsInfo(socketID, packet.QueryTargetsInfo.announcementID);
     }
-        break;
+    break;
 
     default:
         break;
@@ -1749,12 +1801,13 @@ void ServerService::processAnnouncementPacket(const AnnouncementPacket &packet){
 
 }
 
-bool ServerService::sendAnnouncementsInfo(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime){
+bool ServerService::sendAnnouncementsInfo(SOCKETID socketID, const QString &id, const QString &keyword, const QString &validity, const QString &assetNO, const QString &userName, const QString &target, const QString &startTime, const QString &endTime)
+{
 
     QByteArray data;
-    if(getAnnouncementsInfo(&data, id, keyword, validity, assetNO, userName, target, startTime, endTime)){
+    if(getAnnouncementsInfo(&data, id, keyword, validity, assetNO, userName, target, startTime, endTime)) {
         return serverPacketsParser->sendSystemInfoPacket(socketID, userName, data, MS::SYSINFO_ANNOUNCEMENTS);
-    }else{
+    } else {
         QString message = QString("Failed to query announcements!");
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
     }
@@ -1763,18 +1816,19 @@ bool ServerService::sendAnnouncementsInfo(SOCKETID socketID, const QString &id, 
 
 }
 
-bool ServerService::createAnnouncement(SOCKETID adminSocketID, quint32 jobID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets){
+bool ServerService::createAnnouncement(SOCKETID adminSocketID, quint32 jobID, unsigned int tempID, const QString &adminName, quint8 type, const QString &content, bool confirmationRequired, int validityPeriod, quint8 targetType, const QString &targets)
+{
 
     QString statement = QString("call sp_Announcements_Insert(@ID, %1, '%2', %3, '%4', %5, %6, %7 ); ")
-            .arg(type)
-            .arg(content)
-            .arg(confirmationRequired)
-            .arg(adminName)
-            .arg(validityPeriod)
-            .arg(targetType)
-            .arg(1)
-            ;
-    if(!execQuery(statement)){
+                        .arg(type)
+                        .arg(content)
+                        .arg(confirmationRequired)
+                        .arg(adminName)
+                        .arg(validityPeriod)
+                        .arg(targetType)
+                        .arg(1)
+                        ;
+    if(!execQuery(statement)) {
         QString message = QString("Database operation failed!");
         serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
         //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
@@ -1782,26 +1836,26 @@ bool ServerService::createAnnouncement(SOCKETID adminSocketID, quint32 jobID, un
     }
 
     statement = QString("select @ID;");
-    if( !execQuery(statement) || (!query->first()) ){
+    if( !execQuery(statement) || (!query->first()) ) {
         QString message = QString("Database operation failed!");
         serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
         //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         return false;
     }
     unsigned int id = query->value(0).toUInt();
-    if(!id){
+    if(!id) {
         QString message = QString("Database operation failed!");
         serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
         serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         return false;
     }
 
-    if(targetType == quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE) || targets.isEmpty()){
+    if(targetType == quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE) || targets.isEmpty()) {
         serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Finished), id);
         return true;
     }
 
-    if(!updateAnnouncementTargets(id, targets, "")){       
+    if(!updateAnnouncementTargets(id, targets, "")) {
         //QString message = QString("Failed to update announcement targets! Announcement ID: %1").arg(id);
         serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::FinishedWithError), id);
         //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
@@ -1809,9 +1863,9 @@ bool ServerService::createAnnouncement(SOCKETID adminSocketID, quint32 jobID, un
     }
 
 
-    if(targetType == quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE)){
+    if(targetType == quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE)) {
         QByteArray data;
-        if(!getAnnouncementsInfo(&data, QString::number(id), "", "-1", "", "", "-1", "1970-01-01", "2039-12-31")){
+        if(!getAnnouncementsInfo(&data, QString::number(id), "", "-1", "", "", "-1", "1970-01-01", "2039-12-31")) {
             return false;
         }
 
@@ -1825,21 +1879,22 @@ bool ServerService::createAnnouncement(SOCKETID adminSocketID, quint32 jobID, un
     return true;
 }
 
-bool ServerService::updateAnnouncement(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets){
+bool ServerService::updateAnnouncement(SOCKETID adminSocketID, quint32 jobID, const QString &adminName, unsigned int announcementID, quint8 targetType, bool active, const QString &addedTargets, const QString &deletedTargets)
+{
 
     QString statement = QString("call sp_Announcements_Update(%1, %2 %3); ")
-            .arg(announcementID)
-            .arg(targetType)
-            .arg(quint8(active))
-            ;
-    if(!execQuery(statement)){
+                        .arg(announcementID)
+                        .arg(targetType)
+                        .arg(quint8(active))
+                        ;
+    if(!execQuery(statement)) {
         QString message = QString("Database operation failed!");
         serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::Failed), message);
         //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
         //return false;
     }
 
-    if(!updateAnnouncementTargets(announcementID, addedTargets, deletedTargets)){
+    if(!updateAnnouncementTargets(announcementID, addedTargets, deletedTargets)) {
         QString message = QString("Failed to update announcement targets! Announcement ID: %1").arg(announcementID);
         serverPacketsParser->sendJobFinishedPacket(adminSocketID, jobID, quint8(Job::FinishedWithError), message);
         //serverPacketsParser->sendServerMessagePacket(adminSocketID, message, quint8(MS::MSG_Critical));
@@ -1849,30 +1904,32 @@ bool ServerService::updateAnnouncement(SOCKETID adminSocketID, quint32 jobID, co
     return true;
 }
 
-bool ServerService::updateAnnouncementTargets(unsigned int announcementID, const QString &addedTargets, const QString &deletedTargets){
+bool ServerService::updateAnnouncementTargets(unsigned int announcementID, const QString &addedTargets, const QString &deletedTargets)
+{
 
     QString statement = QString("call sp_AnnouncementTargets_Update(%1, '%2', '%3'); ")
-            .arg(announcementID)
-            .arg(addedTargets)
-            .arg(deletedTargets)
-            ;
-    if(!execQuery(statement)){
+                        .arg(announcementID)
+                        .arg(addedTargets)
+                        .arg(deletedTargets)
+                        ;
+    if(!execQuery(statement)) {
         return false;
     }
 
     return true;
 }
 
-bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, unsigned int announcementID){
+bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, unsigned int announcementID)
+{
 
-    if(!announcementID){
+    if(!announcementID) {
         QString message = QString("Failed to query announcement targets! Invalid announcement ID!");
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
         return false;
     }
 
     QString statement = QString("call sp_AnnouncementTargets_Query(%1); ").arg(announcementID);
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString message = QString("Failed to query announcement targets! Announcement ID: %1").arg(announcementID);
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
 
@@ -1880,7 +1937,7 @@ bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, unsigned int 
     }
 
     QJsonArray jsonArray;
-    while(query->next()){
+    while(query->next()) {
         QJsonArray infoArray;
         infoArray.append(query->value("ID").toString());
         infoArray.append(query->value("AssetNO").toString());
@@ -1903,30 +1960,31 @@ bool ServerService::sendAnnouncementTargetsInfo(SOCKETID socketID, unsigned int 
 
 }
 
-void ServerService::replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, unsigned int announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message){
+void ServerService::replyMessageReceived(SOCKETID socketID, const QString &senderAssetNO, unsigned int announcementID, const QString &sender, const QString &receiver,  const QString &receiversAssetNO, const QString &message)
+{
 
     QString statement = QString("call sp_AnnouncementReplies_Insert(@ID, %1, '%2', %3, '%4', '%5', '%6' ); ")
-            .arg(announcementID)
-            .arg(sender)
-            .arg(senderAssetNO)
-            .arg(receiver)
-            .arg(receiversAssetNO)
-            .arg(message)
-            ;
-    if(!execQuery(statement)){
+                        .arg(announcementID)
+                        .arg(sender)
+                        .arg(senderAssetNO)
+                        .arg(receiver)
+                        .arg(receiversAssetNO)
+                        .arg(message)
+                        ;
+    if(!execQuery(statement)) {
         QString message = QString("Failed to save announcement reply!");
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
         return;
     }
 
     statement = QString("select @ID;");
-    if( !execQuery(statement) || (!query->first()) ){
+    if( !execQuery(statement) || (!query->first()) ) {
         QString message = QString("Failed to query announcement reply id!");
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
         return;
     }
     unsigned int id = query->value(0).toUInt();
-    if(!id){
+    if(!id) {
         QString message = QString("Failed to query announcement id!");
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
         return;
@@ -1951,30 +2009,33 @@ void ServerService::replyMessageReceived(SOCKETID socketID, const QString &sende
     QJsonDocument doc(object);
     QByteArray data = doc.toJson(QJsonDocument::Compact);
 
-    if(receiversAssetNO.isEmpty()){
+    if(receiversAssetNO.isEmpty()) {
         //Send Message to Admin
         foreach (SOCKETID sid, onlineAdminSockets.keys()) {
             serverPacketsParser->sendSystemInfoPacket(sid, "", data, MS::SYSINFO_ANNOUNCEMENTREPLIES);
         }
-    }else{
+    } else {
         SOCKETID sid = clientSocketsHash.key(receiversAssetNO);
-        if(!sid){return;}
+        if(!sid) {
+            return;
+        }
         serverPacketsParser->sendSystemInfoPacket(sid, receiver, data, MS::SYSINFO_ANNOUNCEMENTREPLIES);
     }
 
 }
 
-bool ServerService::sendAnnouncementRepliesInfo(SOCKETID socketID, const QString &announcementID, const QString &receiver){
+bool ServerService::sendAnnouncementRepliesInfo(SOCKETID socketID, const QString &announcementID, const QString &receiver)
+{
 
     QString statement = QString("call sp_AnnouncementReplies_Query(%1, '%2'); ").arg(announcementID).arg(receiver);
-    if(!execQuery(statement)){
+    if(!execQuery(statement)) {
         QString message = QString("Failed to query announcement replies! Announcement ID: %1").arg(announcementID);
         serverPacketsParser->sendServerMessagePacket(socketID, message, quint8(MS::MSG_Critical));
         return false;
     }
 
     QJsonArray jsonArray;
-    while(query->next()){
+    while(query->next()) {
         QJsonArray infoArray;
         infoArray.append(query->value("ID").toString());
         infoArray.append(query->value("Announcement").toString());
@@ -2002,7 +2063,7 @@ bool ServerService::sendAnnouncementRepliesInfo(SOCKETID socketID, const QString
 
 void ServerService::start()
 {
-    qDebug()<<"----ServerService::start()";
+    qDebug() << "----ServerService::start()";
 
     m_startupUTCTime = QDateTime::currentDateTime().toTime_t();
 
@@ -2029,10 +2090,10 @@ void ServerService::stop()
 
     databaseUtility->closeAllDBConnections();
 
-    if(m_udpServer){
+    if(m_udpServer) {
         m_udpServer->close();
     }
-    if(m_rtp){
+    if(m_rtp) {
         m_rtp->stopServers();
     }
 
@@ -2051,11 +2112,11 @@ void ServerService::resume()
 void ServerService::processCommand(int code)
 {
 
-    qDebug()<<"----ServerService::processCommand(int code)";
-    qDebug()<<"code:"<<code;
+    qDebug() << "----ServerService::processCommand(int code)";
+    qDebug() << "code:" << code;
 
 
-    switch(code){
+    switch(code) {
     case 0:
         break;
     case 1:
@@ -2068,7 +2129,7 @@ void ServerService::processCommand(int code)
         serverPacketsParser->sendRequestClientInfoPacket("255.255.255.255", IP_MULTICAST_GROUP_PORT, "", false);
         break;
     default:
-        qWarning()<<QString("Unknown Command Code '%1'!").arg(code);
+        qWarning() << QString("Unknown Command Code '%1'!").arg(code);
         break;
 
     }
@@ -2077,14 +2138,15 @@ void ServerService::processCommand(int code)
 }
 
 
-void ServerService::processArguments(int argc, char **argv){
+void ServerService::processArguments(int argc, char **argv)
+{
 
     QCoreApplication core(argc, argv);
-    qDebug()<<"-------availableDrivers:"<<DatabaseUtility::availableDrivers();
+    qDebug() << "-------availableDrivers:" << DatabaseUtility::availableDrivers();
 
 
     QStringList arguments;
-    for(int i = 0; i < argc; i++){
+    for(int i = 0; i < argc; i++) {
         arguments.append(QString(argv[i]));
     }
 
@@ -2092,192 +2154,192 @@ void ServerService::processArguments(int argc, char **argv){
     if(settings.getDBServerHost().isEmpty()
             || settings.getDBName().isEmpty()
             || settings.getDBServerUserName().isEmpty()
-            ){
-        qCritical()<<QString("No database settings found!");
+      ) {
+        qCritical() << QString("No database settings found!");
         arguments.append("-setup");
     }
 
-    if(arguments.contains("-setup", Qt::CaseInsensitive)){
+    if(arguments.contains("-setup", Qt::CaseInsensitive)) {
         QStringList databaseTypes;
-        databaseTypes<<"Other"<<"MYSQL"<<"SQLITE"<<"POSTGRESQL"<<"FIREBIRD"<<"DB2"<<"ORACLE"<<"M$ SQLSERVER"<<"M$ ACCESS";
+        databaseTypes << "Other" << "MYSQL" << "SQLITE" << "POSTGRESQL" << "FIREBIRD" << "DB2" << "ORACLE" << "M$ SQLSERVER" << "M$ ACCESS";
 
         //HEHUI::Settings settings(SERVICE_NAME, "./");
-        wcout<<tr("Current Database Info:").toStdWString()<<endl;
-        wcout<<tr("\tDatabase type: ").toStdWString()<<databaseTypes.at(settings.getDBType()).toStdWString()<<endl;
-        wcout<<tr("\tDriver: ").toStdWString()<<settings.getDBDriver().toStdWString()<<endl;
-        wcout<<tr("\tDatabase server address: ").toStdWString()<<settings.getDBServerHost().toStdWString()<<endl;
-        wcout<<tr("\tDatabase server port: ").toStdWString()<<settings.getDBServerPort()<<endl;
-        wcout<<tr("\tUser name: ").toStdWString()<<settings.getDBServerUserName().toStdWString()<<endl;
+        wcout << tr("Current Database Info:").toStdWString() << endl;
+        wcout << tr("\tDatabase type: ").toStdWString() << databaseTypes.at(settings.getDBType()).toStdWString() << endl;
+        wcout << tr("\tDriver: ").toStdWString() << settings.getDBDriver().toStdWString() << endl;
+        wcout << tr("\tDatabase server address: ").toStdWString() << settings.getDBServerHost().toStdWString() << endl;
+        wcout << tr("\tDatabase server port: ").toStdWString() << settings.getDBServerPort() << endl;
+        wcout << tr("\tUser name: ").toStdWString() << settings.getDBServerUserName().toStdWString() << endl;
         //wcout<<tr("\tPassword: ").toStdWString()<<settings.getDBServerUserPassword().toStdWString()<<endl;
-        wcout<<tr("\tDatabase name: ").toStdWString()<<settings.getDBName().toStdWString()<<endl<<endl;
+        wcout << tr("\tDatabase name: ").toStdWString() << settings.getDBName().toStdWString() << endl << endl;
 
-        wcerr<<tr("Database settings is invalid! Please reconfigure it!").toStdWString()<<endl;
+        wcerr << tr("Database settings is invalid! Please reconfigure it!").toStdWString() << endl;
 
 
         string input = "";
         bool ok = false;
 
-        wcout<<tr("Database type:").toStdWString()<<endl;
-        for(int i = 0; i<databaseTypes.size(); i++){
+        wcout << tr("Database type:").toStdWString() << endl;
+        for(int i = 0; i < databaseTypes.size(); i++) {
             QString type = databaseTypes.at(i);
-            cout<<"\t"<<i<<":"<<qPrintable(type)<<endl;
+            cout << "\t" << i << ":" << qPrintable(type) << endl;
         }
         //cout<<" 0:Other  1:MYSQL  2:SQLITE  3:POSTGRESQL  4:FIREBIRD  5:DB2  6:ORACLE  7:M$SQLSERVER  8:M$ACCESS"<<endl;
         int type = -1;
-        while(1){
-            wcout<<tr("Please select database type number: ").toStdWString();
-            cin>>input;
+        while(1) {
+            wcout << tr("Please select database type number: ").toStdWString();
+            cin >> input;
             type = QString::fromStdString(input).toInt(&ok);
-            if(ok && type >= 0 && type < databaseTypes.size()){
+            if(ok && type >= 0 && type < databaseTypes.size()) {
                 break;
-            }else{
-                wcerr<<tr("Invalid type number!").toStdWString()<<endl;
+            } else {
+                wcerr << tr("Invalid type number!").toStdWString() << endl;
             }
         }
-        cout<<endl;
+        cout << endl;
         input = "";
 
-        wcout<<tr("Available Database Drivers:").toStdWString()<<endl;
+        wcout << tr("Available Database Drivers:").toStdWString() << endl;
         QStringList drivers = DatabaseUtility::availableDrivers();
-        for(int i = 0; i<drivers.size(); i++){
+        for(int i = 0; i < drivers.size(); i++) {
             QString driver = drivers.at(i);
-            cout<<"\t"<<i<<":"<<qPrintable(driver)<<endl;
+            cout << "\t" << i << ":" << qPrintable(driver) << endl;
         }
         QString driver = "";
-        while(1){
-            wcout<<tr("Please select database driver number: ").toStdWString();
-            cin>>input;
+        while(1) {
+            wcout << tr("Please select database driver number: ").toStdWString();
+            cin >> input;
             int driverNO = QString::fromStdString(input).toInt(&ok);
-            if(ok && driverNO >= 0 && driverNO < drivers.size()){
+            if(ok && driverNO >= 0 && driverNO < drivers.size()) {
                 driver = drivers.at(driverNO);
                 break;
-            }else{
-                wcerr<<tr("Invalid driver number!").toStdWString()<<endl;
+            } else {
+                wcerr << tr("Invalid driver number!").toStdWString() << endl;
             }
         }
-        cout<<endl;
+        cout << endl;
         input = "";
 
         QString host = "";
-        while(1){
-            wcout<<tr("Please input database server host name or IP address: ").toStdWString();
-            cin>>input;
+        while(1) {
+            wcout << tr("Please input database server host name or IP address: ").toStdWString();
+            cin >> input;
             host = QString::fromStdString(input);
-            if(QHostAddress(host).isNull()){
-                wcerr<<tr("Invalid database server host name or IP address!").toStdWString()<<endl;
-            }else{
+            if(QHostAddress(host).isNull()) {
+                wcerr << tr("Invalid database server host name or IP address!").toStdWString() << endl;
+            } else {
                 break;
             }
         }
-        cout<<endl;
+        cout << endl;
         input = "";
 
         int port = 0;
-        while(1){
-            wcout<<tr("Please input database server port: ").toStdWString();
-            cin>>input;
+        while(1) {
+            wcout << tr("Please input database server port: ").toStdWString();
+            cin >> input;
             port = QString::fromStdString(input).toInt(&ok);
-            if(ok && port > 0 && port < 65535){
+            if(ok && port > 0 && port < 65535) {
                 break;
-            }else{
-                wcerr<<tr("Invalid database server port!").toStdWString()<<endl;
+            } else {
+                wcerr << tr("Invalid database server port!").toStdWString() << endl;
             }
 
         }
-        cout<<endl;
+        cout << endl;
         input = "";
 
         QString databaseName = "";
-        while(1){
-            wcout<<tr("Please input database name: ").toStdWString();
-            cin>>input;
+        while(1) {
+            wcout << tr("Please input database name: ").toStdWString();
+            cin >> input;
             databaseName = QString::fromStdString(input).trimmed();
-            if(databaseName.isEmpty()){
-                wcerr<<tr("Invalid database name!").toStdWString()<<endl;
-            }else{
+            if(databaseName.isEmpty()) {
+                wcerr << tr("Invalid database name!").toStdWString() << endl;
+            } else {
                 break;
             }
 
         }
-        cout<<endl;
+        cout << endl;
         input = "";
 
         QString userName = "";
-        while(1){
-            wcout<<tr("Please input user name: ").toStdWString();
-            cin>>input;
+        while(1) {
+            wcout << tr("Please input user name: ").toStdWString();
+            cin >> input;
             userName = QString::fromStdString(input).trimmed();
-            if(userName.isEmpty()){
-                wcerr<<tr("Invalid user name!").toStdWString()<<endl;
-            }else{
+            if(userName.isEmpty()) {
+                wcerr << tr("Invalid user name!").toStdWString() << endl;
+            } else {
                 break;
             }
 
         }
-        cout<<endl;
+        cout << endl;
         input = "";
 
         QString userPassword = "";
-        while(1){
-            wcout<<tr("Please input password: ").toStdWString();
-            cin>>input;
+        while(1) {
+            wcout << tr("Please input password: ").toStdWString();
+            cin >> input;
             userPassword = QString::fromStdString(input);
 
             string userPassword2 = "";
-            wcout<<tr("Please type your password again to confirm it: ").toStdWString();
-            cin>>userPassword2;
-            if(userPassword == QString::fromStdString(userPassword2)){
+            wcout << tr("Please type your password again to confirm it: ").toStdWString();
+            cin >> userPassword2;
+            if(userPassword == QString::fromStdString(userPassword2)) {
                 break;
-            }else{
-                wcout<<tr("The two passwords you entered did not match!").toStdWString()<<endl;
+            } else {
+                wcout << tr("The two passwords you entered did not match!").toStdWString() << endl;
             }
 
         }
-        cout<<endl;
+        cout << endl;
         input = "";
 
 
-        wcout<<tr("New Database Info:").toStdWString()<<endl;
-        wcout<<tr("\tDatabase type: ").toStdWString()<<databaseTypes.at(type).toStdWString()<<endl;
-        wcout<<tr("\tDatabase driver: ").toStdWString()<<driver.toStdWString()<<endl;
-        wcout<<tr("\tDatabase server address: ").toStdWString()<<host.toStdWString()<<endl;
-        wcout<<tr("\tDatabase server port: ").toStdWString()<<port<<endl;
-        wcout<<tr("\tDatabase name: ").toStdWString()<<databaseName.toStdWString()<<endl;
-        wcout<<tr("\tUser name: ").toStdWString()<<userName.toStdWString()<<endl;
-        wcout<<tr("\tPassword: ").toStdWString()<<userPassword.toStdWString()<<endl<<endl;
+        wcout << tr("New Database Info:").toStdWString() << endl;
+        wcout << tr("\tDatabase type: ").toStdWString() << databaseTypes.at(type).toStdWString() << endl;
+        wcout << tr("\tDatabase driver: ").toStdWString() << driver.toStdWString() << endl;
+        wcout << tr("\tDatabase server address: ").toStdWString() << host.toStdWString() << endl;
+        wcout << tr("\tDatabase server port: ").toStdWString() << port << endl;
+        wcout << tr("\tDatabase name: ").toStdWString() << databaseName.toStdWString() << endl;
+        wcout << tr("\tUser name: ").toStdWString() << userName.toStdWString() << endl;
+        wcout << tr("\tPassword: ").toStdWString() << userPassword.toStdWString() << endl << endl;
 
 
-        wcout<<tr("Testing database connection...").toStdWString()<<endl;
+        wcout << tr("Testing database connection...").toStdWString() << endl;
         DatabaseUtility databaseUtility;
         QSqlError err = databaseUtility.openDatabase(SERVERSERVICE_DB_CONNECTION_NAME,
-                                                     driver,
-                                                     host,
-                                                     port,
-                                                     userName,
-                                                     userPassword,
-                                                     databaseName,
-                                                     HEHUI::DatabaseType(type));
+                        driver,
+                        host,
+                        port,
+                        userName,
+                        userPassword,
+                        databaseName,
+                        HEHUI::DatabaseType(type));
         if (err.type() != QSqlError::NoError) {
             QString errorString = tr("Error! Database connection failed! An error occurred when opening the database: %1").arg(err.text());
-            wcerr<<errorString.toStdWString()<<endl;
+            wcerr << errorString.toStdWString() << endl;
             qCritical() << errorString;
 
             exit( err.type() );
-        }else{
+        } else {
             QString str = tr("Database connection succeeded!");
-            wcout<<str.toStdWString()<<endl;
-            qWarning()<<str;
+            wcout << str.toStdWString() << endl;
+            qWarning() << str;
         }
         //databaseUtility.closeDBConnection(SERVERSERVICE_DB_CONNECTION_NAME);
         qWarning();
 
 
         QString confirmString = "";
-        wcout<<tr("Do you wnat to save the changes?[Y:Yes  N:No]").toStdWString();
-        cin>>input;
+        wcout << tr("Do you wnat to save the changes?[Y:Yes  N:No]").toStdWString();
+        cin >> input;
         confirmString = QString::fromStdString(input).toLower();
         input = "";
-        if(confirmString == "y" || confirmString == "yes"){
+        if(confirmString == "y" || confirmString == "yes") {
             settings.setDBType(type);
             settings.setDBDriver(driver);
             settings.setDBServerHost(host);
@@ -2285,9 +2347,9 @@ void ServerService::processArguments(int argc, char **argv){
             settings.setDBName(databaseName);
             settings.setDBServerUserName(userName);
             settings.setDBServerUserPassword(userPassword);
-            wcout<<tr("Database Info Saved!").toStdWString()<<endl<<endl;
-        }else{
-            wcout<<tr("Operation canceled! Nothing changes!").toStdWString()<<endl<<endl;
+            wcout << tr("Database Info Saved!").toStdWString() << endl << endl;
+        } else {
+            wcout << tr("Operation canceled! Nothing changes!").toStdWString() << endl << endl;
         }
 
 

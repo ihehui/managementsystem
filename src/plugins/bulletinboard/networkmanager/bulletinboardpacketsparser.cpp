@@ -45,11 +45,12 @@
 //#endif
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance *resourcesManager, QObject *parent)
-    :QObject(parent), m_resourcesManager(resourcesManager)
+    : QObject(parent), m_resourcesManager(resourcesManager)
 {
 
 
@@ -60,11 +61,11 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
     Q_ASSERT(m_udtProtocol);
     m_udtProtocol->startWaitingForIOInOneThread(1000);
     //m_udtProtocol->startWaitingForIOInSeparateThread(100, 1000);
-   connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)));
+    connect(m_udtProtocol, SIGNAL(packetReceived(Packet *)), this, SLOT(parseIncomingPacketData(Packet *)));
 
-   m_tcpServer = m_rtp->getTCPServer();
-   Q_ASSERT(m_tcpServer);
-   connect(m_tcpServer, SIGNAL(packetReceived(Packet*)), this, SLOT(parseIncomingPacketData(Packet*)), Qt::QueuedConnection);
+    m_tcpServer = m_rtp->getTCPServer();
+    Q_ASSERT(m_tcpServer);
+    connect(m_tcpServer, SIGNAL(packetReceived(Packet *)), this, SLOT(parseIncomingPacketData(Packet *)), Qt::QueuedConnection);
 
 
 
@@ -75,12 +76,13 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
 
 
     //    emit signalAnnouncementPacketReceived("ADMIN", "TEST!");
-    
+
 }
 
-BulletinBoardPacketsParser::~BulletinBoardPacketsParser() {
+BulletinBoardPacketsParser::~BulletinBoardPacketsParser()
+{
     // TODO Auto-generated destructor stub
-    qDebug()<<"~BulletinBoardPacketsParser()";
+    qDebug() << "~BulletinBoardPacketsParser()";
 
 
 
@@ -95,9 +97,10 @@ BulletinBoardPacketsParser::~BulletinBoardPacketsParser() {
 
 }
 
-void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
-    qDebug()<<"----BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet)";
-    
+void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet)
+{
+    qDebug() << "----BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet)";
+
 
     QByteArray packetData = packet->getPacketData();
     QDataStream in(&packetData, QIODevice::ReadOnly);
@@ -110,46 +113,42 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
     int socketID = packet->getSocketID();
     PacketHandlerBase::recylePacket(packet);
 
-    switch(packetType){
+    switch(packetType) {
 
-    case quint8(MS::LocalServiceServerDeclare):
-    {        
+    case quint8(MS::LocalServiceServerDeclare): {
         //QString localComputerName = "";
         //in >> localComputerName;
 
         emit signalLocalServiceServerDeclarePacketReceived(peerID);
-        
+
     }
     break;
 
-    case quint8(MS::AdminRequestRemoteAssistance):
-    {
-        
+    case quint8(MS::AdminRequestRemoteAssistance): {
+
         QString adminAddress = "", adminName = "";
         quint16 adminPort = 0;
 
-        in >> adminAddress >> adminPort >> adminName; 
+        in >> adminAddress >> adminPort >> adminName;
         emit signalAdminRequestRemoteAssistancePacketReceived(adminAddress, adminPort, adminName);
 
-        qDebug()<<"~~AdminRequestRemoteAssistance";
-        
+        qDebug() << "~~AdminRequestRemoteAssistance";
+
     }
     break;
 
-    case quint8(MS::InformUserNewPassword):
-    {        
+    case quint8(MS::InformUserNewPassword): {
         QString adminAddress = "", adminName = "",  oldPassword = "",  newPassword = "";
         quint16 adminPort = 0;
         in >> adminAddress >> adminPort >> adminName >> oldPassword >> newPassword;
         emit signalAdminInformUserNewPasswordPacketReceived(adminAddress, adminPort, adminName, oldPassword, newPassword);
-        
-        qDebug()<<"~~InformUserNewPassword";
+
+        qDebug() << "~~InformUserNewPassword";
 
     }
     break;
-    
-    case quint8(MS::ServerAnnouncement):
-    {        
+
+    case quint8(MS::ServerAnnouncement): {
         QString adminName = "", serverAnnouncement = "";
         quint32 announcementID = 0;
         in >> adminName >> announcementID >> serverAnnouncement;
@@ -161,11 +160,11 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet){
 
 
     default:
-        qWarning()<<"BulletinBoardPacketsParser! Unknown Packet Type:"<<packetType;
-                //<<" Serial Number:"<<packetSerialNumber
-                //<<" From:"<<packet->getPeerHostAddress().toString()
-               //<<":"<<packet->getPeerHostPort()
-              //<<" Local Port:"<<localRUDPListeningPort;
+        qWarning() << "BulletinBoardPacketsParser! Unknown Packet Type:" << packetType;
+        //<<" Serial Number:"<<packetSerialNumber
+        //<<" From:"<<packet->getPeerHostAddress().toString()
+        //<<":"<<packet->getPeerHostPort()
+        //<<" Local Port:"<<localRUDPListeningPort;
 
         break;
 

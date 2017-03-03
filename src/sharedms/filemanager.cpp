@@ -53,7 +53,7 @@
 
 
 #ifndef FILE_PIECE_LENGTH
-#define FILE_PIECE_LENGTH 524288 //512 KB
+    #define FILE_PIECE_LENGTH 524288 //512 KB
 #endif
 
 #define SUFFIX_TEMP_FILE ".tf"
@@ -92,7 +92,7 @@ FileManager::~FileManager()
     }
     fileMetaInfoHash.clear();
 
-    qDebug()<<"FileManager::~FileManager()";
+    qDebug() << "FileManager::~FileManager()";
 }
 
 
@@ -135,18 +135,19 @@ void FileManager::writePiece(const QByteArray &fileMD5, int pieceIndex, const QB
     }
 }
 
-QList<int/*Piece Index*/> FileManager::completedPieces(const QByteArray &fileMD5){
+QList<int/*Piece Index*/> FileManager::completedPieces(const QByteArray &fileMD5)
+{
 
     QMutexLocker locker(&mutex);
 
     QList<int> ret;
-    FileMetaInfo * info = fileMetaInfoHash.value(fileMD5);
-    if(!info){
+    FileMetaInfo *info = fileMetaInfoHash.value(fileMD5);
+    if(!info) {
         return ret;
     }
 
-    for(int i=0; i< info->verifiedPieces.size(); i++){
-        if(info->verifiedPieces.testBit(i)){
+    for(int i = 0; i < info->verifiedPieces.size(); i++) {
+        if(info->verifiedPieces.testBit(i)) {
             ret << i;
         }
     }
@@ -155,18 +156,19 @@ QList<int/*Piece Index*/> FileManager::completedPieces(const QByteArray &fileMD5
 
 }
 
-QList<int/*Piece Index*/> FileManager::uncompletedPieces(const QByteArray &fileMD5){
+QList<int/*Piece Index*/> FileManager::uncompletedPieces(const QByteArray &fileMD5)
+{
 
     QMutexLocker locker(&mutex);
 
     QList<int> ret;
-    FileMetaInfo * info = fileMetaInfoHash.value(fileMD5);
-    if(!info){
+    FileMetaInfo *info = fileMetaInfoHash.value(fileMD5);
+    if(!info) {
         return ret;
     }
 
-    for(int i=0; i< info->verifiedPieces.size(); i++){
-        if(!info->verifiedPieces.testBit(i)){
+    for(int i = 0; i < info->verifiedPieces.size(); i++) {
+        if(!info->verifiedPieces.testBit(i)) {
             ret << i;
         }
     }
@@ -175,17 +177,18 @@ QList<int/*Piece Index*/> FileManager::uncompletedPieces(const QByteArray &fileM
 
 }
 
-int FileManager::getOneUncompletedPiece(const QByteArray &fileMD5){
+int FileManager::getOneUncompletedPiece(const QByteArray &fileMD5)
+{
 
     QMutexLocker locker(&mutex);
 
-    FileMetaInfo * info = fileMetaInfoHash.value(fileMD5);
-    if(!info){
+    FileMetaInfo *info = fileMetaInfoHash.value(fileMD5);
+    if(!info) {
         return -1;
     }
 
-    for(int i=0; i< info->verifiedPieces.size(); i++){
-        if(!info->verifiedPieces.testBit(i)){
+    for(int i = 0; i < info->verifiedPieces.size(); i++) {
+        if(!info->verifiedPieces.testBit(i)) {
             return i;
         }
     }
@@ -194,8 +197,9 @@ int FileManager::getOneUncompletedPiece(const QByteArray &fileMD5){
 
 }
 
-void FileManager::stop(){
-    qDebug()<<"--FileManager::stop() currentThreadId:"<<currentThreadId();
+void FileManager::stop()
+{
+    qDebug() << "--FileManager::stop() currentThreadId:" << currentThreadId();
 
     {
         QMutexLocker locker(&quitMutex);
@@ -217,8 +221,9 @@ void FileManager::run()
         {
             // Go to sleep if there's nothing to do.
             QMutexLocker locker(&mutex);
-            if (!isAboutToQuit() && readRequests.isEmpty() && writeRequests.isEmpty() )
+            if (!isAboutToQuit() && readRequests.isEmpty() && writeRequests.isEmpty() ) {
                 cond.wait(&mutex);
+            }
         }
 
         // Read pending read requests
@@ -230,11 +235,17 @@ void FileManager::run()
         while (!newReadRequests.isEmpty()) {
             ReadRequest request = newReadRequests.takeFirst();
             FileMetaInfo *info = fileMetaInfoHash.value(request.fileMD5) ;
-            if(!info){continue;}
-            if(request.pieceIndex >= info->verifiedPieces.size()){continue;}
+            if(!info) {
+                continue;
+            }
+            if(request.pieceIndex >= info->verifiedPieces.size()) {
+                continue;
+            }
             QByteArray block = readBlock(request.id, info, request.pieceIndex);
-            if(block.isEmpty()){continue;}
-            if(!info->sha1Sums.contains(request.pieceIndex)){
+            if(block.isEmpty()) {
+                continue;
+            }
+            if(!info->sha1Sums.contains(request.pieceIndex)) {
                 QByteArray dataSHA1SUM = QCryptographicHash::hash(block, QCryptographicHash::Sha1);
                 info->sha1Sums.insert(request.pieceIndex, dataSHA1SUM);
             }
@@ -251,7 +262,9 @@ void FileManager::run()
         while (!isAboutToQuit() && !newWriteRequests.isEmpty()) {
             WriteRequest request = newWriteRequests.takeFirst();
             FileMetaInfo *info = fileMetaInfoHash.value(request.fileMD5) ;
-            if(!info){continue;}
+            if(!info) {
+                continue;
+            }
             writeBlock(info, request.pieceIndex, request.data, request.dataSHA1SUM);
 
         }
@@ -269,7 +282,9 @@ void FileManager::run()
     while (!newWriteRequests.isEmpty()) {
         WriteRequest request = newWriteRequests.takeFirst();
         FileMetaInfo *info = fileMetaInfoHash.value(request.fileMD5) ;
-        if(!info){continue;}
+        if(!info) {
+            continue;
+        }
         writeBlock(info, request.pieceIndex, request.data, request.dataSHA1SUM);
 
     }
@@ -277,24 +292,25 @@ void FileManager::run()
 
 }
 
-const FileManager::FileMetaInfo * FileManager::tryToSendFile( const QString &localSavePath, FileError *error/*, int pieceLength*/){
+const FileManager::FileMetaInfo *FileManager::tryToSendFile( const QString &localSavePath, FileError *error/*, int pieceLength*/)
+{
 
     Q_ASSERT(error);
-    if(!error){
-        qCritical()<<"ERROR! Invalid Pointer!";
+    if(!error) {
+        qCritical() << "ERROR! Invalid Pointer!";
         return 0;
     }
 
     {
         QMutexLocker locker(&mutex);
         foreach (FileMetaInfo *metaInfo, fileMetaInfoHash) {
-            if(metaInfo->file->fileName() == localSavePath){
+            if(metaInfo->file->fileName() == localSavePath) {
                 return metaInfo;
             }
         }
     }
 
-    if(!QFile::exists(localSavePath)){
+    if(!QFile::exists(localSavePath)) {
         error->errorCode = ERROR_FILE_NOT_EXIST;
         error->errorString = tr("File '%1' does not exist!").arg(localSavePath);
         return 0;
@@ -313,7 +329,7 @@ const FileManager::FileMetaInfo * FileManager::tryToSendFile( const QString &loc
     qint64 fileSize = file->size();
 
     int pieceCount = fileSize / FILE_PIECE_LENGTH;
-    if(fileSize % FILE_PIECE_LENGTH){
+    if(fileSize % FILE_PIECE_LENGTH) {
         pieceCount++;
     }
     //qDebug()<<"----------------pieceCount:"<<pieceCount;
@@ -336,11 +352,12 @@ const FileManager::FileMetaInfo * FileManager::tryToSendFile( const QString &loc
 
 }
 
-const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileMD5Sum, const QString &localSavePath, quint64 size, FileError *error/*, int pieceLength*/){
+const FileManager::FileMetaInfo *FileManager::tryToReceiveFile(QByteArray fileMD5Sum, const QString &localSavePath, quint64 size, FileError *error/*, int pieceLength*/)
+{
 
     Q_ASSERT(error);
-    if(!error){
-        qCritical()<<"ERROR! Invalid Pointer!";
+    if(!error) {
+        qCritical() << "ERROR! Invalid Pointer!";
         return 0;
     }
 
@@ -348,7 +365,7 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
     QString infoFilePath = localSavePath + SUFFIX_INFO_FILE;
 
     QFileInfo fi(localSavePath);
-    if(fi.exists()){
+    if(fi.exists()) {
         QFile file(localSavePath);
         if (!file.open(QFile::ReadOnly)) {
             error->errorCode = ERROR_FILE_EXIST_WITH_SAME_NAME;
@@ -356,17 +373,17 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
             return 0;
         }
         QByteArray md5Sum = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Md5);
-        if(md5Sum == fileMD5Sum){
+        if(md5Sum == fileMD5Sum) {
             error->errorCode = ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME;
             error->errorString = tr("File '%1' already exists!").arg(localSavePath);
-        }else{
+        } else {
             error->errorCode = ERROR_FILE_EXIST_WITH_SAME_NAME;
             error->errorString = tr("File '%1' already exists but it has different content!").arg(localSavePath);
         }
         return 0;
 
-    }else{
-        if(!fi.dir().mkpath(fi.absolutePath())){
+    } else {
+        if(!fi.dir().mkpath(fi.absolutePath())) {
             error->errorCode = FILE_WRITE_ERROR;
             error->errorString = tr("Failed to make path '%1'!").arg(fi.absolutePath());
             return 0;
@@ -376,10 +393,10 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
     {
         QMutexLocker locker(&mutex);
         foreach (FileMetaInfo *metaInfo, fileMetaInfoHash) {
-            if(metaInfo->file->fileName() == tempFilePath){
-                if(metaInfo->md5sum == fileMD5Sum ){
+            if(metaInfo->file->fileName() == tempFilePath) {
+                if(metaInfo->md5sum == fileMD5Sum ) {
                     return metaInfo;
-                }else{
+                } else {
                     error->errorCode = ERROR_FILE_IN_USE;
                     error->errorString = tr("File '%1' is in use!").arg(localSavePath);
                     return 0;
@@ -400,7 +417,7 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
     QSettings settings(infoFilePath, QSettings::IniFormat);
     QByteArray oldMD5 = settings.value("MD5", QByteArray()).toByteArray();
     quint64 oldSize = settings.value("size", 0).toULongLong();
-    if(oldMD5 != fileMD5Sum || oldSize != size || file->size() == 0){
+    if(oldMD5 != fileMD5Sum || oldSize != size || file->size() == 0) {
         file->resize(0);
         if (!file->resize(size)) {
             error->errorCode = FILE_WRITE_ERROR;
@@ -413,9 +430,9 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
 
 
     QBitArray ba = settings.value("Pieces", QBitArray()).toBitArray();
-    if(ba.isEmpty()){
+    if(ba.isEmpty()) {
         int pieces = size / FILE_PIECE_LENGTH;
-        if(size % FILE_PIECE_LENGTH){
+        if(size % FILE_PIECE_LENGTH) {
             pieces++;
         }
         ba.resize(pieces);
@@ -447,11 +464,12 @@ const FileManager::FileMetaInfo * FileManager::tryToReceiveFile(QByteArray fileM
 
 }
 
-void FileManager::closeFile(const QString &filePath){
+void FileManager::closeFile(const QString &filePath)
+{
 
     QMutexLocker locker(&mutex);
     foreach (FileMetaInfo *metaInfo, fileMetaInfoHash) {
-        if(metaInfo->file->fileName() == filePath){
+        if(metaInfo->file->fileName() == filePath) {
             metaInfo->file->close();
             delete metaInfo->file;
             fileMetaInfoHash.remove(metaInfo->md5sum);
@@ -464,11 +482,12 @@ void FileManager::closeFile(const QString &filePath){
 
 }
 
-void FileManager::closeFile(const QByteArray &fileMD5){
+void FileManager::closeFile(const QByteArray &fileMD5)
+{
 
     QMutexLocker locker(&mutex);
     FileMetaInfo *metaInfo = fileMetaInfoHash.take(fileMD5);
-    if(metaInfo){
+    if(metaInfo) {
         metaInfo->file->close();
         delete metaInfo->file;
     }
@@ -477,23 +496,25 @@ void FileManager::closeFile(const QByteArray &fileMD5){
 
 }
 
-QString FileManager::getFileLocalSavePath(const QByteArray &fileMD5){
+QString FileManager::getFileLocalSavePath(const QByteArray &fileMD5)
+{
 
     QMutexLocker locker(&mutex);
     FileMetaInfo *metaInfo = fileMetaInfoHash.value(fileMD5);
-    if(metaInfo){
+    if(metaInfo) {
         return metaInfo->file->fileName();
     }
 
     return "";
 }
 
-QByteArray FileManager::readBlock(int requestID, FileMetaInfo *info, int pieceIndex){
+QByteArray FileManager::readBlock(int requestID, FileMetaInfo *info, int pieceIndex)
+{
     //qDebug()<<"--FileManager::readBlock(...) "<<" pieceIndex:"<<pieceIndex;
 
     QByteArray block;
 
-    if(!info){
+    if(!info) {
         QString errString = tr("Failed to read file info!");
         emit error(requestID, info->md5sum, quint8(ERROR_UNKNOWN), errString);
         return block;
@@ -526,17 +547,18 @@ QByteArray FileManager::readBlock(int requestID, FileMetaInfo *info, int pieceIn
     return block;
 }
 
-bool FileManager::writeBlock(FileMetaInfo *info, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM){
+bool FileManager::writeBlock(FileMetaInfo *info, int pieceIndex, const QByteArray &data, const QByteArray &dataSHA1SUM)
+{
     //qDebug()<<"--FileManager::writeBlock(...) "<<"pieceIndex:"<<pieceIndex<<" data size:"<<data.size()<<" MD5:"<<dataSHA1SUM.toBase64();
 
-    if(!info){
+    if(!info) {
         QString errString = tr("Failed to read file info!");
         emit error(0, info->md5sum, quint8(ERROR_UNKNOWN), errString);
         return false;
     }
 
     QByteArray sha1Sum = QCryptographicHash::hash(data, QCryptographicHash::Sha1);
-    if(sha1Sum != dataSHA1SUM){
+    if(sha1Sum != dataSHA1SUM) {
         emit pieceVerified(info->md5sum, pieceIndex, false, 0);
         return false;
     }
@@ -575,7 +597,7 @@ bool FileManager::writeBlock(FileMetaInfo *info, int pieceIndex, const QByteArra
 
     info->verifiedPieces.setBit(pieceIndex);
 
-    if((pieceIndex % 25) == 0){
+    if((pieceIndex % 25) == 0) {
         QSettings settings(info->infoFileName, QSettings::IniFormat);
         settings.setValue("Pieces", info->verifiedPieces);
         settings.sync();
@@ -584,13 +606,13 @@ bool FileManager::writeBlock(FileMetaInfo *info, int pieceIndex, const QByteArra
     int verificationProgress = (info->verifiedPieces.count(true) * 100) / info->verifiedPieces.size();
     Q_ASSERT(verificationProgress >= 0 && verificationProgress <= 100);
 
-    if(verificationProgress == 100){
+    if(verificationProgress == 100) {
         QString name = info->file->fileName();
         Q_ASSERT(name.endsWith(SUFFIX_TEMP_FILE));
         name.remove(SUFFIX_TEMP_FILE);
-        if(!info->file->rename(name)){
-            qCritical()<<"ERROR! Failed to rename file!";
-        }else{
+        if(!info->file->rename(name)) {
+            qCritical() << "ERROR! Failed to rename file!";
+        } else {
             QFile::remove(info->infoFileName);
             //qWarning()<<"File Received!";
         }
@@ -609,7 +631,7 @@ bool FileManager::writeBlock(FileMetaInfo *info, int pieceIndex, const QByteArra
 bool FileManager::verifySinglePiece(FileMetaInfo *info, int pieceIndex)
 {
 
-    if(!info){
+    if(!info) {
         return false;
     }
 
@@ -619,14 +641,14 @@ bool FileManager::verifySinglePiece(FileMetaInfo *info, int pieceIndex)
     QByteArray sha1Sum = QCryptographicHash::hash(block, QCryptographicHash::Sha1);
 
     bool verified = false;
-    if (sha1Sum != info->sha1Sums.value(pieceIndex)){
+    if (sha1Sum != info->sha1Sums.value(pieceIndex)) {
         verified = false;
-    }else{
+    } else {
         info->verifiedPieces.setBit(pieceIndex);
         verified = true;
     }
 
-    if((pieceIndex % 10) == 0){
+    if((pieceIndex % 10) == 0) {
         QSettings settings(info->infoFileName, QSettings::IniFormat);
         settings.setValue("Pieces", info->verifiedPieces);
         settings.sync();
@@ -635,13 +657,13 @@ bool FileManager::verifySinglePiece(FileMetaInfo *info, int pieceIndex)
     int verificationProgress = (info->verifiedPieces.count(true) * 100) / info->verifiedPieces.size();
     Q_ASSERT(verificationProgress >= 0 && verificationProgress <= 100);
 
-    if(verificationProgress == 100){
+    if(verificationProgress == 100) {
         QString name = info->file->fileName();
         Q_ASSERT(name.endsWith(SUFFIX_TEMP_FILE));
         name.remove(SUFFIX_TEMP_FILE);
-        if(!info->file->rename(name)){
-            qCritical()<<"ERROR! Failed to rename file!";
-        }else{
+        if(!info->file->rename(name)) {
+            qCritical() << "ERROR! Failed to rename file!";
+        } else {
             //QString cfgFile = name + SUFFIX_INFO_FILE;
             QFile::remove(info->infoFileName);
             QFile::remove(info->infoFileName);
@@ -663,7 +685,8 @@ void FileManager::wakeUp()
     cond.wakeOne();
 }
 
-bool FileManager::isAboutToQuit(){
+bool FileManager::isAboutToQuit()
+{
     //qDebug()<<"--FileManager::isAboutToQuit:"<<currentThreadId();
 
     QMutexLocker locker(&quitMutex);

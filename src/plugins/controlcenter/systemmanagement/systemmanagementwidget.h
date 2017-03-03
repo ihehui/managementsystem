@@ -17,7 +17,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class SystemManagementWidget : public QWidget
@@ -37,7 +38,7 @@ protected:
 //    void dragMoveEvent(QDragMoveEvent *event);
 //    void dropEvent(QDropEvent *event);
 
-    
+
 signals:
     void updateTitle(SystemManagementWidget *wgt);
     void signalSetProcessMonitorInfo(const QByteArray &localRulesData, const QByteArray &globalRulesData, bool enableProcMon, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess, bool useGlobalRules, const QString &assetNO);

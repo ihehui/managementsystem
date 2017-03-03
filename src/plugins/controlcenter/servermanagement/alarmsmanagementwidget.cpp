@@ -9,7 +9,8 @@
 #include "HHSharedGUI/hdataoutputdialog.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 AlarmsManagementWidget::AlarmsManagementWidget(QWidget *parent) :
@@ -61,7 +62,7 @@ AlarmsManagementWidget::AlarmsManagementWidget(QWidget *parent) :
 
 AlarmsManagementWidget::~AlarmsManagementWidget()
 {
-    qDebug()<<"--AlarmsManagementWidget::~AlarmsManagementWidget()";
+    qDebug() << "--AlarmsManagementWidget::~AlarmsManagementWidget()";
 
     QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
     ui->tableView->setModel(0);
@@ -74,37 +75,41 @@ AlarmsManagementWidget::~AlarmsManagementWidget()
     delete ui;
 }
 
-void AlarmsManagementWidget::setData(const QByteArray &data){
+void AlarmsManagementWidget::setData(const QByteArray &data)
+{
     m_selectedInfoList.clear();
     m_model->setJsonData(data);
 }
 
-void AlarmsManagementWidget::on_toolButtonQuery_clicked(){
+void AlarmsManagementWidget::on_toolButtonQuery_clicked()
+{
     on_actionRefresh_triggered();
 }
 
-void AlarmsManagementWidget::on_toolButtonFilter_clicked(){
+void AlarmsManagementWidget::on_toolButtonFilter_clicked()
+{
     filter();
 }
 
-void AlarmsManagementWidget::filter(){
+void AlarmsManagementWidget::filter()
+{
 
     QRegExp assetNORegExp;
     QRegExp typeRegExp;
     QRegExp acknowledgedRegExp;
 
     QString filterString = ui->lineEditAssetNO->text();
-    if(!filterString.trimmed().isEmpty()){
+    if(!filterString.trimmed().isEmpty()) {
         assetNORegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = typeString();
-    if(filterString != "-1"){
+    if(filterString != "-1") {
         typeRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
     filterString = acknowledgedString();
-    if(filterString != "-1"){
+    if(filterString != "-1") {
         acknowledgedRegExp = QRegExp(filterString, Qt::CaseInsensitive);
     }
 
@@ -112,9 +117,10 @@ void AlarmsManagementWidget::filter(){
 
 }
 
-void AlarmsManagementWidget::on_actionRefresh_triggered(){
+void AlarmsManagementWidget::on_actionRefresh_triggered()
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
@@ -124,19 +130,22 @@ void AlarmsManagementWidget::on_actionRefresh_triggered(){
 
 }
 
-void AlarmsManagementWidget::on_comboBoxPeriod_currentIndexChanged(int index){
+void AlarmsManagementWidget::on_comboBoxPeriod_currentIndexChanged(int index)
+{
     periodString(0, 0);
     Period period = Period(ui->comboBoxPeriod->currentData().toUInt());
     ui->dateTimeEditStartTime->setReadOnly((period != Period_Custom));
     ui->dateTimeEditEndTime->setReadOnly((period != Period_Custom));
 }
 
-void AlarmsManagementWidget::on_actionExport_triggered(){
+void AlarmsManagementWidget::on_actionExport_triggered()
+{
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::EXPORT, this);
     dlg.exec();
 }
 
-void AlarmsManagementWidget::on_actionPrint_triggered(){
+void AlarmsManagementWidget::on_actionPrint_triggered()
+{
 #ifndef QT_NO_PRINTER
     //TODO
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::PRINT, this);
@@ -144,17 +153,20 @@ void AlarmsManagementWidget::on_actionPrint_triggered(){
 #endif
 }
 
-void AlarmsManagementWidget::on_actionAcknowledge_triggered(){
+void AlarmsManagementWidget::on_actionAcknowledge_triggered()
+{
     requestAcknowledgeAlarms(false);
 }
 
-void AlarmsManagementWidget::on_actionDelete_triggered(){
+void AlarmsManagementWidget::on_actionDelete_triggered()
+{
     requestAcknowledgeAlarms(true);
 }
 
-void AlarmsManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms){
+void AlarmsManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms)
+{
 
-    if(!verifyPrivilege()){
+    if(!verifyPrivilege()) {
         return;
     }
 
@@ -166,17 +178,18 @@ void AlarmsManagementWidget::requestAcknowledgeAlarms(bool deleteAlarms){
 
 
 
-void AlarmsManagementWidget::slotShowCustomContextMenu(const QPoint & pos){
+void AlarmsManagementWidget::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *tableView = qobject_cast<QTableView*> (sender());
-    if (!tableView){
+    QTableView *tableView = qobject_cast<QTableView *> (sender());
+    if (!tableView) {
         return;
     }
 
 
     QMenu menu(this);
     menu.addAction(ui->actionRefresh);
-    if(m_selectedInfoList.isEmpty()){
+    if(m_selectedInfoList.isEmpty()) {
         menu.exec(tableView->viewport()->mapToGlobal(pos));
         return;
     }
@@ -199,17 +212,20 @@ void AlarmsManagementWidget::slotShowCustomContextMenu(const QPoint & pos){
 
 }
 
-void AlarmsManagementWidget::getSelectedInfo(const QModelIndex &index){
+void AlarmsManagementWidget::getSelectedInfo(const QModelIndex &index)
+{
 
     m_selectedInfoList.clear();
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         m_selectedInfoList.clear();
         return;
     }
 
     QModelIndexList indexList =  ui->tableView->selectionModel()->selectedRows(0);
-    if(indexList.isEmpty()){return;}
+    if(indexList.isEmpty()) {
+        return;
+    }
     foreach (QModelIndex idx, indexList) {
         m_selectedInfoList.append(m_model->getAlarmInfoID(idx));
     }
@@ -219,7 +235,7 @@ void AlarmsManagementWidget::getSelectedInfo(const QModelIndex &index){
     ui->actionPrint->setEnabled(enableExp);
 
     bool enableModify = false;
-    if(!m_myself->isReadonly()){
+    if(!m_myself->isReadonly()) {
         enableModify = true;
     }
 
@@ -229,12 +245,13 @@ void AlarmsManagementWidget::getSelectedInfo(const QModelIndex &index){
 }
 
 
-bool AlarmsManagementWidget::verifyPrivilege(){
+bool AlarmsManagementWidget::verifyPrivilege()
+{
 
-    if(!m_myself->isAdminVerified()){
+    if(!m_myself->isAdminVerified()) {
         return false;
     }
-    if(m_myself->isReadonly()){
+    if(m_myself->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }
@@ -242,74 +259,71 @@ bool AlarmsManagementWidget::verifyPrivilege(){
     return true;
 }
 
-QString AlarmsManagementWidget::typeString() const{
+QString AlarmsManagementWidget::typeString() const
+{
     return QString::number(ui->comboBoxType->currentData().toInt());
 }
 
-QString AlarmsManagementWidget::acknowledgedString() const{
+QString AlarmsManagementWidget::acknowledgedString() const
+{
     return QString::number(ui->comboBoxAcknowledged->currentData().toInt());
 }
 
-void AlarmsManagementWidget::periodString(QString *startTime, QString *endTime){
+void AlarmsManagementWidget::periodString(QString *startTime, QString *endTime)
+{
 
     QDateTime curTime = QDateTime::currentDateTime();
     QTime zeroTime = QTime(0, 0);
 
     Period period = Period(ui->comboBoxPeriod->currentData().toUInt());
     switch (period) {
-    case Period_Custom:
-    {
+    case Period_Custom: {
 
     }
-        break;
+    break;
 
-    case Period_Today:
-    {
+    case Period_Today: {
         ui->dateTimeEditStartTime->setDate(curTime.date());
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
-    case Period_Last_24_Hours:
-    {
-        QDateTime dateTime = curTime.addSecs(-(24*3600));
+    case Period_Last_24_Hours: {
+        QDateTime dateTime = curTime.addSecs(-(24 * 3600));
         ui->dateTimeEditStartTime->setDateTime(dateTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
-    case Period_Yesterday:
-    {
+    case Period_Yesterday: {
         QDate date = curTime.date().addDays(-1);
         ui->dateTimeEditStartTime->setDate(date);
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDate(date);
         ui->dateTimeEditEndTime->setTime(QTime(23, 59));
     }
-        break;
+    break;
 
-    case Period_This_Week:
-    {
+    case Period_This_Week: {
         QDate date = curTime.date();
         int dayOfWeek = date.dayOfWeek();
-        date = date.addDays(-1*(dayOfWeek-1));
+        date = date.addDays(-1 * (dayOfWeek - 1));
         ui->dateTimeEditStartTime->setDate(date);
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
-    case Period_This_Month:
-    {
+    case Period_This_Month: {
         QDate date = curTime.date();
         int day = date.day();
-        date = date.addDays(-1*(day-1));
+        date = date.addDays(-1 * (day - 1));
         ui->dateTimeEditStartTime->setDate(date);
         ui->dateTimeEditStartTime->setTime(zeroTime);
         ui->dateTimeEditEndTime->setDateTime(curTime);
     }
-        break;
+    break;
 
     default:
         ui->dateTimeEditStartTime->setDate(curTime.date());
@@ -318,10 +332,10 @@ void AlarmsManagementWidget::periodString(QString *startTime, QString *endTime){
         break;
     }
 
-    if(startTime){
+    if(startTime) {
         *startTime = ui->dateTimeEditStartTime->dateTime().toString("yyyy-MM-dd hh:mm:ss");
     }
-    if(endTime){
+    if(endTime) {
         *endTime = ui->dateTimeEditEndTime->dateTime().toString("yyyy-MM-dd hh:mm:ss");
     }
 

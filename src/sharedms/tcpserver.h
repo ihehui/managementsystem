@@ -6,7 +6,8 @@
 #include "HHSharedNetwork/htcpbase.h"
 #include "HHSharedNetwork/PacketBase"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class SHAREDMSLIB_API TCPServer : public TCPBase
 {
@@ -27,7 +28,7 @@ private:
 
 
 
-    
+
 };
 
 }

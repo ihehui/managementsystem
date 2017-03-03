@@ -5,10 +5,10 @@
 #include <QtConcurrent>
 
 #ifdef Q_OS_WIN
-// Windows Header Files:
-#include <windows.h>
-// C RunTime Header Files
-#include <tchar.h>
+    // Windows Header Files:
+    #include <windows.h>
+    // C RunTime Header Files
+    #include <tchar.h>
 #endif
 
 #include <stdlib.h>
@@ -23,7 +23,8 @@
 #pragma comment(lib,"Advapi32")
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 const WCHAR serviceName[] = L"ProcessMonitor";
 const WCHAR deviceName[] = L"\\\\.\\HHPROCMON";
@@ -49,16 +50,18 @@ ProcessMonitor::~ProcessMonitor()
     cleanRules(false);
 }
 
-unsigned long ProcessMonitor::lastErrorCode() const{
+unsigned long ProcessMonitor::lastErrorCode() const
+{
     return m_errorCode;
 }
 
-bool ProcessMonitor::init(){
-    qDebug()<<"--ProcessMonitor::init()";
+bool ProcessMonitor::init()
+{
+    qDebug() << "--ProcessMonitor::init()";
 
     m_errorCode = ERROR_SUCCESS;
 
-    if(!setupDriver()){
+    if(!setupDriver()) {
         return false;
     }
 
@@ -67,32 +70,32 @@ bool ProcessMonitor::init(){
 
 
     //CreateThread(0,0,(LPTHREAD_START_ROUTINE)monitor,0,0,&dw);
-    QThreadPool * pool = QThreadPool::globalInstance();
+    QThreadPool *pool = QThreadPool::globalInstance();
     int maxThreadCount = pool->maxThreadCount();
-    if(pool->activeThreadCount() == pool->maxThreadCount()){
+    if(pool->activeThreadCount() == pool->maxThreadCount()) {
         pool->setMaxThreadCount(++maxThreadCount);
     }
     QtConcurrent::run(this, &ProcessMonitor::monitor);
 
     //Open Device
-    HANDLE device=CreateFileW(deviceName, GENERIC_READ|GENERIC_WRITE,0,0,OPEN_EXISTING,FILE_ATTRIBUTE_SYSTEM,0);
-    if( INVALID_HANDLE_VALUE == device){
+    HANDLE device = CreateFileW(deviceName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_SYSTEM, 0);
+    if( INVALID_HANDLE_VALUE == device) {
         m_errorCode = GetLastError();
-        qCritical()<<QString("ERROR! CreateFileW failed. Error Code: %1").arg(m_errorCode);
+        qCritical() << QString("ERROR! CreateFileW failed. Error Code: %1").arg(m_errorCode);
 
         cleanupDriver();
         return false;
     }
 
     //Get NtCreateSection address, 将它传给驱动, 也将缓冲区的地址传给驱动
-    DWORD * addr=(DWORD *)(1+(DWORD)GetProcAddress(GetModuleHandleW(L"ntdll.dll"),"NtCreateSection"));
-    ZeroMemory(outputbuff,256);
-    controlbuff[0]=addr[0];
-    controlbuff[1]=(DWORD)&outputbuff[0];
-    bool ok = DeviceIoControl(device,1000,controlbuff,256,controlbuff,256,&dw,0);
-    if(!ok){
+    DWORD *addr = (DWORD *)(1 + (DWORD)GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtCreateSection"));
+    ZeroMemory(outputbuff, 256);
+    controlbuff[0] = addr[0];
+    controlbuff[1] = (DWORD)&outputbuff[0];
+    bool ok = DeviceIoControl(device, 1000, controlbuff, 256, controlbuff, 256, &dw, 0);
+    if(!ok) {
         m_errorCode = GetLastError();
-        qCritical()<<QString("ERROR! DeviceIoControl failed. Error Code: %1").arg(m_errorCode);
+        qCritical() << QString("ERROR! DeviceIoControl failed. Error Code: %1").arg(m_errorCode);
 
         cleanupDriver();
     }
@@ -101,23 +104,26 @@ bool ProcessMonitor::init(){
 
 }
 
-void ProcessMonitor::setRulesData(const QByteArray &jsonData){
+void ProcessMonitor::setRulesData(const QByteArray &jsonData)
+{
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
-    if(object.isEmpty()){return;}
+    if(object.isEmpty()) {
+        return;
+    }
 
     QJsonArray array = object["Rules"].toArray();
 
-    for(int i=0;i<array.size();i++){
+    for(int i = 0; i < array.size(); i++) {
         QJsonArray infoArray = array.at(i).toArray();
-        if(infoArray.size() != 5){
-            qCritical()<<"ERROR! Invalid JSON array.";
+        if(infoArray.size() != 5) {
+            qCritical() << "ERROR! Invalid JSON array.";
             continue;
         }
 
@@ -130,20 +136,20 @@ void ProcessMonitor::setRulesData(const QByteArray &jsonData){
         rule->globalRule = infoArray.at(index++).toString().toUInt();
 
         QString key = rule->ruleString;
-        if(rule->hashRule){
+        if(rule->hashRule) {
             hashRulesHash.insert(key, rule);
-            if(rule->blacklistRule){
+            if(rule->blacklistRule) {
                 md5BlackList.append(key);
-            }else{
+            } else {
                 md5WhiteList.append(key);
             }
-        }else{
+        } else {
             key = key.replace("\\", "\\\\");
             key = key.replace("*", "\\S+");
             pathRulesHash.insert(key, rule);
-            if(rule->blacklistRule){
+            if(rule->blacklistRule) {
                 filePathBlackList.append(key);
-            }else{
+            } else {
                 filePathWhiteList.append(key);
             }
         }
@@ -152,12 +158,15 @@ void ProcessMonitor::setRulesData(const QByteArray &jsonData){
 
 }
 
-QJsonArray ProcessMonitor::getLocalRules(){
+QJsonArray ProcessMonitor::getLocalRules()
+{
 
     QJsonArray array;
 
     foreach (ProcessMonitorRule *rule, hashRulesHash) {
-        if(rule->globalRule){continue;}
+        if(rule->globalRule) {
+            continue;
+        }
         QJsonArray infoArray;
         infoArray.append(rule->ruleString);
         infoArray.append(rule->comment);
@@ -168,7 +177,9 @@ QJsonArray ProcessMonitor::getLocalRules(){
     }
 
     foreach (ProcessMonitorRule *rule, pathRulesHash) {
-        if(rule->globalRule){continue;}
+        if(rule->globalRule) {
+            continue;
+        }
         QJsonArray infoArray;
         infoArray.append(rule->ruleString);
         infoArray.append(rule->comment);
@@ -182,17 +193,19 @@ QJsonArray ProcessMonitor::getLocalRules(){
 
 }
 
-void ProcessMonitor::setBasicInfo(bool useGlobalRules, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess){
+void ProcessMonitor::setBasicInfo(bool useGlobalRules, bool enablePassthrough, bool enableLogAllowedProcess, bool enableLogBlockedProcess)
+{
     m_useGlobalRules = useGlobalRules;
     m_passthroughEnabled = enablePassthrough;
     m_logAllowedProcessEnabled = enableLogAllowedProcess;
     m_logBlockedProcessEnabled = enableLogBlockedProcess;
 }
 
-void ProcessMonitor::cleanRules(bool globalRules){
+void ProcessMonitor::cleanRules(bool globalRules)
+{
 
     foreach (ProcessMonitorRule *rule, hashRulesHash.values()) {
-        if(rule->globalRule == globalRules){
+        if(rule->globalRule == globalRules) {
             QString key = hashRulesHash.key(rule);
             Q_ASSERT(key == rule->ruleString);
             md5WhiteList.removeAll(key);
@@ -205,7 +218,7 @@ void ProcessMonitor::cleanRules(bool globalRules){
     }
 
     foreach (ProcessMonitorRule *rule, pathRulesHash.values()) {
-        if(rule->globalRule == globalRules){
+        if(rule->globalRule == globalRules) {
             QString key = pathRulesHash.key(rule);
             filePathWhiteList.removeAll(key);
             filePathBlackList.removeAll(key);
@@ -222,43 +235,42 @@ void ProcessMonitor::cleanRules(bool globalRules){
 void ProcessMonitor::monitor()
 {
 
-    qDebug()<<"--ProcessMonitor::monitor()";
+    qDebug() << "--ProcessMonitor::monitor()";
 
 
-    DWORD a,x;
+    DWORD a, x;
     wchar_t msgbuff[512];
 
-    while(1)
-    {
-        memmove(&a,&outputbuff[0],4);
+    while(1) {
+        memmove(&a, &outputbuff[0], 4);
 
         //如果缓冲区为空，则休眠10ms，继续检查
-        if(!a)
-        {
-            Sleep(10);continue;
+        if(!a) {
+            Sleep(10);
+            continue;
         }
 
         // 如果文件的名字和路径在机器的运行进程列表中，则发送一个OK的回应
-        char*name=(char*)&outputbuff[8];
-        qDebug()<<"name:"<<name;
+        char *name = (char *)&outputbuff[8];
+        qDebug() << "name:" << name;
         QString appPath = QString::fromLocal8Bit(name);
-        qDebug()<<"----appPath:"<<appPath;
+        qDebug() << "----appPath:" << appPath;
 
         QString errorString;
         QString md5 = HEHUI::Cryptography::getFileMD5HexString(appPath, &errorString);
-        qDebug()<<QString("MD5: %1 \n%2").arg(md5).arg(errorString);
-        if(md5.isEmpty() && m_passthroughEnabled){
-            a=1;
+        qDebug() << QString("MD5: %1 \n%2").arg(md5).arg(errorString);
+        if(md5.isEmpty() && m_passthroughEnabled) {
+            a = 1;
             goto skip;
         }
 
-        if(md5WhiteList.contains(md5, Qt::CaseInsensitive)){
-            a=1;
+        if(md5WhiteList.contains(md5, Qt::CaseInsensitive)) {
+            a = 1;
             goto skip;
         }
 
-        if(!md5BlackList.contains(md5, Qt::CaseInsensitive)){
-            a=1;
+        if(!md5BlackList.contains(md5, Qt::CaseInsensitive)) {
+            a = 1;
             goto skip;
         }
 
@@ -272,62 +284,64 @@ void ProcessMonitor::monitor()
 //            a=1;
 //            md5WhiteList.append(appPath);
 //        }else{
-            a=0;
+        a = 0;
 //        }
 
 
-        qDebug()<<"-------2-------";
+        qDebug() << "-------2-------";
         // 把用户的选择写进通信缓冲区，驱动将接收
-    skip:memmove(&outputbuff[4], &a, 4);
-qDebug()<<"-------3-------";
+skip:
+        memmove(&outputbuff[4], &a, 4);
+        qDebug() << "-------3-------";
 
         //通知驱动继续进行运行
-        a=0;
+        a = 0;
         memmove(&outputbuff[0], &a, 4);
 
-        qDebug()<<"-------4-------";
+        qDebug() << "-------4-------";
     }
 
 }
 
 
-bool ProcessMonitor::setupDriver(){
+bool ProcessMonitor::setupDriver()
+{
 
     QString drvPath = QCoreApplication::applicationDirPath() + "\\ProcessMonitor.sys";
-    if(!QFileInfo::exists(drvPath)){
+    if(!QFileInfo::exists(drvPath)) {
         m_errorCode = ERROR_FILE_NOT_FOUND;
-        qDebug()<<QString("ERROR! Driver '%1' not found.").arg(drvPath);
+        qDebug() << QString("ERROR! Driver '%1' not found.").arg(drvPath);
         return false;
     }
 
     //Load Driver
-    SC_HANDLE schSCManager=OpenSCManagerW(0,0,SC_MANAGER_ALL_ACCESS);
-    if (NULL == schSCManager){
+    SC_HANDLE schSCManager = OpenSCManagerW(0, 0, SC_MANAGER_ALL_ACCESS);
+    if (NULL == schSCManager) {
         m_errorCode = GetLastError();
-        qCritical()<<QString("ERROR! OpenSCManagerW failed. Error Code: %1").arg(m_errorCode);
+        qCritical() << QString("ERROR! OpenSCManagerW failed. Error Code: %1").arg(m_errorCode);
         return false;
     }
 
     SC_HANDLE schService = OpenServiceW(schSCManager, serviceName, SERVICE_ALL_ACCESS);
-    if (schService == NULL){
-        schService=CreateServiceW(schSCManager, serviceName, serviceName, SERVICE_START|SERVICE_STOP,SERVICE_KERNEL_DRIVER,SERVICE_DEMAND_START,SERVICE_ERROR_NORMAL,drvPath.toStdWString().c_str(),0,0,0,0,0);
+    if (schService == NULL) {
+        schService = CreateServiceW(schSCManager, serviceName, serviceName, SERVICE_START | SERVICE_STOP, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL, drvPath.toStdWString().c_str(), 0, 0, 0, 0, 0);
     }
 
-    if (schService == NULL){
+    if (schService == NULL) {
         m_errorCode = GetLastError();
-        qCritical()<<QString("ERROR! OpenServiceW failed. Error Code: %1").arg(m_errorCode);
+        qCritical() << QString("ERROR! OpenServiceW failed. Error Code: %1").arg(m_errorCode);
         CloseServiceHandle(schSCManager);
         return false;
     }
 
-    bool ok = StartServiceW(schService,0,0);
-    if(!ok){
+    bool ok = StartServiceW(schService, 0, 0);
+    if(!ok) {
         m_errorCode = GetLastError();
-        qCritical()<<QString("ERROR! StartServiceW failed. Error Code: %1").arg(m_errorCode);
+        qCritical() << QString("ERROR! StartServiceW failed. Error Code: %1").arg(m_errorCode);
 
-        if(ERROR_SERVICE_ALREADY_RUNNING == m_errorCode){
+        if(ERROR_SERVICE_ALREADY_RUNNING == m_errorCode) {
             ok = true;
-        }else{
+        } else {
             DeleteService(schService);
         }
 
@@ -340,11 +354,12 @@ bool ProcessMonitor::setupDriver(){
 
 }
 
-void ProcessMonitor::cleanupDriver(){
-    SC_HANDLE schSCManager = OpenSCManager(0,0,SC_MANAGER_ALL_ACCESS);
+void ProcessMonitor::cleanupDriver()
+{
+    SC_HANDLE schSCManager = OpenSCManager(0, 0, SC_MANAGER_ALL_ACCESS);
     SERVICE_STATUS stat;
     SC_HANDLE schService = OpenService(schSCManager, serviceName, SERVICE_ALL_ACCESS);
-    ControlService(schService,SERVICE_CONTROL_STOP,&stat);
+    ControlService(schService, SERVICE_CONTROL_STOP, &stat);
     DeleteService(schService);
 
 }

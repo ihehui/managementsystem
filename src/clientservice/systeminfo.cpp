@@ -15,15 +15,16 @@
 
 
 #ifdef Q_OS_WIN32
-#include "HHSharedSystemUtilities/hhardwaremonitor.h"
-#include "HHSharedSystemUtilities/WinUtilities"
+    #include "HHSharedSystemUtilities/hhardwaremonitor.h"
+    #include "HHSharedSystemUtilities/WinUtilities"
 #endif
 
 #include "HHSharedSystemUtilities/SystemUtilities"
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 //bool SystemInfo::running = false;
@@ -37,8 +38,9 @@ SystemInfo::SystemInfo(QObject *parent) :
 
 }
 
-SystemInfo::~SystemInfo() {
-    qDebug()<<"SystemInfo::~SystemInfo()";
+SystemInfo::~SystemInfo()
+{
+    qDebug() << "SystemInfo::~SystemInfo()";
 
     //running = false;
 }
@@ -64,7 +66,8 @@ SystemInfo::~SystemInfo() {
 
 //}
 
-QByteArray SystemInfo::getOSInfo(){
+QByteArray SystemInfo::getOSInfo()
+{
 
     QJsonObject obj;
     QString computerName = QHostInfo::localHostName().toLower();
@@ -76,11 +79,11 @@ QByteArray SystemInfo::getOSInfo(){
 
     bool isJoinedToDomain = false;
     QString joinInfo = WinUtilities::getJoinInformation(&isJoinedToDomain);
-    if(isJoinedToDomain){
+    if(isJoinedToDomain) {
         WinUtilities::getComputerNameInfo(&joinInfo, 0, 0);
     }
     obj["Workgroup"] = joinInfo;
-    obj["JoinedToDomain"] = QString::number(isJoinedToDomain?1:0);
+    obj["JoinedToDomain"] = QString::number(isJoinedToDomain ? 1 : 0);
 
 
     QStringList users = WinUtilities::localCreatedUsers();
@@ -118,11 +121,11 @@ QByteArray SystemInfo::getOSInfo(){
     MS::USBSTORStatus status = MS::USBSTOR_ReadWrite;
 #ifdef Q_OS_WIN32
     ok = WinUtilities::readUSBStorageDeviceSettings(&readable, &writeable);
-    if(readable && writeable){
+    if(readable && writeable) {
         status = MS::USBSTOR_ReadWrite;
-    }else if(!readable){
+    } else if(!readable) {
         status = MS::USBSTOR_Disabled;
-    }else{
+    } else {
         status = MS::USBSTOR_ReadOnly;
     }
 #endif
@@ -139,8 +142,9 @@ QByteArray SystemInfo::getOSInfo(){
     return doc.toJson(QJsonDocument::Compact);
 }
 
-void SystemInfo::getHardwareInfo(SOCKETID socketID){
-    qDebug()<<"--SystemInfo::getHardwareInfo(...)";
+void SystemInfo::getHardwareInfo(SOCKETID socketID)
+{
+    qDebug() << "--SystemInfo::getHardwareInfo(...)";
 
     QJsonObject obj;
     obj["ComputerName"] = QHostInfo::localHostName().toLower();
@@ -169,7 +173,8 @@ void SystemInfo::getHardwareInfo(SOCKETID socketID){
 
 }
 
-void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID){
+void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID)
+{
 
 #ifdef Q_OS_WIN32
 
@@ -183,7 +188,7 @@ void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID){
 
 
     foreach (QString key, keys64) {
-        if(keys32.contains(key)){
+        if(keys32.contains(key)) {
             keys64.removeAll(key);
         }
     }
@@ -201,12 +206,17 @@ void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID){
 
 }
 
-void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView){
+void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView)
+{
 
 #ifdef Q_OS_WIN32
 
-    if(!infoArray){return;}
-    if(keys.isEmpty()){return;}
+    if(!infoArray) {
+        return;
+    }
+    if(keys.isEmpty()) {
+        return;
+    }
 
     QString rootKey = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 
@@ -214,7 +224,9 @@ void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringL
         QString path = rootKey + "\\" + key;
         QString displayName, displayVersion, installDate, publisher;
         bool ok = WinUtilities::regRead(path, "DisplayName", &displayName, on64BitView);
-        if(!ok){continue;}
+        if(!ok) {
+            continue;
+        }
 
         QJsonArray jsonArray;
         jsonArray.append(displayName);
@@ -236,7 +248,8 @@ void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringL
 
 }
 
-void SystemInfo::getServicesInfo(SOCKETID socketID){
+void SystemInfo::getServicesInfo(SOCKETID socketID)
+{
 
 #ifdef Q_OS_WIN32
 
@@ -252,8 +265,9 @@ void SystemInfo::getServicesInfo(SOCKETID socketID){
 
 }
 
-void SystemInfo::getUsersInfo(SOCKETID socketID){
-    qDebug()<<"--SystemInfo::getUsersInfo(...)";
+void SystemInfo::getUsersInfo(SOCKETID socketID)
+{
+    qDebug() << "--SystemInfo::getUsersInfo(...)";
 
 #ifdef Q_OS_WIN32
 
@@ -270,27 +284,32 @@ void SystemInfo::getUsersInfo(SOCKETID socketID){
 
 }
 
-void SystemInfo::startGetingRealTimeResourcesLoad(SOCKETID socketID){
-    qDebug()<<"SystemInfo::startGetingRealTimeResourcesLoad(...)";
+void SystemInfo::startGetingRealTimeResourcesLoad(SOCKETID socketID)
+{
+    qDebug() << "SystemInfo::startGetingRealTimeResourcesLoad(...)";
 
-    if(m_getRealTimeResourcesLoad){return;}
+    if(m_getRealTimeResourcesLoad) {
+        return;
+    }
     m_getRealTimeResourcesLoad = true;
 
-    QThreadPool * pool = QThreadPool::globalInstance();
+    QThreadPool *pool = QThreadPool::globalInstance();
     int maxThreadCount = pool->maxThreadCount();
-    if(pool->activeThreadCount() == pool->maxThreadCount()){
+    if(pool->activeThreadCount() == pool->maxThreadCount()) {
         pool->setMaxThreadCount(++maxThreadCount);
     }
     QtConcurrent::run(this, &SystemInfo::getRealTimeResourcseLoad, socketID);
 
 }
 
-void SystemInfo::stopGetingRealTimeResourcesLoad(){
+void SystemInfo::stopGetingRealTimeResourcesLoad()
+{
     m_getRealTimeResourcesLoad = false;
 }
 
-void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID){
-    qDebug()<<"--SystemInfo::getRealTimeResourcseLoad(...)";
+void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID)
+{
+    qDebug() << "--SystemInfo::getRealTimeResourcseLoad(...)";
 
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();

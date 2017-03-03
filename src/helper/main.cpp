@@ -9,10 +9,11 @@
 #include "HHSharedCore/hlogdebug.h"
 
 #ifdef Q_OS_WIN32
-#include "HHSharedSystemUtilities/WinUtilities"
+    #include "HHSharedSystemUtilities/WinUtilities"
 #endif
 
-void showSplashMessage(QSplashScreen *s, const QString &str){
+void showSplashMessage(QSplashScreen *s, const QString &str)
+{
     s->showMessage(str, Qt::AlignRight | Qt::AlignBottom, Qt::darkGreen);
 }
 
@@ -30,23 +31,23 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
 
     app.addLibraryPath(QCoreApplication::applicationDirPath());
-    qDebug()<<"--Library Paths:"<<app.libraryPaths ();
+    qDebug() << "--Library Paths:" << app.libraryPaths ();
 
 
     QStringList arguments;
-    for(int i = 0; i < argc; i++){
+    for(int i = 0; i < argc; i++) {
         arguments.append(QString(argv[i]));
     }
 
 #ifdef Q_OS_WIN32
 
-    if(arguments.contains("-lock")){
+    if(arguments.contains("-lock")) {
         QMessageBox::critical(0, QObject::tr("Error"), QObject::tr("LOCK!"));
 
         HEHUI::WinUtilities::LockWindows();
         return 0;
     }
-    if(arguments.contains("-logoff")){
+    if(arguments.contains("-logoff")) {
         QMessageBox::critical(0, QObject::tr("Error"), QObject::tr("LOGOFF!"));
 
         HEHUI::WinUtilities::Logoff(true);
@@ -55,9 +56,9 @@ int main(int argc, char *argv[])
 #endif
 
     QDate date = QDate::currentDate();
-    if(date.year() > 2015 ){
+    if(date.year() > 2015 ) {
         QMessageBox::critical(0, QObject::tr("Error"), QObject::tr("Application has expired!"));
-        qDebug()<<"Application has expired! Please update!";
+        qDebug() << "Application has expired! Please update!";
         return 0;
     }
 

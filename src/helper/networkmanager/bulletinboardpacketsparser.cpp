@@ -49,22 +49,23 @@
 #include "HHSharedGUI/himageresourcebase.h"
 
 #ifdef Q_OS_WIN32
-#include "HHSharedSystemUtilities/WinUtilities"
+    #include "HHSharedSystemUtilities/WinUtilities"
 #endif
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance *resourcesManager, const QString &userName, const QString &computerName, QObject *parent)
-    :QObject(parent), m_resourcesManager(resourcesManager), m_userName(userName), m_localComputerName(computerName)
+    : QObject(parent), m_resourcesManager(resourcesManager), m_userName(userName), m_localComputerName(computerName)
 
 {
 
 
     m_localID = m_userName + "@" + computerName;
-    qDebug()<<"----------computerName:"<<computerName;
+    qDebug() << "----------computerName:" << computerName;
     Packet::setLocalID(m_localID);
 
 
@@ -88,18 +89,20 @@ BulletinBoardPacketsParser::BulletinBoardPacketsParser(ResourcesManagerInstance 
 
 
     //    emit signalAnnouncementPacketReceived("ADMIN", "TEST!");
-    
+
 }
 
-BulletinBoardPacketsParser::~BulletinBoardPacketsParser() {
-    qDebug()<<"~BulletinBoardPacketsParser()";
+BulletinBoardPacketsParser::~BulletinBoardPacketsParser()
+{
+    qDebug() << "~BulletinBoardPacketsParser()";
 
     disconnect();
 }
 
-void BulletinBoardPacketsParser::parseIncomingPacketData(const PacketBase &packet){
-    qDebug()<<"----BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet)";
-    
+void BulletinBoardPacketsParser::parseIncomingPacketData(const PacketBase &packet)
+{
+    qDebug() << "----BulletinBoardPacketsParser::parseIncomingPacketData(Packet *packet)";
+
 
     quint8 packetType = packet.getPacketType();
     QString peerID = packet.getPeerID();
@@ -108,27 +111,27 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(const PacketBase &packe
     quint16 peerPort = packet.getPeerHostPort();
     SOCKETID socketID = packet.getSocketID();
 
-    switch(packetType){
+    switch(packetType) {
 
-    case quint8(MS::CMD_SystemInfoFromServer):
-    {
+    case quint8(MS::CMD_SystemInfoFromServer): {
         SystemInfoFromServerPacket p(packet);
         emit signalSystemInfoFromServerReceived(p);
     }
     break;
 
-    case quint8(MS::CMD_Screenshot):
-    {
-        qDebug()<<"~~CMD_Screenshot";
+    case quint8(MS::CMD_Screenshot): {
+        qDebug() << "~~CMD_Screenshot";
         ScreenshotPacket p(packet);
-        if(m_userName != p.ScreenshotRequest.userName){return;}
+        if(m_userName != p.ScreenshotRequest.userName) {
+            return;
+        }
         emit signalAdminRequestScreenshotPacketReceived(p);
     }
-        break;
+    break;
 
 
     default:
-        qWarning()<<"BulletinBoardPacketsParser! Unknown Packet Type:"<<packetType;
+        qWarning() << "BulletinBoardPacketsParser! Unknown Packet Type:" << packetType;
         //<<" Serial Number:"<<packetSerialNumber
         //<<" From:"<<packet->getPeerHostAddress().toString()
         //<<":"<<packet->getPeerHostPort()

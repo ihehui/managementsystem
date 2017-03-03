@@ -7,12 +7,13 @@
 
 #include "../../sharedms/global_shared.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 
 AnnouncementTargetModel::AnnouncementTargetModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
     m_announcementID = "0";
 }
@@ -27,12 +28,14 @@ void AnnouncementTargetModel::setJsonData(const QByteArray &jsonData)
 
     clear();
 
-    if(jsonData.isEmpty()){return;}
+    if(jsonData.isEmpty()) {
+        return;
+    }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
@@ -41,10 +44,10 @@ void AnnouncementTargetModel::setJsonData(const QByteArray &jsonData)
 
     beginResetModel();
 
-    for(int i=0;i<jsonArray.size(); i++){
+    for(int i = 0; i < jsonArray.size(); i++) {
         QJsonArray infoArray = jsonArray.at(i).toArray();
-        if(infoArray.size() != 10){
-            qCritical()<<"ERROR! Invalid JSON array.";
+        if(infoArray.size() != 10) {
+            qCritical() << "ERROR! Invalid JSON array.";
             continue;
         }
 
@@ -66,8 +69,11 @@ void AnnouncementTargetModel::setJsonData(const QByteArray &jsonData)
     endResetModel();
 }
 
-void AnnouncementTargetModel::addComputerTargets(const QStringList &targets){
-    if(targets.isEmpty()){return;}
+void AnnouncementTargetModel::addComputerTargets(const QStringList &targets)
+{
+    if(targets.isEmpty()) {
+        return;
+    }
 
     beginResetModel();
 
@@ -80,19 +86,22 @@ void AnnouncementTargetModel::addComputerTargets(const QStringList &targets){
     endResetModel();
 }
 
-void AnnouncementTargetModel::addUserTargets(const QStringList &targets){
+void AnnouncementTargetModel::addUserTargets(const QStringList &targets)
+{
 
-    if(targets.isEmpty()){return;}
+    if(targets.isEmpty()) {
+        return;
+    }
 
     beginResetModel();
 
     foreach (QString target, targets) {
         AnnouncementTarget *info = new AnnouncementTarget();
         QStringList list = target.split("\\");
-        if(list.size() == 2){
+        if(list.size() == 2) {
             info->AssetNO = list.at(0);
             info->UserName = list.at(1);
-        }else{
+        } else {
             info->UserName = list.at(0);
         }
 
@@ -102,10 +111,13 @@ void AnnouncementTargetModel::addUserTargets(const QStringList &targets){
     endResetModel();
 }
 
-QString AnnouncementTargetModel::getNewTargetsStringForSQL(){
+QString AnnouncementTargetModel::getNewTargetsStringForSQL()
+{
     QStringList targets;
     foreach (AnnouncementTarget *info, infolist) {
-        if(!info->ID.isEmpty()){continue;}
+        if(!info->ID.isEmpty()) {
+            continue;
+        }
         QString assetNO = info->AssetNO, userName = info->UserName;
         assetNO = "\\'" + assetNO + "\\'";
         userName = "\\'" + userName + "\\'";
@@ -115,11 +127,13 @@ QString AnnouncementTargetModel::getNewTargetsStringForSQL(){
     return targets.join(";");
 }
 
-QString AnnouncementTargetModel::getDeletedTargetsStringForSQL(){
+QString AnnouncementTargetModel::getDeletedTargetsStringForSQL()
+{
     return deletedTargets.join(",");
 }
 
-void AnnouncementTargetModel::clear(){
+void AnnouncementTargetModel::clear()
+{
     beginResetModel();
 
     foreach (AnnouncementTarget *info, infolist) {
@@ -131,24 +145,28 @@ void AnnouncementTargetModel::clear(){
     endResetModel();
 }
 
-AnnouncementTarget * AnnouncementTargetModel::getTarget(const QModelIndex &index){
-    if(!index.isValid()){
+AnnouncementTarget *AnnouncementTargetModel::getTarget(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return 0;
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt());
 }
 
-void AnnouncementTargetModel::deleteTarget(const QModelIndex & index){
-    if(!index.isValid()){
+void AnnouncementTargetModel::deleteTarget(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return;
     }
 
     beginResetModel();
 
     AnnouncementTarget *target = infolist.takeAt(index.data(Qt::UserRole).toInt());
-    if(!target){return;}
-    if(!target->ID.isEmpty()){
+    if(!target) {
+        return;
+    }
+    if(!target->ID.isEmpty()) {
         deletedTargets.append(target->ID);
     }
     delete target;
@@ -156,30 +174,34 @@ void AnnouncementTargetModel::deleteTarget(const QModelIndex & index){
     endResetModel();
 }
 
-QString AnnouncementTargetModel::getTargetID(const QModelIndex & index){
-    if(!index.isValid()){
+QString AnnouncementTargetModel::getTargetID(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return "0";
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt())->ID;
 }
 
-void AnnouncementTargetModel::switchToCloneMode(){
+void AnnouncementTargetModel::switchToCloneMode()
+{
     foreach (AnnouncementTarget *info, infolist) {
         info->ID = "";
     }
 }
 
-int AnnouncementTargetModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int AnnouncementTargetModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return infolist.size();
 
 }
 
-int	 AnnouncementTargetModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 AnnouncementTargetModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
 
@@ -187,18 +209,19 @@ int	 AnnouncementTargetModel::columnCount ( const QModelIndex & parent) const{
 
 }
 
-QVariant AnnouncementTargetModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant AnnouncementTargetModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= infolist.size())){
+    if((row < 0) || (row >= infolist.size())) {
         return QVariant();
     }
 
     AnnouncementTarget *info = static_cast<AnnouncementTarget *> (infolist.at(row));
-    if(role == Qt::DisplayRole){
+    if(role == Qt::DisplayRole) {
         switch (index.column()) {
         case 0:
             return info->AssetNO;
@@ -209,7 +232,7 @@ QVariant AnnouncementTargetModel::data ( const QModelIndex & index, int role) co
             break;
 
         case 2:
-            return info->Acknowledged?tr("Yes"):tr("No");
+            return info->Acknowledged ? tr("Yes") : tr("No");
             break;
 
         case 3:
@@ -223,7 +246,7 @@ QVariant AnnouncementTargetModel::data ( const QModelIndex & index, int role) co
         }
     }
 
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return row;
     }
 
@@ -231,12 +254,13 @@ QVariant AnnouncementTargetModel::data ( const QModelIndex & index, int role) co
 
 }
 
-QVariant AnnouncementTargetModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant AnnouncementTargetModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("Asset NO."));
@@ -273,7 +297,7 @@ QVariant AnnouncementTargetModel::headerData ( int section, Qt::Orientation orie
 //////////////////////////////////////////////////////
 
 AnnouncementInfoModel::AnnouncementInfoModel(QObject *parent)
-    :QAbstractTableModel(parent)
+    : QAbstractTableModel(parent)
 {
 
 }
@@ -289,12 +313,14 @@ void AnnouncementInfoModel::setJsonData(const QByteArray &jsonData)
 
     clear();
 
-    if(jsonData.isEmpty()){return;}
+    if(jsonData.isEmpty()) {
+        return;
+    }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
@@ -302,10 +328,10 @@ void AnnouncementInfoModel::setJsonData(const QByteArray &jsonData)
 
     beginResetModel();
 
-    for(int i=0;i<jsonArray.size(); i++){
+    for(int i = 0; i < jsonArray.size(); i++) {
         QJsonArray infoArray = jsonArray.at(i).toArray();
-        if(infoArray.size() != 10){
-            qCritical()<<"ERROR! Invalid JSON array.";
+        if(infoArray.size() != 10) {
+            qCritical() << "ERROR! Invalid JSON array.";
             continue;
         }
 
@@ -329,7 +355,8 @@ void AnnouncementInfoModel::setJsonData(const QByteArray &jsonData)
     endResetModel();
 }
 
-void AnnouncementInfoModel::clear(){
+void AnnouncementInfoModel::clear()
+{
     beginResetModel();
 
     foreach (AnnouncementInfo *info, infolist) {
@@ -341,30 +368,35 @@ void AnnouncementInfoModel::clear(){
     endResetModel();
 }
 
-AnnouncementInfo * AnnouncementInfoModel::getInfo(const QModelIndex &index){
-    if(!index.isValid()){
+AnnouncementInfo *AnnouncementInfoModel::getInfo(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return 0;
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt());
 }
 
-QString AnnouncementInfoModel::getInfoID(const QModelIndex & index){
-    if(!index.isValid()){
+QString AnnouncementInfoModel::getInfoID(const QModelIndex &index)
+{
+    if(!index.isValid()) {
         return "0";
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt())->ID;
 }
 
-void AnnouncementInfoModel::setAnnouncementRepliesData(const QByteArray &jsonData){
+void AnnouncementInfoModel::setAnnouncementRepliesData(const QByteArray &jsonData)
+{
 
-    if(jsonData.isEmpty()){return;}
+    if(jsonData.isEmpty()) {
+        return;
+    }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
@@ -372,26 +404,28 @@ void AnnouncementInfoModel::setAnnouncementRepliesData(const QByteArray &jsonDat
     QString announcementID = object["AnnouncementID"].toString();
     AnnouncementInfo *info = 0;
     foreach (AnnouncementInfo *info, infolist) {
-        if(info->ID == announcementID){break;};
+        if(info->ID == announcementID) {
+            break;
+        };
     }
 
     QJsonArray jsonArray = object["AnnouncementReplies"].toArray();
-    for(int i=0;i<jsonArray.size(); i++){
+    for(int i = 0; i < jsonArray.size(); i++) {
         QJsonArray infoArray = jsonArray.at(i).toArray();
-        if(infoArray.size() != 10){
-            qCritical()<<"ERROR! Invalid JSON array.";
+        if(infoArray.size() != 10) {
+            qCritical() << "ERROR! Invalid JSON array.";
             continue;
         }
 
         int index = 0;
         QString id = infoArray.at(index++).toString();
         AnnouncementReply *replyinfo = 0;
-        if(replies.contains(id)){
+        if(replies.contains(id)) {
             replyinfo = replies.value(id);
-            if(info){
+            if(info) {
                 info->Replies = "";
             }
-        }else{
+        } else {
             replyinfo = new AnnouncementReply();
             replyinfo->ID = id;
             replies.insert(id, replyinfo);
@@ -404,7 +438,7 @@ void AnnouncementInfoModel::setAnnouncementRepliesData(const QByteArray &jsonDat
         replyinfo->Message = infoArray.at(index++).toString();
         replyinfo->PublishTime = infoArray.at(index++).toString();
 
-        if(info){
+        if(info) {
             //URL: Reply://sender
             QString title = QString("<span><a title=\"%1\" href=\"%2://%1:%3\">%1</a> %4</span>").arg(replyinfo->Sender).arg(URLScheme_Reply).arg(replyinfo->SendersAssetNO).arg(replyinfo->PublishTime);
             //QString title = QString(" <p align=\"left\"><span style=\" font-size:9pt;color:#068ec8;\">%1 %2</span></p> ").arg(replyinfo->Sender).arg(replyinfo->PublishTime);
@@ -415,31 +449,35 @@ void AnnouncementInfoModel::setAnnouncementRepliesData(const QByteArray &jsonDat
 
 }
 
-QList<AnnouncementReply *> AnnouncementInfoModel::getAnnouncementReplies(const QString &announcementID) const{
+QList<AnnouncementReply *> AnnouncementInfoModel::getAnnouncementReplies(const QString &announcementID) const
+{
     QList<AnnouncementReply *> results;
     foreach (AnnouncementReply *reply, replies.values()) {
-        if(reply->AnnouncementID == announcementID){
+        if(reply->AnnouncementID == announcementID) {
             results.append(reply);
         }
     }
     return results;
 }
 
-AnnouncementReply * AnnouncementInfoModel::getReply(const QString &replyID) const{
+AnnouncementReply *AnnouncementInfoModel::getReply(const QString &replyID) const
+{
     return replies.value(replyID);
 }
 
 
-int AnnouncementInfoModel::rowCount ( const QModelIndex & parent) const {
-    if(parent.isValid()){
+int AnnouncementInfoModel::rowCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
     return infolist.size();
 
 }
 
-int	 AnnouncementInfoModel::columnCount ( const QModelIndex & parent) const{
-    if(parent.isValid()){
+int	 AnnouncementInfoModel::columnCount ( const QModelIndex &parent) const
+{
+    if(parent.isValid()) {
         return 0;
     }
 
@@ -447,25 +485,25 @@ int	 AnnouncementInfoModel::columnCount ( const QModelIndex & parent) const{
 
 }
 
-QVariant AnnouncementInfoModel::data ( const QModelIndex & index, int role) const{
-    if(!index.isValid()){
+QVariant AnnouncementInfoModel::data ( const QModelIndex &index, int role) const
+{
+    if(!index.isValid()) {
         return QVariant();
     }
 
     int row = index.row();
-    if((row < 0) || (row >= infolist.size())){
+    if((row < 0) || (row >= infolist.size())) {
         return QVariant();
     }
 
     AnnouncementInfo *info = static_cast<AnnouncementInfo *> (infolist.at(row));
-    if(role == Qt::DisplayRole){
+    if(role == Qt::DisplayRole) {
         switch (index.column()) {
         case 0:
             return info->ID;
             break;
 
-        case 1:
-        {
+        case 1: {
             switch (info->Type) {
             case quint8(MS::ANNOUNCEMENT_NORMAL):
                 return QString(tr("Normal"));
@@ -481,10 +519,10 @@ QVariant AnnouncementInfoModel::data ( const QModelIndex & index, int role) cons
             }
 
         }
-            break;
+        break;
 
         case 2:
-            return info->ACKRequired?tr("Yes"):tr("No");
+            return info->ACKRequired ? tr("Yes") : tr("No");
             break;
 
         case 3:
@@ -499,8 +537,7 @@ QVariant AnnouncementInfoModel::data ( const QModelIndex & index, int role) cons
             return info->ValidityPeriod;
             break;
 
-        case 6:
-        {
+        case 6: {
             switch (info->TargetType) {
             case quint8(MS::ANNOUNCEMENT_TARGET_EVERYONE):
                 return QString(tr("All"));
@@ -516,10 +553,10 @@ QVariant AnnouncementInfoModel::data ( const QModelIndex & index, int role) cons
             }
 
         }
-            break;
+        break;
 
         case 7:
-            return info->Active?tr("Yes"):tr("No");
+            return info->Active ? tr("Yes") : tr("No");
             break;
 
         case 8:
@@ -532,23 +569,23 @@ QVariant AnnouncementInfoModel::data ( const QModelIndex & index, int role) cons
         }
     }
 
-    if(role == Qt::EditRole){
-        if(index.column() == 1){
+    if(role == Qt::EditRole) {
+        if(index.column() == 1) {
             return QString::number(info->Type);
         }
 
-        if(index.column() == 2){
-            return info->ACKRequired?"1":"0";
+        if(index.column() == 2) {
+            return info->ACKRequired ? "1" : "0";
         }
 
-        if(index.column() == 6){
+        if(index.column() == 6) {
             return QString::number(info->TargetType);
         }
 
         return index.data(Qt::DisplayRole);
     }
 
-    if(role == Qt::UserRole){
+    if(role == Qt::UserRole) {
         return row;
     }
 
@@ -556,12 +593,13 @@ QVariant AnnouncementInfoModel::data ( const QModelIndex & index, int role) cons
 
 }
 
-QVariant AnnouncementInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const{
-    if(role != Qt::DisplayRole){
+QVariant AnnouncementInfoModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if(orientation ==  Qt::Horizontal){
+    if(orientation ==  Qt::Horizontal) {
         switch (section) {
         case 0:
             return QString(tr("ID"));
@@ -617,7 +655,7 @@ QVariant AnnouncementInfoModel::headerData ( int section, Qt::Orientation orient
 ////////////////////////////////////////////////////////////
 
 SortFilterProxyModel::SortFilterProxyModel(QObject *parent)
-    :QSortFilterProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 
     id = QRegExp(".*", Qt::CaseInsensitive);
@@ -626,7 +664,8 @@ SortFilterProxyModel::SortFilterProxyModel(QObject *parent)
 
 }
 
-void SortFilterProxyModel::cleanFilters(){
+void SortFilterProxyModel::cleanFilters()
+{
 
     id = QRegExp(".*", Qt::CaseInsensitive);
     keyword = QRegExp(".*", Qt::CaseInsensitive);
@@ -635,7 +674,8 @@ void SortFilterProxyModel::cleanFilters(){
     invalidateFilter();
 }
 
-void SortFilterProxyModel::setFilters(const QRegExp &id, const QRegExp &keyword, const QRegExp &acknowledged){
+void SortFilterProxyModel::setFilters(const QRegExp &id, const QRegExp &keyword, const QRegExp &acknowledged)
+{
 
     this->id = id;
     this->keyword = keyword;
@@ -655,7 +695,7 @@ bool SortFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &so
             && indexKeyword.data(Qt::EditRole).toString().contains(keyword)
             && indexAcknowledged.data(Qt::EditRole).toString().contains(acknowledged)
 
-            );
+           );
 
 }
 

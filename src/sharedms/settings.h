@@ -13,15 +13,16 @@
 
 
 
-namespace HEHUI{
+namespace HEHUI
+{
 
 class SHAREDMSLIB_API Settings : public SettingsCore
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
     Settings(const QString fileBaseName, const QString fileDirPath = QCoreApplication::applicationDirPath(), QObject *parent = 0 );
-    Settings(const QString fileName, Format format, QObject* parent= 0 );
+    Settings(const QString fileName, Format format, QObject *parent = 0 );
 
     ~Settings();
 

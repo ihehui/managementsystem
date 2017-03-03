@@ -39,10 +39,12 @@
 #include "HHSharedGUI/hloginbase.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-BulletinBoardPlugin::BulletinBoardPlugin() {
-    
+BulletinBoardPlugin::BulletinBoardPlugin()
+{
+
 
     systemSummaryInfoWidgetList = QList<SystemSummaryInfo *> ();
 
@@ -54,65 +56,75 @@ BulletinBoardPlugin::BulletinBoardPlugin() {
 
 }
 
-BulletinBoardPlugin::~BulletinBoardPlugin() {
-    
+BulletinBoardPlugin::~BulletinBoardPlugin()
+{
+
     //unload();
-    
-    
+
+
     //    delete bulletinBoardPacketsParser;
     //    bulletinBoardPacketsParser = 0;
-    
+
     //    NetworkManager::freeInstance();
     //    networkManager = 0;
-    
+
     //qWarning()<<"BulletinBoardPlugin::~BulletinBoardPlugin()";
 
 }
 
-bool BulletinBoardPlugin::isSingle(){
+bool BulletinBoardPlugin::isSingle()
+{
 
     return true;
 
 }
 
-QString BulletinBoardPlugin::name () const{
+QString BulletinBoardPlugin::name () const
+{
     return QString(tr("Bulletin Board"));
 }
 
-QString BulletinBoardPlugin::version() const{
+QString BulletinBoardPlugin::version() const
+{
     return "2010.05.10";
 }
 
-QString BulletinBoardPlugin::description() const{
+QString BulletinBoardPlugin::description() const
+{
     return QString(tr("Bulletin Board Plugin"));
 }
 
-QIcon BulletinBoardPlugin::icon () const{
+QIcon BulletinBoardPlugin::icon () const
+{
     return QIcon(":/icon/resources/images/bulletinboard.png");
 
 }
 
-QString BulletinBoardPlugin::whatsThis () const{
+QString BulletinBoardPlugin::whatsThis () const
+{
     return QString(tr("Bulletin Board"));
 }
 
-QString BulletinBoardPlugin::toolTip () const{
+QString BulletinBoardPlugin::toolTip () const
+{
     return QString(tr("Bulletin Board"));
 }
 
 
-void BulletinBoardPlugin::retranslateUi(){
+void BulletinBoardPlugin::retranslateUi()
+{
 
 
-    if(actionMain){
+    if(actionMain) {
         actionMain->setText(tr("System Summary Info"));
     }
 }
 
 
-QAction * BulletinBoardPlugin::mainActionForMenu(){
+QAction *BulletinBoardPlugin::mainActionForMenu()
+{
 
-    if(!actionMain){
+    if(!actionMain) {
         actionMain = new QAction(this);
         actionMain->setIcon(QIcon(":/icon/resources/images/systemsummaryinfo.png"));
         actionMain->setText(tr("System Summary Info"));
@@ -126,45 +138,48 @@ QAction * BulletinBoardPlugin::mainActionForMenu(){
 
 }
 
-bool BulletinBoardPlugin::unload(){
-    qDebug()<<"----BulletinBoardPlugin::unload()";
-    
+bool BulletinBoardPlugin::unload()
+{
+    qDebug() << "----BulletinBoardPlugin::unload()";
+
     //    if(bulletinBoardPacketsParser){
     //        bulletinBoardPacketsParser->sendUserOfflinePacket();
     //        bulletinBoardPacketsParser->aboutToQuit();
     //    }
-    
+
     //    if(remoteAssistance){
     //        remoteAssistance->close();
     //        delete remoteAssistance;
     //    }
     //    remoteAssistance = 0;
-    
+
     //    if(bulletinBoardWidget){
     //        bulletinBoardWidget->close();
     //        delete bulletinBoardWidget;
     //    }
     //    remoteAssistance = 0;
-    
+
     //    if(updatePasswordWidget){
     //        updatePasswordWidget->close();
     //        delete updatePasswordWidget;
     //    }
     //    remoteAssistance = 0;
-    
+
     emit signalPluginToBeUnloaded();
 
     delete bulletinBoardObject;
     bulletinBoardObject = 0;
 
 
-    if(systemSummaryInfoWidgetList.isEmpty()){
+    if(systemSummaryInfoWidgetList.isEmpty()) {
         return true;
     }
 
-    foreach(SystemSummaryInfo *systemSummaryInfo, systemSummaryInfoWidgetList){
-        if(!systemSummaryInfo){continue;}
-        if(systemSummaryInfo->close()){
+    foreach(SystemSummaryInfo *systemSummaryInfo, systemSummaryInfoWidgetList) {
+        if(!systemSummaryInfo) {
+            continue;
+        }
+        if(systemSummaryInfo->close()) {
             systemSummaryInfoWidgetList.removeAll(systemSummaryInfo);
             delete systemSummaryInfo;
             systemSummaryInfo = 0;
@@ -175,8 +190,9 @@ bool BulletinBoardPlugin::unload(){
 
 }
 
-void BulletinBoardPlugin::slotMainActionForMenuTriggered(){
-    if(isSingle() && SystemSummaryInfo::isRunning()){
+void BulletinBoardPlugin::slotMainActionForMenuTriggered()
+{
+    if(isSingle() && SystemSummaryInfo::isRunning()) {
         //TODO: Activate the widget
         return;
     }
@@ -187,8 +203,8 @@ void BulletinBoardPlugin::slotMainActionForMenuTriggered(){
     SystemSummaryInfo *systemSummaryInfo = new SystemSummaryInfo(parentWidget);
     connect(systemSummaryInfo, SIGNAL(destroyed(QObject *)), SLOT(sloSystemSummaryInfoWidgetDestoryed(QObject *)));
 
-    if(parentWidget){
-        if(QMdiArea *mdiArea = qobject_cast<QMdiArea *>(parentWidget)){
+    if(parentWidget) {
+        if(QMdiArea *mdiArea = qobject_cast<QMdiArea *>(parentWidget)) {
             QMdiSubWindow *subWindow = new QMdiSubWindow;
             subWindow->setWidget(systemSummaryInfo);
             subWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -203,11 +219,12 @@ void BulletinBoardPlugin::slotMainActionForMenuTriggered(){
     systemSummaryInfoWidgetList.append(systemSummaryInfo);
 }
 
-void BulletinBoardPlugin::sloSystemSummaryInfoWidgetDestoryed(QObject * obj){
+void BulletinBoardPlugin::sloSystemSummaryInfoWidgetDestoryed(QObject *obj)
+{
     qDebug("----ControlCenterPlugin::sloSystemSummaryInfoWidgetDestoryed(QObject * obj)");
 
     SystemSummaryInfo *controlCenter = static_cast<SystemSummaryInfo *> (sender());
-    if(controlCenter){
+    if(controlCenter) {
         systemSummaryInfoWidgetList.removeAll(controlCenter);
     }
 
@@ -230,7 +247,7 @@ void BulletinBoardPlugin::sloSystemSummaryInfoWidgetDestoryed(QObject * obj){
 //        return;
 //    }else{
 //        if(!bulletinBoardPacketsParser){
-//            bulletinBoardPacketsParser = new BulletinBoardPacketsParser();        
+//            bulletinBoardPacketsParser = new BulletinBoardPacketsParser();
 //        }
 
 //        //connect(bulletinBoardPacketsParser, SIGNAL(signalAdminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), this, SLOT(adminRequestRemoteAssistancePacketReceived(const QString&, quint16, const QString&)), Qt::QueuedConnection);

@@ -32,7 +32,8 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class ControlCenter : public QMainWindow
@@ -43,7 +44,10 @@ public:
     ControlCenter(const QString appName, QWidget *parent = 0);
     ~ControlCenter();
 
-    static bool isRunning(){return running;}
+    static bool isRunning()
+    {
+        return running;
+    }
 
     void retranslateUi();
 
@@ -81,7 +85,7 @@ private slots:
     void slotUpdateUserLogonPassword();
     void slotInformUserNewLogonPassword();
 
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
 
     void startNetwork();
 
@@ -158,7 +162,7 @@ private:
 
     //bool m_readonly;
     AdminUser *m_adminUser;
-    
+
 };
 
 } //namespace HEHUI

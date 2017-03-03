@@ -45,10 +45,12 @@
 #include "HHSharedCore/hutilities.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
-class BulletinBoardPacketsParser : public QObject{
+class BulletinBoardPacketsParser : public QObject
+{
     Q_OBJECT
 
 public:
@@ -60,8 +62,9 @@ public slots:
     void parseIncomingPacketData(const PacketBase &packet);
 
 
-    bool sendLocalUserOnlineStatusChangedPacket(SOCKETID socketID, bool online){
-        qDebug()<<"--sendLocalUserOnlineStatusChangedPacket(...)";
+    bool sendLocalUserOnlineStatusChangedPacket(SOCKETID socketID, bool online)
+    {
+        qDebug() << "--sendLocalUserOnlineStatusChangedPacket(...)";
 
         LocalUserOnlineStatusChangedPacket packet;
         packet.userName = m_userName;
@@ -70,9 +73,10 @@ public slots:
         QByteArray ba = packet.toByteArray();
         return m_rtp->sendReliableData(socketID, &ba);
     }
-    
-    bool sendUserReplyMessagePacket(SOCKETID socketID, unsigned int announcementID, const QString &receiver, const QString &replyMessage){
-        qWarning()<<"----sendUserReplyMessagePacket(...):";
+
+    bool sendUserReplyMessagePacket(SOCKETID socketID, unsigned int announcementID, const QString &receiver, const QString &replyMessage)
+    {
+        qWarning() << "----sendUserReplyMessagePacket(...):";
 
         AnnouncementPacket packet;
         packet.InfoType = AnnouncementPacket::ANNOUNCEMENT_REPLY;
@@ -86,8 +90,9 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendUserScreenshotPacket(SOCKETID socketID, QList<QPoint> locations, QList<QByteArray> images){
-        qWarning()<<"----sendUserScreenshotPacket(...):";
+    bool sendUserScreenshotPacket(SOCKETID socketID, QList<QPoint> locations, QList<QByteArray> images)
+    {
+        qWarning() << "----sendUserScreenshotPacket(...):";
 
         ScreenshotPacket packet;
         packet.InfoType = ScreenshotPacket::SCREENSHOT_DATA;
@@ -98,8 +103,9 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendUserDesktopInfoPacket(SOCKETID socketID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
-        qWarning()<<"----sendUserDesktopInfoPacket(...):";
+    bool sendUserDesktopInfoPacket(SOCKETID socketID, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight)
+    {
+        qWarning() << "----sendUserDesktopInfoPacket(...):";
 
         ScreenshotPacket packet;
         packet.InfoType = ScreenshotPacket::SCREENSHOT_DESKTOP_INFO;

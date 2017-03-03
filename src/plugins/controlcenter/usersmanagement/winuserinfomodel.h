@@ -9,9 +9,11 @@
 
 #include "winuserinfo.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
-class WinUserInfoModel : public QAbstractTableModel {
+class WinUserInfoModel : public QAbstractTableModel
+{
     Q_OBJECT
 
 public:
@@ -19,12 +21,12 @@ public:
     virtual ~WinUserInfoModel();
 
     void setJsonData(const QByteArray &data);
-    WinUserInfo * getUser(const QModelIndex & index);
+    WinUserInfo *getUser(const QModelIndex &index);
 
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
 
@@ -38,7 +40,8 @@ private:
 
 };
 
-class WinUserInfoSortFilterProxyModel : public QSortFilterProxyModel{
+class WinUserInfoSortFilterProxyModel : public QSortFilterProxyModel
+{
     Q_OBJECT
 
 public:

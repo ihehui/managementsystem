@@ -11,19 +11,20 @@
 #include <QMenu>
 
 #ifdef Q_OS_WIN
-#include <QtWin>
-#include "AviFile.h"
+    #include <QtWin>
+    #include "AviFile.h"
 #endif
 
 
 #include "HHSharedGUI/himageresourcebase.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 RemoteDesktopViewer::RemoteDesktopViewer(QWidget *parent, Qt::WindowFlags flag)
-    :ImageViewer(parent, flag)
+    : ImageViewer(parent, flag)
 {
 
     setAttribute(Qt::WA_DeleteOnClose);
@@ -42,13 +43,14 @@ RemoteDesktopViewer::RemoteDesktopViewer(QWidget *parent, Qt::WindowFlags flag)
 
 RemoteDesktopViewer::~RemoteDesktopViewer()
 {
-    qDebug()<<"RemoteDesktopViewer::~RemoteDesktopViewer()";
+    qDebug() << "RemoteDesktopViewer::~RemoteDesktopViewer()";
     //emit toBeDstroyed();
 
     stopRecord();
 }
 
-void RemoteDesktopViewer::setDesktopInfo(quint32 userSocketID, const QString &id, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight){
+void RemoteDesktopViewer::setDesktopInfo(quint32 userSocketID, const QString &id, int desktopWidth, int desktopHeight, int blockWidth, int blockHeight)
+{
 
     m_userSocketID = userSocketID;
     m_id = id;
@@ -56,9 +58,9 @@ void RemoteDesktopViewer::setDesktopInfo(quint32 userSocketID, const QString &id
     m_blockSize = QSize(blockWidth, blockHeight);
     //m_blockCount = (desktopWidth*desktopHeight)/(blockWidth*blockHeight);
 
-    int columnCount = desktopWidth/blockWidth;
-    int rowCount = desktopHeight/blockHeight;
-    m_blockCount = columnCount*rowCount;
+    int columnCount = desktopWidth / blockWidth;
+    int rowCount = desktopHeight / blockHeight;
+    m_blockCount = columnCount * rowCount;
 
 //    for(int i=0;i<columnCount;i++){
 //        for(int j=0;j<rowCount;j++){
@@ -78,14 +80,15 @@ void RemoteDesktopViewer::setDesktopInfo(quint32 userSocketID, const QString &id
 
 }
 
-void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray> images){
+void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray> images)
+{
     //qDebug()<<"--RemoteDesktopViewer::updatePixmap(...)";
 
 #ifdef Q_OS_WIN
 
     QPainter painter(&m_image);
 
-    for(int i=0;i<locations.size();i++){
+    for(int i = 0; i < locations.size(); i++) {
         QPoint point = locations.at(i);
         QRect target(point, m_blockSize);
         QRect source(QPoint(0, 0), m_blockSize);
@@ -97,11 +100,10 @@ void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray
 
     updateAnimationFrame(m_image);
 
-    if(m_aviFile){
+    if(m_aviFile) {
 
         HBITMAP bitmap = QtWin::toHBITMAP(QPixmap::fromImage(m_image));
-        if(FAILED(m_aviFile->AppendNewFrame(bitmap)))
-        {
+        if(FAILED(m_aviFile->AppendNewFrame(bitmap))) {
             QMessageBox::critical(this, tr("Error"), QString::fromWCharArray(m_aviFile->GetLastErrorMessage()));
             stopRecord();
         }
@@ -115,16 +117,19 @@ void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray
 
 }
 
-quint32 RemoteDesktopViewer::userSocketID(){
+quint32 RemoteDesktopViewer::userSocketID()
+{
     return m_userSocketID;
 }
 
-QString RemoteDesktopViewer::viewerID() const{
+QString RemoteDesktopViewer::viewerID() const
+{
     return m_id;
 }
 
-void RemoteDesktopViewer::peerDisconnected(){
-    qDebug()<<"--RemoteDesktopViewer::peerDisconnected()";
+void RemoteDesktopViewer::peerDisconnected()
+{
+    qDebug() << "--RemoteDesktopViewer::peerDisconnected()";
 
     m_blockSize = QSize(0, 0);
     m_image = QImage();
@@ -135,26 +140,28 @@ void RemoteDesktopViewer::peerDisconnected(){
     stopRecord();
 }
 
-void RemoteDesktopViewer::save(){
+void RemoteDesktopViewer::save()
+{
 
     QString savePath = QApplication::applicationDirPath() + "/snapshot";
-    if(!setDefaultSavePath(savePath)){
+    if(!setDefaultSavePath(savePath)) {
         return;
     }
 
     QString fileName = savePath + QString("/%1-%2.jpg").arg(m_id).arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
-    if(!m_image.save(fileName)){
+    if(!m_image.save(fileName)) {
         QMessageBox::critical(this, tr("Error"), tr("Can not save image as:<p>%1</p>").arg(fileName));
     }
 
 
 }
 
-void RemoteDesktopViewer::startRecord(){
+void RemoteDesktopViewer::startRecord()
+{
 
 #ifdef Q_OS_WIN
 
-    if(m_aviFileName.trimmed().isEmpty()){
+    if(m_aviFileName.trimmed().isEmpty()) {
 
         QStringList filters;
         filters << "AVI (*.avi)" << tr("All Files (*)");
@@ -167,22 +174,24 @@ void RemoteDesktopViewer::startRecord(){
         QFileDialog dlg;
         QString selectedFilter;
         QString path = dlg.getSaveFileName(0, tr("Save Video As:"), defaultSavePath(), filters.join(";;"), &selectedFilter);
-        if(path.isEmpty()){return;}
+        if(path.isEmpty()) {
+            return;
+        }
         QFileInfo info(path);
         QString sufffix = info.suffix().trimmed();
-        if(sufffix.isEmpty()){
+        if(sufffix.isEmpty()) {
             sufffix = filtersHash.key(selectedFilter);
             path += sufffix;
         }
 
         m_aviFileName = path;
 
-    }else{
+    } else {
         return;
     }
 
 
-    if(!m_aviFile){
+    if(!m_aviFile) {
         //DWORD dwCodec = mmioFOURCC('M','S','V','C');
         //DWORD dwCodec = mmioFOURCC('I','Y','U','V');
         DWORD dwCodec = 0;
@@ -194,10 +203,11 @@ void RemoteDesktopViewer::startRecord(){
 
 }
 
-void RemoteDesktopViewer::stopRecord(){
+void RemoteDesktopViewer::stopRecord()
+{
 
 #ifdef Q_OS_WIN
-    if(m_aviFile){
+    if(m_aviFile) {
         delete m_aviFile;
         m_aviFile = 0;
     }
@@ -207,17 +217,18 @@ void RemoteDesktopViewer::stopRecord(){
 
 }
 
-void RemoteDesktopViewer::showContextMenu(const QPoint &pos){
+void RemoteDesktopViewer::showContextMenu(const QPoint &pos)
+{
 
     QMenu menu;
 
-    if(!m_actionRecord){
+    if(!m_actionRecord) {
         m_actionRecord = new QAction(tr("Start Recording"), this);
         connect(m_actionRecord, SIGNAL(triggered()), this, SLOT(startOrStopRecording()));
     }
 
 #ifdef Q_OS_WIN
-    if(m_aviFile){
+    if(m_aviFile) {
         m_actionRecord->setText(tr("Stop Recording"));
     }
 #endif
@@ -226,12 +237,13 @@ void RemoteDesktopViewer::showContextMenu(const QPoint &pos){
     menu.exec(mapToGlobal(pos));
 }
 
-void RemoteDesktopViewer::startOrStopRecording(){
+void RemoteDesktopViewer::startOrStopRecording()
+{
 
 #ifdef Q_OS_WIN
-    if(m_aviFile){
+    if(m_aviFile) {
         stopRecord();
-    }else{
+    } else {
         startRecord();
     }
 #endif

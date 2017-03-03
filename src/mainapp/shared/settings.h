@@ -14,7 +14,8 @@
 
 
 
-namespace HEHUI{
+namespace HEHUI
+{
 
 class Settings : public SettingsBase, public Singleton<Settings>
 {

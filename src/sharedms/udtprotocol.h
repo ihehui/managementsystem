@@ -7,7 +7,8 @@
 #include "sharedmslib.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class SHAREDMSLIB_API UDTProtocol : public UDTProtocolBase
@@ -33,7 +34,7 @@ private:
     inline void convertDataToPacket(UDTSOCKET socket, QByteArray *data);
 
 
-    
+
 };
 
 } //namespace HEHUI

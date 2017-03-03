@@ -18,7 +18,8 @@
 #include "networkmanager/controlcenterpacketsparser.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 class FileSystemModel : public QAbstractTableModel
@@ -32,12 +33,12 @@ public:
 //    void setFileItems(QList<FileItemInfo> fileItems);
     void addFileItem(const QString &name, const QString &size, quint8 type, const QString &dateModified);
     void deleteFileItem(const QString &name);
-    void deleteFileItem(const QModelIndex & index);
+    void deleteFileItem(const QModelIndex &index);
 
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
     bool parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data);
@@ -53,7 +54,7 @@ public:
     QStringList drives() const;
 
 private:
-    struct FileItemInfo{
+    struct FileItemInfo {
         QString name;
         QString size;
         quint8 type;
@@ -74,20 +75,20 @@ private:
 class FileManagementWidget : public QWidget
 {
     Q_OBJECT
-    
+
 public:
     explicit FileManagementWidget(QWidget *parent = 0);
     ~FileManagementWidget();
 
     void setPacketsParser(ControlCenterPacketsParser *parser);
     void setPeerSocket(UDTSOCKET peerSocket);
-    
+
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dragMoveEvent(QDragMoveEvent *event);
     void dropEvent(QDropEvent *event);
-    void keyReleaseEvent(QKeyEvent * keyEvent);
+    void keyReleaseEvent(QKeyEvent *keyEvent);
 
 
 signals:
@@ -148,7 +149,7 @@ private slots:
     void on_pushButtonDownloadToLocal_clicked();
 
     void deleteFiles();
-    void deleteLocalFiles(const QString &path, QStringList *failedFiles = 0, const QStringList &nameFilters = QStringList(), const QStringList & ignoredFiles = QStringList(), const QStringList & ignoredDirs = QStringList());
+    void deleteLocalFiles(const QString &path, QStringList *failedFiles = 0, const QStringList &nameFilters = QStringList(), const QStringList &ignoredFiles = QStringList(), const QStringList &ignoredDirs = QStringList());
 
     void renameFile();
 

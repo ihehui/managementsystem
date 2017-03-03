@@ -1,7 +1,8 @@
 #include "announcementinfo.h"
 #include "global_shared.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 AnnouncementTarget::AnnouncementTarget()
 {

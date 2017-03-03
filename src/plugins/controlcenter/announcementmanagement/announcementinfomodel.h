@@ -8,7 +8,8 @@
 #include "../../sharedms/announcementinfo.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class AnnouncementTargetModel : public QAbstractTableModel
 {
@@ -23,16 +24,16 @@ public:
     QString getDeletedTargetsStringForSQL();
 
     void clear();
-    AnnouncementTarget *getTarget(const QModelIndex & index);
-    void deleteTarget(const QModelIndex & index);
-    QString getTargetID(const QModelIndex & index);
+    AnnouncementTarget *getTarget(const QModelIndex &index);
+    void deleteTarget(const QModelIndex &index);
+    QString getTargetID(const QModelIndex &index);
 
     void switchToCloneMode();
 
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
 
@@ -52,16 +53,16 @@ public:
 
     void setJsonData(const QByteArray &jsonData);
     void clear();
-    AnnouncementInfo *getInfo(const QModelIndex & index);
-    QString getInfoID(const QModelIndex & index);
+    AnnouncementInfo *getInfo(const QModelIndex &index);
+    QString getInfoID(const QModelIndex &index);
 
     void setAnnouncementRepliesData(const QByteArray &jsonData);
     QList<AnnouncementReply *> getAnnouncementReplies(const QString &announcementID) const;
-    AnnouncementReply * getReply(const QString &replyID) const;
+    AnnouncementReply *getReply(const QString &replyID) const;
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
 
@@ -73,7 +74,8 @@ private:
 };
 
 
-class SortFilterProxyModel : public QSortFilterProxyModel{
+class SortFilterProxyModel : public QSortFilterProxyModel
+{
     Q_OBJECT
 
 public:

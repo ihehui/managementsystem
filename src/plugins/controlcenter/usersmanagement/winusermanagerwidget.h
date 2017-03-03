@@ -42,12 +42,13 @@
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class WinUserManagerWidget : public QWidget
 {
     Q_OBJECT
-    
+
 public:
     explicit WinUserManagerWidget(QWidget *parent = 0);
     ~WinUserManagerWidget();
@@ -104,7 +105,7 @@ private slots:
     void slotResetUserPassword();
 
 
-    void slotShowCustomContextMenu(const QPoint & pos);
+    void slotShowCustomContextMenu(const QPoint &pos);
     void getSelectedUser(const QModelIndex &index);
 
     void activityTimeout();

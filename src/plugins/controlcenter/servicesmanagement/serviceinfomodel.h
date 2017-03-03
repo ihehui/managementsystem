@@ -36,19 +36,21 @@
 #include <QSortFilterProxyModel>
 
 #ifdef Q_OS_WIN
-#include "HHSharedSystemUtilities/WinUtilities"
+    #include "HHSharedSystemUtilities/WinUtilities"
 #else
-#include "HHSharedSystemUtilities/UnixUtilities"
+    #include "HHSharedSystemUtilities/UnixUtilities"
 #endif
 
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 
-class ServiceInfoModel : public QAbstractTableModel {
-	Q_OBJECT
+class ServiceInfoModel : public QAbstractTableModel
+{
+    Q_OBJECT
 
 public:
     ServiceInfoModel(QObject *parent = 0);
@@ -58,12 +60,12 @@ public:
 
 
 
-    ServiceInfo * getServiceInfo(const QString &serviceName);
+    ServiceInfo *getServiceInfo(const QString &serviceName);
     bool updateServiceInfo(const QString &serviceName, quint64 processID, quint64 startupType);
 
-    int rowCount ( const QModelIndex & parent = QModelIndex() ) const ;
-    int	columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const ;
+    int rowCount ( const QModelIndex &parent = QModelIndex() ) const ;
+    int	columnCount ( const QModelIndex &parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex &index, int role = Qt::DisplayRole ) const ;
     QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
 
@@ -80,7 +82,8 @@ private:
 };
 
 
-class ServiceInfoSortFilterProxyModel : public QSortFilterProxyModel{
+class ServiceInfoSortFilterProxyModel : public QSortFilterProxyModel
+{
     Q_OBJECT
 
 public:

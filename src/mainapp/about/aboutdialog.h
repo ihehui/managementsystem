@@ -38,7 +38,8 @@
 //#include "ui_aboutdialog.h"
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 class AboutDialog : public QDialog
 {
@@ -49,10 +50,10 @@ public:
     ~AboutDialog();
 
 private:
-	void retranslateUi();
+    void retranslateUi();
 
 protected:
-	void languageChange();
+    void languageChange();
 
 
 private:

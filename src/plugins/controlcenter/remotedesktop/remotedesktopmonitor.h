@@ -5,12 +5,14 @@
 
 #include "remotedesktopviewer.h"
 
-namespace Ui {
+namespace Ui
+{
 class RemoteDesktopMonitor;
 }
 
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 

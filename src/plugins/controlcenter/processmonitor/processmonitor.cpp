@@ -14,7 +14,8 @@
 #include "ruleinfowidget.h"
 #include "../adminuser.h"
 
-namespace HEHUI {
+namespace HEHUI
+{
 
 
 ProcessMonitor::ProcessMonitor(QWidget *parent) :
@@ -62,46 +63,45 @@ ProcessMonitor::~ProcessMonitor()
     delete ui;
 }
 
-bool ProcessMonitor::eventFilter(QObject *obj, QEvent *event) {
+bool ProcessMonitor::eventFilter(QObject *obj, QEvent *event)
+{
 
-    switch(event->type()){
-    case QEvent::KeyRelease:
-    {
+    switch(event->type()) {
+    case QEvent::KeyRelease: {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *> (event);
 
-        if(keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down){
+        if(keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down) {
             getSelectedRule(ui->tableView->currentIndex());
         }
 
-        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_O){
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_O) {
             slotExportQueryResult();
         }
-        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_P){
+        if(QApplication::keyboardModifiers() == Qt::ControlModifier && keyEvent->key() == Qt::Key_P) {
             slotPrintQueryResult();
         }
 
         return true;
     }
-        break;
+    break;
     case QEvent::MouseButtonPress:
-    case QEvent::Leave:
-    {
+    case QEvent::Leave: {
         //return QObject::eventFilter(obj, event);
     }
-        break;
-        //    case QEvent::ToolTip:
-        //    {
-        //        if(obj == ui.userPSWDLineEdit){
-        //            QString pwd = ui.userPSWDLineEdit->text();
-        //            if(pwd.isEmpty()){pwd = tr("Password");}
-        //            QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
-        //            QString tip = QString("<b><h1>%1</h1></b>").arg(pwd);
-        //            QToolTip::showText(helpEvent->globalPos(), tip);
-        //            return true;
-        //        }
+    break;
+    //    case QEvent::ToolTip:
+    //    {
+    //        if(obj == ui.userPSWDLineEdit){
+    //            QString pwd = ui.userPSWDLineEdit->text();
+    //            if(pwd.isEmpty()){pwd = tr("Password");}
+    //            QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+    //            QString tip = QString("<b><h1>%1</h1></b>").arg(pwd);
+    //            QToolTip::showText(helpEvent->globalPos(), tip);
+    //            return true;
+    //        }
 
-        //    }
-        //        break;
+    //    }
+    //        break;
     default:
         break;
         //return QObject::eventFilter(obj, event);
@@ -114,23 +114,26 @@ bool ProcessMonitor::eventFilter(QObject *obj, QEvent *event) {
 }
 
 
-void ProcessMonitor::setJsonData(const QByteArray &data){
+void ProcessMonitor::setJsonData(const QByteArray &data)
+{
 
 
-    if(data.isEmpty()){
-        qCritical()<<"ERROR! Empty rules data.";
+    if(data.isEmpty()) {
+        qCritical() << "ERROR! Empty rules data.";
         return;
     }
 
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if(error.error != QJsonParseError::NoError){
-        qCritical()<<error.errorString();
+    if(error.error != QJsonParseError::NoError) {
+        qCritical() << error.errorString();
         return;
     }
     QJsonObject object = doc.object();
-    if(object.isEmpty()){return;}
+    if(object.isEmpty()) {
+        return;
+    }
 
     bool locallyEnableProcMon = object["LocallyEnableProcMon"].toString().toUInt();
     ui->checkBoxLocallyEnableProcessMon->setChecked(locallyEnableProcMon);
@@ -159,14 +162,16 @@ void ProcessMonitor::setJsonData(const QByteArray &data){
 
 }
 
-void ProcessMonitor::rulesSaved(){
+void ProcessMonitor::rulesSaved()
+{
     m_rulesModified = false;
 }
 
-void ProcessMonitor::slotShowCustomContextMenu(const QPoint & pos){
+void ProcessMonitor::slotShowCustomContextMenu(const QPoint &pos)
+{
 
-    QTableView *wgt = qobject_cast<QTableView*> (sender());
-    if (!wgt){
+    QTableView *wgt = qobject_cast<QTableView *> (sender());
+    if (!wgt) {
         return;
     }
 
@@ -191,7 +196,7 @@ void ProcessMonitor::slotShowCustomContextMenu(const QPoint & pos){
 
 #endif
 
-    if(AdminUser::instance()->isReadonly()){
+    if(AdminUser::instance()->isReadonly()) {
         menu.exec(wgt->viewport()->mapToGlobal(pos));
         return;
     }
@@ -207,11 +212,12 @@ void ProcessMonitor::slotShowCustomContextMenu(const QPoint & pos){
 
 }
 
-void ProcessMonitor::getSelectedRule(const QModelIndex &index){
+void ProcessMonitor::getSelectedRule(const QModelIndex &index)
+{
 
-    if(!index.isValid()){
+    if(!index.isValid()) {
         m_selectedRule = 0;
-    }else{
+    } else {
         m_selectedRule = m_processMonitorRuleModel->getRule(index);
     }
 
@@ -221,8 +227,8 @@ void ProcessMonitor::getSelectedRule(const QModelIndex &index){
     ui->actionPrint->setEnabled(enableExp);
 
     bool enableModify = false;
-    if(m_selectedRule){
-        if(!m_selectedRule->globalRule){
+    if(m_selectedRule) {
+        if(!m_selectedRule->globalRule) {
             enableModify = true;
         }
     }
@@ -237,10 +243,11 @@ void ProcessMonitor::getSelectedRule(const QModelIndex &index){
 
 }
 
-void ProcessMonitor::slotViewRuleInfo(const QModelIndex &index){
+void ProcessMonitor::slotViewRuleInfo(const QModelIndex &index)
+{
     getSelectedRule(index);
 
-    if(!m_selectedRule){
+    if(!m_selectedRule) {
         return;
     }
 
@@ -250,13 +257,14 @@ void ProcessMonitor::slotViewRuleInfo(const QModelIndex &index){
     showRuleInfo(m_selectedRule->hashRule, true, &ruleString, &comment, &blacklist);
 }
 
-bool ProcessMonitor::verifyPrivilege(){
+bool ProcessMonitor::verifyPrivilege()
+{
 
     AdminUser *adminUser = AdminUser::instance();
-    if(!adminUser->isAdminVerified()){
+    if(!adminUser->isAdminVerified()) {
         return false;
     }
-    if(adminUser->isReadonly()){
+    if(adminUser->isReadonly()) {
         QMessageBox::critical(this, tr("Access Denied"), tr("You dont have the access permissions!"));
         return false;
     }
@@ -265,14 +273,16 @@ bool ProcessMonitor::verifyPrivilege(){
 
 }
 
-void ProcessMonitor::on_actionRefresh_triggered(){
+void ProcessMonitor::on_actionRefresh_triggered()
+{
     emit signalGetProcessMonitorInfo(MS::SYSINFO_PROCESSMONITOR);
 }
 
-void ProcessMonitor::on_actionAddFileHash_triggered(){
+void ProcessMonitor::on_actionAddFileHash_triggered()
+{
     QString ruleString, comment;
     bool blacklistRule = true;
-    if(!showRuleInfo(true, false, &ruleString, &comment, &blacklistRule)){
+    if(!showRuleInfo(true, false, &ruleString, &comment, &blacklistRule)) {
         return;
     }
 
@@ -282,10 +292,11 @@ void ProcessMonitor::on_actionAddFileHash_triggered(){
 
 }
 
-void ProcessMonitor::on_actionAddFilePath_triggered(){
+void ProcessMonitor::on_actionAddFilePath_triggered()
+{
     QString ruleString, comment;
     bool blacklistRule = true;
-    if(!showRuleInfo(false, false, &ruleString, &comment, &blacklistRule)){
+    if(!showRuleInfo(false, false, &ruleString, &comment, &blacklistRule)) {
         return;
     }
 
@@ -294,14 +305,16 @@ void ProcessMonitor::on_actionAddFilePath_triggered(){
     m_rulesModified = true;
 }
 
-void ProcessMonitor::on_actionDelete_triggered(){
+void ProcessMonitor::on_actionDelete_triggered()
+{
     m_processMonitorRuleModel->deleteRule(m_selectedRule->ruleString);
     m_rulesModified = true;
 }
 
-void ProcessMonitor::on_actionModify_triggered(){
+void ProcessMonitor::on_actionModify_triggered()
+{
 
-    if(!m_selectedRule){
+    if(!m_selectedRule) {
         return;
     }
 
@@ -309,7 +322,7 @@ void ProcessMonitor::on_actionModify_triggered(){
     QString comment = m_selectedRule->comment;
     bool hashRule = m_selectedRule->hashRule;
     bool blacklistRule = m_selectedRule->blacklistRule;
-    if(!showRuleInfo(hashRule, false, &ruleString, &comment, &blacklistRule)){
+    if(!showRuleInfo(hashRule, false, &ruleString, &comment, &blacklistRule)) {
         return;
     }
 
@@ -321,17 +334,22 @@ void ProcessMonitor::on_actionModify_triggered(){
 
 }
 
-void ProcessMonitor::on_actionExport_triggered(){
+void ProcessMonitor::on_actionExport_triggered()
+{
     slotExportQueryResult();
 }
 
-void ProcessMonitor::on_actionPrint_triggered(){
+void ProcessMonitor::on_actionPrint_triggered()
+{
     slotPrintQueryResult();
 }
 
-void ProcessMonitor::on_pushButtonApply_clicked(){
+void ProcessMonitor::on_pushButtonApply_clicked()
+{
 
-    if(!verifyPrivilege()){return;}
+    if(!verifyPrivilege()) {
+        return;
+    }
 
     bool useGlobalRules = ui->checkBoxUseGlobaRules->isChecked();;
     bool enableProcMon = ui->checkBoxLocallyEnableProcessMon->isChecked();
@@ -340,24 +358,26 @@ void ProcessMonitor::on_pushButtonApply_clicked(){
     bool enableLogBlockedProcess = ui->checkBoxLocallyEnableLogBlockedProcess->isChecked();
 
     QJsonObject object;
-    if(m_rulesModified){
+    if(m_rulesModified) {
         QJsonArray rulesArray = m_processMonitorRuleModel->getLocalRulesJsonData();
         object["Rules"] = rulesArray;
     }
 
     QJsonDocument doc(object);
-    emit signalSetProcessMonitorInfo(doc.toJson(QJsonDocument::Compact), enableProcMon,enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, "");
+    emit signalSetProcessMonitorInfo(doc.toJson(QJsonDocument::Compact), enableProcMon, enablePassthrough, enableLogAllowedProcess, enableLogBlockedProcess, useGlobalRules, "");
 
 }
 
-void ProcessMonitor::slotExportQueryResult(){
+void ProcessMonitor::slotExportQueryResult()
+{
 
     DataOutputDialog dlg(ui->tableView, DataOutputDialog::EXPORT, this);
     dlg.exec();
 
 }
 
-void ProcessMonitor::slotPrintQueryResult(){
+void ProcessMonitor::slotPrintQueryResult()
+{
 
 #ifndef QT_NO_PRINTER
     //TODO
@@ -367,9 +387,12 @@ void ProcessMonitor::slotPrintQueryResult(){
 
 }
 
-bool ProcessMonitor::showRuleInfo(bool hashMode, bool readonly, QString *ruleString, QString *ruleComment, bool *blacklistRule){
+bool ProcessMonitor::showRuleInfo(bool hashMode, bool readonly, QString *ruleString, QString *ruleComment, bool *blacklistRule)
+{
 
-    if(!readonly && (!verifyPrivilege())){return false;}
+    if(!readonly && (!verifyPrivilege())) {
+        return false;
+    }
 
     QDialog dlg(this);
     QVBoxLayout vbl(&dlg);
@@ -380,13 +403,13 @@ bool ProcessMonitor::showRuleInfo(bool hashMode, bool readonly, QString *ruleStr
     connect(&wgt, SIGNAL(rejected()), &dlg, SLOT(reject()));
     QString str, comment;
     bool blacklist;
-    if(ruleString){
+    if(ruleString) {
         str = *ruleString;
     }
-    if(ruleComment){
+    if(ruleComment) {
         comment = *ruleComment;
     }
-    if(blacklistRule){
+    if(blacklistRule) {
         blacklist = *blacklistRule;
     }
     wgt.setRuleInfo(str, comment, blacklist);
@@ -394,23 +417,23 @@ bool ProcessMonitor::showRuleInfo(bool hashMode, bool readonly, QString *ruleStr
     vbl.addWidget(&wgt);
     dlg.setLayout(&vbl);
     dlg.updateGeometry();
-    if(!readonly){
+    if(!readonly) {
         dlg.setWindowTitle(tr("Edit Rule"));
-    }else{
+    } else {
         dlg.setWindowTitle(tr("Rule Info"));
     }
-    if(dlg.exec() != QDialog::Accepted){
+    if(dlg.exec() != QDialog::Accepted) {
         return false;
     }
 
-    if(!readonly){
-        if(ruleString){
+    if(!readonly) {
+        if(ruleString) {
             *ruleString = wgt.rule();
         }
-        if(ruleComment){
+        if(ruleComment) {
             *ruleComment = wgt.comment();
         }
-        if(blacklistRule){
+        if(blacklistRule) {
             *blacklistRule = wgt.blacklistRule();
         }
     }
