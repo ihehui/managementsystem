@@ -189,7 +189,11 @@ TCPServer *RTP::startTCPServer(const QHostAddress &address, quint16 port, bool t
         m_tcpServer = 0;
     }
 
-    qDebug() << "TCP listening on port " << port;
+    quint16 listeningPort = port;
+    if(!listeningPort){
+        listeningPort = m_tcpServer->getTCPServerListeningPort();
+    }
+    qDebug() << "TCP listening on port " << listeningPort;
 
     return m_tcpServer;
 
@@ -207,8 +211,8 @@ ENETProtocol *RTP::startENETProtocol(const QHostAddress &address, quint16 port, 
 
     if(!m_enetProtocol) {
         m_enetProtocol = new ENETProtocol(this);
-        connect(m_enetProtocol, SIGNAL(connected(quint32, const QString &, quint16)), this, SLOT(enetPeerConnected(quint32, const QString &, quint16)));
-        connect(m_enetProtocol, SIGNAL(disconnected(quint32)), this, SIGNAL(disconnected(SOCKETID)));
+        connect(m_enetProtocol, SIGNAL(connected(SOCKETID, const QString &, quint16)), this, SLOT(enetPeerConnected(SOCKETID, const QString &, quint16)));
+        connect(m_enetProtocol, SIGNAL(disconnected(SOCKETID)), this, SIGNAL(disconnected(SOCKETID)));
     }
 
     if( (!m_enetProtocol->listen(port, address)) && tryOtherPort) {
@@ -227,9 +231,13 @@ ENETProtocol *RTP::startENETProtocol(const QHostAddress &address, quint16 port, 
     m_enetProtocol->startWaitingForIOInAnotherThread(50);
 
 
-    qDebug() << "ENET listening on port " << port;
-    return m_enetProtocol;
+    quint16 listeningPort = port;
+    if(!listeningPort){
+        m_enetProtocol->getLocalListeningAddressInfo(0, &listeningPort);
+    }
+    qDebug() << "ENET listening on port " << listeningPort;
 
+    return m_enetProtocol;
 }
 
 quint16 RTP::getENETProtocolPort()
@@ -295,11 +303,12 @@ SOCKETID RTP::connectToHost( const QHostAddress &hostAddress, quint16 port, int 
             err = tr("UDT not running.");
             break;
         }
-        socketID = m_udtProtocol->connectToHost(hostAddress, port, 0, true, waitMsecs);
-        if( (socketID == INVALID_SOCK_ID) || (!m_udtProtocol->isSocketConnected(socketID)) ) {
+        UDTSOCKET udtSocketID = m_udtProtocol->connectToHost(hostAddress, port, 0, true, waitMsecs);
+        if( (udtSocketID == UDTProtocolBase::INVALID_UDT_SOCK) || (!m_udtProtocol->isSocketConnected(udtSocketID)) ) {
             err += tr("Can not connect to host %1:%2 via UDT! %3").arg(hostAddress.toString()).arg(port).arg(m_udtProtocol->getLastErrorMessage());
             qCritical() << err;
         } else {
+            socketID = (SOCKETID)udtSocketID;
             connected = true;
             qDebug() << QString("Peer %1:%2 connected via UDT! ").arg(hostAddress.toString()).arg(port);
         }
