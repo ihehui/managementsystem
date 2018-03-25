@@ -44,9 +44,11 @@ RTP::RTP(QObject *parent) :
     qRegisterMetaType<ProcessMonitorInfoPacket>("ProcessMonitorInfoPacket");
 
 
+#ifdef UDT_ENABLED
     m_udtProtocol = 0;
 //    m_udtProtocol = new UDTProtocol(true, 0, this);
 //    connect(m_udtProtocol, SIGNAL(disconnected(int)), this, SIGNAL(disconnected(int)));
+#endif
 
     m_tcpServer = 0;
 //    m_tcpServer = new TCPServer(this);
@@ -64,11 +66,13 @@ RTP::~RTP()
 {
     qDebug() << "--RTP::~RTP()";
 
+#ifdef UDT_ENABLED
     if(m_udtProtocol) {
         //m_udtProtocol->close();
         delete m_udtProtocol;
         m_udtProtocol = 0;
     }
+#endif
 
     if(m_tcpServer) {
         m_tcpServer->closeServer();
@@ -117,9 +121,12 @@ void RTP::startServers(const QHostAddress &localAddress, quint16 localPort, bool
 
 void RTP::stopServers()
 {
+
+#ifdef UDT_ENABLED
     if(m_udtProtocol) {
         m_udtProtocol->close();
     }
+#endif
 
     if(m_tcpServer) {
         m_tcpServer->closeServer();
@@ -131,6 +138,8 @@ void RTP::stopServers()
 
 }
 
+
+#ifdef UDT_ENABLED
 UDTProtocol *RTP::startUDTProtocol(const QHostAddress &localAddress, quint16 localPort, bool tryOtherPort, QString *errorMessage)
 {
 
@@ -165,6 +174,9 @@ quint16 RTP::getUDTServerPort()
     }
     return 0;
 }
+
+#endif
+
 
 TCPServer *RTP::startTCPServer(const QHostAddress &address, quint16 port, bool tryOtherPort, QString *errorMessage)
 {
@@ -298,6 +310,8 @@ SOCKETID RTP::connectToHost( const QHostAddress &hostAddress, quint16 port, int 
 
     }
     break;
+
+#ifdef UDT_ENABLED
     case UDT: {
         if(!m_udtProtocol) {
             err = tr("UDT not running.");
@@ -312,8 +326,11 @@ SOCKETID RTP::connectToHost( const QHostAddress &hostAddress, quint16 port, int 
             connected = true;
             qDebug() << QString("Peer %1:%2 connected via UDT! ").arg(hostAddress.toString()).arg(port);
         }
+
     }
     break;
+ #endif
+
     default:
         break;
     }
@@ -361,10 +378,14 @@ void RTP::closeSocket(SOCKETID socketID)
         Q_ASSERT(m_enetProtocol);
         m_enetProtocol->disconnect(socketID);
         break;
+
+#ifdef UDT_ENABLED
     case UDT:
         Q_ASSERT(m_udtProtocol);
         m_udtProtocol->closeSocket(socketID);
         break;
+ #endif
+
     default:
         break;
     }
@@ -406,9 +427,13 @@ bool RTP::getAddressInfoFromSocket(SOCKETID socketID, QString *address, quint16 
     case ENET:
         return m_enetProtocol->getAddressInfoFromSocket(socketID, address, port, getPeerInfo);
         break;
+
+#ifdef UDT_ENABLED
     case UDT:
         return m_udtProtocol->getAddressInfoFromSocket(socketID, address, port, getPeerInfo);
         break;
+#endif
+
     default:
         break;
     }
@@ -457,11 +482,15 @@ bool RTP::sendReliableData(SOCKETID socketID, const QByteArray *byteArray)
         ok = m_enetProtocol->sendData(socketID, byteArray);
         m_lastErrorString = m_enetProtocol->errorString();
         break;
+
+#ifdef UDT_ENABLED
     case UDT:
         Q_ASSERT(m_udtProtocol);
         ok = m_udtProtocol->sendData(socketID, byteArray);
         m_lastErrorString = m_udtProtocol->getLastErrorMessage();
         break;
+#endif
+
     default:
         break;
     }
@@ -508,6 +537,7 @@ void RTP::enetPeerConnected(SOCKETID socketID, const QString &address, quint16 p
 
 }
 
+#ifdef UDT_ENABLED
 void RTP::udtPeerConnected(SOCKETID socketID, const QString &address, quint16 port)
 {
     qDebug() << "RTP::udtPeerConnected(...)";
@@ -522,7 +552,7 @@ void RTP::udtPeerConnected(SOCKETID socketID, const QString &address, quint16 po
     }
 
 }
-
+#endif
 
 
 

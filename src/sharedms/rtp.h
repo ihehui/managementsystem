@@ -6,10 +6,12 @@
 #include <limits>
 
 #include "sharedmslib.h"
-#include "udtprotocol.h"
 #include "tcpserver.h"
 #include "enetprotocol.h"
 
+#ifdef UDT_ENABLED
+#include "udtprotocol.h"
+#endif
 
 namespace HEHUI
 {
@@ -27,9 +29,11 @@ public:
     void startServers(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
     void stopServers();
 
-//    UDTProtocol * getUDTProtocol(){return m_udtProtocol;}
-    UDTProtocol *startUDTProtocol(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
-    quint16 getUDTServerPort();
+#ifdef UDT_ENABLED
+    //    UDTProtocol * getUDTProtocol(){return m_udtProtocol;}
+        UDTProtocol *startUDTProtocol(const QHostAddress &localAddress = QHostAddress::Any, quint16 localPort = 0, bool tryOtherPort = true, QString *errorMessage = 0);
+        quint16 getUDTServerPort();
+#endif
 
     TCPServer *getTCPServer()
     {
@@ -68,13 +72,20 @@ public slots:
 private slots:
     void tcpPeerConnected(SOCKETID socketID, const QString &address, quint16 port);
     void enetPeerConnected(SOCKETID socketID, const QString &address, quint16 port);
+
+#ifdef UDT_ENABLED
     void udtPeerConnected(SOCKETID socketID, const QString &address, quint16 port);
+#endif
+
 
 private:
 
     QHash<SOCKETID /*socketID*/, Protocol> m_socketInfoHash;
 
+#ifdef UDT_ENABLED
     UDTProtocol *m_udtProtocol;
+#endif
+
     TCPServer *m_tcpServer;
     ENETProtocol *m_enetProtocol;
 

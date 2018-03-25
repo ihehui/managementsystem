@@ -525,7 +525,11 @@ private:
     UDPServer *m_udpServer;
 
     RTP *m_rtp;
+
+#ifdef UDT_ENABLED
     UDTProtocol *m_udtProtocol;
+#endif
+
     TCPServer *m_tcpServer;
     ENETProtocol *m_enetProtocol;
 

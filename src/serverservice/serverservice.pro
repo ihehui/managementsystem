@@ -14,7 +14,7 @@ HHSharedLibs += HHSharedCore \
     HHSharedNetwork \
     HHSharedService \
     HHSharedENET \
-    HHSharedUDT \
+#    HHSharedUDT \
     HHSharedSysUtilities
 include(../../HHSharedLibs.pri)
 HHSharedLibs += HHSharedMS

@@ -14,7 +14,7 @@ HHSharedLibs += HHSharedCore \
     HHSharedGUI \
     HHSharedNetwork \
     HHSharedService \
-    HHSharedUDT \
+#    HHSharedUDT \
     HHSharedENET \
     HHSharedSysUtilities
 #win32:HHSharedLibs += HHSharedSysUtilities

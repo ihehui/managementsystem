@@ -18,14 +18,13 @@ include(../config.pri)
 
 HHSharedLibs += HHSharedCore \
     HHSharedNetwork \
-    HHSharedENET \
-    HHSharedUDT
+    HHSharedENET #\
+#    HHSharedUDT
 include(../../HHSharedLibs.pri)
 
 # Input
 HEADERS += clientinfo.h \
     global_shared.h \
-    udtprotocol.h \
     resourcesmanager.h \
     filemanager.h \
     sharedmslib.h \
@@ -41,7 +40,6 @@ HEADERS += clientinfo.h \
     packets.h
 
 SOURCES += clientinfo.cpp \
-    udtprotocol.cpp \
     resourcesmanager.cpp \
     filemanager.cpp \
     tcpserver.cpp \
@@ -55,7 +53,10 @@ SOURCES += clientinfo.cpp \
     announcementinfo.cpp \
     packes.cpp
 
-FORMS +=
+UDT_ENABLED{
+HEADERS += udtprotocol.h
+SOURCES += udtprotocol.cpp
+}
 
 RESOURCES += resources.qrc
 

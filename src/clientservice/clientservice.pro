@@ -15,7 +15,7 @@ HHSharedLibs += HHSharedCore \
     HHSharedNetwork \
     HHSharedService \
     HHSharedENET \
-    HHSharedUDT \
+#    HHSharedUDT \
     HHSharedSysUtilities
 #win32:HHSharedLibs += HHSharedSysUtilities
 include(../../HHSharedLibs.pri)

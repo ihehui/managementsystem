@@ -558,7 +558,7 @@ void FileManagementWidget::setPacketsParser(ControlCenterPacketsParser *parser)
 
 }
 
-void FileManagementWidget::setPeerSocket(UDTSOCKET peerSocket)
+void FileManagementWidget::setPeerSocket(SOCKETID peerSocket)
 {
     this->m_peerSocket = peerSocket;
     //TODO

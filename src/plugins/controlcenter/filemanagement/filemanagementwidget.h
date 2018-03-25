@@ -81,7 +81,7 @@ public:
     ~FileManagementWidget();
 
     void setPacketsParser(ControlCenterPacketsParser *parser);
-    void setPeerSocket(UDTSOCKET peerSocket);
+    void setPeerSocket(SOCKETID peerSocket);
 
 
 protected:
@@ -164,7 +164,7 @@ private:
 
     FileSystemModel *remoteFileSystemModel;
 
-    int m_peerSocket;
+    unsigned int m_peerSocket;
 
     FileManager *m_fileManager;
     QList<int/*File TX Request ID*/> fileTXRequestList;
