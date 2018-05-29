@@ -15,15 +15,15 @@ namespace HEHUI
 class SHAREDMSLIB_API MSPacket : public Packet
 {
 public:
-    MSPacket(quint8 packetType);
-    MSPacket(const PacketBase &base, quint8 packetType);
-    ~MSPacket();
+    MSPacket(quint8 packetType, bool encrypted = true);
+//    MSPacket(const PacketBase &base, quint8 packetType, bool encrypted = true);
+    virtual ~MSPacket();
 
 public:
     static void setSessionEncryptionKey(const QByteArray &key);
 
 private:
-    virtual void init();
+    void init();
     virtual void parsePacketBody(QByteArray &packetBody) = 0;
     virtual QByteArray packBodyData() = 0;
 

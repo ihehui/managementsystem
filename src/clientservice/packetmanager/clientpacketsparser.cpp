@@ -167,7 +167,6 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet)
         }
 
         emit signalSystemInfoFromServerReceived(p);
-
     }
     break;
 

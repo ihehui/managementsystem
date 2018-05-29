@@ -31,6 +31,7 @@ ClientInfo::ClientInfo(const QString &assetNO, QObject *parent)
     users = "";
     administrators = "";
     ip = "";
+    externalIPInfo = "";
     clientVersion = "";
     processMonitorEnabled = false;
     lastOnlineTime = QDateTime();
@@ -47,8 +48,6 @@ ClientInfo::ClientInfo(const QString &assetNO, QObject *parent)
 
     cpuLoad = 0;
     memoryLoad = 0;
-
-
 
     online = false;
 
@@ -77,6 +76,7 @@ ClientInfo &ClientInfo::operator = (const ClientInfo &clientInfo)
     users = clientInfo.getUsers();
     administrators = clientInfo.getAdministrators();
     ip = clientInfo.getIP();
+    externalIPInfo = clientInfo.getExternalIPInfo();
     clientVersion = clientInfo.getClientVersion();
     processMonitorEnabled = clientInfo.isProcessMonitorEnabled();
     lastOnlineTime = clientInfo.getLastOnlineTime();

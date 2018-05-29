@@ -295,6 +295,15 @@ public:
         return this->ip;
     }
 
+    void setExternalIPInfo(const QString &ipInfo)
+    {
+        this->externalIPInfo = ipInfo;
+    }
+    QString getExternalIPInfo() const
+    {
+        return this->externalIPInfo;
+    }
+
     bool isProcessMonitorEnabled() const
     {
         return processMonitorEnabled;
@@ -334,6 +343,7 @@ private:
     QString users;
     QString administrators;
     QString ip;
+    QString externalIPInfo;
     QString clientVersion;
     bool processMonitorEnabled;
     QDateTime lastOnlineTime;

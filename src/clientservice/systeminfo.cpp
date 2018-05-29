@@ -104,17 +104,17 @@ QByteArray SystemInfo::getOSInfo()
 
 #endif
 
-//    QStringList ipAddresses;
-//    foreach (QNetworkInterface nic, QNetworkInterface::allInterfaces()) {
-//        foreach (QNetworkAddressEntry entry, nic.addressEntries()) {
-//            qDebug()<<"entry.ip():"<<entry.ip().toString();
-//            QHostAddress broadcastAddress = entry.broadcast();
-//            if (broadcastAddress != QHostAddress::Null && entry.ip() != QHostAddress::LocalHost) {
-//                ipAddresses << entry.ip().toString() << "/" << nic.hardwareAddress();
-//            }
-//        }
-//    }
-//    obj["IPInfo"] = ipAddresses.join(";");
+    QStringList ipAddresses;
+    foreach (QNetworkInterface nic, QNetworkInterface::allInterfaces()) {
+        foreach (QNetworkAddressEntry entry, nic.addressEntries()) {
+            qDebug()<<"entry.ip():"<<entry.ip().toString();
+            QHostAddress broadcastAddress = entry.broadcast();
+            if (broadcastAddress != QHostAddress::Null && (entry.ip() != QHostAddress::LocalHost)) {
+                ipAddresses << entry.ip().toString() + "/" + nic.hardwareAddress();
+            }
+        }
+    }
+    obj["IPInfo"] = ipAddresses.join(";");
 
 
     bool ok = false, readable = true, writeable = true;
@@ -313,7 +313,7 @@ void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID)
 
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();
-        float memLoad = 0;
+        int memLoad = 0;
         SystemUtilities::getMemoryStatus(0, &memLoad);
         //qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
 

@@ -87,7 +87,7 @@ bool ProcessMonitor::init()
         return false;
     }
 
-    //Get NtCreateSection address, 将它传给驱动, 也将缓冲区的地址传给驱动
+    //// Get NtCreateSection address, 将它传给驱动, 也将缓冲区的地址传给驱动 ////
     DWORD *addr = (DWORD *)(1 + (DWORD)GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtCreateSection"));
     ZeroMemory(outputbuff, 256);
     controlbuff[0] = addr[0];
@@ -244,13 +244,13 @@ void ProcessMonitor::monitor()
     while(1) {
         memmove(&a, &outputbuff[0], 4);
 
-        //如果缓冲区为空，则休眠10ms，继续检查
+        //// 如果缓冲区为空，则休眠10ms，继续检查 ////
         if(!a) {
             Sleep(10);
             continue;
         }
 
-        // 如果文件的名字和路径在机器的运行进程列表中，则发送一个OK的回应
+        //// 如果文件的名字和路径在机器的运行进程列表中，则发送一个OK的回应 ////
         char *name = (char *)&outputbuff[8];
         qDebug() << "name:" << name;
         QString appPath = QString::fromLocal8Bit(name);
@@ -278,7 +278,7 @@ void ProcessMonitor::monitor()
 //        msg = QString("Do you want to run '%1'?").arg(appPath);
 //        wcscpy(msgbuff, msg.toStdWString().c_str());
 
-//        // 如果用户同意，则添加该程序到信任列表里
+//        //// 如果用户同意，则添加该程序到信任列表里 ////
 //        if(IDYES==MessageBoxW(0, msgbuff,L"WARNING",MB_YESNO|MB_ICONQUESTION|0x00200000L))
 //        {
 //            a=1;
@@ -289,12 +289,12 @@ void ProcessMonitor::monitor()
 
 
         qDebug() << "-------2-------";
-        // 把用户的选择写进通信缓冲区，驱动将接收
+        //// 把用户的选择写进通信缓冲区，驱动将接收 ////
 skip:
         memmove(&outputbuff[4], &a, 4);
         qDebug() << "-------3-------";
 
-        //通知驱动继续进行运行
+        //// 通知驱动继续进行运行 ////
         a = 0;
         memmove(&outputbuff[0], &a, 4);
 

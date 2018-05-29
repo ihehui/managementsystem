@@ -15,7 +15,7 @@
 
 #include "packetmanager/clientpacketsparser.h"
 #include "../clientresourcesmanager.h"
-#include "process.h"
+#include "processrunner.h"
 #include "systeminfo.h"
 #include "../processmonitor/processmonitor.h"
 

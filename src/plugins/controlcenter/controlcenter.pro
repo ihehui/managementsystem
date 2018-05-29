@@ -136,7 +136,7 @@ FORMS += taskmanagement/taskinfoviewwidget.ui \
 win32 {
 HEADERS +=     remotedesktop/avifile.h
 SOURCES +=     remotedesktop/AviFile.cpp
-
+LIBS += -lvfw32 -lgdiplus -lGdi32
 }
 
 

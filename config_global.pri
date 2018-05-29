@@ -11,15 +11,15 @@ CONFIG( debug, debug|release ) {
     BIN_PATH = $${SOURCE_TREE}/bin/release
 }
 LIB_PATH = $${SOURCE_TREE}/lib
+unix{
+    BIN_PATH = $$system(echo $HOME/bin)
+    LIB_PATH = $$system(echo $HOME/lib)
+}
+
 PLUGIN_PATH = $${BIN_PATH}/plugins/hehui
 DLL_PATH = $${BIN_PATH}
 HEADERS_PATH = $${SOURCE_TREE}/include
 
-unix{
-    BIN_PATH = $$system(echo $HOME/bin)
-    LIB_PATH = $$system(echo $HOME/lib)
-    PLUGIN_PATH = $$system(echo $HOME/plugins/hehui)
-}
 
 ##config for application
 contains(TEMPLATE, app){

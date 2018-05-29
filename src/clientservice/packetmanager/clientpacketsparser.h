@@ -89,7 +89,7 @@ public slots:
         ServerDiscoveryPacket packet;
         packet.responseFromServer = 0;
         packet.version = QString(APP_VERSION);
-        //packet.udpPort = m_udpServer->localPort();
+        packet.udpPort = 0;
 
         QByteArray ba = packet.toByteArray();
         return m_udpServer->sendDatagram(ba, address, port );

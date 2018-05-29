@@ -76,7 +76,7 @@ private slots:
     void processClientInfoPacket(const ClientInfoPacket &packet);
     void clientInfoRequested(SOCKETID socketID, const QString &assetNO, quint8 infoType);
 
-    void clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
+    void clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType, const QString &externalIPInfo);
     void processOSInfo(ClientInfo *info, const QByteArray &osData);
     void processHardwareInfo(ClientInfo *info, const QByteArray &hardwareData);
     void processSoftwareInfo(ClientInfo *info, const QByteArray &data);

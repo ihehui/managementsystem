@@ -134,9 +134,7 @@ int	 ClientInfoModel::columnCount ( const QModelIndex &parent) const
         return 0;
     }
 
-    return 13;
-
-
+    return 14;
 }
 
 QVariant ClientInfoModel::data ( const QModelIndex &index, int role) const
@@ -209,6 +207,10 @@ QVariant ClientInfoModel::data ( const QModelIndex &index, int role) const
 
         case 13:
             return info->getLastOnlineTime().toString("yyyy.MM.dd hh:mm:ss");
+            break;
+
+        case 14:
+            return info->getExternalIPInfo();
             break;
 
         default:
@@ -299,6 +301,10 @@ QVariant ClientInfoModel::headerData ( int section, Qt::Orientation orientation,
 
         case 13:
             return QString(tr("Last Online Time"));
+            break;
+
+        case 14:
+            return QString(tr("Last Online IP"));
             break;
 
         default:

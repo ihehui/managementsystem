@@ -54,8 +54,8 @@ SOURCES += clientinfo.cpp \
     packes.cpp
 
 UDT_ENABLED{
-HEADERS += udtprotocol.h
-SOURCES += udtprotocol.cpp
+    HEADERS += udtprotocol.h
+    SOURCES += udtprotocol.cpp
 }
 
 RESOURCES += resources.qrc

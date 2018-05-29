@@ -409,7 +409,7 @@ void ServerService::processClientInfoPacket(const ClientInfoPacket &packet)
     if(packet.IsRequest) {
         clientInfoRequested(packet.getSocketID(), packet.assetNO, packet.infoType);
     } else {
-        clientInfoPacketReceived(packet.getPeerID(), packet.data, packet.infoType);
+        clientInfoPacketReceived(packet.getPeerID(), packet.data, packet.infoType, QString("%1:%2").arg(packet.getPeerHostAddress().toString()).arg(packet.getPeerHostPort()) );
     }
 
 }
@@ -447,7 +447,7 @@ void ServerService::clientInfoRequested(SOCKETID socketID, const QString &assetN
 }
 
 
-void ServerService::clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType)
+void ServerService::clientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType, const QString &externalIPInfo)
 {
     qDebug() << "--ServerService::clientInfoPacketReceived(...) " << " assetNO:" << assetNO;
 
@@ -463,6 +463,7 @@ void ServerService::clientInfoPacketReceived(const QString &assetNO, const QByte
         info = new ClientInfo(assetNO, this);
         clientInfoHash.insert(assetNO, info);
     }
+    info->setExternalIPInfo(externalIPInfo);
 
     switch (infoType) {
 
@@ -504,9 +505,7 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
     //    QString ipInfo = info->getIP();
     //    QString clientVersion = info->getClientVersion();
 
-    QString newipInfo = info->getIP();
     info->setJsonData(osData);
-    info->setIP(newipInfo);
 
     QString newComputerName = info->getComputerName();
     QString newOSInfo = info->getOSVersion();
@@ -516,7 +515,8 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
     bool newJoinedToDomain = info->isJoinedToDomain();
     QString newUsers = info->getUsers();
     QString newadmins = info->getAdministrators();
-    //QString newipInfo = info->getIP();
+    QString internalIPInfo = info->getIP();
+    QString externalIPInfo = info->getExternalIPInfo();
     QString newclientVersion = info->getClientVersion();
     quint8 newUsbSDStatus = quint8(info->getUsbSDStatus());
 
@@ -598,7 +598,7 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
     //    }
 
 
-    statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11', %12 ); ")
+    statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11', '%12', %13 ); ")
                 .arg(assetNO)
                 .arg(newComputerName)
                 .arg(newOSInfo)
@@ -608,7 +608,8 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
                 .arg(QVariant(newJoinedToDomain).toUInt())
                 .arg(newUsers)
                 .arg(newadmins)
-                .arg(newipInfo)
+                .arg(internalIPInfo)
+                .arg(externalIPInfo)
                 .arg(newclientVersion)
                 .arg(newUsbSDStatus)
                 ;
@@ -1280,7 +1281,7 @@ bool ServerService::execQuery(const QString &statement, QString *errorString )
 void ServerService::getAllClientsInfoFromDB()
 {
 
-    QString statement = QString("call sp_OS_Query('', '', '', '', '', '', -1, -1 ); ");
+    QString statement = QString("call sp_OS_Query('', '', '', '', '', '', '', -1, -1 ); ");
     if(!execQuery(statement)) {
         return;
     }
@@ -1304,6 +1305,7 @@ void ServerService::getAllClientsInfoFromDB()
         info->setUsers(query->value("Users").toString());
         info->setAdministrators(query->value("Administrators").toString());
         info->setIP(query->value("IP").toString());
+        info->setExternalIPInfo(query->value("ExternalIP").toString());
         info->setClientVersion(query->value("ClientVersion").toString());
         info->setProcessMonitorEnabled(query->value("ProcessMonitorEnabled").toBool());
         info->setUsbSDStatus(query->value("USB").toUInt());
@@ -1613,7 +1615,7 @@ void ServerService::getRealTimeResourcseLoad()
 
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();
-        float memLoad = 0;
+        int memLoad = 0;
         SystemUtilities::getMemoryStatus(0, &memLoad);
         //qDebug()<<"CPU:"<<cpuLoad<<" Memory:"<<memLoad;
 
@@ -2182,9 +2184,9 @@ void ServerService::processArguments(int argc, char **argv)
         wcout << tr("Database type:").toStdWString() << endl;
         for(int i = 0; i < databaseTypes.size(); i++) {
             QString type = databaseTypes.at(i);
-            cout << "\t" << i << ":" << qPrintable(type) << endl;
+            wcout << "\t" << i << ":" << qPrintable(type) << endl;
         }
-        //cout<<" 0:Other  1:MYSQL  2:SQLITE  3:POSTGRESQL  4:FIREBIRD  5:DB2  6:ORACLE  7:M$SQLSERVER  8:M$ACCESS"<<endl;
+        //wcout<<" 0:Other  1:MYSQL  2:SQLITE  3:POSTGRESQL  4:FIREBIRD  5:DB2  6:ORACLE  7:M$SQLSERVER  8:M$ACCESS"<<endl;
         int type = -1;
         while(1) {
             wcout << tr("Please select database type number: ").toStdWString();
@@ -2196,14 +2198,14 @@ void ServerService::processArguments(int argc, char **argv)
                 wcerr << tr("Invalid type number!").toStdWString() << endl;
             }
         }
-        cout << endl;
+        wcout << endl;
         input = "";
 
         wcout << tr("Available Database Drivers:").toStdWString() << endl;
         QStringList drivers = DatabaseUtility::availableDrivers();
         for(int i = 0; i < drivers.size(); i++) {
             QString driver = drivers.at(i);
-            cout << "\t" << i << ":" << qPrintable(driver) << endl;
+            wcout << "\t" << i << ":" << qPrintable(driver) << endl;
         }
         QString driver = "";
         while(1) {
@@ -2217,7 +2219,7 @@ void ServerService::processArguments(int argc, char **argv)
                 wcerr << tr("Invalid driver number!").toStdWString() << endl;
             }
         }
-        cout << endl;
+        wcout << endl;
         input = "";
 
         QString host = "";
@@ -2231,7 +2233,7 @@ void ServerService::processArguments(int argc, char **argv)
                 break;
             }
         }
-        cout << endl;
+        wcout << endl;
         input = "";
 
         int port = 0;
@@ -2246,7 +2248,7 @@ void ServerService::processArguments(int argc, char **argv)
             }
 
         }
-        cout << endl;
+        wcout << endl;
         input = "";
 
         QString databaseName = "";
@@ -2261,7 +2263,7 @@ void ServerService::processArguments(int argc, char **argv)
             }
 
         }
-        cout << endl;
+        wcout << endl;
         input = "";
 
         QString userName = "";
@@ -2276,7 +2278,7 @@ void ServerService::processArguments(int argc, char **argv)
             }
 
         }
-        cout << endl;
+        wcout << endl;
         input = "";
 
         QString userPassword = "";
@@ -2295,7 +2297,7 @@ void ServerService::processArguments(int argc, char **argv)
             }
 
         }
-        cout << endl;
+        wcout << endl;
         input = "";
 
 

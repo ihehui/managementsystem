@@ -5,8 +5,8 @@
  *      Author: HeHui
  */
 
-#ifndef PROCESS_H_
-#define PROCESS_H_
+#ifndef PROCESSRUNNER_H_
+#define PROCESSRUNNER_H_
 
 
 #include <QObject>
@@ -57,4 +57,4 @@ private:
 
 }
 
-#endif /* PROCESS_H_ */
+#endif /* PROCESSRUNNER_H_ */

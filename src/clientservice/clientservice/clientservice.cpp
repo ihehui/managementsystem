@@ -4,6 +4,7 @@
 
 #include <QHostInfo>
 #include <QByteArray>
+#include <QElapsedTimer>
 
 #include "clientservice.h"
 #include "../sharedms/global_shared.h"
@@ -470,6 +471,14 @@ void ClientService::serverFound(const ServerDiscoveryPacket &packet)
     qWarning();
     qWarning() << "Server Found!" << " Address:" << serverAddress << " RTP Port:" << m_serverRTPListeningPort << " TCP Port:" << packet.tcpPort << " Name:" << m_serverName << " Instance ID:" << m_serverInstanceID << " Socket ID:" << m_socketConnectedToServer;
     qWarning();
+
+
+    qsrand(QDateTime::currentMSecsSinceEpoch());
+    int wt = (qAbs(qrand()) % 10 + 1) * 1000;
+    QElapsedTimer timer;
+    while(timer.elapsed() < wt){
+        qApp->processEvents();
+    }
 
 
     processClientInfoRequestedPacket(m_socketConnectedToServer, MS::SYSINFO_OS);
@@ -1338,7 +1347,7 @@ void ClientService::processAdminRequestChangeServiceConfigPacket(const ServiceCo
         clientPacketsParser->sendClientMessagePacket(socketID, message, MS::MSG_Critical);
     }
 
-    WinUtilities::ServiceInfo info;
+    ServiceInfo info;
     if(WinUtilities::serviceQueryInfo(serviceName, &info)) {
         clientPacketsParser->sendClientResponseServiceConfigChangedPacket(socketID, serviceName, info.processID, info.startType);
     }

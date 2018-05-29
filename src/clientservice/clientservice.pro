@@ -28,19 +28,19 @@ INCLUDEPATH += .
 RESOURCES += resources.qrc
 SOURCES += \
     systeminfo.cpp \
-    process.cpp \
     packetmanager/clientpacketsparser.cpp \
     main.cpp \
     clientservice/clientservice.cpp \
-    clientresourcesmanager.cpp
+    clientresourcesmanager.cpp \
+    processrunner.cpp
 
 HEADERS += \
     systeminfo.h \
-    process.h \
     app_constants.h \
     packetmanager/clientpacketsparser.h \
     clientservice/clientservice.h \
-    clientresourcesmanager.h
+    clientresourcesmanager.h \
+    processrunner.h
 
 
 

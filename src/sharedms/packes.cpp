@@ -12,18 +12,21 @@ namespace HEHUI
 ////////////////////////////////////////////////////////////////////////
 
 QByteArray MSPacket::sessionEncryptionKey = QByteArray("HE.HUI");
-MSPacket::MSPacket(quint8 packetType)
+MSPacket::MSPacket(quint8 packetType, bool encrypted)
     : Packet(packetType)
 {
+    setEncrypted(encrypted);
     init();
 }
 
-MSPacket::MSPacket(const PacketBase &base, quint8 packetType)
-    : Packet(packetType)
-{
-    init();
-    convert(base);
-}
+//MSPacket::MSPacket(const PacketBase &base, quint8 packetType, bool encrypted)
+//    : Packet(packetType)
+//{
+//    setEncrypted(encrypted);
+//    init();
+
+//    convert(base);
+//}
 
 MSPacket::~MSPacket()
 {
@@ -37,12 +40,12 @@ void MSPacket::setSessionEncryptionKey(const QByteArray &key)
 
 void MSPacket::init()
 {
-
+    //qDebug()<<"MSPacket::init()";
 }
 
 QByteArray MSPacket::encrypt(const QByteArray &data)
 {
-    if(sessionEncryptionKey.isEmpty()) {
+    if(!isEncrypted() || sessionEncryptionKey.isEmpty()) {
         return data;
     }
     Cryptography cryptography;
@@ -55,7 +58,7 @@ QByteArray MSPacket::encrypt(const QByteArray &data)
 
 QByteArray MSPacket::decrypt(const QByteArray &encryptedData)
 {
-    if(sessionEncryptionKey.isEmpty()) {
+    if(!isEncrypted() || sessionEncryptionKey.isEmpty()) {
         return encryptedData;
     }
     Cryptography cryptography;
@@ -74,15 +77,16 @@ QByteArray MSPacket::decrypt(const QByteArray &encryptedData)
 
 ////////////////////////////////////////////////////////////////////////
 ServerDiscoveryPacket::ServerDiscoveryPacket()
-    : MSPacket(quint8(MS::CMD_ServerDiscovery))
+    : MSPacket(quint8(MS::CMD_ServerDiscovery), false)
 {
-
+    init();
 }
 
 ServerDiscoveryPacket::ServerDiscoveryPacket(const PacketBase &base)
-    : MSPacket(quint8(MS::CMD_JobProgress))
+    : MSPacket(quint8(MS::CMD_JobProgress), false)
 {
-
+    init();
+    fromPacket(base);
 }
 
 ServerDiscoveryPacket::~ServerDiscoveryPacket()
@@ -136,13 +140,14 @@ QByteArray ServerDiscoveryPacket::packBodyData()
 MessagePacket::MessagePacket()
     : MSPacket(quint8(MS::CMD_Message))
 {
-
+    init();
 }
 
 MessagePacket::MessagePacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_Message))
 {
-
+    init();
+    fromPacket(base);
 }
 
 MessagePacket::~MessagePacket()
@@ -180,13 +185,14 @@ QByteArray MessagePacket::packBodyData()
 JobProgressPacket::JobProgressPacket()
     : MSPacket(quint8(MS::CMD_JobProgress))
 {
-
+    init();
 }
 
 JobProgressPacket::JobProgressPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_JobProgress))
 {
-
+    init();
+    fromPacket(base);
 }
 
 JobProgressPacket::~JobProgressPacket()
@@ -226,13 +232,14 @@ QByteArray JobProgressPacket::packBodyData()
 AdminLoginPacket::AdminLoginPacket()
     : MSPacket(quint8(MS::CMD_AdminLogin))
 {
-
+    init();
 }
 
 AdminLoginPacket::AdminLoginPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_AdminLogin))
 {
-
+    init();
+    fromPacket(base);
 }
 
 AdminLoginPacket::~AdminLoginPacket()
@@ -266,12 +273,12 @@ void AdminLoginPacket::parsePacketBody(QByteArray &packetBody)
     case LOGIN_REQUEST: {
         in >> LoginInfo.adminID >> LoginInfo.password >> LoginInfo.computerName;
     }
-    break;
+        break;
 
     case LOGIN_RESULT: {
         in >> LoginResult.loggedIn >> LoginResult.message >> LoginResult.readonly;
     }
-    break;
+        break;
 
     default:
         break;
@@ -295,12 +302,12 @@ QByteArray AdminLoginPacket::packBodyData()
     case LOGIN_REQUEST: {
         out << LoginInfo.adminID << LoginInfo.password << LoginInfo.computerName;
     }
-    break;
+        break;
 
     case LOGIN_RESULT: {
         out << LoginResult.loggedIn << LoginResult.message << LoginResult.readonly;
     }
-    break;
+        break;
 
     default:
         break;
@@ -315,13 +322,14 @@ QByteArray AdminLoginPacket::packBodyData()
 ClientInfoPacket::ClientInfoPacket()
     : MSPacket(quint8(MS::CMD_ClientInfo))
 {
-
+    init();
 }
 
 ClientInfoPacket::ClientInfoPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_ClientInfo))
 {
-
+    init();
+    fromPacket(base);
 }
 
 ClientInfoPacket::~ClientInfoPacket()
@@ -362,13 +370,14 @@ QByteArray ClientInfoPacket::packBodyData()
 SystemInfoFromServerPacket::SystemInfoFromServerPacket()
     : MSPacket(quint8(MS::CMD_SystemInfoFromServer))
 {
-
+    init();
 }
 
 SystemInfoFromServerPacket::SystemInfoFromServerPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_SystemInfoFromServer))
 {
-
+    init();
+    fromPacket(base);
 }
 
 SystemInfoFromServerPacket::~SystemInfoFromServerPacket()
@@ -408,13 +417,14 @@ QByteArray SystemInfoFromServerPacket::packBodyData()
 SysAdminInfoPacket::SysAdminInfoPacket()
     : MSPacket(quint8(MS::CMD_SysAdminInfo))
 {
-
+    init();
 }
 
 SysAdminInfoPacket::SysAdminInfoPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_SysAdminInfo))
 {
-
+    init();
+    fromPacket(base);
 }
 
 SysAdminInfoPacket::~SysAdminInfoPacket()
@@ -455,13 +465,14 @@ QByteArray SysAdminInfoPacket::packBodyData()
 SystemAlarmsPacket::SystemAlarmsPacket()
     : MSPacket(quint8(MS::CMD_SystemAlarms))
 {
-
+    init();
 }
 
 SystemAlarmsPacket::SystemAlarmsPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_SystemAlarms))
 {
-
+    init();
+    fromPacket(base);
 }
 
 SystemAlarmsPacket::~SystemAlarmsPacket()
@@ -496,12 +507,12 @@ void SystemAlarmsPacket::parsePacketBody(QByteArray &packetBody)
     case SYSTEMALARMS_QUERY: {
         in >> QueryInfo.assetNO >> QueryInfo.type >> QueryInfo.acknowledged >> QueryInfo.startTime >> QueryInfo.endTime;
     }
-    break;
+        break;
 
     case SYSTEMALARMS_ACK: {
         in >> ACKInfo.alarms >> ACKInfo.deleteAlarms;
     }
-    break;
+        break;
 
     default:
         break;
@@ -525,12 +536,12 @@ QByteArray SystemAlarmsPacket::packBodyData()
     case SYSTEMALARMS_QUERY: {
         out << QueryInfo.assetNO << QueryInfo.type << QueryInfo.acknowledged << QueryInfo.startTime << QueryInfo.endTime;
     }
-    break;
+        break;
 
     case SYSTEMALARMS_ACK: {
         out << ACKInfo.alarms << ACKInfo.deleteAlarms;
     }
-    break;
+        break;
 
     default:
         break;
@@ -545,13 +556,14 @@ QByteArray SystemAlarmsPacket::packBodyData()
 AnnouncementPacket::AnnouncementPacket()
     : MSPacket(quint8(MS::CMD_Announcement))
 {
-
+    init();
 }
 
 AnnouncementPacket::AnnouncementPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_Announcement))
 {
-
+    init();
+    fromPacket(base);
 }
 
 AnnouncementPacket::~AnnouncementPacket()
@@ -613,27 +625,27 @@ void AnnouncementPacket::parsePacketBody(QByteArray &packetBody)
     case ANNOUNCEMENT_QUERY: {
         in >> QueryInfo.announcementID >> QueryInfo.keyword >> QueryInfo.validity >> QueryInfo.assetNO >> QueryInfo.userName >> QueryInfo.target >> QueryInfo.startTime >> QueryInfo.endTime;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_CREATE: {
         in >> CreateInfo.localTempID >> CreateInfo.adminID >> CreateInfo.type >> CreateInfo.content >> CreateInfo.confirmationRequired >> CreateInfo.validityPeriod >> CreateInfo.targetType >> CreateInfo.targets;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_UPDATE: {
         in << UpdateInfo.adminName << UpdateInfo.announcementID << UpdateInfo.targetType << UpdateInfo.active << UpdateInfo.addedTargets << UpdateInfo.deletedTargets;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_REPLY: {
         in >> ReplyInfo.announcementID >> ReplyInfo.sender >> ReplyInfo.receiver >> ReplyInfo.receiversAssetNO >> ReplyInfo.replyMessage ;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_QUERY_TARGETS: {
         in >> QueryTargetsInfo.announcementID;
     }
-    break;
+        break;
 
     default:
         break;
@@ -657,27 +669,27 @@ QByteArray AnnouncementPacket::packBodyData()
     case ANNOUNCEMENT_QUERY: {
         out << QueryInfo.announcementID << QueryInfo.keyword << QueryInfo.validity << QueryInfo.assetNO << QueryInfo.userName << QueryInfo.target << QueryInfo.startTime << QueryInfo.endTime;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_CREATE: {
         out << CreateInfo.localTempID << CreateInfo.adminID << CreateInfo.type << CreateInfo.content << CreateInfo.confirmationRequired << CreateInfo.validityPeriod << CreateInfo.targetType << CreateInfo.targets;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_UPDATE: {
         out << UpdateInfo.adminName << UpdateInfo.announcementID << UpdateInfo.targetType << UpdateInfo.active << UpdateInfo.addedTargets << UpdateInfo.deletedTargets;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_REPLY: {
         out << ReplyInfo.announcementID << ReplyInfo.sender << ReplyInfo.receiver << ReplyInfo.receiversAssetNO << ReplyInfo.replyMessage ;
     }
-    break;
+        break;
 
     case ANNOUNCEMENT_QUERY_TARGETS: {
         out << QueryTargetsInfo.announcementID;
     }
-    break;
+        break;
 
     default:
         break;
@@ -692,13 +704,14 @@ QByteArray AnnouncementPacket::packBodyData()
 RemoteConsolePacket::RemoteConsolePacket()
     : MSPacket(quint8(MS::CMD_RemoteConsole))
 {
-
+    init();
 }
 
 RemoteConsolePacket::RemoteConsolePacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_RemoteConsole))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void RemoteConsolePacket::init()
@@ -730,22 +743,22 @@ void RemoteConsolePacket::parsePacketBody(QByteArray &packetBody)
     case REMOTECONSOLE_OPEN: {
         in >> OpenConsole.applicationPath >> OpenConsole.startProcess;
     }
-    break;
+        break;
 
     case REMOTECONSOLE_STATE: {
         in >> ConsoleState.isRunning >> ConsoleState.message >> ConsoleState.messageType;
     }
-    break;
+        break;
 
     case REMOTECONSOLE_COMMAND: {
         in >> Command.command;
     }
-    break;
+        break;
 
     case REMOTECONSOLE_OUTPUT: {
         in >> Output.output;
     }
-    break;
+        break;
 
     default:
         break;
@@ -769,22 +782,22 @@ QByteArray RemoteConsolePacket::packBodyData()
     case REMOTECONSOLE_OPEN: {
         out << OpenConsole.applicationPath << OpenConsole.startProcess;
     }
-    break;
+        break;
 
     case REMOTECONSOLE_STATE: {
         out << ConsoleState.isRunning << ConsoleState.message << ConsoleState.messageType;
     }
-    break;
+        break;
 
     case REMOTECONSOLE_COMMAND: {
         out << Command.command ;
     }
-    break;
+        break;
 
     case REMOTECONSOLE_OUTPUT: {
         out << Output.output;
     }
-    break;
+        break;
 
     default:
         break;
@@ -799,13 +812,14 @@ QByteArray RemoteConsolePacket::packBodyData()
 ClientLogPacket::ClientLogPacket()
     : MSPacket(quint8(MS::CMD_ClientLog))
 {
-
+    init();
 }
 
 ClientLogPacket::ClientLogPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_ClientLog))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void ClientLogPacket::init()
@@ -839,13 +853,14 @@ QByteArray ClientLogPacket::packBodyData()
 USBDevPacket::USBDevPacket()
     : MSPacket(quint8(MS::CMD_FileTransfer))
 {
-
+    init();
 }
 
 USBDevPacket::USBDevPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_FileTransfer))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void USBDevPacket::init()
@@ -878,13 +893,14 @@ QByteArray USBDevPacket::packBodyData()
 AdminConnectionToClientPacket::AdminConnectionToClientPacket()
     : MSPacket(quint8(MS::CMD_AdminConnectionToClient))
 {
-
+    init();
 }
 
 AdminConnectionToClientPacket::AdminConnectionToClientPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_AdminConnectionToClient))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void AdminConnectionToClientPacket::init()
@@ -920,13 +936,14 @@ QByteArray AdminConnectionToClientPacket::packBodyData()
 AdminSearchClientPacket::AdminSearchClientPacket()
     : MSPacket(quint8(MS::CMD_AdminSearchClient))
 {
-
+    init();
 }
 
 AdminSearchClientPacket::AdminSearchClientPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_AdminSearchClient))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void AdminSearchClientPacket::init()
@@ -965,13 +982,14 @@ QByteArray AdminSearchClientPacket::packBodyData()
 LocalUserOnlineStatusChangedPacket::LocalUserOnlineStatusChangedPacket()
     : MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
 {
-
+    init();
 }
 
 LocalUserOnlineStatusChangedPacket::LocalUserOnlineStatusChangedPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_LocalUserOnlineStatusChanged))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void LocalUserOnlineStatusChangedPacket::init()
@@ -1005,13 +1023,14 @@ QByteArray LocalUserOnlineStatusChangedPacket::packBodyData()
 FileTransferPacket::FileTransferPacket()
     : MSPacket(quint8(MS::CMD_FileTransfer))
 {
-
+    init();
 }
 
 FileTransferPacket::FileTransferPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_FileTransfer))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void FileTransferPacket::init()
@@ -1092,72 +1111,72 @@ void FileTransferPacket::parsePacketBody(QByteArray &packetBody)
     case FT_FileSystemInfoRequest: {
         in >> FileSystemInfoRequest.parentDirPath;
     }
-    break;
+        break;
 
     case FT_FileSystemInfoResponse: {
         in >> FileSystemInfoResponse.baseDirPath >> FileSystemInfoResponse.fileSystemInfoData;
     }
-    break;
+        break;
 
     case FT_FileDeletingRequest: {
         in >> FileDeletingRequest.baseDirPath >> FileDeletingRequest.files;
     }
-    break;
+        break;
 
     case FT_FileDeletingResponse: {
         in >> FileDeletingResponse.baseDirPath >> FileDeletingResponse.failedFiles;
     }
-    break;
+        break;
 
     case FT_FileRenamingRequest: {
         in >> FileRenamingRequest.baseDirPath >> FileRenamingRequest.oldFileName >> FileRenamingRequest.newFileName;
     }
-    break;
+        break;
 
     case FT_FileRenamingResponse: {
         in >> FileRenamingResponse.baseDirPath >> FileRenamingResponse.oldFileName >> FileRenamingResponse.renamed >> FileRenamingResponse.message;
     }
-    break;
+        break;
 
     case FT_FileDownloadingRequest: {
         in >> FileDownloadingRequest.baseDir >> FileDownloadingRequest.fileName >> FileDownloadingRequest.dirToSaveFile;
     }
-    break;
+        break;
 
     case FT_FileDownloadingResponse: {
         in >> FileDownloadingResponse.accepted >> FileDownloadingResponse.baseDir >> FileDownloadingResponse.fileName >> FileDownloadingResponse.fileMD5Sum >> FileDownloadingResponse.size >> FileDownloadingResponse.pathToSaveFile;
     }
-    break;
+        break;
 
     case FT_FileUploadingRequest: {
         in >> FileUploadingRequest.fileName >> FileUploadingRequest.fileMD5Sum >> FileUploadingRequest.size >> FileUploadingRequest.fileSaveDir;
     }
-    break;
+        break;
 
     case FT_FileUploadingResponse: {
         in >> FileUploadingResponse.accepted >> FileUploadingResponse.fileMD5Sum >> FileUploadingResponse.message;
     }
-    break;
+        break;
 
     case FT_FileDataRequest: {
         in >> FileDataRequest.fileMD5 >> FileDataRequest.startPieceIndex >> FileDataRequest.endPieceIndex;
     }
-    break;
+        break;
 
     case FT_FileData: {
         in >> FileDataResponse.fileMD5 >> FileDataResponse.pieceIndex >> FileDataResponse.data >> FileDataResponse.pieceMD5;
     }
-    break;
+        break;
 
     case FT_FileTXStatus: {
         in >> FileTXStatus.fileMD5 >> FileTXStatus.status;
     }
-    break;
+        break;
 
     case FT_FileTXError: {
         in >> FileTXError.fileMD5 >> FileTXError.errorCode >> FileTXError.message;
     }
-    break;
+        break;
 
     default:
         break;
@@ -1180,72 +1199,72 @@ QByteArray FileTransferPacket::packBodyData()
     case FT_FileSystemInfoRequest: {
         out << FileSystemInfoRequest.parentDirPath;
     }
-    break;
+        break;
 
     case FT_FileSystemInfoResponse: {
         out << FileSystemInfoResponse.baseDirPath << FileSystemInfoResponse.fileSystemInfoData;
     }
-    break;
+        break;
 
     case FT_FileDeletingRequest: {
         out << FileDeletingRequest.baseDirPath << FileDeletingRequest.files;
     }
-    break;
+        break;
 
     case FT_FileDeletingResponse: {
         out << FileDeletingResponse.baseDirPath << FileDeletingResponse.failedFiles;
     }
-    break;
+        break;
 
     case FT_FileRenamingRequest: {
         out << FileRenamingRequest.baseDirPath << FileRenamingRequest.oldFileName << FileRenamingRequest.newFileName;
     }
-    break;
+        break;
 
     case FT_FileRenamingResponse: {
         out << FileRenamingResponse.baseDirPath << FileRenamingResponse.oldFileName << FileRenamingResponse.renamed << FileRenamingResponse.message;
     }
-    break;
+        break;
 
     case FT_FileDownloadingRequest: {
         out << FileDownloadingRequest.baseDir << FileDownloadingRequest.fileName << FileDownloadingRequest.dirToSaveFile;
     }
-    break;
+        break;
 
     case FT_FileDownloadingResponse: {
         out << FileDownloadingResponse.accepted << FileDownloadingResponse.baseDir << FileDownloadingResponse.fileName << FileDownloadingResponse.fileMD5Sum << FileDownloadingResponse.size << FileDownloadingResponse.pathToSaveFile;
     }
-    break;
+        break;
 
     case FT_FileUploadingRequest: {
         out << FileUploadingRequest.fileName << FileUploadingRequest.fileMD5Sum << FileUploadingRequest.size << FileUploadingRequest.fileSaveDir;
     }
-    break;
+        break;
 
     case FT_FileUploadingResponse: {
         out << FileUploadingResponse.accepted << FileUploadingResponse.fileMD5Sum << FileUploadingResponse.message;
     }
-    break;
+        break;
 
     case FT_FileDataRequest: {
         out << FileDataRequest.fileMD5 << FileDataRequest.startPieceIndex << FileDataRequest.endPieceIndex;
     }
-    break;
+        break;
 
     case FT_FileData: {
         out << FileDataResponse.fileMD5 << FileDataResponse.pieceIndex << FileDataResponse.data << FileDataResponse.pieceMD5;
     }
-    break;
+        break;
 
     case FT_FileTXStatus: {
         out << FileTXStatus.fileMD5 << FileTXStatus.status;
     }
-    break;
+        break;
 
     case FT_FileTXError: {
         out << FileTXError.fileMD5 << FileTXError.errorCode << FileTXError.message;
     }
-    break;
+        break;
 
     default:
         break;
@@ -1260,13 +1279,14 @@ QByteArray FileTransferPacket::packBodyData()
 ModifyAssetNOPacket::ModifyAssetNOPacket()
     : MSPacket(quint8(MS::CMD_ModifyAssetNO))
 {
-
+    init();
 }
 
 ModifyAssetNOPacket::ModifyAssetNOPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_ModifyAssetNO))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void ModifyAssetNOPacket::init()
@@ -1302,13 +1322,14 @@ QByteArray ModifyAssetNOPacket::packBodyData()
 RenameComputerPacket::RenameComputerPacket()
     : MSPacket(quint8(MS::CMD_RenameComputer))
 {
-
+    init();
 }
 
 RenameComputerPacket::RenameComputerPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_RenameComputer))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void RenameComputerPacket::init()
@@ -1344,13 +1365,14 @@ QByteArray RenameComputerPacket::packBodyData()
 JoinOrUnjoinDomainPacket::JoinOrUnjoinDomainPacket()
     : MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
 {
-
+    init();
 }
 
 JoinOrUnjoinDomainPacket::JoinOrUnjoinDomainPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_JoinOrUnjoinDomain))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void JoinOrUnjoinDomainPacket::init()
@@ -1387,13 +1409,14 @@ QByteArray JoinOrUnjoinDomainPacket::packBodyData()
 TemperaturesPacket::TemperaturesPacket()
     : MSPacket(quint8(MS::CMD_Temperatures))
 {
-
+    init();
 }
 
 TemperaturesPacket::TemperaturesPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_Temperatures))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void TemperaturesPacket::init()
@@ -1420,12 +1443,12 @@ void TemperaturesPacket::parsePacketBody(QByteArray &packetBody)
     case TEMPERATURES_REQUEST: {
         in >> TemperaturesRequest.requestCPU >> TemperaturesRequest.requestCPU;
     }
-    break;
+        break;
 
     case TEMPERATURES_RESPONSE: {
         in >> TemperaturesResponse.cpuTemperature >> TemperaturesResponse.harddiskTemperature;
     }
-    break;
+        break;
 
 
     default:
@@ -1450,12 +1473,12 @@ QByteArray TemperaturesPacket::packBodyData()
     case TEMPERATURES_REQUEST: {
         out << TemperaturesRequest.requestCPU << TemperaturesRequest.requestCPU;
     }
-    break;
+        break;
 
     case TEMPERATURES_RESPONSE: {
         out << TemperaturesResponse.cpuTemperature << TemperaturesResponse.harddiskTemperature;
     }
-    break;
+        break;
 
 
     default:
@@ -1471,13 +1494,14 @@ QByteArray TemperaturesPacket::packBodyData()
 ScreenshotPacket::ScreenshotPacket()
     : MSPacket(quint8(MS::CMD_Screenshot))
 {
-
+    init();
 }
 
 ScreenshotPacket::ScreenshotPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_Screenshot))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void ScreenshotPacket::init()
@@ -1507,12 +1531,12 @@ void ScreenshotPacket::parsePacketBody(QByteArray &packetBody)
     case SCREENSHOT_REQUEST: {
         in >> ScreenshotRequest.adminID >> ScreenshotRequest.userName >> ScreenshotRequest.adminListeningPort;
     }
-    break;
+        break;
 
     case SCREENSHOT_DESKTOP_INFO: {
         in >> DesktopInfo.desktopWidth >> DesktopInfo.desktopHeight >> DesktopInfo.blockWidth >> DesktopInfo.blockHeight;
     }
-    break;
+        break;
 
     case SCREENSHOT_DATA: {
         while (!in.atEnd()) {
@@ -1525,7 +1549,7 @@ void ScreenshotPacket::parsePacketBody(QByteArray &packetBody)
             ScreenshotData.images.append(image);
         }
     }
-    break;
+        break;
 
 
     default:
@@ -1550,12 +1574,12 @@ QByteArray ScreenshotPacket::packBodyData()
     case SCREENSHOT_REQUEST: {
         out << ScreenshotRequest.adminID << ScreenshotRequest.userName << ScreenshotRequest.adminListeningPort;
     }
-    break;
+        break;
 
     case SCREENSHOT_DESKTOP_INFO: {
         out << DesktopInfo.desktopWidth << DesktopInfo.desktopHeight << DesktopInfo.blockWidth << DesktopInfo.blockHeight;
     }
-    break;
+        break;
 
     case SCREENSHOT_DATA: {
         for(int i = 0; i < ScreenshotData.locations.size(); i++) {
@@ -1563,7 +1587,7 @@ QByteArray ScreenshotPacket::packBodyData()
             out <<  point.x() << point.y() << ScreenshotData.images.at(i);
         }
     }
-    break;
+        break;
 
 
     default:
@@ -1579,13 +1603,14 @@ QByteArray ScreenshotPacket::packBodyData()
 ShutdownPacket::ShutdownPacket()
     : MSPacket(quint8(MS::CMD_Shutdown))
 {
-
+    init();
 }
 
 ShutdownPacket::ShutdownPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_Shutdown))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void ShutdownPacket::init()
@@ -1621,13 +1646,14 @@ QByteArray ShutdownPacket::packBodyData()
 LockWindowsPacket::LockWindowsPacket()
     : MSPacket(quint8(MS::CMD_LockWindows))
 {
-
+    init();
 }
 
 LockWindowsPacket::LockWindowsPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_LockWindows))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void LockWindowsPacket::init()
@@ -1661,13 +1687,14 @@ QByteArray LockWindowsPacket::packBodyData()
 WinUserPacket::WinUserPacket()
     : MSPacket(quint8(MS::CMD_WinUser))
 {
-
+    init();
 }
 
 WinUserPacket::WinUserPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_WinUser))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void WinUserPacket::init()
@@ -1700,13 +1727,14 @@ QByteArray WinUserPacket::packBodyData()
 ServiceConfigPacket::ServiceConfigPacket()
     : MSPacket(quint8(MS::CMD_ServiceConfig))
 {
-
+    init();
 }
 
 ServiceConfigPacket::ServiceConfigPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_ServiceConfig))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void ServiceConfigPacket::init()
@@ -1742,13 +1770,14 @@ QByteArray ServiceConfigPacket::packBodyData()
 ProcessMonitorInfoPacket::ProcessMonitorInfoPacket()
     : MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
 {
-
+    init();
 }
 
 ProcessMonitorInfoPacket::ProcessMonitorInfoPacket(const PacketBase &base)
     : MSPacket(quint8(MS::CMD_ProcessMonitorInfo))
 {
-
+    init();
+    fromPacket(base);
 }
 
 void ProcessMonitorInfoPacket::init()
