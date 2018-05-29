@@ -971,46 +971,7 @@
       <string>Target</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="7">
-       <spacer name="horizontalSpacer_6">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Preferred</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="0" column="4">
-       <spacer name="horizontalSpacer_7">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Preferred</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="0" column="8">
-       <widget class="QLabel" name="labelAuthentication">
-        <property name="text">
-         <string>Authentication Mode:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="9">
+      <item row="0" column="11">
        <widget class="QComboBox" name="comboBoxAuthenticationMode">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -1025,7 +986,7 @@
         </item>
        </widget>
       </item>
-      <item row="0" column="11">
+      <item row="0" column="13">
        <widget class="QToolButton" name="toolButtonVerify">
         <property name="toolTip">
          <string>Verify Client Info</string>
@@ -1042,10 +1003,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="6">
+      <item row="0" column="8">
        <widget class="QComboBox" name="comboBoxProtocol"/>
       </item>
-      <item row="0" column="5">
+      <item row="0" column="7">
        <widget class="QLabel" name="labelProtocol">
         <property name="text">
          <string>Protocol:</string>
@@ -1075,7 +1036,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="10">
+      <item row="0" column="12">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -1087,6 +1048,59 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item row="0" column="9">
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Preferred</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="6">
+       <spacer name="horizontalSpacer_7">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Preferred</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="10">
+       <widget class="QLabel" name="labelAuthentication">
+        <property name="text">
+         <string>Authentication Mode:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Port:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QSpinBox" name="spinBoxPort">
+        <property name="maximum">
+         <number>65535</number>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

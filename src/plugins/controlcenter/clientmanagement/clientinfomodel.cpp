@@ -134,7 +134,7 @@ int	 ClientInfoModel::columnCount ( const QModelIndex &parent) const
         return 0;
     }
 
-    return 14;
+    return 15;
 }
 
 QVariant ClientInfoModel::data ( const QModelIndex &index, int role) const
@@ -206,7 +206,7 @@ QVariant ClientInfoModel::data ( const QModelIndex &index, int role) const
             break;
 
         case 13:
-            return info->getLastOnlineTime().toString("yyyy.MM.dd hh:mm:ss");
+            return info->getLastOnlineTime();
             break;
 
         case 14:

@@ -111,7 +111,7 @@ public:
 //        return lastHeartbeatTime;
 //    }
 
-    QDateTime getLastOnlineTime() const
+    QString getLastOnlineTime() const
     {
         return lastOnlineTime;
     }
@@ -215,7 +215,7 @@ public:
     }
 
 
-    void setLastOnlineTime(QDateTime lastOnlineTime)
+    void setLastOnlineTime(const QString &lastOnlineTime)
     {
         this->lastOnlineTime = lastOnlineTime;
     }
@@ -346,7 +346,7 @@ private:
     QString externalIPInfo;
     QString clientVersion;
     bool processMonitorEnabled;
-    QDateTime lastOnlineTime;
+    QString lastOnlineTime;
 
 
     QString cpu;

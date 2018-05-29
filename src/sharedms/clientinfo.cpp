@@ -34,7 +34,7 @@ ClientInfo::ClientInfo(const QString &assetNO, QObject *parent)
     externalIPInfo = "";
     clientVersion = "";
     processMonitorEnabled = false;
-    lastOnlineTime = QDateTime();
+    lastOnlineTime = "";
 
     cpu = "";
     memory = "";
@@ -139,9 +139,14 @@ void ClientInfo::setJsonData(const QByteArray &data)
         if(osObj.contains("IPInfo")) {
             ip = osObj["IPInfo"].toString();
         }
+        if(osObj.contains("ExternalIPInfo")) {
+            externalIPInfo = osObj["ExternalIPInfo"].toString();
+        }
         clientVersion = osObj["Version"].toString();
         processMonitorEnabled = osObj["ProcessMonitorEnabled"].toBool();
         usbSDStatus = MS::USBSTORStatus(osObj.value("USBSD").toString().toUShort());
+
+        lastOnlineTime = osObj["LastOnlineTime"].toString();
 
     }
 
@@ -179,9 +184,11 @@ QByteArray ClientInfo::getOSJsonData() const
     osObj["Users"] = users;
     osObj["Admins"] = administrators;
     osObj["IPInfo"] = ip;
+    osObj["ExternalIPInfo"] = externalIPInfo;
     osObj["Version"] = clientVersion;
     osObj["ProcessMonitorEnabled"] = processMonitorEnabled ? "1" : "0";
     osObj["USBSD"] = usbSDStatus;
+    osObj["LastOnlineTime"] = lastOnlineTime;
 
 //    QJsonObject hwObj;
 //    hwObj["Processor"] = cpu;

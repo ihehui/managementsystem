@@ -37,6 +37,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
 
     ui.lineEditHost->setFocus();
+    ui.spinBoxPort->setValue(RTP_LISTENING_PORT);
 
     m_joinWorkgroupMenu = new QMenu(this);
     m_joinWorkgroupMenu->addAction(ui.actionJoinWorkgroup);
@@ -111,7 +112,15 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
         localComputer = false;
     }
 
-    ui.lineEditHost->setText(m_clientInfo.getIP());
+    QStringList ipInfoList = m_clientInfo.getExternalIPInfo().split(":");
+    if(2 != ipInfoList.size()){
+        ipInfoList.clear();
+        ipInfoList.append("");
+        ipInfoList.append(QString::number(RTP_LISTENING_PORT));
+    }
+    ui.lineEditHost->setText(ipInfoList[0]);
+    ui.spinBoxPort->setValue(ipInfoList[1].toUInt());
+
     m_peerIPAddress = QHostAddress(m_clientInfo.getIP());
     if(localComputer) {
         ui.lineEditHost->setText("127.0.0.1");
@@ -355,6 +364,7 @@ void SystemManagementWidget::on_toolButtonVerify_clicked()
     }
 
     QString host = ui.lineEditHost->text().trimmed();
+    quint16 port = ui.spinBoxPort->value();
     m_peerIPAddress = QHostAddress(host);
     if(localComputer) {
         this->m_peerIPAddress = QHostAddress::LocalHost;
@@ -372,7 +382,7 @@ void SystemManagementWidget::on_toolButtonVerify_clicked()
 
     QString errorMessage;
     if(m_peerSocket == INVALID_SOCK_ID) {
-        m_peerSocket = m_rtp->connectToHost(m_peerIPAddress, RTP_LISTENING_PORT, 5000, &errorMessage, RTP::Protocol(ui.comboBoxProtocol->itemData(ui.comboBoxProtocol->currentIndex()).toUInt()));
+        m_peerSocket = m_rtp->connectToHost(m_peerIPAddress, port, 5000, &errorMessage, RTP::Protocol(ui.comboBoxProtocol->itemData(ui.comboBoxProtocol->currentIndex()).toUInt()));
     }
     if(m_peerSocket == INVALID_SOCK_ID) {
         QMessageBox::critical(this, tr("Error"), tr("Can not connect to host!<br>%1").arg(errorMessage));

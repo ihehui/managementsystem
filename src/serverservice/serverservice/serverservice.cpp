@@ -505,7 +505,11 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
     //    QString ipInfo = info->getIP();
     //    QString clientVersion = info->getClientVersion();
 
+    QString externalIPInfo = info->getExternalIPInfo();
+    QString lastOnlineTime = info->getLastOnlineTime();
     info->setJsonData(osData);
+    info->setExternalIPInfo(externalIPInfo);
+    info->setLastOnlineTime(lastOnlineTime);
 
     QString newComputerName = info->getComputerName();
     QString newOSInfo = info->getOSVersion();
@@ -516,7 +520,7 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
     QString newUsers = info->getUsers();
     QString newadmins = info->getAdministrators();
     QString internalIPInfo = info->getIP();
-    QString externalIPInfo = info->getExternalIPInfo();
+    //QString externalIPInfo = info->getExternalIPInfo();
     QString newclientVersion = info->getClientVersion();
     quint8 newUsbSDStatus = quint8(info->getUsbSDStatus());
 
@@ -1309,7 +1313,7 @@ void ServerService::getAllClientsInfoFromDB()
         info->setClientVersion(query->value("ClientVersion").toString());
         info->setProcessMonitorEnabled(query->value("ProcessMonitorEnabled").toBool());
         info->setUsbSDStatus(query->value("USB").toUInt());
-        info->setLastOnlineTime(query->value("LastOnlineTime").toDateTime());
+        info->setLastOnlineTime(query->value("LastOnlineTime").toString());
 
     }
     query->clear();
