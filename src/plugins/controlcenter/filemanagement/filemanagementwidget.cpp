@@ -263,9 +263,11 @@ QVariant FileSystemModel::headerData ( int section, Qt::Orientation orientation,
 bool FileSystemModel::parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data)
 {
 
-    if(m_currentDirPath != remoteParentDirPath) {
-        return false;
-    }
+//    if(m_currentDirPath != remoteParentDirPath) {
+//        return false;
+//    }
+
+    m_currentDirPath = remoteParentDirPath;
 
     QList<FileItemInfo *> items;
 
@@ -415,8 +417,10 @@ QString FileSystemModel::absoluteFilePath(const QModelIndex &index)
     } else {
         path = m_currentDirPath + "/" + info->name;
     }
-    QDir dir(path);
-    return dir.absolutePath();
+//    QDir dir(path);
+//    return dir.absolutePath();
+
+    return path;
 
 }
 
@@ -617,11 +621,45 @@ void FileManagementWidget::dropEvent(QDropEvent *event)
 void FileManagementWidget::keyReleaseEvent(QKeyEvent *keyEvent)
 {
 
-    if(keyEvent->key() == Qt::Key_Delete) {
+    switch (keyEvent->key()) {
+    case Qt::Key_Delete:
         deleteFiles();
-    } else if(keyEvent->key() == Qt::Key_F2) {
+        break;
+
+    case Qt::Key_F2:
         renameFile();
+        break;
+
+    case Qt::Key_Enter:
+    case Qt::Key_Return:
+    {
+        if(ui.comboBoxLocalPath->hasFocus()){
+            QString newPath = ui.comboBoxLocalPath->currentText();
+            QDir dir(newPath);
+            if(!dir.exists()){
+                QMessageBox::critical(this, tr("Error"), tr("Directory does not exist!"));
+                return;
+            }
+            if(!dir.isReadable()){
+                QMessageBox::critical(this, tr("Error"), tr("Directory is not readable!"));
+                return;
+            }
+            newPath = dir.canonicalPath();
+            changeLocalFilePath(newPath);
+        }
+
+        if(ui.comboBoxRemotePath->hasFocus()){
+            changeRemoteFilePath(ui.comboBoxRemotePath->currentText());
+        }
+
     }
+        break;
+
+    default:
+        break;
+    }
+
+
 
     //    if(QApplication::keyboardModifiers() == Qt::ShiftModifier && keyEvent->key() == Qt::Key_Delete){
     //    }
@@ -712,13 +750,29 @@ void FileManagementWidget::localFileItemDoubleClicked(const QModelIndex &index)
     QString newPath = localFileSystemModel->fileInfo(index).absoluteFilePath();
     ui.comboBoxLocalPath->setEditText(newPath);
 
-    ui.tableViewLocalFiles->setRootIndex(localFileSystemModel->index(newPath));
-    ui.tableViewLocalFiles->clearSelection();
+//    ui.tableViewLocalFiles->setRootIndex(localFileSystemModel->index(newPath));
+//    ui.tableViewLocalFiles->clearSelection();
 
-    m_localCurrentDir = newPath;
+//    m_localCurrentDir = newPath;
+
+    changeLocalFilePath(newPath);
 
 
 }
+
+void FileManagementWidget::changeLocalFilePath(const QString &newPath)
+{
+    QModelIndex idx = localFileSystemModel->index(newPath);
+    if(!localFileSystemModel->isDir(idx)) {
+        return;
+    }
+
+    ui.tableViewLocalFiles->setRootIndex(idx);
+    ui.tableViewLocalFiles->clearSelection();
+
+    m_localCurrentDir = newPath;
+}
+
 
 void FileManagementWidget::on_groupBoxRemote_toggled( bool on )
 {
@@ -781,15 +835,24 @@ void FileManagementWidget::tableViewRemoteFileItemDoubleClicked(const QModelInde
 
     QString newPath = remoteFileSystemModel->absoluteFilePath(index);
 
-    //    emit signalShowRemoteFiles(newPath);
-    requestFileSystemInfo(newPath);
-
     ui.comboBoxRemotePath->setEditText(newPath);
 
+//    //    emit signalShowRemoteFiles(newPath);
+
+//    requestFileSystemInfo(newPath);
+//    remoteFileSystemModel->changePath(newPath);
+//    ui.tableViewRemoteFiles->clearSelection();
+
+    changeRemoteFilePath(newPath);
+
+}
+
+void FileManagementWidget::changeRemoteFilePath(const QString &newPath)
+{
+    requestFileSystemInfo(newPath);
+
     remoteFileSystemModel->changePath(newPath);
-
     ui.tableViewRemoteFiles->clearSelection();
-
 }
 
 bool FileManagementWidget::getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage)
@@ -995,6 +1058,8 @@ void FileManagementWidget::fileSystemInfoReceived(SOCKETID socketID, const QStri
         ui.comboBoxRemotePath->insertItem(0, tr("Computer"));
         ui.comboBoxRemotePath->setCurrentIndex(0);
         connect(ui.comboBoxRemotePath, SIGNAL(currentIndexChanged(int)), this, SLOT(comboBoxRemotePathIndexChanged(int)));
+    }else{
+        ui.comboBoxRemotePath->setCurrentText(parentDirPath);
     }
 
 }

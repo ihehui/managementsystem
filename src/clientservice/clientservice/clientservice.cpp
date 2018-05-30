@@ -2078,8 +2078,14 @@ void ClientService::fileSystemInfoRequested(SOCKETID socketID, const QString &pa
     QByteArray data;
     QString errorMessage;
 
-    if(getLocalFilesInfo(parentDirPath, &data, &errorMessage)) {
-        clientPacketsParser->responseFileSystemInfo(socketID, parentDirPath, data);
+    QString canonicalPath = parentDirPath;
+    if(!canonicalPath.isEmpty()){
+        QDir dir(parentDirPath);
+        canonicalPath = dir.canonicalPath();
+    }
+
+    if(getLocalFilesInfo(canonicalPath, &data, &errorMessage)) {
+        clientPacketsParser->responseFileSystemInfo(socketID, canonicalPath, data);
     } else {
         qCritical() << "ERROR! " << errorMessage;
     }
@@ -2408,24 +2414,30 @@ bool ClientService::getLocalFilesInfo(const QString &parentDirPath, QByteArray *
 
     if(parentDirPath.isEmpty()) {
         infoList = QDir::drives();
+        infoList.append(QFileInfo(QDir::homePath()));
         isDrives = true;
     } else {
         QFileInfo fi(parentDirPath);
         if(!fi.isDir()) {
-            *errorMessage = tr("'%1' is not a directorie!").arg(parentDirPath);
+            *errorMessage = tr("'%1' is not a directory!").arg(parentDirPath);
             return false;
         }
         QDir dir(parentDirPath);
         if(!dir.exists()) {
-            *errorMessage = tr("Directorie '%1' does not exist!").arg(parentDirPath);
+            *errorMessage = tr("Directory '%1' does not exist!").arg(parentDirPath);
             return false;
         }
-        dir.setFilter(QDir::AllEntries | QDir::NoDot | QDir::Hidden | QDir::NoSymLinks);
+        if(!dir.isReadable()) {
+            *errorMessage = tr("Directory '%1' is not readable!").arg(parentDirPath);
+            return false;
+        }
+        dir.setFilter(QDir::AllEntries | QDir::NoDot | QDir::Hidden /*| QDir::NoSymLinks*/);
         infoList = dir.entryInfoList();
     }
 
     if(infoList.isEmpty()) {
         //TODO
+        *errorMessage = tr("Directory '%1' is empty!").arg(parentDirPath);
         return false;
     }
 

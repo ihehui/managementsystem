@@ -136,12 +136,14 @@ private slots:
     void on_toolButtonShowLocalFiles_clicked();
     void comboBoxLocalPathCurrentIndexChanged(int index);
     void localFileItemDoubleClicked(const QModelIndex &index);
-
+    void changeLocalFilePath(const QString &newPath);
 
     void on_groupBoxRemote_toggled( bool on );
     void on_toolButtonShowRemoteFiles_clicked();
     void comboBoxRemotePathIndexChanged(int index);
     void tableViewRemoteFileItemDoubleClicked(const QModelIndex &index);
+    void changeRemoteFilePath(const QString &newPath);
+
     bool getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage);
     bool parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data);
 
