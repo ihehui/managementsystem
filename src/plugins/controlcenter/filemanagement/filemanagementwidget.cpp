@@ -703,21 +703,40 @@ void FileManagementWidget::on_groupBoxLocal_toggled( bool on )
 void FileManagementWidget::on_toolButtonShowLocalFiles_clicked()
 {
 
-    QString path = ui.comboBoxLocalPath->currentText();
-    if(ui.comboBoxLocalPath->currentIndex() == 0) {
-        path = "";
-    }
+//    QString path = ui.comboBoxLocalPath->currentText();
+//    if(ui.comboBoxLocalPath->currentIndex() == 0) {
+//        path = "";
+//    }
 
-    if(!path.isEmpty() && !QFile::exists(path)) {
-        QMessageBox::critical(this, tr("Error"), tr("Target path does not exist!"));
-        ui.comboBoxLocalPath->setEditText(localFileSystemModel->fileInfo(ui.tableViewLocalFiles->rootIndex()).absoluteFilePath() );
+//    if(!path.isEmpty() && !QFile::exists(path)) {
+//        QMessageBox::critical(this, tr("Error"), tr("Target path does not exist!"));
+//        ui.comboBoxLocalPath->setEditText(localFileSystemModel->fileInfo(ui.tableViewLocalFiles->rootIndex()).absoluteFilePath() );
+//        return;
+//    }
+
+//    ui.tableViewLocalFiles->setRootIndex(localFileSystemModel->index(path));
+//    ui.tableViewLocalFiles->clearSelection();
+
+//    m_localCurrentDir = path;
+
+
+    QString newPath = ui.comboBoxLocalPath->currentText();
+    if(newPath.trimmed().isEmpty()){
+        changeLocalFilePath(newPath);
         return;
     }
 
-    ui.tableViewLocalFiles->setRootIndex(localFileSystemModel->index(path));
-    ui.tableViewLocalFiles->clearSelection();
-
-    m_localCurrentDir = path;
+    QDir dir(newPath);
+    if(!dir.exists()){
+        QMessageBox::critical(this, tr("Error"), tr("Directory does not exist!"));
+        return;
+    }
+    if(!dir.isReadable()){
+        QMessageBox::critical(this, tr("Error"), tr("Directory is not readable!"));
+        return;
+    }
+    newPath = dir.canonicalPath();
+    changeLocalFilePath(newPath);
 
 }
 
@@ -805,16 +824,7 @@ void FileManagementWidget::on_groupBoxRemote_toggled( bool on )
 
 void FileManagementWidget::on_toolButtonShowRemoteFiles_clicked()
 {
-
-    QString newPath = ui.comboBoxRemotePath->currentText();
-    if(ui.comboBoxRemotePath->currentIndex() == 0) {
-        newPath = "";
-    }
-    //    emit signalShowRemoteFiles(newPath);
-    requestFileSystemInfo(newPath);
-
-    remoteFileSystemModel->changePath(newPath);
-    ui.tableViewRemoteFiles->clearSelection();
+    changeRemoteFilePath(ui.comboBoxRemotePath->currentText());
 }
 
 void FileManagementWidget::comboBoxRemotePathIndexChanged(int index)
@@ -982,16 +992,17 @@ void FileManagementWidget::processFileTransferPacket(const FileTransferPacket &p
     break;
 
     case FileTransferPacket::FT_FileDownloadingResponse : {
-        QString pathToSaveFile = packet.FileDownloadingResponse.pathToSaveFile;
-        if(pathToSaveFile.isEmpty()) {
-            QDir saveDir(m_localCurrentDir);
-            pathToSaveFile = saveDir.absoluteFilePath(packet.FileDownloadingResponse.fileName);
-        }
 
         if(packet.FileDownloadingResponse.accepted) {
+            QString pathToSaveFile = packet.FileDownloadingResponse.pathToSaveFile;
+            if(pathToSaveFile.isEmpty()) {
+                QDir saveDir(m_localCurrentDir);
+                pathToSaveFile = saveDir.absoluteFilePath(packet.FileDownloadingResponse.fileName);
+            }
+
             fileDownloadRequestAccepted(socketID, packet.FileDownloadingResponse.fileName, packet.FileDownloadingResponse.fileMD5Sum, packet.FileDownloadingResponse.size, pathToSaveFile);
         } else {
-            fileDownloadRequestDenied(socketID, packet.FileDownloadingResponse.fileName, "");
+            fileDownloadRequestDenied(socketID, packet.FileDownloadingResponse.fileName, packet.FileDownloadingResponse.errorCode);
         }
 
     }
@@ -1238,7 +1249,7 @@ void FileManagementWidget::processPeerRequestDownloadFilePacket(SOCKETID socketI
     FileManager::FileError error;
     const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &error);
     if(!info) {
-        controlCenterPacketsParser->responseFileDownloadRequest(socketID, false, localBaseDir, fileName, QByteArray(), 0, "");
+        controlCenterPacketsParser->responseFileDownloadRequest(socketID, false, localBaseDir, fileName, QByteArray(), 0, "", quint8(error.errorCode));
         return;
     }
 
@@ -1389,7 +1400,7 @@ void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const 
 
 }
 
-void FileManagementWidget::fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message)
+void FileManagementWidget::fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, quint8 errorCode)
 {
 
     if(socketID != m_peerSocket) {
@@ -1397,7 +1408,7 @@ void FileManagementWidget::fileDownloadRequestDenied(SOCKETID socketID, const QS
     }
     //TODO:
 
-    ui.textEditLogs->append(tr("Error! File download request denied! %1").arg(remoteFileName));
+    ui.textEditLogs->append(tr("Error! File '%1' downloading request denied! Code:%2").arg(remoteFileName).arg(errorCode));
 
 }
 
@@ -1421,6 +1432,8 @@ void FileManagementWidget::fileUploadRequestResponsed(SOCKETID socketID, const Q
         filesList.removeAll(fileMD5Sum);
         ui.textEditLogs->append(tr("Error! Can not send file!<br>%1").arg(message));
     }
+
+    on_toolButtonShowRemoteFiles_clicked();
 
 }
 
@@ -1512,6 +1525,8 @@ void FileManagementWidget::processFileTXStatusChangedPacket(SOCKETID socketID, c
 
         ui.textEditLogs->append(tr("File Uploaded! '%1'").arg(m_fileManager->getFileLocalSavePath(fileMD5)));
         m_fileManager->closeFile(fileMD5);
+
+        on_toolButtonShowRemoteFiles_clicked();
     }
     break;
     default:

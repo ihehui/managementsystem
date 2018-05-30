@@ -517,7 +517,7 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool responseFileDownloadRequest(SOCKETID socketID, bool accepted, const QString &baseDir, const QString &fileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile)
+    bool responseFileDownloadRequest(SOCKETID socketID, bool accepted, const QString &baseDir, const QString &fileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile, quint8 errorCode = ERROR_CODE_NO_ERROR)
     {
 
         FileTransferPacket packet;
@@ -528,6 +528,8 @@ public slots:
         packet.FileDownloadingResponse.fileMD5Sum = fileMD5Sum;
         packet.FileDownloadingResponse.size = size;
         packet.FileDownloadingResponse.pathToSaveFile = pathToSaveFile;
+        packet.FileDownloadingResponse.errorCode = errorCode;
+
 
         QByteArray ba = packet.toByteArray();
         return m_rtp->sendReliableData(socketID, &ba);

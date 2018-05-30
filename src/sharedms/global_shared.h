@@ -179,9 +179,12 @@
 #endif
 
 
-
+//#ifndef ERROR_CODE_NO_ERROR
+//    #define ERROR_CODE_NO_ERROR  0
+//#endif
 
 #include "HHSharedNetwork/hglobal_network.h"
+#include "sharedmslib.h"
 
 
 namespace HEHUI
@@ -191,6 +194,7 @@ namespace HEHUI
 
 namespace MS
 {
+
 
 enum Command {
 
@@ -325,8 +329,8 @@ enum AnnouncementTarget {
 
 
 enum ErrorCode {
-    ERROR_NO_ERROR = 0,
-    ERROR_UNKNOWN_ERROR = 1,
+    ERROR_NO_ERROR = ERROR_CODE_NO_ERROR,
+    ERROR_UNKNOWN_ERROR,
 
     ERROR_ID_NOT_EXIST,
 

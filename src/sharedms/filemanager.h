@@ -52,7 +52,9 @@
 
 #include "sharedmslib.h"
 
-
+//#ifndef ERROR_CODE_NO_ERROR
+//    #define ERROR_CODE_NO_ERROR  0
+//#endif
 
 
 class SHAREDMSLIB_API FileManager : public QThread
@@ -60,7 +62,17 @@ class SHAREDMSLIB_API FileManager : public QThread
     Q_OBJECT
 
 public:
-    enum Error {ERROR_NO_ERROR = 0, ERROR_UNKNOWN, ERROR_FILE_EXIST_WITH_SAME_NAME, ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME, ERROR_FILE_NOT_EXIST, ERROR_FILE_IN_USE, FILE_READ_ERROR, FILE_WRITE_ERROR};
+    enum Error {
+        ERROR_NO_ERROR = ERROR_CODE_NO_ERROR,
+        ERROR_UNKNOWN,
+        ERROR_FILE_EXIST_WITH_SAME_NAME,
+        ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME,
+        ERROR_FILE_NOT_EXIST,
+        ERROR_FILE_IN_USE,
+        FILE_READ_ERROR,
+        FILE_WRITE_ERROR
+    };
+
     struct FileError {
         Error errorCode;
         QString errorString;

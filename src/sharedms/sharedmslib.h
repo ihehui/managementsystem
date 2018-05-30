@@ -44,6 +44,13 @@
 #endif
 
 
+//#ifndef ERROR_CODE_NO_ERROR
+//    #define ERROR_CODE_NO_ERROR  0
+//#endif
+
+const quint8 ERROR_CODE_NO_ERROR = 0;
+
+
 /*
 
 #if defined(Q_WS_WIN)

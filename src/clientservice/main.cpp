@@ -11,12 +11,21 @@
 
 #include "HHSharedCore/hlogdebug.h"
 
+#ifdef Q_OS_WIN32
+    #include "HHSharedCore/WinCrashDump"
+#endif
 
 #include <iostream>
 
 
 int main(int argc, char **argv)
 {
+
+#ifdef Q_OS_WIN32
+    SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
+#endif
+
+
     Q_INIT_RESOURCE(resources);
 
 //#if !defined(Q_WS_WIN)

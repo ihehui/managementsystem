@@ -112,7 +112,7 @@ public slots:
     //File TX
     void startFileManager();
     void fileDownloadRequestAccepted(SOCKETID socketID, const QString &remoteFileName, const QByteArray &fileMD5Sum, quint64 size, const QString &pathToSaveFile);
-    void fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, const QString &message);
+    void fileDownloadRequestDenied(SOCKETID socketID, const QString &remoteFileName, quint8 errorCode);
     void fileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message);
 
     void processFileDataRequestPacket(SOCKETID socketID, const QByteArray &fileMD5, int startPieceIndex, int endPieceIndex);

@@ -33,6 +33,7 @@ protected:
 
 private:
     static QByteArray sessionEncryptionKey;
+
 };
 ////////////////////////////////////////////////////////////////////////
 
@@ -526,6 +527,7 @@ public:
         QByteArray fileMD5Sum;
         quint64 size;
         QString pathToSaveFile;
+        quint8 errorCode;
     } FileDownloadingResponse;
 
     struct FileUploadingRequestStruct {

@@ -2157,7 +2157,9 @@ void ClientService::processAdminRequestDownloadFilePacket(SOCKETID socketID, con
     FileManager::FileError error;
     const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(absoluteFilePath, &error);
     if(!info) {
-        clientPacketsParser->responseFileDownloadRequest(socketID, false, absoluteFilePath, fileName, info->md5sum, info->size, "");
+        clientPacketsParser->responseFileDownloadRequest(socketID, false, absoluteFilePath, fileName, QByteArray(), 0, "", quint8(error.errorCode));
+        //clientPacketsParser->fileTXError(socketID, QByteArray(), error.errorCode, error.errorString);
+        return;
     }
 
     if(clientPacketsParser->responseFileDownloadRequest(socketID, true, absoluteFilePath, fileName, info->md5sum, info->size, newSavePath)) {

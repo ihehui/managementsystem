@@ -8,6 +8,8 @@
 namespace HEHUI
 {
 
+//static Cryptography cryptography;
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1068,6 +1070,7 @@ void FileTransferPacket::init()
     FileDownloadingResponse.fileMD5Sum = QByteArray();
     FileDownloadingResponse.size = 0;
     FileDownloadingResponse.pathToSaveFile = "";
+    FileDownloadingResponse.errorCode = MS::ERROR_NO_ERROR;
 
     FileUploadingRequest.fileName = "";
     FileUploadingRequest.fileMD5Sum = QByteArray();
@@ -1144,7 +1147,7 @@ void FileTransferPacket::parsePacketBody(QByteArray &packetBody)
         break;
 
     case FT_FileDownloadingResponse: {
-        in >> FileDownloadingResponse.accepted >> FileDownloadingResponse.baseDir >> FileDownloadingResponse.fileName >> FileDownloadingResponse.fileMD5Sum >> FileDownloadingResponse.size >> FileDownloadingResponse.pathToSaveFile;
+        in >> FileDownloadingResponse.accepted >> FileDownloadingResponse.baseDir >> FileDownloadingResponse.fileName >> FileDownloadingResponse.fileMD5Sum >> FileDownloadingResponse.size >> FileDownloadingResponse.pathToSaveFile >> FileDownloadingResponse.errorCode;
     }
         break;
 
@@ -1232,7 +1235,7 @@ QByteArray FileTransferPacket::packBodyData()
         break;
 
     case FT_FileDownloadingResponse: {
-        out << FileDownloadingResponse.accepted << FileDownloadingResponse.baseDir << FileDownloadingResponse.fileName << FileDownloadingResponse.fileMD5Sum << FileDownloadingResponse.size << FileDownloadingResponse.pathToSaveFile;
+        out << FileDownloadingResponse.accepted << FileDownloadingResponse.baseDir << FileDownloadingResponse.fileName << FileDownloadingResponse.fileMD5Sum << FileDownloadingResponse.size << FileDownloadingResponse.pathToSaveFile << FileDownloadingResponse.errorCode;
     }
         break;
 
