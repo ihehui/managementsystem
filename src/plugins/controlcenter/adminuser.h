@@ -36,6 +36,7 @@ public:
     QString serverName() const;
     QString serverVersion() const;
 
+    void setAboutToQuit(bool quit);
 
 signals:
     void signalVerified();
@@ -68,6 +69,7 @@ private:
     LoginDlg *m_loginDlg;
 
     bool m_readonly;
+    bool m_aboutToQuit;
 
 
 

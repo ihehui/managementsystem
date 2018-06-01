@@ -84,6 +84,8 @@ ServerAddressManagerWindow::ServerAddressManagerWindow(QWidget *parent)
 
     //        clientPacketsParser = 0;
 
+    QTimer::singleShot(1000, this, SLOT(slotTestServers()));
+
 
 }
 

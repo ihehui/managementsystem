@@ -28,11 +28,7 @@ AdminUser::AdminUser()
     m_serverAddress = "";
     m_serverPort = 0;
     Settings settings(SETTINGS_FILE_NAME, "./");
-    QStringList lastUsedAppServer = settings.getLastUsedAppServer().split(":");
-    if(lastUsedAppServer.size() == 2) {
-        m_serverAddress = lastUsedAppServer.at(0);
-        m_serverPort = lastUsedAppServer.at(1).toUShort();
-    }
+    settings.getLastUsedAppServer(&m_serverAddress, &m_serverPort);
 
     m_serverName = "";
     m_serverVersion = "";
@@ -40,6 +36,7 @@ AdminUser::AdminUser()
     m_loginDlg = 0;
 
     m_readonly = true;
+    m_aboutToQuit = false;
 
 }
 
@@ -96,6 +93,11 @@ QString AdminUser::serverName() const
 QString AdminUser::serverVersion() const
 {
     return m_serverVersion;
+}
+
+void AdminUser::setAboutToQuit(bool quit)
+{
+    m_aboutToQuit = quit;
 }
 
 bool AdminUser::isAdminVerified()
@@ -182,7 +184,7 @@ bool AdminUser::connectToServer(const QString &serverAddress, quint16 serverPort
     m_serverPort = serverPort;
 
     Settings settings(SETTINGS_FILE_NAME, "./");
-    settings.setLastUsedAppServer(m_serverAddress + ":" + QString::number(m_serverPort));
+    settings.setLastUsedAppServer(m_serverAddress , m_serverPort);
 
     qWarning() << "Server Connected!" << " Address:" << serverAddress << " Port:" << m_serverPort;
 
@@ -235,6 +237,9 @@ void AdminUser::peerDisconnected(SOCKETID socketID)
         m_socketConnectedToServer = INVALID_SOCK_ID;
         setVerified(false);
         m_readonly = true;
+        if(!m_aboutToQuit){
+            verifyUser();
+        }
         return;
     }
 

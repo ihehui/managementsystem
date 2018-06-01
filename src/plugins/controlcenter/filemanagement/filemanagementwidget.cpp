@@ -17,16 +17,11 @@ namespace HEHUI
 FileSystemModel::FileSystemModel(QFileIconProvider *fileIconProvider, QObject *parent)
     : QAbstractTableModel(parent), m_fileIconProvider(fileIconProvider)
 {
-    // TODO Auto-generated constructor stub
-
     Q_ASSERT(m_fileIconProvider);
 
     m_currentDirPath = "";
 
     //    setHeaderData(1, Qt::Horizontal, Qt::AlignRight, Qt::TextAlignmentRole);
-
-
-
 }
 
 FileSystemModel::~FileSystemModel()
@@ -51,7 +46,6 @@ FileSystemModel::~FileSystemModel()
 
 void FileSystemModel::addFileItem(const QString &name, const QString &size, quint8 type, const QString &dateModified)
 {
-
     foreach (FileItemInfo *info, fileItems) {
         if(info->name == name) {
             return;
@@ -94,12 +88,11 @@ void FileSystemModel::deleteFileItem(const QString &name)
 }
 void FileSystemModel::deleteFileItem(const QModelIndex &index)
 {
-
     if(!index.isValid()) {
         return;
     }
 
-    int row = index.row();
+    int row = index.data(Qt::UserRole).toInt();
     if((row < 0) || (row >= fileItems.size())) {
         return;
     }
@@ -110,8 +103,6 @@ void FileSystemModel::deleteFileItem(const QModelIndex &index)
     delete info;
     this->fileItems.removeAll(info);
     endResetModel();
-
-
 }
 
 int FileSystemModel::rowCount ( const QModelIndex &parent) const
@@ -119,8 +110,8 @@ int FileSystemModel::rowCount ( const QModelIndex &parent) const
     if(parent.isValid()) {
         return 0;
     }
-    return fileItems.size();
 
+    return fileItems.size();
 }
 
 int FileSystemModel::columnCount ( const QModelIndex &parent) const
@@ -130,8 +121,6 @@ int FileSystemModel::columnCount ( const QModelIndex &parent) const
     }
 
     return 4;
-
-
 }
 
 QVariant FileSystemModel::data ( const QModelIndex &index, int role) const
@@ -187,15 +176,15 @@ QVariant FileSystemModel::data ( const QModelIndex &index, int role) const
             }
             return icon;
         }
+    }else if(Qt::UserRole == role){
+        return row;
     }
 
     return QVariant();
-
 }
 
 QVariant FileSystemModel::headerData ( int section, Qt::Orientation orientation, int role) const
 {
-
     if(role != Qt::DisplayRole) {
         return QVariant();
     }
@@ -220,44 +209,7 @@ QVariant FileSystemModel::headerData ( int section, Qt::Orientation orientation,
         }
     }
 
-
-    //    if(role == Qt::DisplayRole){
-    //        if(orientation ==  Qt::Horizontal){
-    //                switch (section) {
-    //                case 0:
-    //                    return QString(tr("Name"));
-    //                    break;
-    //                case 1:
-    //                    return QString(tr("Size"));
-    //                    break;
-    //                case 2:
-    //                    return QString(tr("Type"));
-    //                    break;
-    //                case 3:
-    //                    return QString(tr("Date Modified"));
-    //                    break;
-    //                default:
-    //                    return QVariant();
-    //                    break;
-    //                }
-    //        }
-    //    }else if(role == Qt::TextAlignmentRole){
-    //        if(orientation ==  Qt::Horizontal){
-    //                switch (section) {
-    //                case 0:
-    //                    return Qt::AlignRight;
-    //                    break;
-    //                default:
-    //                    return Qt::AlignLeft;
-    //                    break;
-    //                }
-    //        }
-
-    //    }
-
-
     return QVariant();
-
 }
 
 bool FileSystemModel::parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data)
@@ -273,10 +225,7 @@ bool FileSystemModel::parseRemoteFilesInfo(const QString &remoteParentDirPath, c
 
     QDataStream in(data);
     in.setVersion(QDataStream::Qt_4_8);
-
     QString parentDirPath = "";
-
-
     in >> parentDirPath;
 
     while (!in.atEnd()) {
@@ -320,7 +269,6 @@ bool FileSystemModel::parseRemoteFilesInfo(const QString &remoteParentDirPath, c
         //qDebug()<<"name:"<<name<<" size:"<<size<<" type:"<<type<<" lastModified:"<<lastModified;
 
     }
-
     //    setFileItems(items);
 
 
@@ -339,18 +287,16 @@ bool FileSystemModel::parseRemoteFilesInfo(const QString &remoteParentDirPath, c
         }
     }
 
-
     return true;
 }
 
 bool FileSystemModel::isDrive(const QModelIndex &index)
 {
-
     if(!index.isValid()) {
         return false;
     }
 
-    int row = index.row();
+    int row = index.data(Qt::UserRole).toInt();
     if((row < 0) || (row >= fileItems.size())) {
         return false;
     }
@@ -358,24 +304,16 @@ bool FileSystemModel::isDrive(const QModelIndex &index)
     FileItemInfo *info = fileItems.at(row);
     //FileItemInfo *info = static_cast<FileItemInfo *> (fileItems.at(row));
 
-
     return (info->type == quint8(MS::DRIVE));
-
-    //    int column = index.column();
-    //    if(column != 0){
-    //        QModelIndex idx = index.sibling(index.row(), 0);
-    //    }
-
 }
 
 bool FileSystemModel::isDir(const QModelIndex &index)
 {
-
     if(!index.isValid()) {
         return false;
     }
 
-    int row = index.row();
+    int row = index.data(Qt::UserRole).toInt();
     if((row < 0) || (row >= fileItems.size())) {
         return false;
     }
@@ -383,24 +321,16 @@ bool FileSystemModel::isDir(const QModelIndex &index)
     FileItemInfo *info = fileItems.at(row);
     //FileItemInfo *info = static_cast<FileItemInfo *> (fileItems.at(row));
 
-
     return (info->type != quint8(MS::FILE));
-
-    //    int column = index.column();
-    //    if(column != 0){
-    //        QModelIndex idx = index.sibling(index.row(), 0);
-    //    }
-
 }
 
 QString FileSystemModel::absoluteFilePath(const QModelIndex &index)
 {
-
     if(!index.isValid()) {
         return "";
     }
 
-    int row = index.row();
+    int row = index.data(Qt::UserRole).toInt();
     if((row < 0) || (row >= fileItems.size())) {
         return "";
     }
@@ -409,7 +339,6 @@ QString FileSystemModel::absoluteFilePath(const QModelIndex &index)
     if(!info) {
         return "";
     }
-
 
     QString path;
     if(m_currentDirPath.isEmpty() || m_currentDirPath.endsWith("/") || m_currentDirPath.endsWith("\\")) {
@@ -421,17 +350,15 @@ QString FileSystemModel::absoluteFilePath(const QModelIndex &index)
 //    return dir.absolutePath();
 
     return path;
-
 }
 
 QString FileSystemModel::fileName(const QModelIndex &index)
 {
-
     if(!index.isValid()) {
         return "";
     }
 
-    int row = index.row();
+    int row = index.data(Qt::UserRole).toInt();
     if((row < 0) || (row >= fileItems.size())) {
         return "";
     }
@@ -442,19 +369,15 @@ QString FileSystemModel::fileName(const QModelIndex &index)
     }
 
     return info->name;;
-
-
 }
 
 void FileSystemModel::changePath(const QString &newPath)
 {
-
     m_currentDirPath = newPath;
 
     beginResetModel();
     this->fileItems.clear();
     endResetModel();
-
 }
 
 QString FileSystemModel::currentDirPath() const
@@ -483,7 +406,8 @@ FileManagementWidget::FileManagementWidget(QWidget *parent) :
     localFilesCompleter = 0;
     m_localCurrentDir = "";
 
-    remoteFileSystemModel = 0;
+    m_remoteFileSystemModel = 0;
+    m_proxyModel = 0;
 
     connect(ui.tableViewLocalFiles, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(localFileItemDoubleClicked(const QModelIndex &)));
     connect(ui.tableViewRemoteFiles, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(tableViewRemoteFileItemDoubleClicked(const QModelIndex &)));
@@ -516,9 +440,14 @@ FileManagementWidget::~FileManagementWidget()
         localFilesCompleter = 0;
     }
 
-    if(remoteFileSystemModel) {
-        delete remoteFileSystemModel;
-        remoteFileSystemModel = 0;
+    if(m_proxyModel){
+        delete m_proxyModel;
+        m_proxyModel = 0;
+    }
+
+    if(m_remoteFileSystemModel) {
+        delete m_remoteFileSystemModel;
+        m_remoteFileSystemModel = 0;
     }
 
     if(m_fileManager) {
@@ -613,7 +542,7 @@ void FileManagementWidget::dropEvent(QDropEvent *event)
 
     if (!files.isEmpty()) {
         //        emit signalUploadFilesToRemote(files, ui.comboBoxRemotePath->currentText());
-        requestUploadFilesToRemote("", files, remoteFileSystemModel->currentDirPath());
+        requestUploadFilesToRemote("", files, m_remoteFileSystemModel->currentDirPath());
     }
 
 }
@@ -623,11 +552,17 @@ void FileManagementWidget::keyReleaseEvent(QKeyEvent *keyEvent)
 
     switch (keyEvent->key()) {
     case Qt::Key_Delete:
-        deleteFiles();
+    {
+        if(ui.tableViewRemoteFiles->hasFocus() || ui.tableViewLocalFiles->hasFocus()){}
+        deleteFiles(ui.tableViewRemoteFiles->hasFocus());
+    }
         break;
 
     case Qt::Key_F2:
-        renameFile();
+    {
+        if(ui.tableViewRemoteFiles->hasFocus() || ui.tableViewLocalFiles->hasFocus()){}
+        renameFile(ui.tableViewRemoteFiles->hasFocus());
+    }
         break;
 
     case Qt::Key_Enter:
@@ -751,6 +686,8 @@ void FileManagementWidget::comboBoxLocalPathCurrentIndexChanged(int index)
             ui.comboBoxLocalPath->addItem(info.filePath());
         }
         ui.comboBoxLocalPath->insertItem(0, tr("Computer"));
+        ui.comboBoxLocalPath->insertItem(1, QDir::homePath());
+
         ui.comboBoxLocalPath->setCurrentIndex(0);
         connect(ui.comboBoxLocalPath, SIGNAL(currentIndexChanged(int)), this, SLOT(comboBoxLocalPathCurrentIndexChanged(int)));
     }
@@ -797,14 +734,17 @@ void FileManagementWidget::on_groupBoxRemote_toggled( bool on )
 {
 
     if(on) {
-        if(!remoteFileSystemModel) {
+        if(!m_remoteFileSystemModel) {
             if(!ui.groupBoxLocal->isChecked()) {
                 ui.groupBoxLocal->setChecked(true);
                 //on_groupBoxLocal_toggled();
             }
 
-            remoteFileSystemModel = new FileSystemModel(localFileSystemModel->iconProvider(), this);
-            ui.tableViewRemoteFiles->setModel(remoteFileSystemModel);
+            m_remoteFileSystemModel = new FileSystemModel(localFileSystemModel->iconProvider(), this);
+            m_proxyModel = new QSortFilterProxyModel(this);
+            m_proxyModel->setDynamicSortFilter(true);
+            m_proxyModel->setSourceModel(m_remoteFileSystemModel);
+            ui.tableViewRemoteFiles->setModel(m_proxyModel);
         }
 
         //        emit signalShowRemoteFiles("");
@@ -839,12 +779,11 @@ void FileManagementWidget::tableViewRemoteFileItemDoubleClicked(const QModelInde
         return;
     }
 
-    if(!remoteFileSystemModel->isDir(index)) {
+    if(!m_remoteFileSystemModel->isDir(index)) {
         return;
     }
 
-    QString newPath = remoteFileSystemModel->absoluteFilePath(index);
-
+    QString newPath = m_remoteFileSystemModel->absoluteFilePath(index);
     ui.comboBoxRemotePath->setEditText(newPath);
 
 //    //    emit signalShowRemoteFiles(newPath);
@@ -861,7 +800,7 @@ void FileManagementWidget::changeRemoteFilePath(const QString &newPath)
 {
     requestFileSystemInfo(newPath);
 
-    remoteFileSystemModel->changePath(newPath);
+    m_remoteFileSystemModel->changePath(newPath);
     ui.tableViewRemoteFiles->clearSelection();
 }
 
@@ -925,7 +864,7 @@ bool FileManagementWidget::getLocalFilesInfo(const QString &parentDirPath, QByte
 
 bool FileManagementWidget::parseRemoteFilesInfo(const QString &remoteParentDirPath, const QByteArray &data)
 {
-    return remoteFileSystemModel->parseRemoteFilesInfo(remoteParentDirPath, data);
+    return m_remoteFileSystemModel->parseRemoteFilesInfo(remoteParentDirPath, data);
 }
 
 
@@ -933,9 +872,9 @@ void FileManagementWidget::peerDisconnected(bool normalClose)
 {
 
     if(normalClose) {
-        ui.textEditLogs->append(tr("Peer Closed!"));
+        appendMessage(tr("Peer Closed!"));
     } else {
-        ui.textEditLogs->append(tr("ERROR! Peer Closed Unexpectedly!"));
+        appendMessage(tr("ERROR! Peer Closed Unexpectedly!"));
     }
 
     foreach (QByteArray fileMD5, filesList) {
@@ -973,7 +912,7 @@ void FileManagementWidget::processFileTransferPacket(const FileTransferPacket &p
     }
     break;
     case FileTransferPacket::FT_FileDeletingResponse : {
-
+        processFileDeletingResult(packet.FileDeletingResponse.baseDirPath, packet.FileDeletingResponse.failedFiles);
     }
     break;
 
@@ -982,7 +921,12 @@ void FileManagementWidget::processFileTransferPacket(const FileTransferPacket &p
     }
     break;
     case FileTransferPacket::FT_FileRenamingResponse : {
-
+        QString basePath = packet.FileRenamingResponse.baseDirPath;
+        QString oldFileName = packet.FileRenamingResponse.oldFileName;
+        QString newFileName = packet.FileRenamingResponse.newFileName;
+        bool renamed = packet.FileRenamingResponse.renamed;
+        QString msg = packet.FileRenamingResponse.message;
+        processFileRenamingResult(basePath, oldFileName, newFileName, renamed, msg);
     }
     break;
 
@@ -1048,7 +992,7 @@ void FileManagementWidget::requestFileSystemInfo(const QString &parentDirPath)
 {
 
     if(!controlCenterPacketsParser->requestFileSystemInfo(m_peerSocket, parentDirPath)) {
-        ui.textEditLogs->append(tr("Error! Can not send request! %1").arg(controlCenterPacketsParser->lastErrorMessage()));
+        appendMessage(tr("Can not send request!"), QtCriticalMsg, true, controlCenterPacketsParser->lastErrorMessage());
     }
 
 }
@@ -1065,7 +1009,7 @@ void FileManagementWidget::fileSystemInfoReceived(SOCKETID socketID, const QStri
     if(parentDirPath.isEmpty()) {
         ui.comboBoxRemotePath->disconnect();
         ui.comboBoxRemotePath->clear();
-        ui.comboBoxRemotePath->addItems(remoteFileSystemModel->drives());
+        ui.comboBoxRemotePath->addItems(m_remoteFileSystemModel->drives());
         ui.comboBoxRemotePath->insertItem(0, tr("Computer"));
         ui.comboBoxRemotePath->setCurrentIndex(0);
         connect(ui.comboBoxRemotePath, SIGNAL(currentIndexChanged(int)), this, SLOT(comboBoxRemotePathIndexChanged(int)));
@@ -1094,7 +1038,6 @@ void FileManagementWidget::requestUploadFilesToRemote(const QString &localBaseDi
         if(fi.isDir()) {
             QStringList newFiles;
             QDir dir(fi.absoluteFilePath());
-
             QStringList filters;
             filters << "*" << "*.*";
             foreach(QString file, dir.entryList(filters, QDir::Dirs | QDir::Files | QDir::System | QDir::Hidden | QDir::NoDotAndDotDot)) {
@@ -1103,9 +1046,7 @@ void FileManagementWidget::requestUploadFilesToRemote(const QString &localBaseDi
             }
 
             if(!newFiles.isEmpty()) {
-                QDir dir(remoteDir);
-                QString newRemoteDir = dir.absoluteFilePath(localFileName);
-                requestUploadFilesToRemote(fi.absoluteFilePath(), newFiles, newRemoteDir);
+                requestUploadFilesToRemote(fi.absoluteFilePath(), newFiles, remoteDir+"/"+localFileName);
             }
             continue;
         }
@@ -1113,7 +1054,7 @@ void FileManagementWidget::requestUploadFilesToRemote(const QString &localBaseDi
         FileManager::FileError error;
         const FileManager::FileMetaInfo *info = m_fileManager->tryToSendFile(fi.absoluteFilePath(), &error);
         if(!info) {
-            ui.textEditLogs->append(tr("Error! Can not send file! %1").arg(error.errorString));
+            appendMessage(tr("Can not send file!"), QtCriticalMsg, true, error.errorString);
             continue ;
         }
 
@@ -1123,13 +1064,13 @@ void FileManagementWidget::requestUploadFilesToRemote(const QString &localBaseDi
         bool ok = controlCenterPacketsParser->requestUploadFile(m_peerSocket, info->md5sum, fi.fileName(), info->size, remoteDir);
         if(!ok) {
             m_fileManager->closeFile(info->md5sum);
-            ui.textEditLogs->append(tr("Error! Can not send file! %1").arg(controlCenterPacketsParser->lastErrorMessage()));
+            appendMessage(tr("Can not upload file '%1'!").arg(fi.fileName()), QtCriticalMsg, true, controlCenterPacketsParser->lastErrorMessage());
             continue ;
         } else {
             if(!filesList.contains(info->md5sum)) {
                 filesList.append(info->md5sum);
             }
-            ui.textEditLogs->append(tr("Request uploading file %1").arg(localFileName));
+            appendMessage(tr("Request uploading file %1...").arg(localFileName));
         }
 
     }
@@ -1148,16 +1089,15 @@ void FileManagementWidget::requestDownloadFileFromRemote(const QString &remoteBa
         return;
     }
 
-
     startFileManager();
 
     foreach (QString remoteFileName, remoteFiles) {
         bool ok = controlCenterPacketsParser->requestDownloadFile(m_peerSocket, remoteBaseDir, remoteFileName, localDir);
         if(!ok) {
-            ui.textEditLogs->append(tr("Error! Can not send file download request! %1").arg(controlCenterPacketsParser->lastErrorMessage()) );
+            appendMessage(tr("Can not send file download request!"), QtCriticalMsg, true, controlCenterPacketsParser->lastErrorMessage());
             continue ;
         } else {
-            ui.textEditLogs->append(tr("Request downloading file %1").arg(remoteFileName));
+            appendMessage(tr("Request downloading file '%1' ").arg(remoteFileName));
         }
     }
 
@@ -1267,17 +1207,21 @@ void FileManagementWidget::processPeerRequestDownloadFilePacket(SOCKETID socketI
 void FileManagementWidget::processFileDeletingResult(const QString &baseDirPath, const QStringList &failedFiles)
 {
     if(failedFiles.isEmpty()) {
+        appendMessage(tr("Files deleted!"));
         return;
     }
-    QMessageBox::critical(this, tr("Error"), tr("Some files can not be deleted:<br>%1").arg(failedFiles.join("<br>")));
+
+    appendMessage(tr("Some files can not be deleted:<br>%1").arg(failedFiles.join("<br>")), QtCriticalMsg, true);
 }
 
-void FileManagementWidget::processFileRenamingResult(const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message)
+void FileManagementWidget::processFileRenamingResult(const QString &baseDirPath, const QString &oldFileName, const QString &newFileName, bool renamed, const QString &message)
 {
     if(renamed) {
+        appendMessage(tr("File '%1' renamed to '%2' .").arg(oldFileName).arg(newFileName));
         return;
     }
-    QMessageBox::critical(this, tr("Error"), tr("File '%1' can not be renamed!").arg(fileName));
+
+    appendMessage(tr("Failed to rename file '%1' to '%2' !").arg(oldFileName).arg(newFileName), QtCriticalMsg, true, message);
 }
 
 
@@ -1291,7 +1235,7 @@ void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const 
     }
     //TODO:
 
-    ui.textEditLogs->append(tr("File downloading request accepted! %1").arg(pathToSaveFile));
+    appendMessage(tr("File downloading request accepted! %1").arg(pathToSaveFile));
 
     startFileManager();
 
@@ -1303,18 +1247,17 @@ void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const 
         case FileManager::ERROR_FILE_EXIST_WITH_SAME_NAME : {
             QDir dir(pathToSaveFile);
             if(!dir.remove(pathToSaveFile)) {
-                QString msg = tr("Failed to overwrite file:<br>%1").arg(pathToSaveFile);
-                ui.textEditLogs->append(msg);
-                QMessageBox::critical(this, tr("Error"), msg);
+                QString msg = tr("Failed to overwrite file '%1' !").arg(pathToSaveFile);
+                appendMessage(msg, QtCriticalMsg, true);
                 return;
             }
-            ui.textEditLogs->append(tr("File automatically overwrote: %1").arg(pathToSaveFile));
+            appendMessage(tr("File automatically overwrote: %1").arg(pathToSaveFile));
             fileDownloadRequestAccepted(socketID, remoteFileName, fileMD5Sum, size, pathToSaveFile);
             return;
         }
         break;
         case FileManager::ERROR_FILE_EXIST_WITH_SAME_CONTENT_AND_NAME : {
-            ui.textEditLogs->append(tr("File automatically skipped: %1").arg(pathToSaveFile));
+            appendMessage(tr("File automatically skipped: %1").arg(pathToSaveFile));
             return;
 
             //            static bool skipAll = false;
@@ -1379,7 +1322,7 @@ void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const 
 
         default: {
             QMessageBox::critical(this, tr("Error"), error.errorString);
-            ui.textEditLogs->append(tr("Error! Failed to download file '%1'! %2 ").arg(remoteFileName).arg(error.errorString));
+            appendMessage(tr("Failed to download file '%1' !").arg(remoteFileName), QtCriticalMsg, true, error.errorString);
             return;
         }
         break;
@@ -1395,7 +1338,7 @@ void FileManagementWidget::fileDownloadRequestAccepted(SOCKETID socketID, const 
 
     if(!controlCenterPacketsParser->requestFileData(m_peerSocket, fileMD5Sum, 0, 0)) {
         m_fileManager->closeFile(fileMD5Sum);
-        ui.textEditLogs->append(tr("Error! Failed to download file '%1'! %2 ").arg(remoteFileName).arg(controlCenterPacketsParser->lastErrorMessage()));
+        appendMessage(tr("Failed to download file '%1' !").arg(remoteFileName), QtCriticalMsg, true, controlCenterPacketsParser->lastErrorMessage());
     }
 
 }
@@ -1408,8 +1351,7 @@ void FileManagementWidget::fileDownloadRequestDenied(SOCKETID socketID, const QS
     }
     //TODO:
 
-    ui.textEditLogs->append(tr("Error! File '%1' downloading request denied! Code:%2").arg(remoteFileName).arg(errorCode));
-
+    appendMessage(tr("File '%1' downloading request denied! Code:%2").arg(remoteFileName).arg(errorCode), QtCriticalMsg, true);
 }
 
 void FileManagementWidget::fileUploadRequestResponsed(SOCKETID socketID, const QByteArray &fileMD5Sum, bool accepted, const QString &message)
@@ -1427,10 +1369,9 @@ void FileManagementWidget::fileUploadRequestResponsed(SOCKETID socketID, const Q
         //        m_udtProtocolForFileTransmission->sendFileToPeer(m_peerFileTransmissionSocket, fi.absoluteFilePath(), 0, fi.size());
 
     } else {
-        //QMessageBox::critical(this, tr("Error"), tr("Can not send file!<br>%1").arg(message) );
         m_fileManager->closeFile(fileMD5Sum);
         filesList.removeAll(fileMD5Sum);
-        ui.textEditLogs->append(tr("Error! Can not send file!<br>%1").arg(message));
+        appendMessage(tr("Can not send file!"), QtCriticalMsg, false, message);
     }
 
     on_toolButtonShowRemoteFiles_clicked();
@@ -1523,7 +1464,7 @@ void FileManagementWidget::processFileTXStatusChangedPacket(SOCKETID socketID, c
     break;
     case quint8(MS::File_TX_Done): {
 
-        ui.textEditLogs->append(tr("File Uploaded! '%1'").arg(m_fileManager->getFileLocalSavePath(fileMD5)));
+        appendMessage(tr("File Uploaded! '%1'").arg(m_fileManager->getFileLocalSavePath(fileMD5)));
         m_fileManager->closeFile(fileMD5);
 
         on_toolButtonShowRemoteFiles_clicked();
@@ -1540,7 +1481,7 @@ void FileManagementWidget::processFileTXErrorFromPeer(SOCKETID socketID, const Q
     qDebug() << "--FileManagement::processFileTXErrorFromPeer(...) " << " socketID:" << socketID;
     qCritical() << errorMessage;
 
-    ui.textEditLogs->append(errorMessage);
+    appendMessage(errorMessage, QtCriticalMsg, true);
 
 }
 
@@ -1575,8 +1516,7 @@ void FileManagementWidget::fileTXError(int requestID, const QByteArray &fileMD5,
         return;
     }
 
-    qCritical() << errorString;
-    ui.textEditLogs->append(errorString);
+    appendMessage(errorString, QtCriticalMsg, true);
 
     controlCenterPacketsParser->fileTXError(m_peerSocket, fileMD5, errorCode, errorString);
 
@@ -1595,7 +1535,7 @@ void FileManagementWidget::pieceVerified(const QByteArray &fileMD5, int pieceInd
         if(verificationProgress == 100) {
             //qWarning()<<"Done!";
             controlCenterPacketsParser->fileTXStatusChanged(m_peerSocket, fileMD5, quint8(MS::File_TX_Done));
-            ui.textEditLogs->append(tr("File Downloaded! '%1'").arg(m_fileManager->getFileLocalSavePath(fileMD5)));
+            appendMessage(tr("File Downloaded! '%1'").arg(m_fileManager->getFileLocalSavePath(fileMD5)));
         } else {
             //TODO:
             //            int uncompletedPieceIndex = m_fileManager->getOneUncompletedPiece(fileMD5);
@@ -1646,7 +1586,7 @@ void FileManagementWidget::on_pushButtonUploadToRemote_clicked()
     //        return;
     //    }
 
-    QString remoteDir = remoteFileSystemModel->currentDirPath();
+    QString remoteDir = m_remoteFileSystemModel->currentDirPath();
     if(remoteDir.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Please select the remote path to save files!"));
         ui.tableViewRemoteFiles->setFocus();
@@ -1689,7 +1629,7 @@ void FileManagementWidget::on_pushButtonUploadToRemote_clicked()
         return;
     }
 
-    requestUploadFilesToRemote(m_localCurrentDir, files, remoteFileSystemModel->currentDirPath());
+    requestUploadFilesToRemote(m_localCurrentDir, files, m_remoteFileSystemModel->currentDirPath());
 
 
 }
@@ -1728,7 +1668,7 @@ void FileManagementWidget::on_pushButtonDownloadToLocal_clicked()
             continue;
         }
 
-        QString filePath = remoteFileSystemModel->fileName(index);
+        QString filePath = m_remoteFileSystemModel->fileName(index);
         if(filePath == "..") {
             continue;
         }
@@ -1746,20 +1686,21 @@ void FileManagementWidget::on_pushButtonDownloadToLocal_clicked()
         return;
     }
 
-    requestDownloadFileFromRemote(remoteFileSystemModel->currentDirPath(), files, m_localCurrentDir);
+    requestDownloadFileFromRemote(m_remoteFileSystemModel->currentDirPath(), files, m_localCurrentDir);
 
 }
 
-void FileManagementWidget::deleteFiles()
+void FileManagementWidget::deleteFiles(bool deleteRemoteFiles)
 {
 
     QModelIndexList selectedIndexes;
     QString baseDir;
     QStringList files;
+    //bool deleteRemoteFiles = ui.tableViewRemoteFiles->hasFocus();
 
-    if(ui.tableViewRemoteFiles->hasFocus()) {
+    if(deleteRemoteFiles) {
         selectedIndexes = ui.tableViewRemoteFiles->selectionModel()->selectedIndexes();
-        baseDir = remoteFileSystemModel->currentDirPath();
+        baseDir = m_remoteFileSystemModel->currentDirPath();
         int selectedIndexesCount = selectedIndexes.count();
         for (int j = 0; j < selectedIndexesCount; ++j) {
             QModelIndex index = selectedIndexes.at(j);
@@ -1767,7 +1708,7 @@ void FileManagementWidget::deleteFiles()
                 continue;
             }
 
-            QString filePath = remoteFileSystemModel->fileName(index);
+            QString filePath = m_remoteFileSystemModel->fileName(index);
             if(filePath == "..") {
                 continue;
             }
@@ -1804,12 +1745,12 @@ void FileManagementWidget::deleteFiles()
     }
 
 
-    if(ui.tableViewRemoteFiles->hasFocus()) {
+    if(deleteRemoteFiles) {
         bool ok = controlCenterPacketsParser->requestDeleteFiles(m_peerSocket, baseDir, files);
         if(!ok) {
-            ui.textEditLogs->append(tr("Error! Can not send file deletion request! %1").arg(controlCenterPacketsParser->lastErrorMessage()) );
+            appendMessage(tr("Can not send file deletion request!"), QtCriticalMsg, true, controlCenterPacketsParser->lastErrorMessage());
         } else {
-            ui.textEditLogs->append(tr("Request deleting files:<br> %1").arg(files.join("<br>")));
+            appendMessage(tr("Request deleting files:<br> %1").arg(files.join("<br>")));
         }
     } else {
         QDir dir(baseDir);
@@ -1819,9 +1760,9 @@ void FileManagementWidget::deleteFiles()
         }
 
         if(failedFiles.isEmpty()) {
-            ui.textEditLogs->append(tr("Local files deleted:<br>%1").arg(files.join("<br>")));
+            appendMessage(tr("Local files deleted:<br>%1").arg(files.join("<br>")));
         } else {
-            ui.textEditLogs->append(tr("Failed to delete local files:<br>%1").arg(failedFiles.join("<br>")) );
+            appendMessage(tr("Failed to delete local files:<br>%1").arg(failedFiles.join("<br>")), QtCriticalMsg, true);
         }
 
     }
@@ -1832,8 +1773,21 @@ void FileManagementWidget::deleteFiles()
 void FileManagementWidget::deleteLocalFiles(const QString &path, QStringList *failedFiles, const QStringList &nameFilters, const QStringList &ignoredFiles, const QStringList &ignoredDirs)
 {
 
+    QFileInfo fi(path);
+    if(fi.isFile()){
+        if(!QFile::remove(path)){
+            if(failedFiles) {
+                failedFiles->append(path);
+            }
+        }
+        return;
+    }
+
     QDir dir(path);
     if(!dir.exists()) {
+        if(failedFiles) {
+            failedFiles->append(path);
+        }
         return;
     }
 
@@ -1869,16 +1823,16 @@ void FileManagementWidget::deleteLocalFiles(const QString &path, QStringList *fa
 }
 
 
-void FileManagementWidget::renameFile()
+void FileManagementWidget::renameFile(bool renameRemoteFile)
 {
 
     QModelIndexList selectedIndexes;
     QString baseDir;
     QString file;
 
-    if(ui.tableViewRemoteFiles->hasFocus()) {
+    if(renameRemoteFile) {
         selectedIndexes = ui.tableViewRemoteFiles->selectionModel()->selectedIndexes();
-        baseDir = remoteFileSystemModel->currentDirPath();
+        baseDir = m_remoteFileSystemModel->currentDirPath();
         if(selectedIndexes.isEmpty()) {
             return;
         }
@@ -1888,7 +1842,7 @@ void FileManagementWidget::renameFile()
             return;
         }
 
-        file = remoteFileSystemModel->fileName(index);
+        file = m_remoteFileSystemModel->fileName(index);
         if(file == "..") {
             return;
         }
@@ -1920,7 +1874,6 @@ void FileManagementWidget::renameFile()
         return;
     }
 
-
     bool ok;
     QString newFileName = QInputDialog::getText(this, tr("Rename File"),
                           tr("New File Name:"), QLineEdit::Normal,
@@ -1929,26 +1882,52 @@ void FileManagementWidget::renameFile()
         return;
     }
 
-
-    if(ui.tableViewRemoteFiles->hasFocus()) {
+    if(renameRemoteFile) {
         ok = controlCenterPacketsParser->requestRenameFile(m_peerSocket, baseDir, file, newFileName);
         if(!ok) {
-            ui.textEditLogs->append(tr("Error! Can not send file renaming request! %1").arg(controlCenterPacketsParser->lastErrorMessage()) );
+            appendMessage(tr("Can not send file renaming request!"), QtCriticalMsg, true, controlCenterPacketsParser->lastErrorMessage());
         } else {
-            ui.textEditLogs->append(tr("Request renaming file:<br> %1").arg(file));
+            appendMessage(tr("Request renaming file: %1").arg(file));
         }
     } else {
         QDir dir(baseDir);
         ok = dir.rename(file, newFileName);
         if(!ok) {
-            ui.textEditLogs->append(tr("Error! Failed to rename local file '%1'!").arg(file) );
+            appendMessage(tr("Failed to rename local file '%1' !").arg(file), QtCriticalMsg, true);
         } else {
-            ui.textEditLogs->append(tr("Local file '%1' renamed to '%2'").arg(file).arg(newFileName));
+            appendMessage(tr("Local file '%1' renamed to '%2'").arg(file).arg(newFileName));
         }
     }
 
 }
 
+void FileManagementWidget::appendMessage(const QString &info, QtMsgType msgType, bool showMsgBox, const QString &extraMsg)
+{
+    QString msg = QString("[%1] %2 %3").arg(QDateTime::currentDateTime().toString("hh:mm:ss")).arg(info).arg(extraMsg);
+    ui.textEditLogs->append(msg);
+
+    if(showMsgBox){
+        QString msg = info;
+        if(!extraMsg.trimmed().isEmpty()){
+            msg += "<p>" + extraMsg + "</p>";
+        }
+        switch (msgType) {
+        case QtCriticalMsg:
+        case QtFatalMsg:
+            QMessageBox::critical(this, QObject::tr("Error"), msg);
+            break;
+
+        case QtWarningMsg:
+            QMessageBox::warning(this, QObject::tr("Warning"), msg);
+            break;
+
+        default:
+            QMessageBox::information(this, QObject::tr("Information"), msg);
+            break;
+        }
+    }
+
+}
 
 
 

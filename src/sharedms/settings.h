@@ -56,8 +56,8 @@ public:
     QString getAppServers() const;
 
     //Format: IP:Port (eg. 192.168.1.1:12345)
-    void setLastUsedAppServer(const QString &server);
-    QString getLastUsedAppServer() const;
+    void setLastUsedAppServer(const QString &server, quint16 port);
+    void getLastUsedAppServer(QString *ip, quint16 *port) const;
 
 
 private:

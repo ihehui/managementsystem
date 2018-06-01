@@ -1056,6 +1056,7 @@ void FileTransferPacket::init()
 
     FileRenamingResponse.baseDirPath = "";
     FileRenamingResponse.oldFileName = "";
+    FileRenamingResponse.newFileName = "";
     FileRenamingResponse.renamed = 0;
     FileRenamingResponse.message = "";
 
@@ -1137,7 +1138,7 @@ void FileTransferPacket::parsePacketBody(QByteArray &packetBody)
         break;
 
     case FT_FileRenamingResponse: {
-        in >> FileRenamingResponse.baseDirPath >> FileRenamingResponse.oldFileName >> FileRenamingResponse.renamed >> FileRenamingResponse.message;
+        in >> FileRenamingResponse.baseDirPath >> FileRenamingResponse.oldFileName >> FileRenamingResponse.newFileName >> FileRenamingResponse.renamed >> FileRenamingResponse.message;
     }
         break;
 
@@ -1225,7 +1226,7 @@ QByteArray FileTransferPacket::packBodyData()
         break;
 
     case FT_FileRenamingResponse: {
-        out << FileRenamingResponse.baseDirPath << FileRenamingResponse.oldFileName << FileRenamingResponse.renamed << FileRenamingResponse.message;
+        out << FileRenamingResponse.baseDirPath << FileRenamingResponse.oldFileName << FileRenamingResponse.newFileName << FileRenamingResponse.renamed << FileRenamingResponse.message;
     }
         break;
 

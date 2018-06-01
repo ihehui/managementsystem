@@ -398,6 +398,15 @@ QString ServerManagementWidget::convertDisksInfoToHTML(const QString &disksInfo)
                    ;
 
     html += "<table  border=\"0\" cellpadding=\"5\" cellspacing=\"1\"  >";
+    html += QString("<tr><td>%1</td><td>%2</td><td>%3</td><td>%4</td><td>%5</td><td>%6</td><td>%7</td></tr>")
+            .arg(tr("Filesystem"))
+            .arg(tr("Type"))
+            .arg(tr("Size"))
+            .arg("Used")
+            .arg("Avail")
+            .arg(tr("Use%"))
+            .arg(tr("Mounted on"))
+            ;
 
     QStringList list = disksInfo.split("\n");
     foreach (QString row, list) {

@@ -177,7 +177,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
     m_updateTemperaturesTimer = 0;
 
-
+    ui.tabWidget->setEnabled(false);
 
 }
 
@@ -1051,6 +1051,7 @@ void SystemManagementWidget::clientInfoPacketReceived(const ClientInfoPacket &pa
 
 void SystemManagementWidget::systemInfoFromServerPacketReceived(const SystemInfoFromServerPacket &packet)
 {
+    if(INVALID_SOCK_ID == m_peerSocket || (m_peerSocket != packet.getSocketID())){return;}
 
     QString extraInfo = packet.extraInfo;
     QByteArray infoData = packet.data;

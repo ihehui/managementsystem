@@ -138,14 +138,21 @@ QString Settings::getAppServers() const
     return getValueWithDecryption("AppServers", m_encryptionKey, "").toString();
 }
 
-void Settings::setLastUsedAppServer(const QString &server)
+void Settings::setLastUsedAppServer(const QString &server, quint16 port)
 {
-    setValueWithEncryption("AppServerLastUsed", server, m_encryptionKey);
+    setValueWithEncryption("AppServerIPLastUsed", server, m_encryptionKey);
+    setValueWithEncryption("AppServerPortLastUsed", port, m_encryptionKey);
 }
 
-QString Settings::getLastUsedAppServer() const
+void Settings::getLastUsedAppServer(QString *ip, quint16 *port) const
 {
-    return getValueWithDecryption("AppServerLastUsed", m_encryptionKey, QString()).toString();
+    if(ip){
+        *ip = getValueWithDecryption("AppServerIPLastUsed", m_encryptionKey, "").toString();
+    }
+
+    if(port){
+        *port = getValueWithDecryption("AppServerPortLastUsed", m_encryptionKey, 0).toUInt();
+    }
 }
 
 

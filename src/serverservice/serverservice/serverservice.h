@@ -179,10 +179,12 @@ private:
     bool m_isUsingMySQL;
 
     bool m_getRealTimeResourcesLoad;
+    int m_realTimeResourcseLoadInterval; //ms
 
     uint m_unacknowledgedAlarmsCount;
     uint m_totalAlarmsCount;
     QString m_disksInfo;
+    int m_disksInfoCounter;
 
 };
 

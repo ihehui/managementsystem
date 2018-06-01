@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QObject>
 #include <QFileSystemModel>
+#include <QSortFilterProxyModel>
 #include <QCompleter>
 #include <QFileIconProvider>
 #include <QList>
@@ -128,7 +129,7 @@ public slots:
     void processPeerRequestDownloadFilePacket(SOCKETID socketID, const QString &localBaseDir, const QString &fileName, const QString &remoteFileSaveDir);
 
     void processFileDeletingResult(const QString &baseDirPath, const QStringList &failedFiles);
-    void processFileRenamingResult(const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message);
+    void processFileRenamingResult(const QString &baseDirPath, const QString &oldFileName, const QString &newFileName, bool renamed, const QString &message);
 
 private slots:
 
@@ -150,10 +151,12 @@ private slots:
     void on_pushButtonUploadToRemote_clicked();
     void on_pushButtonDownloadToLocal_clicked();
 
-    void deleteFiles();
+    void deleteFiles(bool deleteRemoteFiles);
     void deleteLocalFiles(const QString &path, QStringList *failedFiles = 0, const QStringList &nameFilters = QStringList(), const QStringList &ignoredFiles = QStringList(), const QStringList &ignoredDirs = QStringList());
 
-    void renameFile();
+    void renameFile(bool renameRemoteFile);
+
+    void appendMessage(const QString &info, QtMsgType msgType = QtDebugMsg, bool showMsgBox = false, const QString &extraMsg = "");
 
 private:
     Ui::FileManagement ui;
@@ -164,7 +167,8 @@ private:
     QCompleter *localFilesCompleter;
     QString m_localCurrentDir;
 
-    FileSystemModel *remoteFileSystemModel;
+    FileSystemModel *m_remoteFileSystemModel;
+    QSortFilterProxyModel *m_proxyModel;
 
     unsigned int m_peerSocket;
 

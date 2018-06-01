@@ -329,13 +329,14 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool responseRenamingFiles(SOCKETID socketID, const QString &baseDirPath, const QString &fileName, bool renamed, const QString &message)
+    bool responseRenamingFiles(SOCKETID socketID, const QString &baseDirPath, const QString &oldFileName, const QString &newFileName,bool renamed, const QString &message)
     {
 
         FileTransferPacket packet;
         packet.InfoType = FileTransferPacket::FT_FileRenamingResponse;
         packet.FileRenamingResponse.baseDirPath = baseDirPath;
-        packet.FileRenamingResponse.oldFileName = fileName;
+        packet.FileRenamingResponse.oldFileName = oldFileName;
+        packet.FileRenamingResponse.newFileName = newFileName;
         packet.FileRenamingResponse.renamed = renamed;
         packet.FileRenamingResponse.message = message;
 

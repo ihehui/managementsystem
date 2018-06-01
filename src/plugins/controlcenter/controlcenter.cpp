@@ -323,7 +323,9 @@ void ControlCenter::closeEvent(QCloseEvent *e)
 
 
     if(controlCenterPacketsParser && m_socketConnectedToServer) {
+        m_adminUser->setAboutToQuit(true);
         m_rtp->closeSocket(m_socketConnectedToServer);
+        m_socketConnectedToServer = INVALID_SOCK_ID;
     }
 
     clientInfoModel->clear();
@@ -1470,8 +1472,8 @@ void ControlCenter::peerDisconnected(SOCKETID socketID)
 
     if(socketID == m_socketConnectedToServer) {
         m_socketConnectedToServer = INVALID_SOCK_ID;
-//        m_adminUser->setVerified(false);
-//        m_readonly = true;
+        ui.tabServer->setEnabled(false);
+        ui.tabClientsList->setEnabled(false);
         return;
     }
 
@@ -1485,6 +1487,9 @@ void ControlCenter::adminVerified()
 {
     m_socketConnectedToServer = m_adminUser->socketConnectedToServer();
     Packet::setLocalID(m_adminUser->getUserID());
+
+    ui.tabServer->setEnabled(true);
+    ui.tabClientsList->setEnabled(true);
 }
 
 

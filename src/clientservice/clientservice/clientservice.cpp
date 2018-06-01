@@ -476,6 +476,7 @@ void ClientService::serverFound(const ServerDiscoveryPacket &packet)
     qsrand(QDateTime::currentMSecsSinceEpoch());
     int wt = (qAbs(qrand()) % 10 + 1) * 1000;
     QElapsedTimer timer;
+    timer.start();
     while(timer.elapsed() < wt){
         qApp->processEvents();
     }
@@ -2360,9 +2361,11 @@ void ClientService::deleteLocalFiles(const QString &path, QStringList *failedFil
         return;
     }
 
-
     QDir dir(path);
     if(!dir.exists()) {
+        if(failedFiles) {
+            failedFiles->append(path);
+        }
         return;
     }
 
@@ -2402,7 +2405,7 @@ void ClientService::renameFile(SOCKETID socketID, const QString &localBaseDir, c
     QDir dir(localBaseDir);
     renamed = dir.rename(oldFileName, newFileName);
     fileSystemInfoRequested(socketID, localBaseDir);
-    clientPacketsParser->responseRenamingFiles(socketID, localBaseDir, oldFileName, renamed, "");
+    clientPacketsParser->responseRenamingFiles(socketID, localBaseDir, oldFileName, newFileName, renamed, "");
 }
 
 bool ClientService::getLocalFilesInfo(const QString &parentDirPath, QByteArray *result, QString *errorMessage)

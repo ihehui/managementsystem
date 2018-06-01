@@ -45,6 +45,16 @@
 #include "HHSharedSystemUtilities/SystemUtilities"
 #include "HHSharedCore/JobMonitor"
 
+
+#ifdef Q_OS_WIN32
+    #include <windows.h>
+    #include <time.h>
+#else
+    #include <unistd.h>
+    #include <sys/time.h>
+#endif
+
+
 namespace HEHUI
 {
 
@@ -83,9 +93,13 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
     m_isUsingMySQL = true;
 
     m_getRealTimeResourcesLoad = false;
+    m_realTimeResourcseLoadInterval = 2000;
 
     m_totalAlarmsCount = 0;
     m_unacknowledgedAlarmsCount = 0;
+
+    m_disksInfo = "";
+    m_disksInfoCounter = 0;
 
 
     processArguments(argc, argv);
@@ -1055,6 +1069,8 @@ void ServerService::processAdminLoginPacket(const AdminLoginPacket &packet)
     if(!verified) {
         return;
     }
+    qWarning() << QString(" Admin %1@%2 online! %3").arg(adminID).arg(adminIP).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+
 
     QString statement = QString("call sp_Admin_Update_Login_Info('%1', '%2', '%3' );")
                         .arg(adminID)
@@ -1069,6 +1085,8 @@ void ServerService::processAdminLoginPacket(const AdminLoginPacket &packet)
 
     onlineAdminSockets.insert(socketID, adminID);
     sendServerInfo(socketID);
+
+    m_disksInfoCounter = 0;
     startGetingRealTimeResourcesLoad();
 
 }
@@ -1087,6 +1105,12 @@ void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, con
 
     qWarning() << QString(" Admin %1@%2 %3! %4").arg(adminID).arg(adminComputerName).arg(online ? "Online" : "Offline").arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
 
+
+    onlineAdminSockets.remove(socketID);
+    if(!onlineAdminSockets.size()) {
+        stopGetingRealTimeResourcesLoad();
+    }
+
     foreach (AdminUserInfo *info, adminsHash) {
         if(info->getUserID() == adminID) {
             info->socketID = (online ? socketID : 0);
@@ -1094,10 +1118,6 @@ void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, con
         }
     }
 
-    onlineAdminSockets.remove(socketID);
-    if(!onlineAdminSockets.size()) {
-        stopGetingRealTimeResourcesLoad();
-    }
 
 }
 
@@ -1120,8 +1140,6 @@ void ServerService::peerDisconnected(const QHostAddress &peerAddress, quint16 pe
     if(!normalClose) {
         qCritical() << QString("ERROR! Peer %1:%2 Closed Unexpectedly!").arg(peerAddress.toString()).arg(peerPort);
     }
-
-
 }
 
 void ServerService::peerDisconnected(SOCKETID socketID)
@@ -1136,7 +1154,7 @@ void ServerService::peerDisconnected(SOCKETID socketID)
         if(info) {
             address = info->getClientUDTListeningAddress() + ":" + QString::number(info->getClientUDTListeningPort());
         }
-        qCritical() << QString("ERROR! Client '%1' From %2 Closed Connection Unexpectedly! %3").arg(clientSocketsHash.value(socketID)).arg(address).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+        qCritical() << QString("ERROR! Client '%1' from %2 closed connection unexpectedly! %3").arg(clientSocketsHash.value(socketID)).arg(address).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         clientSocketsHash.remove(socketID);
     }
 
@@ -1148,6 +1166,7 @@ void ServerService::peerDisconnected(SOCKETID socketID)
     foreach (AdminUserInfo *info, adminsHash) {
         if(info->socketID == socketID) {
             info->socketID = INVALID_SOCK_ID;
+            qWarning() << QString(" Admin %1@%2 offline! %3").arg(info->getUserID()).arg(info->lastLoginIP).arg(QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
             return;
         }
     }
@@ -1267,19 +1286,17 @@ bool ServerService::execQuery(const QString &statement, QString *errorString )
         //MySQL数据库重启，重新连接
         if(error.number() == 2006) {
             query->clear();
-            openDatabase(true);
-        } else {
-            getAllClientsInfoFromDB();
-            getAllAdminsInfoFromDB();
-            getSystemAlarmsCount();
+            if(openDatabase(true)){
+                getAllClientsInfoFromDB();
+                getAllAdminsInfoFromDB();
+                getSystemAlarmsCount();
+            }
+            query->clear();
         }
-        query->clear();
-
         return false;
     }
 
     return true;
-
 }
 
 void ServerService::getAllClientsInfoFromDB()
@@ -1558,7 +1575,8 @@ void ServerService::sendServerInfo(SOCKETID adminSocketID)
     QString cpu = SystemUtilities::getCPUName();
     quint64 memory = 0;
     SystemUtilities::getMemoryStatus(&memory, 0);
-    //qDebug()<<"CPU:"<<cpu<<" Memory:"<<memory;
+
+    //qDebug()<<"CPU:"<<cpu<<" Memory:"<<memory<<" HD SN:"<<SystemUtilities::getHardDriveSerialNumber(0);
     obj["CPU"] = cpu;
     obj["Memory"] = QString::number(memory);
 
@@ -1567,15 +1585,9 @@ void ServerService::sendServerInfo(SOCKETID adminSocketID)
     obj["CurrentDBUTCTime"] = QString::number(getCurrentDBUTCTime());
 
 
-
     Settings settings(SERVICE_NAME, "./");
     obj["DBServerIP"] = settings.getDBServerHost();
     obj["DBDriver"] = settings.getDBDriver();
-
-
-
-
-
 
 
     QJsonObject object;
@@ -1585,7 +1597,6 @@ void ServerService::sendServerInfo(SOCKETID adminSocketID)
 
 
     serverPacketsParser->sendSystemInfoPacket(adminSocketID, "", data, MS::SYSINFO_SERVER_INFO);
-
 }
 
 void ServerService::startGetingRealTimeResourcesLoad()
@@ -1593,6 +1604,7 @@ void ServerService::startGetingRealTimeResourcesLoad()
     qDebug() << "ServerService::startGetingRealTimeResourcesLoad(...)";
 
     if(m_getRealTimeResourcesLoad) {
+        m_disksInfoCounter = 0;
         return;
     }
     m_getRealTimeResourcesLoad = true;
@@ -1611,12 +1623,18 @@ void ServerService::startGetingRealTimeResourcesLoad()
 void ServerService::stopGetingRealTimeResourcesLoad()
 {
     m_getRealTimeResourcesLoad = false;
+    m_disksInfoCounter = 0;
 }
 
 void ServerService::getRealTimeResourcseLoad()
 {
     qDebug() << "--SystemInfo::getRealTimeResourcseLoad(...)";
+    if(m_realTimeResourcseLoadInterval < 1000){
+        m_realTimeResourcseLoadInterval = 1000;
+    }
 
+    QElapsedTimer timer;
+    timer.start();
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();
         int memLoad = 0;
@@ -1625,10 +1643,18 @@ void ServerService::getRealTimeResourcseLoad()
 
         emit signalSendRealtimeInfo(cpuLoad, memLoad);
 
+        if (timer.elapsed() < m_realTimeResourcseLoadInterval) {
+#ifdef Q_OS_WIN32
+    Sleep(m_realTimeResourcseLoadInterval - timer.elapsed());
+#else
+    usleep((m_realTimeResourcseLoadInterval - timer.elapsed()) * 1000);
+#endif
+        }
+        timer.restart();
+
 //        QJsonObject obj;
 //        obj["CPULoad"] = QString::number(cpuLoad);
 //        obj["MemLoad"] = QString::number(memLoad);
-
 
 //        QJsonObject object;
 //        object["ResourcsesLoad"] = obj;
@@ -1639,7 +1665,10 @@ void ServerService::getRealTimeResourcseLoad()
 //        foreach (SOCKETID socketID, onlineAdminSockets) {
 //            serverPacketsParser->sendSystemInfoPacket(socketID, "", data, MS::SYSINFO_RESOURCESLOAD);
 //        }
+
     }
+
+    m_disksInfoCounter = 0;
 
 }
 
@@ -1737,15 +1766,14 @@ void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad)
     obj["CPULoad"] = QString::number(cpuLoad);
     obj["MemLoad"] = QString::number(memoryLoad);
 
-    static quint8 count = 0;
-    if(!count) {
-        m_disksInfo = SystemUtilities::getDisksInfo();;
+    if(!m_disksInfoCounter) {
+        m_disksInfo = SystemUtilities::getDisksInfo();
+        obj["Disks"] = m_disksInfo;
     }
-    obj["Disks"] = m_disksInfo;
 
-    count++;
-    if(count == 300) {
-        count = 0;
+    m_disksInfoCounter++;
+    if(m_disksInfoCounter == 300) {
+        m_disksInfoCounter = 0;
     }
 
     obj["TotalClients"] = QString::number(clientInfoHash.size());
@@ -1753,9 +1781,6 @@ void ServerService::sendRealtimeInfo(int cpuLoad, int memoryLoad)
 
     obj["TotalAlarms"] = QString::number(m_totalAlarmsCount);
     obj["UnacknowledgedAlarms"] = QString::number(m_unacknowledgedAlarmsCount);
-
-
-
 
 
     QJsonObject object;

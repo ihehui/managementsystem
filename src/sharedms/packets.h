@@ -511,6 +511,7 @@ public:
     struct FileRenamingResponseStruct {
         QString baseDirPath;
         QString oldFileName;
+        QString newFileName;
         quint8 renamed;
         QString message;
     } FileRenamingResponse;
