@@ -22,6 +22,15 @@
 #include "HHSharedSystemUtilities/SystemUtilities"
 
 
+#ifdef Q_OS_WIN32
+    #include <windows.h>
+    #include <time.h>
+#else
+    #include <unistd.h>
+    #include <sys/time.h>
+#endif
+
+
 
 namespace HEHUI
 {
@@ -35,7 +44,7 @@ SystemInfo::SystemInfo(QObject *parent) :
     //running = true;
 
     m_getRealTimeResourcesLoad = false;
-
+    m_realTimeResourcseLoadInterval = 2000;
 }
 
 SystemInfo::~SystemInfo()
@@ -311,6 +320,12 @@ void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID)
 {
     qDebug() << "--SystemInfo::getRealTimeResourcseLoad(...)";
 
+    if(m_realTimeResourcseLoadInterval < 1000){
+        m_realTimeResourcseLoadInterval = 1000;
+    }
+
+    QElapsedTimer timer;
+    timer.start();
     while (m_getRealTimeResourcesLoad) {
         int cpuLoad = SystemUtilities::getCPULoad();
         int memLoad = 0;
@@ -326,6 +341,17 @@ void SystemInfo::getRealTimeResourcseLoad(SOCKETID socketID)
         object["ResourcsesLoad"] = obj;
         QJsonDocument doc(object);
         emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_REALTIME_INFO, socketID);
+
+
+        if (timer.elapsed() < m_realTimeResourcseLoadInterval) {
+#ifdef Q_OS_WIN32
+    Sleep(m_realTimeResourcseLoadInterval - timer.elapsed());
+#else
+    usleep((m_realTimeResourcseLoadInterval - timer.elapsed()) * 1000);
+#endif
+        }
+        timer.restart();
+
     }
 
 }

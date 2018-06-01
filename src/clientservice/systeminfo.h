@@ -51,6 +51,7 @@ private:
 //    static bool running;
 
     bool m_getRealTimeResourcesLoad;
+    int m_realTimeResourcseLoadInterval; //ms
 
 
 };

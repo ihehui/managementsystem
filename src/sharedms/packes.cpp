@@ -8,7 +8,7 @@
 namespace HEHUI
 {
 
-//static Cryptography cryptography;
+static Cryptography cryptography;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ QByteArray MSPacket::encrypt(const QByteArray &data)
     if(!isEncrypted() || sessionEncryptionKey.isEmpty()) {
         return data;
     }
-    Cryptography cryptography;
+//    Cryptography cryptography;
     QByteArray encryptedData;
     if(cryptography.teaCrypto(&encryptedData, data, sessionEncryptionKey, true)) {
         return encryptedData;
@@ -63,7 +63,7 @@ QByteArray MSPacket::decrypt(const QByteArray &encryptedData)
     if(!isEncrypted() || sessionEncryptionKey.isEmpty()) {
         return encryptedData;
     }
-    Cryptography cryptography;
+//    Cryptography cryptography;
     QByteArray decryptedData;
     if(cryptography.teaCrypto(&decryptedData, encryptedData, sessionEncryptionKey, false)) {
         return decryptedData;

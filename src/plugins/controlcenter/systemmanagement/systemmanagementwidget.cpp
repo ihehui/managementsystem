@@ -994,6 +994,9 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(co
         ui.tabFileManagement->setEnabled(true);
 
         ui.groupBoxTargetHost->hide();
+
+        ui.tabWidget->setEnabled(true);
+
     } else {
         ui.lineEditHost->setReadOnly(false);
         //ui.tabSystemInfo->setEnabled(false);
@@ -1534,6 +1537,8 @@ void SystemManagementWidget::peerDisconnected(bool normalClose)
     //ui.lineEditHost->setReadOnly(false);
     ui.groupBoxTargetHost->show();
     ui.toolButtonVerify->setEnabled(true);
+    ui.tabWidget->setEnabled(false);
+
 
     ui.tabRemoteConsole->setEnabled(false);
     ui.tabSoftware->setEnabled(false);
