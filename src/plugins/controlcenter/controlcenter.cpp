@@ -1297,12 +1297,12 @@ void ControlCenter::updateClientInfoFromServer(const QString &assetNO, const QBy
         info->setJsonData(infoData);
         break;
 
-//    case quint8(MS::SYSINFO_SOFTWARE):
-//        processSoftwareInfo(info, clientInfo);
-//        break;
-//    case quint8(MS::SYSINFO_SERVICES):
-//        updateServicesInfo(object);
-//        break;
+    case quint8(MS::SYSINFO_SOFTWARE):
+        //processSoftwareInfo(info, clientInfo);
+        break;
+    case quint8(MS::SYSINFO_SERVICES):
+        //updateServicesInfo(object);
+        break;
     default:
         qCritical() << "ERROR! Unknown client info type!";
         break;

@@ -38,7 +38,7 @@
 #include <QDateTime>
 
 //#include "../../sharedms/global_shared.h"
-#include "../../sharedms/packets.h"
+#include "../../sharedms/mspackets.h"
 
 #include "../resourcesmanagerinstance.h"
 

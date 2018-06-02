@@ -73,7 +73,12 @@ ServicesManagement::~ServicesManagement()
 void ServicesManagement::setData(const QByteArray &data)
 {
     m_selectedService = 0;
-    m_serviceInfoModel->setJsonData(data);
+    unsigned long errorCode = 0;
+    QString errorMessage = "";
+    m_serviceInfoModel->setJsonData(data, &errorCode, &errorMessage);
+    if(errorCode){
+        QMessageBox::critical(this, tr("Error"), tr("Failed to get services info!<p>Error Code: %1</p><p>Error Message: %2</p>").arg(errorCode).arg(errorMessage));
+    }
 }
 
 void ServicesManagement::serviceConfigChanged(const QString &serviceName, quint64 processID, quint64 startupType)

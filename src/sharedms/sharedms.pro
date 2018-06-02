@@ -37,7 +37,7 @@ HEADERS += clientinfo.h \
     serverinfo.h \
     alarminfo.h \
     announcementinfo.h \
-    packets.h
+    mspackets.h
 
 SOURCES += clientinfo.cpp \
     resourcesmanager.cpp \
@@ -51,7 +51,7 @@ SOURCES += clientinfo.cpp \
     serverinfo.cpp \
     alarminfo.cpp \
     announcementinfo.cpp \
-    packes.cpp
+    mspackes.cpp
 
 UDT_ENABLED{
     HEADERS += udtprotocol.h

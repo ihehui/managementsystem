@@ -41,7 +41,7 @@
 
 #include "../../sharedms/global_shared.h"
 #include "../../sharedms/settings.h"
-#include "../../sharedms/packets.h"
+#include "../../sharedms/mspackets.h"
 
 
 namespace HEHUI

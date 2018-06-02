@@ -263,10 +263,18 @@ void SystemInfo::getServicesInfo(SOCKETID socketID)
 #ifdef Q_OS_WIN32
 
     QJsonArray infoArray;
-    HEHUI::WinUtilities::serviceGetAllServicesInfo(&infoArray);
+    unsigned long errorCode = 0;
+    QString errorMsg = "";
+    if(!HEHUI::WinUtilities::serviceGetAllServicesInfo(&infoArray, &errorCode)){
+        errorMsg = HEHUI::WinUtilities::WinSysErrorMsg(errorCode);
+        qCritical()<<"Failed to get services info!"<<errorMsg;
+    }
 
     QJsonObject object;
     object["Service"] = infoArray;
+    object["ErrorCode"] = QString::number(errorCode);;
+    object["ErrorMessage"] = errorMsg;
+
     QJsonDocument doc(object);
     emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_SERVICES, socketID);
 

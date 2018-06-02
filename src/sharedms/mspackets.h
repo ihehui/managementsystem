@@ -1,5 +1,5 @@
-#ifndef PACKETS_H_
-#define PACKETS_H_
+#ifndef MSPACKETS_H_
+#define MSPACKETS_H_
 
 #include <QPoint>
 
@@ -813,4 +813,4 @@ public:
 
 } //namespace HEHUI
 
-#endif // PACKETS_H_
+#endif // MSPACKETS_H_

@@ -56,7 +56,7 @@ ServiceInfoModel::~ServiceInfoModel()
 
 }
 
-void ServiceInfoModel::setJsonData(const QByteArray &data)
+void ServiceInfoModel::setJsonData(const QByteArray &data, unsigned long *errorCode, QString *errorMessage)
 {
     clearServicesList();
 
@@ -74,6 +74,15 @@ void ServiceInfoModel::setJsonData(const QByteArray &data)
     if(object.isEmpty()) {
         return;
     }
+
+
+    if(errorCode){
+        *errorCode = object["ErrorCode"].toString().toULong();
+    }
+    if(errorMessage){
+        *errorMessage = object["ErrorMessage"].toString();
+    }
+
 
     beginResetModel();
 

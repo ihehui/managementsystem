@@ -56,9 +56,7 @@ public:
     ServiceInfoModel(QObject *parent = 0);
     virtual ~ServiceInfoModel();
 
-    void setJsonData(const QByteArray &data);
-
-
+    void setJsonData(const QByteArray &data, unsigned long *errorCode = 0, QString *errorMessage = 0);
 
     ServiceInfo *getServiceInfo(const QString &serviceName);
     bool updateServiceInfo(const QString &serviceName, quint64 processID, quint64 startupType);

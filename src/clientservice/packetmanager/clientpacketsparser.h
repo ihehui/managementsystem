@@ -39,7 +39,7 @@
 #include <QCryptographicHash>
 
 #include "../clientresourcesmanager.h"
-#include "../../sharedms/packets.h"
+#include "../../sharedms/mspackets.h"
 
 #include "HHSharedNetwork/hnetworkutilities.h"
 
