@@ -209,7 +209,7 @@ void AnnouncementManagementWidget::on_actionClone_triggered()
     //AnnouncementInfo *info = m_model->getInfo(index);
 
     AnnouncementInfo info(*(m_model->getInfo(index)));
-    info.ID = "";
+    info.ID = 0;
     info.Admin = m_myself->getUserID();
     info.Active = true;
 

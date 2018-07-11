@@ -275,7 +275,7 @@ void Helper::adminRequestScreenshotPacketReceived(const ScreenshotPacket &packet
 {
 
     //QString adminName = packet.ScreenshotRequest.adminID;
-    QHostAddress adminAddress = packet.getPeerHostAddress();
+    QHostAddress adminAddress = QHostAddress(packet.ScreenshotRequest.adminAddress);
     quint16 adminPort = packet.ScreenshotRequest.adminListeningPort;
 
     QString errorMessage;
@@ -283,7 +283,7 @@ void Helper::adminRequestScreenshotPacketReceived(const ScreenshotPacket &packet
         m_rtp->closeSocket(m_socketConnectedToAdmin);
     }
 
-    m_socketConnectedToAdmin = m_rtp->connectToHost(adminAddress, adminPort, 5000, &errorMessage, RTP::TCP);
+    m_socketConnectedToAdmin = m_rtp->connectToHost(adminAddress, adminPort, 5000, &errorMessage, RTP::AUTO);
     if(m_socketConnectedToAdmin == INVALID_SOCK_ID) {
         qCritical() << QString("Can not connect to admin host '%1:%2'.<br>%3").arg(adminAddress.toString()).arg(adminPort).arg(errorMessage);
         return;
@@ -342,7 +342,7 @@ void Helper::adminRequestScreenshotPacketReceived(const ScreenshotPacket &packet
         }
     }
 
-    m_screenshotTimer->start(1000);
+    m_screenshotTimer->start(100);
 
 }
 
@@ -469,7 +469,7 @@ void Helper::setupBulletinBoardWidget()
     }
 
     bulletinBoardWidget = new BulletinBoardWidget(m_userName);
-    connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(const QString &, const QString &)), this, SLOT(sendReplyMessage(const QString &, const QString &)));
+    connect(bulletinBoardWidget, SIGNAL(sendReplyMessage(unsigned int, const QString &)), this, SLOT(sendReplyMessage(unsigned int, const QString &)));
 }
 
 

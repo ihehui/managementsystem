@@ -24,25 +24,25 @@ public:
     BulletinBoardWidget(const QString &userName, QWidget *parent = 0);
     ~BulletinBoardWidget();
 
-    void showAnnouncements(const QString &announcementID);
+    void showAnnouncements(unsigned int announcementID);
     void showAnnouncements();
     bool processAnnouncementsInfo(const QByteArray &infoData);
     void processAnnouncementReplies(const QByteArray &infoData);
 
-    void deleteAnnouncementsInfo(const QString &announcementID);
+//    void deleteAnnouncementsInfo(unsigned int announcementID);
 
 protected:
     void closeEvent(QCloseEvent *event);
 
 
 signals:
-    void sendReplyMessage(const QString &originalMessageID, const QString &replyMessage);
+    void sendReplyMessage(unsigned int originalMessageID, const QString &replyMessage);
 
 private slots:
     void clearAnnouncements();
-    void saveAnnouncementInfo(const QString &announcementID);
-    bool isAnnouncementInfoExists(const QString &announcementID);
-    AnnouncementInfo *getAnnouncementInfo(const QString &announcementID);
+    void saveAnnouncementInfo(unsigned int announcementID);
+    bool isAnnouncementInfoExists(unsigned int announcementID);
+    AnnouncementInfo *getAnnouncementInfo(unsigned int announcementID);
 
 
     void on_toolButtonPrevious_clicked();
@@ -57,13 +57,13 @@ private:
     QString m_userName;
 
     int curAnnouncementIndex;
-    QString m_curAnnouncementID;
+    unsigned int m_curAnnouncementID;
 
     QSettings *m_settings;
 
     QList<AnnouncementInfo *> infolist;
 
-    QHash<QString /*Announcement ID*/, int /*times*/> acknowledgedAnnouncements;
+    QHash<unsigned int /*Announcement ID*/, int /*times*/> acknowledgedAnnouncements;
 
 
 };

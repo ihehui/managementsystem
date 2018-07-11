@@ -78,7 +78,7 @@ void AnnouncementInfoWidget::setAnnouncementInfo(const AnnouncementInfo *info)
 
     m_info = *info;
 
-    ui.lineEditAnnouncementID->setText(info->ID);
+    ui.lineEditAnnouncementID->setText(QString::number(info->ID));
     ui.lineEditAdmin->setText(info->Admin);
     ui.dateTimeEditPublishDate->setDateTime(QDateTime::fromString(info->PublishDate, Qt::ISODate));
     ui.checkBoxActive->setChecked(info->Active);
@@ -90,12 +90,12 @@ void AnnouncementInfoWidget::setAnnouncementInfo(const AnnouncementInfo *info)
 
     ui.textEdit->setText(info->Content);
 
-    if(info->ID.isEmpty()) {
+    if(!info->ID) {
         ui.tabReplies->setEnabled(false);
         ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabReplies));
     } else {
         on_actionRefresh_triggered();
-        m_localTempID = info->ID.toUInt();
+        m_localTempID = info->ID;
 
         if(!info->Replies.isEmpty()) {
             if(ui.tabWidget->indexOf(ui.tabReplies) < 0) {
@@ -113,7 +113,7 @@ void AnnouncementInfoWidget::getAnnouncementInfo(AnnouncementInfo *info)
         return;
     }
 
-    info->ID = ui.lineEditAnnouncementID->text().trimmed();
+    info->ID = ui.lineEditAnnouncementID->text().trimmed().toUInt();
     info->Type = ui.comboBoxAnnouncementType->currentData().toUInt();
     info->Content = ui.textEdit->toHtml();
     info->ACKRequired = ui.checkBoxConfirmationRequired->isChecked();
@@ -199,7 +199,7 @@ void AnnouncementInfoWidget::setAnnouncementTargetsData(const QString &announcem
 void AnnouncementInfoWidget::on_pushButtonClone_clicked()
 {
 
-    m_info.ID = "";
+    m_info.ID = 0;
     m_info.Admin = m_myself->getUserID();
     m_info.Active = true;
 
@@ -262,7 +262,7 @@ void AnnouncementInfoWidget::on_pushButtonSave_clicked()
 
     ui.pushButtonSave->setEnabled(false);
 
-    unsigned int announcementID = m_info.ID.toUInt();
+    unsigned int announcementID = m_info.ID;
     if(!announcementID) {
         m_info.Active = ui.checkBoxActive->isChecked();
         m_info.Type = ui.comboBoxAnnouncementType->currentData().toUInt();
@@ -463,7 +463,7 @@ void AnnouncementInfoWidget::linkClicked(const QUrl &url)
             return;
         }
 
-        ok = m_myself->packetsParser()->sendAdminReplyMessagePacket(m_myself->socketConnectedToServer(), m_info.ID.toUInt(), m_myself->getUserID(), sender, sendersAssetNO, text);
+        ok = m_myself->packetsParser()->sendAdminReplyMessagePacket(m_myself->socketConnectedToServer(), m_info.ID, m_myself->getUserID(), sender, sendersAssetNO, text);
         if(!ok) {
             QMessageBox::critical(this, tr("Error"), tr("Failed to send data!"));
             return;
@@ -497,7 +497,7 @@ void AnnouncementInfoWidget::jobFinished(quint32 jobID)
         if(createAnnouncement) {
             unsigned int id = job->ExtraData.toUInt();
             if(id) {
-                m_info.ID = QString::number(id);
+                m_info.ID = id;
                 m_info.Admin = m_myself->getUserID();
                 m_info.PublishDate = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
 
@@ -530,7 +530,7 @@ void AnnouncementInfoWidget::jobFinished(quint32 jobID)
         if(createAnnouncement) {
             unsigned int id = job->ExtraData.toUInt();
             if(id) {
-                m_info.ID = QString::number(id);
+                m_info.ID = id;
                 m_info.Admin = m_myself->getUserID();
                 m_info.PublishDate = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
 

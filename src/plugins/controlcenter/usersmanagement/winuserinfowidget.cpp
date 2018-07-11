@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegExpValidator>
 
 #include "winuserinfowidget.h"
 

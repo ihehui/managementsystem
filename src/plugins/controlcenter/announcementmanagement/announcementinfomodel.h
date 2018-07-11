@@ -38,7 +38,7 @@ public:
 
 
 private:
-    QString m_announcementID;
+    unsigned int m_announcementID;
     QList<AnnouncementTarget *> infolist;
 
     QStringList deletedTargets;

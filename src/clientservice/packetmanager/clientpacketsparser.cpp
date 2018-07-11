@@ -386,7 +386,7 @@ void ClientPacketsParser::requestScreenshot(SOCKETID adminSocketID, const QStrin
         return;
     }
 
-    sendAdminRequestScreenshotPacket(userSocketID, userName, adminPort);
+    sendAdminRequestScreenshotPacket(userSocketID, userName, adminAddress, adminPort);
 
 }
 

@@ -84,7 +84,6 @@ void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray
 {
     //qDebug()<<"--RemoteDesktopViewer::updatePixmap(...)";
 
-#ifdef Q_OS_WIN
 
     QPainter painter(&m_image);
 
@@ -99,6 +98,8 @@ void RemoteDesktopViewer::updatePixmap(QList<QPoint> locations, QList<QByteArray
     painter.end();
 
     updateAnimationFrame(m_image);
+
+#ifdef Q_OS_WIN
 
     if(m_aviFile) {
 

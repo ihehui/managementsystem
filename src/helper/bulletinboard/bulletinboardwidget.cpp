@@ -40,14 +40,14 @@ BulletinBoardWidget::BulletinBoardWidget(const QString &userName, QWidget *paren
 
 
     curAnnouncementIndex = -1;
-    m_curAnnouncementID = "";
+    m_curAnnouncementID = 0;
 
     m_settings = new QSettings("HKEY_CURRENT_USER\\Software\\HEHUI\\MS", QSettings::NativeFormat, this);
     m_settings->beginGroup("AcknowledgedAnnouncements");
     QStringList announcementIDs = m_settings->allKeys();
     foreach (QString id, announcementIDs) {
         int times = m_settings->value(id, 1).toInt();
-        acknowledgedAnnouncements.insert(id, times);
+        acknowledgedAnnouncements.insert(id.toUInt(), times);
     }
     m_settings->endGroup();
 
@@ -82,7 +82,7 @@ void BulletinBoardWidget::closeEvent(QCloseEvent *event)
 
 }
 
-void BulletinBoardWidget::showAnnouncements(const QString &announcementID)
+void BulletinBoardWidget::showAnnouncements(unsigned int announcementID)
 {
     qDebug() << "--BulletinBoardWidget::showAnnouncements(...)";
 
@@ -157,7 +157,7 @@ void BulletinBoardWidget::processAnnouncementReplies(const QByteArray &infoData)
     }
     QJsonObject object = doc.object();
 
-    QString announcementID = object["AnnouncementID"].toString();
+    unsigned int announcementID = object["AnnouncementID"].toInt();
     if(isAnnouncementInfoExists(announcementID)) {
         return;
     }
@@ -220,7 +220,7 @@ bool BulletinBoardWidget::processAnnouncementsInfo(const QByteArray &infoData)
         }
 
         int index = 0;
-        QString id = infoArray.at(index++).toString();
+        unsigned int id = infoArray.at(index++).toInt();
         if(isAnnouncementInfoExists(id)) {
             continue;
         }
@@ -271,19 +271,19 @@ void BulletinBoardWidget::clearAnnouncements()
     infolist.clear();
 }
 
-void BulletinBoardWidget::saveAnnouncementInfo(const QString &announcementID)
+void BulletinBoardWidget::saveAnnouncementInfo(unsigned int announcementID)
 {
 
     m_settings->beginGroup("AcknowledgedAnnouncements");
     if(!acknowledgedAnnouncements.contains(announcementID)) {
         return;
     }
-    m_settings->setValue(announcementID, (acknowledgedAnnouncements.value(announcementID) + 1) );
+    m_settings->setValue(QString::number(announcementID), (acknowledgedAnnouncements.value(announcementID) + 1) );
     m_settings->endGroup();
 
 }
 
-bool BulletinBoardWidget::isAnnouncementInfoExists(const QString &announcementID)
+bool BulletinBoardWidget::isAnnouncementInfoExists(unsigned int announcementID)
 {
     foreach (AnnouncementInfo *info, infolist) {
         if(info->ID == announcementID) {
@@ -294,7 +294,7 @@ bool BulletinBoardWidget::isAnnouncementInfoExists(const QString &announcementID
     return false;
 }
 
-AnnouncementInfo *BulletinBoardWidget::getAnnouncementInfo(const QString &announcementID)
+AnnouncementInfo *BulletinBoardWidget::getAnnouncementInfo(unsigned int announcementID)
 {
     foreach (AnnouncementInfo *info, infolist) {
         if(info->ID == announcementID) {

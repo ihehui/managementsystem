@@ -686,6 +686,7 @@ public:
     struct ScreenshotRequestStruct {
         QString adminID;
         QString userName;
+        QString adminAddress;
         quint16 adminListeningPort;
     } ScreenshotRequest;
 

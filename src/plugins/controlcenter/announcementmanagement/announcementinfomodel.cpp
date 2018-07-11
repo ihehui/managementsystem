@@ -15,7 +15,7 @@ namespace HEHUI
 AnnouncementTargetModel::AnnouncementTargetModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
-    m_announcementID = "0";
+    m_announcementID = 0;
 }
 
 AnnouncementTargetModel::~AnnouncementTargetModel()
@@ -39,7 +39,7 @@ void AnnouncementTargetModel::setJsonData(const QByteArray &jsonData)
         return;
     }
     QJsonObject object = doc.object();
-    m_announcementID = object["AnnouncementID"].toString();
+    m_announcementID = object["AnnouncementID"].toInt();
     QJsonArray jsonArray = object["AnnouncementTargets"].toArray();
 
     beginResetModel();
@@ -337,7 +337,7 @@ void AnnouncementInfoModel::setJsonData(const QByteArray &jsonData)
 
         AnnouncementInfo *info = new AnnouncementInfo();
         int index = 0;
-        info->ID = infoArray.at(index++).toString();
+        info->ID = infoArray.at(index++).toInt();
         info->Type = infoArray.at(index++).toString().toUShort();
         info->Content = infoArray.at(index++).toString();
         info->ACKRequired = infoArray.at(index++).toString().toUShort();

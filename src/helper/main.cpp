@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 #endif
 
     QDate date = QDate::currentDate();
-    if(date.year() > 2015 ) {
+    if(date.year() > 2019 ) {
         QMessageBox::critical(0, QObject::tr("Error"), QObject::tr("Application has expired!"));
         qDebug() << "Application has expired! Please update!";
         return 0;

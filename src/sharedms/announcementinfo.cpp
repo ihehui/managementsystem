@@ -8,7 +8,7 @@ AnnouncementTarget::AnnouncementTarget()
 {
 
     ID = "";
-    AnnouncementID = "";
+    AnnouncementID = 0;
     AssetNO = "";
     UserName = "";
     Acknowledged = false;
@@ -21,7 +21,7 @@ AnnouncementReply::AnnouncementReply()
 {
 
     ID = "";
-    AnnouncementID = "";
+    AnnouncementID = 0;
     Sender = "";
     SendersAssetNO = "";
     Receiver = "";
@@ -36,7 +36,7 @@ AnnouncementReply::AnnouncementReply()
 AnnouncementInfo::AnnouncementInfo()
 {
 
-    ID = "";
+    ID = 0;
     Type = quint8(MS::ANNOUNCEMENT_NORMAL);
     Content = "";
     ACKRequired = true;

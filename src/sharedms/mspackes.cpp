@@ -1514,6 +1514,7 @@ void ScreenshotPacket::init()
 
     ScreenshotRequest.adminID = "";
     ScreenshotRequest.userName = "";
+    ScreenshotRequest.adminAddress = "";
     ScreenshotRequest.adminListeningPort = 0;
 
     DesktopInfo.desktopWidth = 0;
@@ -1533,7 +1534,7 @@ void ScreenshotPacket::parsePacketBody(QByteArray &packetBody)
 
     switch (InfoType) {
     case SCREENSHOT_REQUEST: {
-        in >> ScreenshotRequest.adminID >> ScreenshotRequest.userName >> ScreenshotRequest.adminListeningPort;
+        in >> ScreenshotRequest.adminID >> ScreenshotRequest.userName >> ScreenshotRequest.adminAddress >> ScreenshotRequest.adminListeningPort;
     }
         break;
 
@@ -1576,7 +1577,7 @@ QByteArray ScreenshotPacket::packBodyData()
 
     switch (InfoType) {
     case SCREENSHOT_REQUEST: {
-        out << ScreenshotRequest.adminID << ScreenshotRequest.userName << ScreenshotRequest.adminListeningPort;
+        out << ScreenshotRequest.adminID << ScreenshotRequest.userName << ScreenshotRequest.adminAddress << ScreenshotRequest.adminListeningPort;
     }
         break;
 

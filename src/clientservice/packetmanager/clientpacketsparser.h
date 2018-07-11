@@ -278,13 +278,14 @@ public slots:
     }
 
 
-    bool sendAdminRequestScreenshotPacket(SOCKETID userSocketID, const QString &userName, quint16 adminPort)
+    bool sendAdminRequestScreenshotPacket(SOCKETID userSocketID, const QString &userName, const QString &adminAddress, quint16 adminPort)
     {
         //qDebug()<<"----sendAdminRequestScreenshotPacket(...):";
 
         ScreenshotPacket packet;
         packet.InfoType = ScreenshotPacket::SCREENSHOT_REQUEST;
         packet.ScreenshotRequest.userName = userName;
+        packet.ScreenshotRequest.adminAddress = adminAddress;
         packet.ScreenshotRequest.adminListeningPort = adminPort;
 
         QByteArray ba = packet.toByteArray();

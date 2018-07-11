@@ -18,7 +18,7 @@ public:
 
 public:
     QString ID;
-    QString AnnouncementID;
+    unsigned int AnnouncementID;
     QString AssetNO;
     QString UserName;
     bool Acknowledged;
@@ -36,7 +36,7 @@ public:
 
 public:
     QString ID;
-    QString AnnouncementID;
+    unsigned int AnnouncementID;
     QString Sender;
     QString SendersAssetNO;
     QString Receiver;
@@ -56,7 +56,7 @@ public:
 
 
 public:
-    QString ID;
+    unsigned int ID;
     quint8 Type;
     QString Content;
     bool ACKRequired;
