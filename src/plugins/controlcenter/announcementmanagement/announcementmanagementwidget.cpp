@@ -319,7 +319,7 @@ void AnnouncementManagementWidget::getSelectedInfo(const QModelIndex &index)
         return;
     }
     foreach (QModelIndex idx, indexList) {
-        m_selectedInfoList.append(m_model->getInfoID(idx));
+        m_selectedInfoList.append(QString::number(m_model->getInfoID(idx)));
     }
 
     bool enableExp = m_model->rowCount();

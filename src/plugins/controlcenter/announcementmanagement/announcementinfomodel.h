@@ -54,7 +54,7 @@ public:
     void setJsonData(const QByteArray &jsonData);
     void clear();
     AnnouncementInfo *getInfo(const QModelIndex &index);
-    QString getInfoID(const QModelIndex &index);
+    unsigned int getInfoID(const QModelIndex &index);
 
     void setAnnouncementRepliesData(const QByteArray &jsonData);
     QList<AnnouncementReply *> getAnnouncementReplies(const QString &announcementID) const;

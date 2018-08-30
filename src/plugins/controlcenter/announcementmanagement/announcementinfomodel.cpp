@@ -377,10 +377,10 @@ AnnouncementInfo *AnnouncementInfoModel::getInfo(const QModelIndex &index)
     return infolist.at(index.data(Qt::UserRole).toInt());
 }
 
-QString AnnouncementInfoModel::getInfoID(const QModelIndex &index)
+unsigned int AnnouncementInfoModel::getInfoID(const QModelIndex &index)
 {
     if(!index.isValid()) {
-        return "0";
+        return 0;
     }
 
     return infolist.at(index.data(Qt::UserRole).toInt())->ID;
