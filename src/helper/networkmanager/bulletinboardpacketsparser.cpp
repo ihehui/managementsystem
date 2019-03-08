@@ -105,7 +105,7 @@ void BulletinBoardPacketsParser::parseIncomingPacketData(const PacketBase &packe
 
 
     quint8 packetType = packet.getPacketType();
-    QString peerID = packet.getPeerID();
+    QString senderID = packet.getSenderID();
 
     QHostAddress peerAddress = packet.getPeerHostAddress();
     quint16 peerPort = packet.getPeerHostPort();

@@ -165,7 +165,7 @@ void ServerAddressManagerWindow::serverFound(const ServerDiscoveryPacket &packet
     QString serverAddress = packet.getPeerHostAddress().toString();
     quint16 serverRTPListeningPort = packet.rtpPort;
     quint16 serverTCPListeningPort = packet.tcpPort;
-    QString serverName = packet.getPeerID();
+    QString serverName = packet.getSenderID();
     QString version = packet.version;
     int serverInstanceID = packet.serverInstanceID;
 
@@ -236,7 +236,7 @@ void ServerAddressManagerWindow::slotSaveServers()
         serverList << info->serverIP + ":" + QString::number(info->serverPort);
     }
 
-    Settings settings(SETTINGS_FILE_NAME, "./");
+    Settings settings(SETTINGS_FILE_NAME);
     settings.setAppServers(serverList.join(";"));
     settings.sync();
 
@@ -244,7 +244,7 @@ void ServerAddressManagerWindow::slotSaveServers()
 
 void ServerAddressManagerWindow::slotLoadServers()
 {
-    Settings settings(SETTINGS_FILE_NAME, "./");
+    Settings settings(SETTINGS_FILE_NAME);
     QStringList serverList = settings.getAppServers().split(";");
 
     foreach(QString server, serverList) {

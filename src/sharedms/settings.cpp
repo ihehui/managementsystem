@@ -159,12 +159,5 @@ void Settings::getLastUsedAppServer(QString *ip, quint16 *port) const
 
 
 
-
-
-
-
-
-
-
 } //namespace HEHUI
 

@@ -139,6 +139,54 @@ QByteArray ServerDiscoveryPacket::packBodyData()
 
 
 ////////////////////////////////////////////////////////////////////////
+DataForwardPacket::DataForwardPacket()
+    : MSPacket(quint8(MS::CMD_DataForward))
+{
+    init();
+}
+
+DataForwardPacket::DataForwardPacket(const PacketBase &base)
+    : MSPacket(quint8(MS::CMD_DataForward))
+{
+    init();
+    fromPacket(base);
+
+    Q_ASSERT(base.getPacketType() == quint8(MS::CMD_DataForward));
+}
+
+DataForwardPacket::~DataForwardPacket()
+{
+
+}
+
+void DataForwardPacket::init()
+{
+    data.clear();
+    peer = "";
+    isRequest = 0;
+}
+
+void DataForwardPacket::parsePacketBody(QByteArray &packetBody)
+{
+    QDataStream in(&packetBody, QIODevice::ReadOnly);
+    in.setVersion(QDataStream::Qt_4_8);
+
+    in >> data >> peer >> isRequest;
+}
+
+QByteArray DataForwardPacket::packBodyData()
+{
+    QByteArray ba;
+    QDataStream out(&ba, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_4_8);
+
+    out << data << peer << isRequest;
+    return ba;
+}
+////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////
 MessagePacket::MessagePacket()
     : MSPacket(quint8(MS::CMD_Message))
 {

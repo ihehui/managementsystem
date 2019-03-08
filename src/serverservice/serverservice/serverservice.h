@@ -73,6 +73,8 @@ private slots:
 //    bool updateOrSaveClientInfoToDatabase(ClientInfo *info);
 //    void updateOrSaveAllClientsInfoToDatabase();
 
+    void processDataForwardPacket(const DataForwardPacket &packet);
+
     void processClientInfoPacket(const ClientInfoPacket &packet);
     void clientInfoRequested(SOCKETID socketID, const QString &assetNO, quint8 infoType);
 

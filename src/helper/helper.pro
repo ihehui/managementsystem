@@ -62,6 +62,6 @@ mac:ICON = ./resources/images/app.icns
 
 # define some usefull values
 # QMAKE_TARGET_COMPANY	= "He Hui Team"
-QMAKE_TARGET_PRODUCT = "Helper Application For Management System"
-QMAKE_TARGET_DESCRIPTION = "Crossplatform Service Application Based On Qt"
+QMAKE_TARGET_PRODUCT = "Helper"
+QMAKE_TARGET_DESCRIPTION = "Helper Application For Management System"
 DEFINES *= "APP_NAME=\"\\\"$${QMAKE_TARGET_PRODUCT}\\\"\""

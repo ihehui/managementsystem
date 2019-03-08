@@ -12,6 +12,7 @@
 
 #include "HHSharedNetwork/hnetworkutilities.h"
 #include "HHSharedCore/hutilities.h"
+#include "HHSharedCore/MessageLogger"
 
 
 
@@ -27,8 +28,6 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
 
     setStartupType(QtServiceController::AutoStartup);
     //    setServiceFlags(CanBeSuspended);
-
-
 
 
     resourcesManager = 0;
@@ -315,7 +314,7 @@ bool ClientService::startMainService()
     //TODO:
     QString ip = "";
     quint16 port = 0;
-    getServerLastUsed(&ip, &port);
+    getServerLastUsed(&ip, &port, &m_serverName);
     clientPacketsParser->sendClientLookForServerPacket(ip, port);
     lookForServerTimer = new QTimer(this);
     lookForServerTimer->setSingleShot(true);
@@ -340,7 +339,7 @@ bool ClientService::startMainService()
     //setupStartupWithSafeMode(true);
 
     QString section = serviceName() + "/LastCheckUpdate";
-    QSettings settings(QCoreApplication::applicationDirPath() + "/.settings", QSettings::IniFormat, this);
+    QSettings settings(applicationDirPath() + "/.settings", QSettings::IniFormat, this);
     QDateTime time = settings.value(section, QDateTime()).toDateTime();
     if(time.isNull() || (time.addDays(1) < QDateTime::currentDateTime())) {
 
@@ -462,10 +461,10 @@ void ClientService::serverFound(const ServerDiscoveryPacket &packet)
 
     m_serverAddress = serverAddress;
     m_serverRTPListeningPort = packet.rtpPort;
-    m_serverName = packet.getPeerID();
+    m_serverName = packet.getSenderID();
     m_serverInstanceID = packet.serverInstanceID;
 
-    setServerLastUsed(serverAddress.toString());
+    setServerLastUsed(serverAddress.toString(), m_serverRTPListeningPort, m_serverName);
 
     //logMessage(QString("Server Found! Address:%1 TCP Port:%2 Name:%3").arg(serverAddress).arg(serverTCPListeningPort).arg(serverName), QtServiceBase::Information);
     qWarning();
@@ -1782,18 +1781,19 @@ bool ClientService::setupStartupWithSafeMode(bool startup)
 
 }
 
-bool ClientService::getServerLastUsed(QString *ip, quint16 *port)
+bool ClientService::getServerLastUsed(QString *ip, quint16 *port, QString *name)
 {
 
     QString fileName;
 #if defined(Q_OS_WIN32)
     fileName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\HeHui\\MS";
 #else
-    fileName = serviceName();
+    fileName = QString("%1/%2.ini").arg(applicationDirPath()).arg(serviceName());
 #endif
     Settings s(fileName, QSettings::NativeFormat);
     QString serverAddress = s.getValueWithDecryption("ServerAddress", m_encryptionKey, "").toString();
     quint16 serverPort = s.getValueWithDecryption("ServerPort", m_encryptionKey, 0).toUInt();
+    QString serverName = s.getValueWithDecryption("ServerName", m_encryptionKey, 0).toString();
 
     if(ip) {
         *ip = serverAddress;
@@ -1803,10 +1803,14 @@ bool ClientService::getServerLastUsed(QString *ip, quint16 *port)
         *port = serverPort;
     }
 
+    if(name){
+        *name = serverName;
+    }
+
     return true;
 }
 
-void ClientService::setServerLastUsed(const QString &serverAddress, quint16 serverPort)
+void ClientService::setServerLastUsed(const QString &serverAddress, quint16 serverPort, const QString &serverName)
 {
     qDebug() << "--ClientService::setServerLastUsed(...) " << " serverAddress:" << serverAddress << " serverPort:" << serverPort;
 
@@ -1814,7 +1818,7 @@ void ClientService::setServerLastUsed(const QString &serverAddress, quint16 serv
 #if defined(Q_OS_WIN32)
     fileName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\HeHui\\MS";
 #else
-    fileName = serviceName();
+    fileName = QString("%1/%2.ini").arg(applicationDirPath()).arg(serviceName());
 #endif
     Settings s(fileName, QSettings::NativeFormat);
     if(!serverAddress.isEmpty()) {
@@ -1822,6 +1826,10 @@ void ClientService::setServerLastUsed(const QString &serverAddress, quint16 serv
     }
     if(serverPort != 0) {
         s.setValueWithEncryption("ServerPort", serverPort, m_encryptionKey);
+    }
+
+    if(!serverName.isEmpty()) {
+        s.setValueWithEncryption("ServerName", serverName, m_encryptionKey);
     }
 
 //    if(WinUtilities::getUserNameOfCurrentThread().toUpper() == "SYSTEM"){
@@ -1850,7 +1858,6 @@ void ClientService::uploadSoftwareInfo()
 void ClientService::checkHasAnyServerBeenFound()
 {
 
-
     if(!m_rtp->isSocketConnected(m_socketConnectedToServer)) {
         qWarning() << "No server found!";
         //clientPacketsParser->sendClientLookForServerPacket();
@@ -1858,7 +1865,9 @@ void ClientService::checkHasAnyServerBeenFound()
         int interval = lookForServerTimer->interval();
         interval *= 2;
         if(interval > 300000 && interval < 1800000) {
-            QHostInfo::lookupHost(DEFAULT_MS_SERVER_HOST_NAME, this, SLOT(serverLookedUp(QHostInfo)));
+            if(!m_serverName.trimmed().isEmpty()){
+                QHostInfo::lookupHost(m_serverName, this, SLOT(serverLookedUp(QHostInfo)));
+            }
         } else if(interval > 1800000) {
             interval = 1800000;
             clientPacketsParser->sendClientLookForServerPacket("255.255.255.255");
@@ -1866,7 +1875,7 @@ void ClientService::checkHasAnyServerBeenFound()
         } else {
             QString ip;
             quint16 port = 0;
-            getServerLastUsed(&ip, &port);
+            getServerLastUsed(&ip, &port, 0);
             clientPacketsParser->sendClientLookForServerPacket(ip, port);
         }
         lookForServerTimer->start(interval);
@@ -2490,7 +2499,7 @@ void ClientService::getLocalAssetNO(QString *newAssetNOToBeUsed)
     }
 
 #else
-    Settings settings(serviceName());
+    Settings settings(serviceName(), applicationDirPath());
     m_localAssetNO = settings.getValueWithDecryption("AssetNO", m_encryptionKey, "").toString();
     newAN = settings.getValueWithDecryption("NewAssetNO", m_encryptionKey, "").toString();
 #endif
@@ -2527,8 +2536,7 @@ void ClientService::setLocalAssetNO(const QString &assetNO, bool tobeModified)
     }
 
 #else
-
-    Settings settings(serviceName());
+    Settings settings(serviceName(), applicationDirPath());
     if(tobeModified) {
         settings.setValueWithEncryption("NewAssetNO", assetNO, m_encryptionKey);
     } else {
@@ -2749,6 +2757,19 @@ void ClientService::processArguments(int argc, char **argv)
     }
     qDebug() << "----arguments:" << arguments;
 
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    SettingsCore settings(serviceName(), applicationDirPath());
+    if(arguments.contains("-nolog", Qt::CaseInsensitive)){
+        settings.enableLog(false);
+    }else{
+        settings.enableLog(true, serviceName());
+    }
+    LOGWARNING<<"Application started.";
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
     if(arguments.contains("-server", Qt::CaseInsensitive)) {
         int index = arguments.indexOf("-server");
         if( index == (arguments.size() - 1) ) {
@@ -2761,19 +2782,25 @@ void ClientService::processArguments(int argc, char **argv)
             }
 
             QString ip = list.at(0).trimmed();
+            QString name = "";
             if(QHostAddress(ip).isNull()) {
                 ip = "";
+                if(!ip.isEmpty()){
+                    name = ip;
+                }
             }
             quint16 port = 0;
             if(list.size() == 2) {
                 port = list.at(1).toUShort();
             }
 
-            setServerLastUsed(ip, port);
-
+            setServerLastUsed(ip, port, name);
         }
 
     }
+
+
+
 
 
 }

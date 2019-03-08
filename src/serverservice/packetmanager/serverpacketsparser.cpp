@@ -107,7 +107,7 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet)
 
     //QByteArray packetBody = packet.getPacketBody();
     quint8 packetType = packet.getPacketType();
-    QString peerID = packet.getPeerID();
+    QString peerID = packet.getSenderID();
     QHostAddress peerAddress = packet.getPeerHostAddress();
     quint16 peerPort = packet.getPeerHostPort();
     SOCKETID socketID = packet.getSocketID();
@@ -127,6 +127,15 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet)
         qWarning() << "~~ClientLookForServer--" << " peerAddress:" << peerAddress.toString() << "   peerPort:" << peerPort << " Version:" << p.version << " peerID:" << peerID;
     }
     break;
+
+    case quint8(MS::CMD_DataForward): {
+        qDebug() << "~~DataForwardRequestByClient";
+
+        DataForwardPacket p(packet);
+        emit signalDataForwardPacketReceived(p);
+    }
+    break;
+
 
     case quint8(MS::CMD_AdminLogin): {
         qDebug() << "~~CMD_AdminLogin";

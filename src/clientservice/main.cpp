@@ -9,24 +9,20 @@
 #include "app_constants.h"
 #include "clientservice/clientservice.h"
 
-#include "HHSharedCore/hlogdebug.h"
+//#include "HHSharedCore/hlogdebug.h"
+#include "HHSharedCore/MessageLogger"
+#include "HHSharedCore/CrashHandler"
 
-#ifdef Q_OS_WIN32
-    #include "HHSharedCore/WinCrashDump"
-#endif
+
+
 
 #include <iostream>
 
 
 int main(int argc, char **argv)
 {
-
-#ifdef Q_OS_WIN32
-    SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
-#endif
-
-
     Q_INIT_RESOURCE(resources);
+
 
 //#if !defined(Q_WS_WIN)
 //    // QtService stores service settings in SystemScope, which normally require root privileges.
@@ -43,26 +39,11 @@ int main(int argc, char **argv)
 
     std::cout << qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION)) << std::endl << std::endl;
 
+    setupCrashHandler();
 
 
     //reset the message handler
-    qInstallMessageHandler(0);
-
-
-//    for(int i = 0; i < argc; i++){
-//        if(QString(argv[i]).toLower() == "-log"){
-//            qInstallMessageHandler(logDebug);
-//            qAddPostRoutine(closeDebugLog);
-//        }else if(QString(argv[i]).toLower() == "-setwallpaper"){
-//            QString imagePath = "";
-//            if(i < (argc - 1) ){
-//                imagePath = QString::fromLocal8Bit(argv[i + 1]);
-//                //qDebug()<<imagePath;
-//            }
-//            service.setDeskWallpaper(imagePath);
-//        }
-//    }
-
+    //qInstallMessageHandler(0);
 
 
 

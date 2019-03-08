@@ -65,6 +65,28 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
+class SHAREDMSLIB_API DataForwardPacket : public MSPacket
+{
+public:
+    DataForwardPacket();
+    DataForwardPacket(const PacketBase &base);
+    ~DataForwardPacket();
+
+private:
+    void init();
+    void parsePacketBody(QByteArray &packetBody);
+    QByteArray packBodyData();
+
+public:
+    QByteArray data;
+    QString peer; //sender or receiver ID
+    quint8 isRequest;
+
+};
+////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////
 class SHAREDMSLIB_API MessagePacket : public MSPacket
 {
 public:

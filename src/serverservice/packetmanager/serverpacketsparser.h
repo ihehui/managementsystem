@@ -80,7 +80,23 @@ public slots:
         return m_udpServer->sendDatagram(packet.toByteArray(), peerAddress, peerPort);
     }
 
-    bool sendServerMessagePacket(int adminSocketID, const QString &message, quint8 messageType = quint8(MS::MSG_Information))
+    bool forwardData(SOCKETID peerSocketID, const QString &senderID, const QByteArray &data)
+    {
+        qDebug() << "--forwardData(...)";
+
+        DataForwardPacket p;
+        p.data = data;
+        p.peer = senderID;
+
+        QByteArray ba = p.toByteArray();
+        if(ba.isEmpty()) {
+            return false;
+        }
+
+        return m_rtp->sendReliableData(peerSocketID, &ba);
+    }
+
+    bool sendServerMessagePacket(SOCKETID adminSocketID, const QString &message, quint8 messageType = quint8(MS::MSG_Information))
     {
 
         MessagePacket packet;
@@ -91,7 +107,7 @@ public slots:
         return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendJobFinishedPacket(int adminSocketID, quint32 jobID, quint8 result, const QVariant &extraData)
+    bool sendJobFinishedPacket(SOCKETID adminSocketID, quint32 jobID, quint8 result, const QVariant &extraData)
     {
 
         JobProgressPacket packet;
@@ -178,6 +194,8 @@ signals:
 
     //void signalClientOnlinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
     //void signalClientOfflinePacketReceived(const QHostAddress &clientAddress, quint16 clientPort, const QString &clientName);
+
+    void signalDataForwardPacketReceived(const DataForwardPacket &packet);
 
     void signalClientInfoPacketReceived(const QString &assetNO, const QByteArray &clientInfo, quint8 infoType);
 

@@ -6,7 +6,11 @@
 
 #include "helper.h"
 
-#include "HHSharedCore/hlogdebug.h"
+//#include "HHSharedCore/hlogdebug.h"
+#include "HHSharedCore/MessageLogger"
+#include "HHSharedCore/CrashHandler"
+
+#include "../sharedms/settings.h"
 
 #ifdef Q_OS_WIN32
     #include "HHSharedSystemUtilities/WinUtilities"
@@ -34,10 +38,28 @@ int main(int argc, char *argv[])
     qDebug() << "--Library Paths:" << app.libraryPaths ();
 
 
+    setupCrashHandler();
+
+
     QStringList arguments;
     for(int i = 0; i < argc; i++) {
         arguments.append(QString(argv[i]));
     }
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    QString name = QString(APP_NAME).remove(" ");
+    HEHUI::Settings settings(name);
+    if(arguments.contains("-log", Qt::CaseInsensitive)){
+        settings.enableLog(true, name);
+    }else{
+        settings.enableLog(false);
+    }
+    LOGWARNING<<"Application started.";
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 #ifdef Q_OS_WIN32
 

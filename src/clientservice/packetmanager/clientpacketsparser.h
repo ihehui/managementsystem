@@ -95,6 +95,23 @@ public slots:
         return m_udpServer->sendDatagram(ba, address, port );
     }
 
+    bool requestDataForward(int socketID, const QString &receiverID, const QByteArray &data)
+    {
+        qDebug() << "--requestDataForward(...) receiverID:" << receiverID;
+
+        DataForwardPacket p;
+        p.data = data;
+        p.peer = receiverID;
+        p.isRequest = 1;
+
+        QByteArray ba = p.toByteArray();
+        if(ba.isEmpty()) {
+            return false;
+        }
+
+        return m_rtp->sendReliableData(socketID, &ba);
+    }
+
 
     bool sendRequestAnnouncementsPacket(SOCKETID serverSocketID, const QString &userName)
     {

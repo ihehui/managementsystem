@@ -953,7 +953,7 @@ void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(co
         return;
     }
 
-    QString assetNO = packet.getPeerID();
+    QString assetNO = packet.getSenderID();
     QString computerName = packet.computerName;
 
     clientResponseAdminConnectionResultPacketReceived = true;
@@ -1044,7 +1044,7 @@ void SystemManagementWidget::requestClientInfo(quint8 infoType)
 void SystemManagementWidget::clientInfoPacketReceived(const ClientInfoPacket &packet)
 {
 
-    QString assetNO = packet.getPeerID();
+    QString assetNO = packet.getSenderID();
     QByteArray data = packet.data;
     quint8 infoType = packet.infoType;
 
@@ -1375,7 +1375,7 @@ void SystemManagementWidget::requestClientInfoTimeout()
 void SystemManagementWidget::remoteConsolePacketReceived(const RemoteConsolePacket &packet)
 {
 
-    if(packet.getPeerID() != this->m_peerAssetNO) {
+    if(packet.getSenderID() != this->m_peerAssetNO) {
         return;
     }
 
@@ -1446,7 +1446,7 @@ void SystemManagementWidget::userResponseRemoteAssistancePacketReceived(const QS
 void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const LocalUserOnlineStatusChangedPacket &packet)
 {
 
-    if(packet.getPeerID() != m_peerAssetNO) {
+    if(packet.getSenderID() != m_peerAssetNO) {
         return;
     }
 
@@ -1470,7 +1470,7 @@ void SystemManagementWidget::userOnlineStatusChangedPacketReceived(const LocalUs
 void SystemManagementWidget::updateTemperatures(const TemperaturesPacket &packet)
 {
 
-    if(packet.getPeerID() != m_peerAssetNO) {
+    if(packet.getSenderID() != m_peerAssetNO) {
         return;
     }
 
@@ -1502,7 +1502,7 @@ void SystemManagementWidget::updateTemperatures(const TemperaturesPacket &packet
 void SystemManagementWidget::serviceConfigChangedPacketReceived(const ServiceConfigPacket &packet)
 {
 
-    if(packet.getPeerID() != m_peerAssetNO) {
+    if(packet.getSenderID() != m_peerAssetNO) {
         return;
     }
 

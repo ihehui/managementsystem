@@ -293,7 +293,7 @@
      <x>0</x>
      <y>0</y>
      <width>922</width>
-     <height>23</height>
+     <height>31</height>
     </rect>
    </property>
   </widget>
@@ -339,7 +339,7 @@
   </action>
   <action name="actionUpdatePassword">
    <property name="icon">
-    <iconset resource="controlcenter.qrc">
+    <iconset resource="../../helper/resources.qrc">
      <normaloff>:/icon/resources/images/password.png</normaloff>:/icon/resources/images/password.png</iconset>
    </property>
    <property name="text">
@@ -357,7 +357,7 @@
   </action>
   <action name="actionAnnouncement">
    <property name="icon">
-    <iconset resource="controlcenter.qrc">
+    <iconset resource="../../helper/resources.qrc">
      <normaloff>:/icon/resources/images/announcement.png</normaloff>:/icon/resources/images/announcement.png</iconset>
    </property>
    <property name="text">
@@ -392,8 +392,20 @@
  </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
+  <tabstop>lineEditAssetNO</tabstop>
+  <tabstop>lineEditUserName</tabstop>
+  <tabstop>comboBoxWorkgroup</tabstop>
+  <tabstop>comboBoxUSBSD</tabstop>
+  <tabstop>toolButtonQuery</tabstop>
+  <tabstop>lineEditComputerName</tabstop>
+  <tabstop>lineEditIPAddress</tabstop>
+  <tabstop>comboBoxOSVersion</tabstop>
+  <tabstop>comboBoxProcMon</tabstop>
+  <tabstop>toolButtonfilter</tabstop>
+  <tabstop>tableViewClientList</tabstop>
  </tabstops>
  <resources>
+  <include location="../../helper/resources.qrc"/>
   <include location="controlcenter.qrc"/>
  </resources>
  <connections/>

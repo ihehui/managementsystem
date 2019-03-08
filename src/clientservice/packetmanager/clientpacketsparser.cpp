@@ -108,7 +108,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet)
 
     //QByteArray packetBody = packet.getPacketBody();
     quint8 packetType = packet.getPacketType();
-    QString peerID = packet.getPeerID();
+    QString peerID = packet.getSenderID();
 
     QHostAddress peerAddress = packet.getPeerHostAddress();
     quint16 peerPort = packet.getPeerHostPort();
@@ -125,6 +125,23 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet)
 
         emit signalServerDeclarePacketReceived(p);
         qDebug() << "~~CMD_ServerDiscovery" << " serverAddress:" << serverAddress.toString() << " servername:" << serverName << " serverRTPListeningPort:" << serverRTPListeningPort << " serverTCPListeningPort:" << p.tcpPort;
+    }
+    break;
+
+    case quint8(MS::CMD_DataForward): {
+        qDebug() << "~~CMD_DataForward";
+
+        DataForwardPacket p(packet);
+        QString orignalSender = p.peer;
+        //TODO
+
+        PacketBase packet2;
+        if(packet2.fromByteArray(&p.data)) {
+            packet2.setSocketID(socketID);
+            parseIncomingPacketData(packet2);
+        } else {
+            qWarning() << "ERROR! Can not parse data!";
+        }
     }
     break;
 

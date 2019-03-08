@@ -132,8 +132,8 @@ private slots:
 
     bool setupStartupWithSafeMode(bool startup);
 
-    bool getServerLastUsed(QString *ip, quint16 *port = 0);
-    void setServerLastUsed(const QString &serverAddress, quint16 serverPort = 0);
+    bool getServerLastUsed(QString *ip, quint16 *port, QString *name);
+    void setServerLastUsed(const QString &serverAddress, quint16 serverPort, const QString &serverName);
 
     void uploadSoftwareInfo();
 

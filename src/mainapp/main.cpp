@@ -6,7 +6,12 @@
 #include "./mainwindow/mainwindow.h"
 #include "./shared/app_constants.h"
 
-#include "HHSharedCore/hlogdebug.h"
+//#include "HHSharedCore/hlogdebug.h"
+#include "HHSharedCore/MessageLogger"
+#include "HHSharedCore/CrashHandler"
+
+
+#include "settings.h"
 
 
 
@@ -32,13 +37,24 @@ int main(int argc, char *argv[])
     app.addLibraryPath(QCoreApplication::applicationDirPath() + QDir::separator () + QString(MYLIBS_DIR));
     qDebug() << "--Library Paths:" << app.libraryPaths ();
 
+    setupCrashHandler();
 
-    for(int i = 0; i < argc; i++) {
-        if(QString(argv[i]).toLower() == "-log") {
-            qInstallMessageHandler(logDebug);
-            qAddPostRoutine(closeDebugLog);
-        }
+
+    QStringList arguments = app.arguments();
+//    for(int i = 0; i < argc; i++) {
+//        arguments.append(QString(argv[i]));
+//    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    HEHUI::Settings settings;
+    if(arguments.contains("-log", Qt::CaseInsensitive)){
+        settings.enableLog(true, QString(APP_NAME).remove(" "));
+    }else{
+        settings.enableLog(false);
     }
+    LOGWARNING<<"Application started.";
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
     QDate date = QDate::currentDate();

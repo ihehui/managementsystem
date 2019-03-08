@@ -44,6 +44,7 @@
 
 #include "HHSharedSystemUtilities/SystemUtilities"
 #include "HHSharedCore/JobMonitor"
+#include "HHSharedCore/MessageLogger"
 
 
 #ifdef Q_OS_WIN32
@@ -71,6 +72,8 @@ ServerService::ServerService(int argc, char **argv, const QString &serviceName, 
     //    serverPacketsParser = 0;
     //    databaseUtility = new DatabaseUtility(this);
     //    mainServiceStarted = false;
+
+
 
     m_startupUTCTime = 0;
 
@@ -191,6 +194,8 @@ bool ServerService::startMainService()
     //connect(m_udpServer, SIGNAL(signalNewUDPPacketReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
     //connect(m_udtProtocol, SIGNAL(packetReceived(Packet*)), clientPacketsParser, SLOT(parseIncomingPacketData(Packet*)));
 
+    connect(serverPacketsParser, SIGNAL(signalDataForwardPacketReceived(const DataForwardPacket &)), this, SLOT(processDataForwardPacket(const DataForwardPacket &)), Qt::QueuedConnection);
+
     connect(serverPacketsParser, SIGNAL(signalClientLogReceived(const ClientLogPacket &)), this, SLOT(saveClientLog(const ClientLogPacket &)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalModifyAssetNOPacketReceived(const ModifyAssetNOPacket &)), this, SLOT(processModifyAssetNOPacket(const ModifyAssetNOPacket &)));
@@ -245,7 +250,7 @@ bool ServerService::startMainService()
 void ServerService::saveClientLog(const ClientLogPacket &packet)
 {
 
-    QString assetNO = packet.getPeerID();
+    QString assetNO = packet.getSenderID();
     QString clientAddress = packet.getPeerHostAddress().toString();
     quint8 logType = packet.logType;
     QString log = packet.log;
@@ -417,13 +422,41 @@ void ServerService::sendServerOnlinePacket()
 
 //}
 
+
+void ServerService::processDataForwardPacket(const DataForwardPacket &packet)
+{
+
+    QString senderID = packet.getSenderID();
+    QString receiver = packet.peer;
+
+    if(!clientInfoHash.contains(senderID)) {
+        qCritical()<<QString("Unknown client '%1'!").arg(senderID);
+        return;
+    }
+
+    if(!clientInfoHash.contains(receiver)) {
+        qCritical()<<QString("Unknown client '%1'!").arg(receiver);
+        return;
+    }
+
+    SOCKETID sid = clientSocketsHash.key(receiver);
+    if(!sid) {
+        qCritical()<<QString("Client '%1' is offline!").arg(receiver);
+        return;
+    }
+
+
+    serverPacketsParser->forwardData(sid, senderID, packet.data);
+
+}
+
 void ServerService::processClientInfoPacket(const ClientInfoPacket &packet)
 {
 
     if(packet.IsRequest) {
         clientInfoRequested(packet.getSocketID(), packet.assetNO, packet.infoType);
     } else {
-        clientInfoPacketReceived(packet.getPeerID(), packet.data, packet.infoType, QString("%1:%2").arg(packet.getPeerHostAddress().toString()).arg(packet.getPeerHostPort()) );
+        clientInfoPacketReceived(packet.getSenderID(), packet.data, packet.infoType, QString("%1:%2").arg(packet.getPeerHostAddress().toString()).arg(packet.getPeerHostPort()) );
     }
 
 }
@@ -1210,7 +1243,7 @@ bool ServerService::openDatabase(bool reopen)
         //                                            REMOTE_SITOY_COMPUTERS_DB_USER_PASSWORD,
         //                                            REMOTE_SITOY_COMPUTERS_DB_NAME,
         //                                            HEHUI::MYSQL);
-        Settings settings(SERVICE_NAME, "./");
+        Settings settings(SERVICE_NAME, applicationDirPath());
         err = databaseUtility->openDatabase(SERVERSERVICE_DB_CONNECTION_NAME,
                                             settings.getDBDriver(),
                                             settings.getDBServerHost(),
@@ -1221,7 +1254,7 @@ bool ServerService::openDatabase(bool reopen)
                                             settings.getDBType());
         if (err.type() != QSqlError::NoError) {
             logMessage(QString("An error occurred when opening the database on '%1'! %2").arg(REMOTE_SITOY_COMPUTERS_DB_SERVER_HOST).arg(err.text()), QtServiceBase::Error);
-            qCritical() << QString("XX An error occurred when opening the database: %1").arg(err.text());
+            qCritical() << QString("An error occurred when opening the database: %1").arg(err.text());
             return false;
         }
 
@@ -1585,7 +1618,7 @@ void ServerService::sendServerInfo(SOCKETID adminSocketID)
     obj["CurrentDBUTCTime"] = QString::number(getCurrentDBUTCTime());
 
 
-    Settings settings(SERVICE_NAME, "./");
+    Settings settings(SERVICE_NAME, applicationDirPath());
     obj["DBServerIP"] = settings.getDBServerHost();
     obj["DBDriver"] = settings.getDBDriver();
 
@@ -1818,7 +1851,7 @@ void ServerService::processAnnouncementPacket(const AnnouncementPacket &packet)
     break;
 
     case AnnouncementPacket::ANNOUNCEMENT_REPLY : {
-        replyMessageReceived(socketID, packet.getPeerID(), packet.ReplyInfo.announcementID, packet.ReplyInfo.sender, packet.ReplyInfo.receiver, packet.ReplyInfo.receiversAssetNO, packet.ReplyInfo.replyMessage);
+        replyMessageReceived(socketID, packet.getSenderID(), packet.ReplyInfo.announcementID, packet.ReplyInfo.sender, packet.ReplyInfo.receiver, packet.ReplyInfo.receiversAssetNO, packet.ReplyInfo.replyMessage);
     }
     break;
     case AnnouncementPacket::ANNOUNCEMENT_QUERY_TARGETS : {
@@ -2181,13 +2214,26 @@ void ServerService::processArguments(int argc, char **argv)
         arguments.append(QString(argv[i]));
     }
 
-    HEHUI::Settings settings(SERVICE_NAME, "./");
+    HEHUI::Settings settings(serviceName(), applicationDirPath());
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    if(arguments.contains("-nolog", Qt::CaseInsensitive)){
+        settings.enableLog(false);
+    }else{
+        settings.enableLog(true, serviceName());
+    }
+    LOGWARNING<<"Application started.";
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     if(settings.getDBServerHost().isEmpty()
             || settings.getDBName().isEmpty()
             || settings.getDBServerUserName().isEmpty()
       ) {
         qCritical() << QString("No database settings found!");
-        arguments.append("-setup");
+        if(!arguments.contains("-setup", Qt::CaseInsensitive)){
+            arguments.append("-setup");
+        }
     }
 
     if(arguments.contains("-setup", Qt::CaseInsensitive)) {
@@ -2204,7 +2250,7 @@ void ServerService::processArguments(int argc, char **argv)
         //wcout<<tr("\tPassword: ").toStdWString()<<settings.getDBServerUserPassword().toStdWString()<<endl;
         wcout << tr("\tDatabase name: ").toStdWString() << settings.getDBName().toStdWString() << endl << endl;
 
-        wcerr << tr("Database settings is invalid! Please reconfigure it!").toStdWString() << endl;
+        //wcerr << tr("Database settings is invalid! Please reconfigure it!").toStdWString() << endl;
 
 
         string input = "";
@@ -2378,7 +2424,8 @@ void ServerService::processArguments(int argc, char **argv)
             settings.setDBName(databaseName);
             settings.setDBServerUserName(userName);
             settings.setDBServerUserPassword(userPassword);
-            wcout << tr("Database Info Saved!").toStdWString() << endl << endl;
+            settings.sync();
+            wcout << tr("Database info has been saved to: %1").arg(settings.fileName()).toStdWString() << endl << endl;
         } else {
             wcout << tr("Operation canceled! Nothing changes!").toStdWString() << endl << endl;
         }

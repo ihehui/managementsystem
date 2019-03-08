@@ -146,5 +146,5 @@ RESOURCES += controlcenter.qrc
 
 # define some usefull values
 QMAKE_TARGET_PRODUCT = "Control Center"
-QMAKE_TARGET_DESCRIPTION = "Control Center"
+QMAKE_TARGET_DESCRIPTION = "Control Center For Management System"
 DEFINES *= "APP_NAME=\"\\\"$${QMAKE_TARGET_PRODUCT}\\\"\""

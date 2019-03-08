@@ -27,7 +27,7 @@ AdminUser::AdminUser()
     m_socketConnectedToServer = INVALID_SOCK_ID;
     m_serverAddress = "";
     m_serverPort = 0;
-    Settings settings(SETTINGS_FILE_NAME, "./");
+    Settings settings(SETTINGS_FILE_NAME);
     settings.getLastUsedAppServer(&m_serverAddress, &m_serverPort);
 
     m_serverName = "";
@@ -183,7 +183,7 @@ bool AdminUser::connectToServer(const QString &serverAddress, quint16 serverPort
     m_serverAddress = serverAddress;
     m_serverPort = serverPort;
 
-    Settings settings(SETTINGS_FILE_NAME, "./");
+    Settings settings(SETTINGS_FILE_NAME);
     settings.setLastUsedAppServer(m_serverAddress , m_serverPort);
 
     qWarning() << "Server Connected!" << " Address:" << serverAddress << " Port:" << m_serverPort;
@@ -212,7 +212,7 @@ void AdminUser::processLoginResult(const AdminLoginPacket &packet)
 
     Q_ASSERT(packet.getSocketID() == m_socketConnectedToServer);
 
-    m_serverName = packet.getPeerID();
+    m_serverName = packet.getSenderID();
 
     bool loggedin = packet.LoginResult.loggedIn;
     setVerified(loggedin);

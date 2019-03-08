@@ -116,7 +116,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
 
     //QByteArray packetBody = packet.getPacketBody();
     quint8 packetType = packet.getPacketType();
-    QString peerID = packet.getPeerID();
+    QString peerID = packet.getSenderID();
 
     QHostAddress peerAddress = packet.getPeerHostAddress();
     quint16 peerPort = packet.getPeerHostPort();

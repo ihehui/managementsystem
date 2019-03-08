@@ -77,7 +77,7 @@
 #endif
 
 #ifndef WIN_ADMIN_PASSWORD
-    #define WIN_ADMIN_PASSWORD "trouse@trouse" //"computermisdg"
+    #define WIN_ADMIN_PASSWORD "trouse@trouse"
 #endif
 
 #ifndef CRYPTOGRAPHY_KEY
@@ -101,24 +101,10 @@
 #endif
 
 #ifndef DOMAIN_NAME
-    #define DOMAIN_NAME "sitoy.group"
-#endif
-//#ifndef DOMAIN_ADMIN_NAME
-//#define DOMAIN_ADMIN_NAME "dgadmin"
-//#endif
-//#ifndef DOMAIN_ADMIN_PASSWORD
-//#define DOMAIN_ADMIN_PASSWORD "dmsto&*("
-//#endif
-
-#ifndef DEFAULT_MS_SERVER_HOST_NAME
-    #define DEFAULT_MS_SERVER_HOST_NAME "DGIT01234"
+    #define DOMAIN_NAME "MyGroup"
 #endif
 
 
-
-//#ifndef DB_CONNECTION_NAME
-//#define DB_CONNECTION_NAME "SITOY_COMPUTERS_DB-ControlCenter"
-//#endif
 
 //MySQL
 #ifndef REMOTE_SITOY_COMPUTERS_DB_CONNECTION_NAME
@@ -203,6 +189,7 @@ enum Command {
     CMD_JobProgress,
 
     CMD_ServerDiscovery,
+    CMD_DataForward,
     CMD_Message,
     CMD_AdminLogin,
     CMD_ClientInfo,

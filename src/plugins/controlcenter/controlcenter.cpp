@@ -562,7 +562,7 @@ bool ControlCenter::openDatabase(QSqlDatabase *database, bool reopen, QString *e
         QSqlDatabase::removeDatabase(DB_CONNECTION_NAME);
     }
 
-    Settings settings(SETTINGS_FILE_NAME, "./");
+    Settings settings(SETTINGS_FILE_NAME);
 
     QString driver = DB_DRIVER;
     QString host = "";
@@ -741,6 +741,10 @@ void ControlCenter::slotSearchNetwork()
     QList<QHostAddress> broadcastAddresses = NetworkUtilities::broadcastAddresses();
     foreach (QHostAddress address, broadcastAddresses) {
         controlCenterPacketsParser->sendAdminSearchClientPacket(address, computerName(), userName(), workgroup(), assetNO(), ipAddress(), osVersion(), m_adminUser->getUserID());
+    }
+    QHostAddress ip = QHostAddress(ui.lineEditIPAddress->text().trimmed());
+    if(!ip.isNull()){
+        controlCenterPacketsParser->sendAdminSearchClientPacket(ip, computerName(), userName(), workgroup(), assetNO(), ipAddress(), osVersion(), m_adminUser->getUserID());
     }
 
     //statusBar()->showMessage(tr("Matched:%1 Total:%2").arg(QString::number(proxyModel->rowCount())).arg(clientInfoHash.size()));
@@ -1119,7 +1123,7 @@ void ControlCenter::showReceivedMessage(const MessagePacket &packet)
     QString message = packet.message;
     quint8 messageType = packet.msgType;
 
-    QString msg = QString(tr("<p>Message From %1 <b>%2</b> :</p>").arg((packet.getSocketID() == m_socketConnectedToServer) ? tr("Server") : tr("Computer")).arg(packet.getPeerID()));
+    QString msg = QString(tr("<p>Message From %1 <b>%2</b> :</p>").arg((packet.getSocketID() == m_socketConnectedToServer) ? tr("Server") : tr("Computer")).arg(packet.getSenderID()));
 
     msg += message;
     switch(messageType) {
@@ -1142,7 +1146,7 @@ void ControlCenter::updateOrSaveClientInfo(const ClientInfoPacket &packet)
 {
     //qDebug()<<"--ControlCenter::updateOrSaveClientInfo(...)";
 
-    QString assetNO = packet.getPeerID();
+    QString assetNO = packet.getSenderID();
     QByteArray clientInfoData = packet.data;
     quint8 infoType = packet.infoType;
 
@@ -1378,7 +1382,7 @@ void ControlCenter::processScreenshotPacket(const ScreenshotPacket &packet)
             ui.tabWidget->setCurrentWidget(m_remoteDesktopMonitor);
         }
 
-        m_remoteDesktopMonitor->setDesktopInfo(packet.getSocketID(), packet.getPeerID(), packet.DesktopInfo.desktopWidth, packet.DesktopInfo.desktopHeight, packet.DesktopInfo.blockWidth, packet.DesktopInfo.blockHeight);
+        m_remoteDesktopMonitor->setDesktopInfo(packet.getSocketID(), packet.getSenderID(), packet.DesktopInfo.desktopWidth, packet.DesktopInfo.desktopHeight, packet.DesktopInfo.blockWidth, packet.DesktopInfo.blockHeight);
     }
     break;
 
@@ -1387,7 +1391,7 @@ void ControlCenter::processScreenshotPacket(const ScreenshotPacket &packet)
             qCritical() << QString("ERROR! Remote Desktop Monitor Not Initialized.");
             return;
         }
-        m_remoteDesktopMonitor->updateScreenshot(packet.getPeerID(), packet.ScreenshotData.locations, packet.ScreenshotData.images);
+        m_remoteDesktopMonitor->updateScreenshot(packet.getSenderID(), packet.ScreenshotData.locations, packet.ScreenshotData.images);
     }
     break;
 

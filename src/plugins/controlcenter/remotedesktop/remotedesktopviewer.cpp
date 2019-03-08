@@ -24,7 +24,7 @@ namespace HEHUI
 
 
 RemoteDesktopViewer::RemoteDesktopViewer(QWidget *parent, Qt::WindowFlags flag)
-    : ImageViewer(parent, flag)
+    : ImageViewer(CONTROL_IMAGEVIEW, parent, flag)
 {
 
     setAttribute(Qt::WA_DeleteOnClose);

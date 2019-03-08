@@ -17,6 +17,7 @@ RTP::RTP(QObject *parent) :
     qRegisterMetaType<PacketBase>("PacketBase");
 
     qRegisterMetaType<ServerDiscoveryPacket>("ServerDiscoveryPacket");
+    qRegisterMetaType<DataForwardPacket>("DataForwardPacket");
     qRegisterMetaType<MessagePacket>("MessagePacket");
     qRegisterMetaType<JobProgressPacket>("JobProgressPacket");
     qRegisterMetaType<AdminLoginPacket>("AdminLoginPacket");

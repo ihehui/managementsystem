@@ -8,6 +8,9 @@
 
 #include "HHSharedCore/hlogdebug.h"
 #include "HHSharedCore/hglobal_core.h"
+#include "HHSharedCore/MessageLogger"
+#include "HHSharedCore/CrashHandler"
+
 
 #include "../sharedms/settings.h"
 
@@ -16,6 +19,7 @@ using namespace std;
 
 
 #include <QLibraryInfo>
+
 
 
 int main(int argc, char **argv)
@@ -37,10 +41,10 @@ int main(int argc, char **argv)
     HEHUI::ServerService service(argc, argv, SERVICE_NAME, APP_NAME);
     cout << qPrintable(QString(APP_NAME) + " Build " + QString(APP_VERSION)) << endl << endl;
 
-
+    setupCrashHandler();
 
     //reset the message handler
-    qInstallMessageHandler(0);
+    //qInstallMessageHandler(0);
 
     return service.exec();
 }
