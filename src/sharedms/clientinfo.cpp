@@ -172,7 +172,6 @@ void ClientInfo::setJsonData(const QByteArray &data)
 
 QByteArray ClientInfo::getOSJsonData() const
 {
-
     QJsonObject osObj;
     osObj["AssetNO"] = assetNO;
     osObj["ComputerName"] = computerName;
@@ -190,43 +189,15 @@ QByteArray ClientInfo::getOSJsonData() const
     osObj["USBSD"] = usbSDStatus;
     osObj["LastOnlineTime"] = lastOnlineTime;
 
-//    QJsonObject hwObj;
-//    hwObj["Processor"] = cpu;
-//    hwObj["PhysicalMemory"] = memory;
-//    hwObj["BaseBoard"] = motherboardName;
-//    hwObj["VideoController"] =video;
-//    hwObj["Monitor"] = monitor;
-//    hwObj["SoundDevice"] = audio;
-//    hwObj["DiskDrive"] = storage;
-//    hwObj["NetworkAdapter"] = network;
-
     QJsonObject object;
     object["OS"] = osObj;
-//    object["Hardware"] = hwObj;
 
     QJsonDocument doc(object);
     return doc.toJson(QJsonDocument::Compact);
-
 }
 
 QByteArray ClientInfo::getHardwareJsonData() const
 {
-
-//    QJsonObject osObj;
-//    osObj["AssetNO"] = assetNO;
-//    osObj["ComputerName"] = computerName;
-//    osObj["OS"] = osVersion;
-//    osObj["InstallDate"] = installationDate;
-//    osObj["Key"] = osKey;
-//    osObj["Workgroup"] = workgroup;
-//    osObj["JoinedToDomain"] = m_isJoinedToDomain?"1":"0";
-//    osObj["Users"] = users;
-//    osObj["Admins"] = administrators;
-//    //osObj["IPInfo"] = ip;
-//    osObj["Version"] = clientVersion;
-//    osObj["ProcessMonitorEnabled"] = processMonitorEnabled?"1":"0";
-
-
     QJsonObject hwObj;
     hwObj["Processor"] = cpu;
     hwObj["PhysicalMemory"] = memory;
@@ -238,12 +209,10 @@ QByteArray ClientInfo::getHardwareJsonData() const
     hwObj["NetworkAdapter"] = network;
 
     QJsonObject object;
-    //object["OS"] = osObj;
     object["Hardware"] = hwObj;
 
     QJsonDocument doc(object);
     return doc.toJson(QJsonDocument::Compact);
-
 }
 
 

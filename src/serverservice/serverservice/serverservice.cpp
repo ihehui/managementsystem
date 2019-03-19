@@ -1295,10 +1295,7 @@ bool ServerService::openDatabase(bool reopen)
 
 bool ServerService::execQuery(const QString &statement, QString *errorString )
 {
-
-    qCritical() << "statement:";
-    qCritical() << statement;
-    qCritical() << "";
+    qDebug() << "statement: "<< statement;
 
     if(!query) {
         if(!openDatabase()) {

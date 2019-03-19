@@ -37,11 +37,10 @@
 #include <QWidget>
 #include <QTranslator>
 
-//#include "../ui/ui_mainwindow.h"
 #include "ui_mainwindow.h"
 #include "../shared/app_constants.h"
-//#include "../../shared/gui/widgetbase/mainwindowbase.h"
-#include "HHSharedGUI/hmainwindowbase.h"
+#include "HHSharedGUI/MainwindowBase"
+#include "HHSharedGUI/GUIUtilities"
 
 
 namespace HEHUI
@@ -53,7 +52,7 @@ class MainWindow: public MainWindowBase
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0, HEHUI::WindowPosition positon = HEHUI::Center)	;
+    MainWindow(QWidget *parent = 0, GUIUtilities::WindowPosition positon = GUIUtilities::CENTER);
     ~MainWindow();
 
     QSystemTrayIcon *SystemTrayIcon();
@@ -82,7 +81,8 @@ public slots:
 
     void slotQuit();
 
-    void savePreferedStyle(const QString &preferedStyle, bool useStylePalette);
+    void savePreferedStyle(const QString &preferedStyle);
+    void saveUsingStylePalette(bool useStylePalette);
     void savePreferedLanguage(const QString &preferedLanguage);
 
 

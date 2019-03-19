@@ -82,6 +82,8 @@ ClientService::ClientService(int argc, char **argv, const QString &serviceName, 
     m_adminAddress = "";
     m_adminPort = 0;
     m_adminID = "";
+    m_adminToken = 0;
+    m_myToken = 0;
 
 
     lookForServerTimer = 0;
@@ -264,7 +266,7 @@ bool ClientService::startMainService()
 
     connect(clientPacketsParser, SIGNAL(signalShowAdminPacketReceived(bool)), this, SLOT(processShowAdminPacket(bool)), Qt::QueuedConnection);
 
-    connect(clientPacketsParser, SIGNAL(signalAdminRequestConnectionToClientPacketReceived(const AdminConnectionToClientPacket &)), this, SLOT(processAdminRequestConnectionToClientPacket(const AdminConnectionToClientPacket &)), Qt::QueuedConnection);
+    connect(clientPacketsParser, SIGNAL(signalAdminConnectionToClientPacketReceived(const AdminConnectionToClientPacket &)), this, SLOT(processAdminRequestConnectionToClientPacket(const AdminConnectionToClientPacket &)), Qt::QueuedConnection);
     connect(clientPacketsParser, SIGNAL(signalAdminSearchClientPacketReceived(const AdminSearchClientPacket &)), this, SLOT(processAdminSearchClientPacket(const AdminSearchClientPacket &)), Qt::QueuedConnection);
 
     connect(clientPacketsParser, SIGNAL(signalClientInfoRequestedPacketReceived(const ClientInfoPacket &)), this, SLOT(processClientInfoRequestedPacket(const ClientInfoPacket &)), Qt::QueuedConnection);
@@ -381,9 +383,7 @@ bool ClientService::startMainService()
 //    m_wm->freeMemory();
 #endif
 
-    qWarning();
     qWarning() << "Main Service Started!";
-    qWarning();
 
     return true;
 
@@ -394,7 +394,7 @@ void ClientService::serverLookedUp(const QHostInfo &host)
     qDebug() << "--ClientService::serverLookedUp(...)";
 
     if (host.error() != QHostInfo::NoError) {
-        qDebug() << "Server Lookup failed:" << host.errorString();
+        qCritical() << QString("Server '%1' Lookup failed: %2").arg(host.hostName()).arg(host.errorString());
         return;
     }
 
@@ -435,7 +435,7 @@ void ClientService::serverFound(const ServerDiscoveryPacket &packet)
 
     int msec = QDateTime::currentDateTime().toString("zzz").toUInt();
     msec = msec < 100 ? (msec * 1000) : (msec * 10);
-    Utilities::msleep(msec);
+    CoreUtilities::msleep(msec);
 
     QString errorMessage = "";
     QHostAddress serverAddress = packet.getPeerHostAddress();
@@ -467,9 +467,7 @@ void ClientService::serverFound(const ServerDiscoveryPacket &packet)
     setServerLastUsed(serverAddress.toString(), m_serverRTPListeningPort, m_serverName);
 
     //logMessage(QString("Server Found! Address:%1 TCP Port:%2 Name:%3").arg(serverAddress).arg(serverTCPListeningPort).arg(serverName), QtServiceBase::Information);
-    qWarning();
     qWarning() << "Server Found!" << " Address:" << serverAddress << " RTP Port:" << m_serverRTPListeningPort << " TCP Port:" << packet.tcpPort << " Name:" << m_serverName << " Instance ID:" << m_serverInstanceID << " Socket ID:" << m_socketConnectedToServer;
-    qWarning();
 
 
     qsrand(QDateTime::currentMSecsSinceEpoch());
@@ -532,28 +530,20 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, quint8 i
 {
 
 
-#ifdef Q_OS_WIN
-
+//#ifdef Q_OS_WIN
+//#endif
 
     peerSocketThatRequiresDetailedInfo = socketID;
-
-//    if(SystemInfo::isRunning()){
-//        return;
-//    }
 
 
     if(!systemInfo) {
         systemInfo = new SystemInfo(this);
         connect(systemInfo, SIGNAL(signalSystemInfoResultReady(const QByteArray &, quint8, SOCKETID)), this, SLOT(systemInfoResultReady(const QByteArray &, quint8, SOCKETID)), Qt::QueuedConnection);
-//        connect(systemInfo, SIGNAL(finished()), this, SLOT(systemInfoThreadFinished()));
     }
-
-    //QtConcurrent::run(QThreadPool::globalInstance(), &SystemInfo::getInstalledSoftwareInfo, socketID);
 
 
     switch (infoType) {
     case quint8(MS::SYSINFO_OS):
-        //systemInfoResultReady(systemInfo->getOSInfo(), quint8(MS::SYSINFO_OS), socketID);
         systemInfoResultReady(m_myInfo->getOSJsonData(), quint8(MS::SYSINFO_OS), socketID);
         break;
 
@@ -582,10 +572,6 @@ void ClientService::processClientInfoRequestedPacket(SOCKETID socketID, quint8 i
         qCritical() << "ERROR! Unknown info type:" << infoType;
         break;
     }
-
-
-
-#endif
 
 }
 
@@ -878,75 +864,83 @@ void ClientService::processAdminRequestConnectionToClientPacket(const AdminConne
     qDebug() << "--ClientService::processAdminRequestConnectionToClientPacket(...)";
 
 
-    int previousSocketConnectedToAdmin = m_socketConnectedToAdmin;
-
-    SOCKETID adminSocketID = packet.getSocketID();
-    QString adminID = packet.adminID;
-
-#ifdef Q_OS_WIN
-    bool result = false;
-    QString message = "";
-    quint8 errorCode = MS::ERROR_NO_ERROR;
-
-//    if(m_localComputerName == computerName ){
-    message = "";
-    result = true;
-//    }else{
-//        message = QString("The computer names do not match!<br>Expected Value:%1").arg(m_localComputerName);
-//        result = false;
-//        QString address;
-//        m_rtp->getAddressInfoFromSocket(adminSocketID, &address, 0);
-//        if(NetworkUtilities::isLocalAddress(address)){
-//            result = true;
-//        }
-//    }
-
-//    QString usersInfo = usersOnLocalComputer().join(",");
-//    if( !users.trimmed().isEmpty() && (!usersInfo.contains(users, Qt::CaseInsensitive)) ){
-//        message = QString("The users information does not match!<br>Expected Value:%1").arg(usersInfo);
-//        result = false;
-//    }
-
-
-    if(!result) {
-        uploadClientOSInfo(m_socketConnectedToServer);
+    AdminConnectionToClientPacket::PacketInfoType InfoType = packet.InfoType;
+    switch (InfoType) {
+    case AdminConnectionToClientPacket::ADMINCONNECTION_ADMIN_ASK_SERVER_AUTH:
+    case AdminConnectionToClientPacket::ADMINCONNECTION_RESPONSE_AUTH:
+    case AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_RESULT:
+    {
     }
+        break;
 
-    bool ok = clientPacketsParser->sendClientResponseAdminConnectionResultPacket(adminSocketID, m_localComputerName, result, errorCode);
-    if(!ok) {
-        qCritical() << "Error! Failed to response admin connection request! " << m_rtp->lastErrorString();
+    case AdminConnectionToClientPacket::ADMINCONNECTION_SERVER_ASK_CLIENT_AUTH: {
+        QString adminID = packet.adminID;
+        m_adminToken = packet.adminToken;
+        QString adminHostName = packet.hostName;
+
+        //TODO:Check
+        bool allowed = true;
+
+        int msec = QTime::currentTime().msecsSinceStartOfDay() + 1;
+        qsrand(uint(msec));
+        m_myToken = qrand();
+        if(0 == m_myToken){
+            m_myToken = msec;
+        }
+        clientPacketsParser->sendClientResponseAdminConnectionAuthPacket(packet.getSocketID(), adminID, allowed, m_myToken, MS::ERROR_NO_ERROR, "");
+
     }
-    //    qWarning()<<"ClientService::processAdminRequestVerifyClientInfoPacket:"<<adminAddress<< " "<<adminPort;
+        break;
 
-    if(ok && result) {
-        m_socketConnectedToAdmin = adminSocketID;
-        clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, adminID);
+    case AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_REQUEST: {
+        QString adminID = packet.adminID;
+        int adminToken = packet.adminToken;
+        int clientToken = packet.clientToken;
+        QString adminHostName = packet.hostName;
 
-        m_rtp->getAddressInfoFromSocket(m_socketConnectedToAdmin, &m_adminAddress, &m_adminPort);
+        if(adminToken != m_adminToken || (clientToken != m_myToken)){
+            clientPacketsParser->sendClientResponseAdminConnectionResultPacket(packet.getSocketID(), adminID, false, "", MS::ERROR_VERIFICATION_FAILED, "");
+            return;
+        }
+
         m_adminID = adminID;
-        qWarning() << QString("Admin %1 connected form %2:%3 via %4!").arg(adminID + "@" + packet.computerName).arg(m_adminAddress).arg(m_adminPort).arg(m_rtp->socketProtocolString(m_socketConnectedToAdmin));
+        bool ok = clientPacketsParser->sendClientResponseAdminConnectionResultPacket(packet.getSocketID(), adminID, true, m_localComputerName, MS::ERROR_NO_ERROR, "");
+        if(ok) {
+            SOCKETID previousSocketConnectedToAdmin = m_socketConnectedToAdmin;
 
-        //uploadClientSummaryInfo(m_socketConnectedToAdmin);
-        processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_OS);
-        processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_REALTIME_INFO);
+            m_adminAddress = packet.getPeerHostAddress().toString();
+            m_adminPort = packet.getPeerHostPort();
+            m_socketConnectedToAdmin = packet.getSocketID();
 
-    } else {
-        m_rtp->closeSocket(adminSocketID);
-        clientPacketsParser->setSocketConnectedToAdmin(INVALID_SOCK_ID, "");
-        return;
+            //m_socketConnectedToAdmin = adminSocketID;
+            clientPacketsParser->setSocketConnectedToAdmin(m_socketConnectedToAdmin, adminID);
+
+            //m_rtp->getAddressInfoFromSocket(m_socketConnectedToAdmin, &m_adminAddress, &m_adminPort);
+            qWarning() << QString("Admin %1 connected form %2:%3 via %4!").arg(adminID).arg(m_adminAddress).arg(m_adminPort).arg(m_rtp->socketProtocolString(m_socketConnectedToAdmin));
+
+            //uploadClientSummaryInfo(m_socketConnectedToAdmin);
+            processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_OS);
+            processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_REALTIME_INFO);
+
+
+            if( (previousSocketConnectedToAdmin != INVALID_SOCK_ID) && (previousSocketConnectedToAdmin != m_socketConnectedToAdmin) ) {
+                clientPacketsParser->sendClientMessagePacket(previousSocketConnectedToAdmin, QString("Another administrator has logged on from %1!").arg(m_adminAddress), quint8(MS::MSG_Critical));
+                m_rtp->closeSocket(previousSocketConnectedToAdmin);
+            }
+
+        } else {
+            m_rtp->closeSocket(packet.getSocketID());
+            clientPacketsParser->setSocketConnectedToAdmin(INVALID_SOCK_ID, "");
+            return;
+        }
+
+
     }
+        break;
 
-#else
-    clientPacketsParser->sendClientResponseAdminConnectionResultPacket(adminSocketID, "It's NOT M$ Windows!", true, MS::ERROR_NO_ERROR);
-    processClientInfoRequestedPacket(m_socketConnectedToAdmin, MS::SYSINFO_OS);
 
-    //m_udtProtocol->closeSocket(adminSocketID);
-#endif
-
-    if( (previousSocketConnectedToAdmin != INVALID_SOCK_ID) && (previousSocketConnectedToAdmin != m_socketConnectedToAdmin) ) {
-        clientPacketsParser->sendClientMessagePacket(previousSocketConnectedToAdmin, QString("Another administrator has logged on from %1!").arg(m_adminAddress), quint8(MS::MSG_Critical));
-        m_rtp->closeSocket(previousSocketConnectedToAdmin);
-//        closeFileTXWithAdmin();
+    default:
+        break;
     }
 
 
@@ -1971,6 +1965,8 @@ void ClientService::peerDisconnected(SOCKETID socketID)
         m_adminAddress = "";
         m_adminPort = 0;
         m_adminID = "";
+        m_adminToken = 0;
+        m_myToken = 0;
 
 //        closeFileTXWithAdmin();
     } else {

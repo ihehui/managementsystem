@@ -97,6 +97,8 @@ ControlCenterPacketsParser::ControlCenterPacketsParser(ResourcesManagerInstance 
     m_localComputerName = QHostInfo::localHostName().toLower();
     Packet::setLocalID(m_localComputerName);
 
+    m_socketConnectedToServer = INVALID_SOCK_ID;
+
 }
 
 ControlCenterPacketsParser::~ControlCenterPacketsParser()
@@ -192,7 +194,7 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
 
     case quint8(MS::CMD_AdminConnectionToClient): {
         AdminConnectionToClientPacket p(packet);
-        emit signalClientResponseAdminConnectionResultPacketReceived(p);
+        emit signalAdminConnectionToClientPacketReceived(p);
     }
     break;
 
@@ -252,7 +254,10 @@ void ControlCenterPacketsParser::parseIncomingPacketData(const PacketBase &packe
 }
 
 
-
+void ControlCenterPacketsParser::setSocketConnectedToServer(SOCKETID serverSocketID)
+{
+    m_socketConnectedToServer = serverSocketID;
+}
 
 
 

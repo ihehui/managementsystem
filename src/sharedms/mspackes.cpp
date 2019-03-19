@@ -13,7 +13,7 @@ static Cryptography cryptography;
 
 ////////////////////////////////////////////////////////////////////////
 
-QByteArray MSPacket::sessionEncryptionKey = QByteArray("HE.HUI");
+QByteArray MSPacket::sessionEncryptionKey = QByteArray("!HE.HUI@~@HUI.HE!");
 MSPacket::MSPacket(quint8 packetType, bool encrypted)
     : Packet(packetType)
 {
@@ -955,10 +955,16 @@ AdminConnectionToClientPacket::AdminConnectionToClientPacket(const PacketBase &b
 
 void AdminConnectionToClientPacket::init()
 {
-    computerName = "";
+    InfoType = ADMINCONNECTION_UNKNOWN;
+
     adminID = "";
-    verified = 0;
+    clientID = "";
+    adminToken = 0;
+    clientToken = 0;
+    ok = 0;
+    hostName = "";
     errorCode = quint8(MS::ERROR_NO_ERROR);
+    errorMessage  ="";
 }
 
 void AdminConnectionToClientPacket::parsePacketBody(QByteArray &packetBody)
@@ -966,16 +972,85 @@ void AdminConnectionToClientPacket::parsePacketBody(QByteArray &packetBody)
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
-    in >> adminID >> computerName >> verified >> errorCode;
+    quint8 type = quint8(ADMINCONNECTION_UNKNOWN);
+    in >> type;
+    InfoType = PacketInfoType(type);
+
+    switch (InfoType) {
+    case ADMINCONNECTION_ADMIN_ASK_SERVER_AUTH: {
+        in >> clientID >> adminToken >> hostName;
+    }
+        break;
+
+    case ADMINCONNECTION_SERVER_ASK_CLIENT_AUTH: {
+        in >> adminID >> adminToken >> hostName;
+    }
+        break;
+
+    case ADMINCONNECTION_RESPONSE_AUTH: {
+        in >> adminID >> ok >> clientToken >> errorCode >> errorMessage;
+    }
+        break;
+
+    case ADMINCONNECTION_CONNECTION_REQUEST: {
+        in >> adminID >> adminToken >> clientToken >> hostName;
+    }
+        break;
+
+    case ADMINCONNECTION_CONNECTION_RESULT: {
+        in >> adminID >> ok >> hostName >> errorCode >> errorMessage;
+    }
+        break;
+
+    default:
+        break;
+    }
+
 }
 
 QByteArray AdminConnectionToClientPacket::packBodyData()
 {
+    Q_ASSERT(InfoType != ADMINCONNECTION_UNKNOWN);
+    if(InfoType == ADMINCONNECTION_UNKNOWN) {
+        return QByteArray();
+    }
+
     QByteArray ba;
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
 
-    out << adminID << computerName << verified << errorCode;
+    out << quint8(InfoType);
+
+    switch (InfoType) {
+    case ADMINCONNECTION_ADMIN_ASK_SERVER_AUTH: {
+        out << clientID << adminToken << hostName;
+    }
+        break;
+
+    case ADMINCONNECTION_SERVER_ASK_CLIENT_AUTH: {
+        out << adminID << adminToken << hostName;
+    }
+        break;
+
+    case ADMINCONNECTION_RESPONSE_AUTH: {
+        out << adminID << ok << clientToken << errorCode << errorMessage;
+    }
+        break;
+
+    case ADMINCONNECTION_CONNECTION_REQUEST: {
+        out << adminID << adminToken << clientToken << hostName;
+    }
+        break;
+
+    case ADMINCONNECTION_CONNECTION_RESULT: {
+        out << adminID << ok << hostName << errorCode << errorMessage;
+    }
+        break;
+
+    default:
+        break;
+    }
+
 
     return ba;
 }

@@ -53,7 +53,7 @@ namespace HEHUI
 {
 
 
-MainWindow::MainWindow(QWidget *parent, HEHUI::WindowPosition positon) :
+MainWindow::MainWindow(QWidget *parent, GUIUtilities::WindowPosition positon) :
     MainWindowBase(parent)
 {
     ui.setupUi(this);
@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent, HEHUI::WindowPosition positon) :
     } else {
         //使窗口居中
         //Center the window
-        moveWindow(positon);
+       GUIUtilities::moveWindow(this, positon);
         showMaximized();
     }
 
@@ -175,7 +175,7 @@ void MainWindow::initUI()
 {
 
     ui.menuView->addSeparator();
-    ui.menuView->addMenu(getStyleMenu(Settings::instance()->getStyle(), Settings::instance()->getPalette()));
+    ui.menuView->addMenu(getStyleMenu(Settings::instance()->getStyle(), Settings::instance()->isUsingStylesPalette()));
     QString qmLocale = Settings::instance()->getLanguage();
     QString qmPath = QApplication::applicationDirPath() + QDir::separator () + QString(LANGUAGE_FILE_DIR);
     ui.menuView->addMenu(getLanguageMenu(qmPath, qmLocale));
@@ -516,10 +516,14 @@ void MainWindow::slotQuit()
 }
 
 
-void MainWindow::savePreferedStyle(const QString &preferedStyle, bool useStylePalette)
+void MainWindow::savePreferedStyle(const QString &preferedStyle)
 {
     Settings::instance()->setStyle(preferedStyle);
-    Settings::instance()->setPalette(useStylePalette);
+}
+
+void MainWindow::saveUsingStylePalette(bool useStylePalette)
+{
+    Settings::instance()->setUseStylesPalette(useStylePalette);
 }
 
 void MainWindow::savePreferedLanguage(const QString &preferedLanguage)

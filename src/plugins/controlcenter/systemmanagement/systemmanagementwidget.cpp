@@ -163,7 +163,7 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
     administratorsManagementMenu = 0;
 
-
+    serverResponseAdminConnectionAuthPacketReceived = false;
     clientResponseAdminConnectionResultPacketReceived = false;
     remoteConsoleRunning = false;
 
@@ -176,6 +176,13 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
 
 
     m_updateTemperaturesTimer = 0;
+
+    int msec = QTime::currentTime().msecsSinceStartOfDay() + 1;
+    qsrand(uint(msec));
+    m_myToken = qrand();
+    if(0 == m_myToken){
+        m_myToken = msec;
+    }
 
     ui.tabWidget->setEnabled(false);
 
@@ -316,7 +323,7 @@ void SystemManagementWidget::setControlCenterPacketsParser(ControlCenterPacketsP
     this->controlCenterPacketsParser = parser;
     connect(controlCenterPacketsParser, SIGNAL(signalClientInfoPacketReceived(const ClientInfoPacket &)), this, SLOT(clientInfoPacketReceived(const ClientInfoPacket &)));
     connect(controlCenterPacketsParser, SIGNAL(signalSystemInfoFromServerReceived(const SystemInfoFromServerPacket &)), this, SLOT(systemInfoFromServerPacketReceived(const SystemInfoFromServerPacket &)));
-    connect(controlCenterPacketsParser, SIGNAL(signalClientResponseAdminConnectionResultPacketReceived(const AdminConnectionToClientPacket &)), this, SLOT(processClientResponseAdminConnectionResultPacket(const AdminConnectionToClientPacket &)));
+    connect(controlCenterPacketsParser, SIGNAL(signalAdminConnectionToClientPacketReceived(const AdminConnectionToClientPacket &)), this, SLOT(processAdminConnectionToClientPacket(const AdminConnectionToClientPacket &)));
 
 
     connect(controlCenterPacketsParser, SIGNAL(signalClientOnlineStatusChanged(SOCKETID, const QString &, bool)), this, SLOT(processClientOnlineStatusChangedPacket(SOCKETID, const QString &, bool)), Qt::QueuedConnection);
@@ -363,6 +370,33 @@ void SystemManagementWidget::on_toolButtonVerify_clicked()
         return;
     }
 
+    serverResponseAdminConnectionAuthPacketReceived = false;
+    clientResponseAdminConnectionResultPacketReceived = false;
+
+    ui.toolButtonVerify->setEnabled(false);
+
+    bool ok = controlCenterPacketsParser->sendAdminAskServerForClientConnectionAuthPacket(m_peerAssetNO, m_myToken, QHostInfo::localHostName().toLower());
+    if(!ok) {
+        QString err = m_rtp->lastErrorString();
+        m_rtp->closeSocket(m_peerSocket);
+        m_peerSocket = INVALID_SOCK_ID;
+        QMessageBox::critical(this, tr("Error"), tr("Can not send request to server!<br>%1").arg(err));
+        ui.toolButtonVerify->setEnabled(true);
+        return;
+    }
+
+    ui.lineEditHost->setReadOnly(true);
+
+    QTimer::singleShot(5000, this, SLOT(askConnectionToClientAuthTimeout()));
+
+}
+
+void SystemManagementWidget::connectToClient()
+{
+    if(!m_clientToken){
+        return;
+    }
+
     QString host = ui.lineEditHost->text().trimmed();
     quint16 port = ui.spinBoxPort->value();
     m_peerIPAddress = QHostAddress(host);
@@ -390,7 +424,7 @@ void SystemManagementWidget::on_toolButtonVerify_clicked()
         return;
     }
 
-    bool ok = controlCenterPacketsParser->sendAdminRequestConnectionToClientPacket(m_peerSocket, QHostInfo::localHostName(), m_adminUser->getUserID());
+    bool ok = controlCenterPacketsParser->sendAdminRequestConnectionToClientPacket(m_peerSocket, m_adminUser->getUserID(), m_myToken, m_clientToken, QHostInfo::localHostName());
     if(!ok) {
         QString err = m_rtp->lastErrorString();
         m_rtp->closeSocket(m_peerSocket);
@@ -947,79 +981,138 @@ void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID soc
 
 }
 
-void SystemManagementWidget::processClientResponseAdminConnectionResultPacket(const AdminConnectionToClientPacket &packet)
+void SystemManagementWidget::processAdminConnectionToClientPacket(const AdminConnectionToClientPacket &packet)
 {
     if(packet.getSocketID() != m_peerSocket) {
         return;
     }
 
-    QString assetNO = packet.getSenderID();
-    QString computerName = packet.computerName;
+    AdminConnectionToClientPacket::PacketInfoType InfoType = packet.InfoType;
+    switch (InfoType) {
+    case AdminConnectionToClientPacket::ADMINCONNECTION_ADMIN_ASK_SERVER_AUTH:
+    case AdminConnectionToClientPacket::ADMINCONNECTION_SERVER_ASK_CLIENT_AUTH:
+    case AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_REQUEST:
+        break;
 
-    clientResponseAdminConnectionResultPacketReceived = true;
+    case AdminConnectionToClientPacket::ADMINCONNECTION_RESPONSE_AUTH:
+    {
+        if(packet.adminID != m_adminUser->getUserID()){
+            return;
+        }
+        serverResponseAdminConnectionAuthPacketReceived = true;
 
-    if(packet.verified == true) {
-        m_peerAssetNO = assetNO;
-        m_clientInfo.setAssetNO(assetNO);
-        m_peerComputerName = computerName;
-        m_clientInfo.setComputerName(computerName);
-        setWindowTitle(computerName);
-        emit updateTitle(this);
+        bool ok = packet.ok;
+        if(!ok){
+            QMessageBox::critical(this, tr("Error"), tr("Failed to get authorization for connection!") + tr("<p>Code: %1</p>").arg(packet.errorCode));
+            return;
+        }
 
-        //ui.lineEditHost->setReadOnly(true);
+        m_clientToken = packet.clientToken;
+        connectToClient();
 
-        ui.lineEditAssetNO->setText(assetNO);
-        ui.lineEditAssetNO->setReadOnly(true);
-
-        ui.lineEditComputerName1->setText(computerName);
-        ui.lineEditComputerName1->setReadOnly(true);
-
-        ui.lineEditIP->setText(packet.getPeerHostAddress().toString());
-
-
-        ui.tabSystemInfo->setEnabled(true);
-        ui.groupBoxTemperatures->setEnabled(true);
-        ui.toolButtonRequestHardwareInfoFromClient->setEnabled(true);
-
-        ui.tabRemoteConsole->setEnabled(true);
-        ui.groupBoxRemoteConsole->setEnabled(true);
-
-
-        ui.tabSoftware->setEnabled(true);
-        ui.tabUsers->setEnabled(true);
-        ui.tabServices->setEnabled(true);
-        ui.tabProcessMonitor->setEnabled(true);
-
-        m_fileManagementWidget->setPeerSocket(m_peerSocket);
-        ui.tabFileManagement->setEnabled(true);
-
-        ui.groupBoxTargetHost->hide();
-
-        ui.tabWidget->setEnabled(true);
-
-    } else {
-        ui.lineEditHost->setReadOnly(false);
-        //ui.tabSystemInfo->setEnabled(false);
-        ui.groupBoxRemoteConsole->setEnabled(false);
-
-        ui.toolButtonRequestHardwareInfoFromClient->setEnabled(false);
-        ui.groupBoxTemperatures->setEnabled(false);
-
-        ui.toolButtonVerify->setEnabled(true);
-
-
-        ui.tabRemoteConsole->setEnabled(false);
-        ui.tabSoftware->setEnabled(false);
-        ui.tabUsers->setEnabled(false);
-        ui.tabServices->setEnabled(false);
-
-        ui.tabFileManagement->setEnabled(false);
-
-        QMessageBox::critical(this, tr("Connection failed"), tr("Error Code: %1").arg(packet.errorCode));
     }
+        break;
+
+    case AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_RESULT:
+    {
+        if(packet.getSocketID() != m_peerSocket || (packet.adminID != m_adminUser->getUserID())) {
+            return;
+        }
+
+        clientResponseAdminConnectionResultPacketReceived = true;
+
+        bool ok = packet.ok;
+        if(ok) {
+            QString assetNO = packet.getSenderID();
+            QString computerName = packet.hostName;
+
+            m_peerAssetNO = assetNO;
+            m_clientInfo.setAssetNO(assetNO);
+            m_peerComputerName = computerName;
+            m_clientInfo.setComputerName(computerName);
+            setWindowTitle(computerName);
+            emit updateTitle(this);
+
+            //ui.lineEditHost->setReadOnly(true);
+
+            ui.lineEditAssetNO->setText(assetNO);
+            ui.lineEditAssetNO->setReadOnly(true);
+
+            ui.lineEditComputerName1->setText(computerName);
+            ui.lineEditComputerName1->setReadOnly(true);
+
+            ui.lineEditIP->setText(packet.getPeerHostAddress().toString());
+
+
+            ui.tabSystemInfo->setEnabled(true);
+            ui.groupBoxTemperatures->setEnabled(true);
+            ui.toolButtonRequestHardwareInfoFromClient->setEnabled(true);
+
+            ui.tabRemoteConsole->setEnabled(true);
+            ui.groupBoxRemoteConsole->setEnabled(true);
+
+
+            ui.tabSoftware->setEnabled(true);
+            ui.tabUsers->setEnabled(true);
+            ui.tabServices->setEnabled(true);
+            ui.tabProcessMonitor->setEnabled(true);
+
+            m_fileManagementWidget->setPeerSocket(m_peerSocket);
+            ui.tabFileManagement->setEnabled(true);
+
+            ui.groupBoxTargetHost->hide();
+
+            ui.tabWidget->setEnabled(true);
+
+        } else {
+
+            ui.lineEditHost->setReadOnly(false);
+            //ui.tabSystemInfo->setEnabled(false);
+            ui.groupBoxRemoteConsole->setEnabled(false);
+
+            ui.toolButtonRequestHardwareInfoFromClient->setEnabled(false);
+            ui.groupBoxTemperatures->setEnabled(false);
+
+            ui.toolButtonVerify->setEnabled(true);
+
+
+            ui.tabRemoteConsole->setEnabled(false);
+            ui.tabSoftware->setEnabled(false);
+            ui.tabUsers->setEnabled(false);
+            ui.tabServices->setEnabled(false);
+
+            ui.tabFileManagement->setEnabled(false);
+
+            QMessageBox::critical(this, tr("Error"), tr("Connection failed!") + tr("<p>Code: %1</p>").arg(packet.errorCode));
+        }
+
+
+    }
+        break;
+
+    default:
+        break;
+    }
+
+
+
+    QString assetNO = packet.getSenderID();
+    QString computerName = packet.hostName;
+
+
 
 }
 
+void SystemManagementWidget::askConnectionToClientAuthTimeout()
+{
+
+    if(!serverResponseAdminConnectionAuthPacketReceived) {
+        QMessageBox::critical(this, tr("Error"), tr("Timeout! No response received from server!"));
+        ui.lineEditHost->setReadOnly(false);
+        ui.toolButtonVerify->setEnabled(true);
+    }
+
+}
 void SystemManagementWidget::requestConnectionToClientTimeout()
 {
 
@@ -1527,6 +1620,7 @@ void SystemManagementWidget::peerDisconnected(bool normalClose)
     qDebug() << "--SystemManagementWidget::peerDisconnected(...) " << " normalClose:" << normalClose;
 
     m_peerSocket = INVALID_SOCK_ID;
+    m_clientToken = 0;
 
     //ui.tabSystemInfo->setEnabled(false);
     ui.toolButtonRequestHardwareInfoFromClient->setEnabled(false);

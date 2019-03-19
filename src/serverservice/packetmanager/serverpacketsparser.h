@@ -65,9 +65,12 @@ public slots:
 
     bool sendServerDeclarePacket(const QHostAddress peerAddress, quint16 peerPort)
     {
-
-        qsrand(QDateTime::currentDateTime().toTime_t());
-        static int serverInstanceID = qrand();
+qDebug()<<"--sendServerDeclarePacket(...)  peerAddress:"<<peerAddress<<"  peerPort:"<<peerPort;
+        static int serverInstanceID = 0;
+        if(!serverInstanceID){
+            qsrand(QDateTime::currentDateTime().toTime_t());
+            serverInstanceID = qrand();
+        }
         //qDebug()<<"Server Instance ID:"<<serverInstanceID;
 
         ServerDiscoveryPacket packet;
@@ -154,6 +157,36 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
+    bool sendAdminRequestConnectionAuthPacket(SOCKETID adminSocketID, const QString &adminID, int adminToken, const QString &hostName)
+    {
+        //qWarning()<<"----sendAdminRequestConnectionAuthPacket(...):"<<adminID<<" verified:"<<verified;
+
+        AdminConnectionToClientPacket packet;
+        packet.InfoType = AdminConnectionToClientPacket::ADMINCONNECTION_SERVER_ASK_CLIENT_AUTH;
+        packet.adminID = adminID;
+        packet.adminToken = adminToken;
+        packet.hostName = hostName;
+
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(adminSocketID, &ba);
+    }
+
+    bool sendClientResponseAdminConnectionAuthPacket(SOCKETID adminSocketID, const QString &adminID, bool verified, int clientToken, quint8 errorCode, const QString &errorMessage)
+    {
+        //qWarning()<<"----sendClientResponseAdminConnectionAuthPacket(...):"<<adminID<<" verified:"<<verified;
+
+        AdminConnectionToClientPacket packet;
+        packet.InfoType = AdminConnectionToClientPacket::ADMINCONNECTION_RESPONSE_AUTH;
+        packet.adminID = adminID;
+        packet.ok = quint8(verified);
+        packet.clientToken = clientToken;
+        packet.errorCode = errorCode;
+        packet.errorMessage = errorMessage;
+
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(adminSocketID, &ba);
+    }
+
     bool sendSystemInfoPacket(SOCKETID socketID, const QString &extraInfo, const QByteArray &data, quint8 infoType)
     {
         //qDebug()<<"----sendSystemInfoPacket(...)"<<" socketID:"<<socketID<<" infoType:"<<infoType;
@@ -211,6 +244,7 @@ signals:
     void signalUpdateSysAdminInfoPacketReceived(const SysAdminInfoPacket &packet);
 
 
+    void signalAdminConnectionToClientPacketReceived(const AdminConnectionToClientPacket &packet);
     void signalAdminLogin(const AdminLoginPacket &packet);
     void signalSystemAlarmsPacketReceived(const SystemAlarmsPacket &packet);
 

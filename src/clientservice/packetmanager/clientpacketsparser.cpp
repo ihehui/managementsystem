@@ -230,7 +230,7 @@ void ClientPacketsParser::parseIncomingPacketData(const PacketBase &packet)
         qDebug() << "~~CMD_AdminConnectionToClient";
 
         AdminConnectionToClientPacket p(packet);
-        emit signalAdminRequestConnectionToClientPacketReceived(p);
+        emit signalAdminConnectionToClientPacketReceived(p);
     }
     break;
 

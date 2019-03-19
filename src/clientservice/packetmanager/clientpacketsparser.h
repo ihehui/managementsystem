@@ -75,7 +75,7 @@ public slots:
 
     bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = IP_MULTICAST_GROUP_PORT)
     {
-        qDebug() << "----sendClientLookForServerPacket(...) targetAddress:" << targetAddress;
+        qDebug() << "----sendClientLookForServerPacket(...) targetAddress:" << targetAddress <<" targetPort:"<<targetPort;
 
         QHostAddress address = QHostAddress(targetAddress);
         if(address.isNull()) {
@@ -217,20 +217,39 @@ public slots:
         return m_udpServer->sendDatagram(ba, QHostAddress(targetAddress), targetPort);
     }
 
-    bool sendClientResponseAdminConnectionResultPacket(SOCKETID socketID, const QString &computerName, bool verified, quint8 errorCode)
+    bool sendClientResponseAdminConnectionAuthPacket(SOCKETID serverSocketID, const QString &adminID, bool verified, int clientToken, quint8 errorCode, const QString &errorMessage)
+    {
+        //qWarning()<<"----sendClientResponseAdminConnectionAuthPacket(...):"<<adminID<<" verified:"<<verified;
+
+        AdminConnectionToClientPacket packet;
+        packet.InfoType = AdminConnectionToClientPacket::ADMINCONNECTION_RESPONSE_AUTH;
+        packet.adminID = adminID;
+        packet.ok = quint8(verified);
+        packet.clientToken = clientToken;
+        packet.errorCode = errorCode;
+        packet.errorMessage = errorMessage;
+
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(serverSocketID, &ba);
+    }
+
+    bool sendClientResponseAdminConnectionResultPacket(SOCKETID adminSocketID, const QString &adminID, bool verified, const QString &hostName, quint8 errorCode, const QString &errorMessage)
     {
         //qWarning()<<"----sendClientResponseAdminConnectionResultPacket(...):"<<adminAddress.toString()<<" "<<adminPort;
 
         AdminConnectionToClientPacket packet;
-        packet.computerName = computerName;
-        packet.verified = quint8(verified);
+        packet.InfoType = AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_RESULT;
+        packet.adminID = adminID;
+        packet.ok = quint8(verified);
+        packet.hostName = hostName;
         packet.errorCode = errorCode;
+        packet.errorMessage = errorMessage;
 
         QByteArray ba = packet.toByteArray();
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(adminSocketID, &ba);
     }
 
-    bool sendClientMessagePacket(int adminSocketID, const QString &message, quint8 clientMessageType = quint8(MS::MSG_Information))
+    bool sendClientMessagePacket(SOCKETID adminSocketID, const QString &message, quint8 clientMessageType = quint8(MS::MSG_Information))
     {
 
         MessagePacket packet;
@@ -496,7 +515,7 @@ signals:
     void signalClientRequestSoftwareVersionPacketReceived(const QString &softwareName);
     void signalServerResponseSoftwareVersionPacketReceived(const QString &softwareName, const QString &version);
 
-    void signalAdminRequestConnectionToClientPacketReceived(const AdminConnectionToClientPacket &packet);
+    void signalAdminConnectionToClientPacketReceived(const AdminConnectionToClientPacket &packet);
     void signalAdminSearchClientPacketReceived(const AdminSearchClientPacket &packet);
 
     void signalAdminRequestTemperatures(const TemperaturesPacket &packet);

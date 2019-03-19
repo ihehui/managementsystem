@@ -136,6 +136,11 @@ void ServerPacketsParser::parseIncomingPacketData(const PacketBase &packet)
     }
     break;
 
+    case quint8(MS::CMD_AdminConnectionToClient): {
+        AdminConnectionToClientPacket p(packet);
+        emit signalAdminConnectionToClientPacketReceived(p);
+    }
+    break;
 
     case quint8(MS::CMD_AdminLogin): {
         qDebug() << "~~CMD_AdminLogin";

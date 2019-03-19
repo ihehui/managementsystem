@@ -49,7 +49,7 @@ SystemSummaryInfo::SystemSummaryInfo(QWidget *parent)
     localComputerName = QHostInfo::localHostName().toLower();
     ui.lineEditComputerName->setText(localComputerName);
 
-    m_currentUserNameOfOS = Utilities::currentUserNameOfOS();
+    m_currentUserNameOfOS = CoreUtilities::currentUserNameOfOS();
     ui.lineEditUserName->setText(m_currentUserNameOfOS);
 
 

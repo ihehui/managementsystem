@@ -14,12 +14,14 @@
 #include "../sharedms/global_shared.h"
 
 
-#ifdef Q_OS_WIN32
-    #include "HHSharedSystemUtilities/hhardwaremonitor.h"
-    #include "HHSharedSystemUtilities/WinUtilities"
-#endif
+//#ifdef Q_OS_WIN32
+//    #include "HHSharedSystemUtilities/WinUtilities"
+//#else
+//    #include "HHSharedSystemUtilities/UnixUtilities"
+//#endif
 
 #include "HHSharedSystemUtilities/SystemUtilities"
+#include "HHSharedSystemUtilities/HardwareInfo"
 
 
 #ifdef Q_OS_WIN32
@@ -82,9 +84,15 @@ QByteArray SystemInfo::getOSInfo()
     QString computerName = QHostInfo::localHostName().toLower();
     obj["ComputerName"] = computerName;
 
+    QStringList users = SystemUtilities::localCreatedUsers();
+    SystemUtilities::getAllUsersLoggedOn(&users);
+    users.removeDuplicates();
+    obj["Users"] = users.join(";");
+
+    HardwareInfo hwi;
+    hwi.getOSInfo(&obj);
+
 #ifdef Q_OS_WIN32
-    HardwareMonitor hwm;
-    hwm.getOSInfo(&obj);
 
     bool isJoinedToDomain = false;
     QString joinInfo = WinUtilities::getJoinInformation(&isJoinedToDomain);
@@ -94,19 +102,10 @@ QByteArray SystemInfo::getOSInfo()
     obj["Workgroup"] = joinInfo;
     obj["JoinedToDomain"] = QString::number(isJoinedToDomain ? 1 : 0);
 
-
-    QStringList users = WinUtilities::localCreatedUsers();
-    WinUtilities::getAllUsersLoggedOn(&users);
-    users.removeDuplicates();
-    obj["Users"] = users.join(";");
-
     QStringList admins = WinUtilities::getMembersOfLocalGroup("Administrators");
     QString admisStr = admins.join(";").toLower();
     admisStr = admisStr.replace(computerName + "\\", "");
     obj["Admins"] = admisStr;
-
-
-
 
 #else
 
@@ -158,22 +157,16 @@ void SystemInfo::getHardwareInfo(SOCKETID socketID)
     QJsonObject obj;
     obj["ComputerName"] = QHostInfo::localHostName().toLower();
 
-#ifdef Q_OS_WIN32
-    HardwareMonitor hwm;
+    HardwareInfo hwi;
 
-    hwm.getBaseBoardInfo(&obj);
-    hwm.getProcessorInfo(&obj);
-    hwm.getPhysicalMemoryInfo(&obj);
-    hwm.getDiskDriveInfo(&obj);
-    hwm.getVideoControllerInfo(&obj);
-    hwm.getSoundDeviceInfo(&obj);
-    hwm.getMonitorInfo(&obj);
-    hwm.getNetworkAdapterInfo(&obj);
-
-#else
-
-
-#endif
+    hwi.getBaseBoardInfo(&obj);
+    hwi.getProcessorInfo(&obj);
+    hwi.getPhysicalMemoryInfo(&obj);
+    hwi.getDiskDriveInfo(&obj);
+    hwi.getVideoControllerInfo(&obj);
+    hwi.getSoundDeviceInfo(&obj);
+    hwi.getMonitorInfo(&obj);
+    hwi.getNetworkAdapterInfo(&obj);
 
     QJsonObject object;
     object["Hardware"] = obj;
@@ -214,6 +207,7 @@ void SystemInfo::getInstalledSoftwaresInfo(SOCKETID socketID)
 #endif
 
 }
+
 
 void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringList &keys, bool on64BitView)
 {
@@ -260,13 +254,13 @@ void SystemInfo::getInstalledSoftwaresInfo(QJsonArray *infoArray, const QStringL
 void SystemInfo::getServicesInfo(SOCKETID socketID)
 {
 
-#ifdef Q_OS_WIN32
-
     QJsonArray infoArray;
     unsigned long errorCode = 0;
     QString errorMsg = "";
-    if(!HEHUI::WinUtilities::serviceGetAllServicesInfo(&infoArray, &errorCode)){
+    if(!HEHUI::SystemUtilities::serviceGetAllServicesInfo(&infoArray, &errorCode)){
+#ifdef Q_OS_WIN32
         errorMsg = HEHUI::WinUtilities::WinSysErrorMsg(errorCode);
+#endif
         qCritical()<<"Failed to get services info!"<<errorMsg;
     }
 
@@ -278,26 +272,19 @@ void SystemInfo::getServicesInfo(SOCKETID socketID)
     QJsonDocument doc(object);
     emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_SERVICES, socketID);
 
-#endif
-
 }
 
 void SystemInfo::getUsersInfo(SOCKETID socketID)
 {
     qDebug() << "--SystemInfo::getUsersInfo(...)";
 
-#ifdef Q_OS_WIN32
-
     QJsonArray infoArray;
-    HEHUI::WinUtilities::getAllUsersInfo(&infoArray);
+    HEHUI::SystemUtilities::getAllUsersInfo(&infoArray);
 
     QJsonObject object;
     object["Users"] = infoArray;
     QJsonDocument doc(object);
     emit signalSystemInfoResultReady(doc.toJson(QJsonDocument::Compact), MS::SYSINFO_OSUSERS, socketID);
-
-#endif
-
 
 }
 

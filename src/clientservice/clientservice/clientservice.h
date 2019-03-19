@@ -28,10 +28,14 @@
 
 //#include "HHSharedUDT/hudtprotocolforfiletransmission.h"
 
-#ifdef Q_OS_WIN32
-    #include "HHSharedSystemUtilities//hhardwaremonitor.h"
-    #include "HHSharedSystemUtilities/WinUtilities"
-#endif
+//#ifdef Q_OS_WIN32
+//    #include "HHSharedSystemUtilities/WinUtilities"
+//#else
+//    #include "HHSharedSystemUtilities/UnixUtilities"
+//#endif
+
+#include "HHSharedSystemUtilities/SystemUtilities"
+
 
 
 
@@ -229,6 +233,8 @@ private:
     QString m_adminAddress;
     quint16 m_adminPort;
     QString m_adminID;
+    int m_adminToken;
+    int m_myToken;
 
 
     QTimer *lookForServerTimer;

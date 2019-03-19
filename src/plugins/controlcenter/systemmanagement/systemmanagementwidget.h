@@ -54,6 +54,7 @@ public slots:
 
 private slots:
     void on_toolButtonVerify_clicked();
+    void connectToClient();
 
     void on_toolButtonModifyAssetNO_clicked();
     void on_toolButtonShutdown_clicked();
@@ -80,8 +81,10 @@ private slots:
     void targetHostLookedUp(const QHostInfo &host);
 
     void processClientOnlineStatusChangedPacket(SOCKETID socketID, const QString &assetNO, bool online);
-    void processClientResponseAdminConnectionResultPacket(const AdminConnectionToClientPacket &packet);
+    void processAdminConnectionToClientPacket(const AdminConnectionToClientPacket &packet);
 
+    void clientResponseConnectionAuth();
+    void askConnectionToClientAuthTimeout();
     void requestConnectionToClientTimeout();
 
     void requestClientInfo(quint8 infoType);
@@ -164,6 +167,7 @@ private:
 
     QMenu *administratorsManagementMenu;
 
+    bool serverResponseAdminConnectionAuthPacketReceived;
     bool clientResponseAdminConnectionResultPacketReceived;
     bool remoteConsoleRunning;
 
@@ -174,6 +178,9 @@ private:
 
     QStringList m_onlineUsers;
     QStringList adminProcesses;
+
+    int m_myToken;
+    int m_clientToken;
 
 };
 

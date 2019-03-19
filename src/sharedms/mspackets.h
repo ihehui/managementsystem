@@ -419,10 +419,30 @@ private:
     QByteArray packBodyData();
 
 public:
-    QString computerName;
+    enum PacketInfoType {
+        ADMINCONNECTION_UNKNOWN = 0,
+
+        ADMINCONNECTION_ADMIN_ASK_SERVER_AUTH,
+        ADMINCONNECTION_SERVER_ASK_CLIENT_AUTH,
+
+        ADMINCONNECTION_RESPONSE_AUTH,
+
+        ADMINCONNECTION_CONNECTION_REQUEST,
+        ADMINCONNECTION_CONNECTION_RESULT
+    };
+
+    PacketInfoType InfoType;
+
     QString adminID;
-    quint8 verified;
+    QString clientID;
+    int adminToken;
+    int clientToken;
+    quint8 ok;
+    QString hostName;
     quint8 errorCode;
+    QString errorMessage;
+
+
 };
 ////////////////////////////////////////////////////////////////////////
 

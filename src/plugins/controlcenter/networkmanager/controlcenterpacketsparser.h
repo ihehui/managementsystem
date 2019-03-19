@@ -59,6 +59,7 @@ public slots:
 
     void parseIncomingPacketData(const PacketBase &packet);
 
+    void setSocketConnectedToServer(SOCKETID serverSocketID);
 
 
     bool sendClientLookForServerPacket(const QString &targetAddress = QString(IP_MULTICAST_GROUP_ADDRESS), quint16 targetPort = quint16(IP_MULTICAST_GROUP_PORT))
@@ -251,16 +252,33 @@ public slots:
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-
-    bool sendAdminRequestConnectionToClientPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminID)
+    bool sendAdminAskServerForClientConnectionAuthPacket(const QString &targetID, int adminToken, const QString &hostName)
     {
+        if(INVALID_SOCK_ID == m_socketConnectedToServer){
+            return false;
+        }
 
         AdminConnectionToClientPacket packet;
-        packet.computerName = adminComputerName;
-        packet.adminID = adminID;
+        packet.InfoType = AdminConnectionToClientPacket::ADMINCONNECTION_ADMIN_ASK_SERVER_AUTH;
+        packet.clientID = targetID;
+        packet.adminToken = adminToken;
+        packet.hostName = hostName;
 
         QByteArray ba = packet.toByteArray();
-        return m_rtp->sendReliableData(socketID, &ba);
+        return m_rtp->sendReliableData(m_socketConnectedToServer, &ba);
+    }
+
+    bool sendAdminRequestConnectionToClientPacket(SOCKETID clientSocketID, const QString &adminID, int adminToken, int clientToken, const QString &hostName)
+    {
+        AdminConnectionToClientPacket packet;
+        packet.InfoType = AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_REQUEST;
+        packet.adminID = adminID;
+        packet.adminToken = adminToken;
+        packet.clientToken = clientToken;
+        packet.hostName = hostName;
+
+        QByteArray ba = packet.toByteArray();
+        return m_rtp->sendReliableData(clientSocketID, &ba);
     }
 
     bool sendAdminSearchClientPacket(const QHostAddress &targetAddress, const QString &computerName, const QString &userName, const QString &workgroup, const QString &macAddress, const QString &ipAddress, const QString &osVersion, const QString &adminID)
@@ -620,7 +638,7 @@ signals:
     void signalRemoteConsolePacketReceived(const RemoteConsolePacket &packet);
     void signalServerResponseAdminLoginResultPacketReceived(const AdminLoginPacket &packet);
 
-    void signalClientResponseAdminConnectionResultPacketReceived(const AdminConnectionToClientPacket &packet);
+    void signalAdminConnectionToClientPacketReceived(const AdminConnectionToClientPacket &packet);
     void signalAssetNOModifiedPacketReceived(const ModifyAssetNOPacket &packet);
     void signalUserOnlineStatusChanged(const LocalUserOnlineStatusChangedPacket &packet);
     void signalTemperaturesPacketReceived(const TemperaturesPacket &packet);
@@ -685,6 +703,8 @@ private:
 //        quint16 localUDTListeningPort;
     quint16 m_localTCPServerListeningPort;
     quint16 m_localENETListeningPort;
+
+    SOCKETID m_socketConnectedToServer;
 
 
 };
