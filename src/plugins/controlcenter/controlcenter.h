@@ -25,9 +25,8 @@
 #include "../remotedesktop/remotedesktopmonitor.h"
 
 
-#include "HHSharedCore/huser.h"
-#include "HHSharedCore/hmysharedlib_global.h"
-#include "HHSharedGUI/hlogindlg.h"
+#include "HHSharedCore/User"
+#include "HHSharedGUI/LoginDlg"
 
 
 

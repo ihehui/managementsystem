@@ -9,7 +9,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-#include "HHSharedGUI/hdataoutputdialog.h"
+#include "HHSharedGUI/DataOutputDialog"
 
 #include "ruleinfowidget.h"
 #include "../adminuser.h"

@@ -42,7 +42,7 @@
 #include "../adminuser.h"
 
 
-#include "HHSharedGUI/hdataoutputdialog.h"
+#include "HHSharedGUI/DataOutputDialog"
 
 
 

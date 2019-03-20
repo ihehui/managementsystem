@@ -7,9 +7,9 @@
 #include "global_shared.h"
 #include "sharedmslib.h"
 
-#include "HHSharedCore/hsettingscore.h"
-#include "HHSharedCore/hcryptography.h"
-#include "HHSharedCore/hglobal_core.h"
+#include "HHSharedCore/SettingsCore"
+#include "HHSharedCore/Cryptography"
+#include "HHSharedCore/GlobalCore"
 
 
 

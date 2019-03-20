@@ -21,19 +21,9 @@
 
 
 
-#include "HHSharedService/hservice.h"
-#include "HHSharedCore/hdatabaseutility.h"
-#include "HHSharedCore/hcryptography.h"
-
-
-//#include "HHSharedUDT/hudtprotocolforfiletransmission.h"
-
-//#ifdef Q_OS_WIN32
-//    #include "HHSharedSystemUtilities/WinUtilities"
-//#else
-//    #include "HHSharedSystemUtilities/UnixUtilities"
-//#endif
-
+#include "HHSharedService/Service"
+#include "HHSharedCore/DatabaseUtility"
+#include "HHSharedCore/Cryptography"
 #include "HHSharedSystemUtilities/SystemUtilities"
 
 

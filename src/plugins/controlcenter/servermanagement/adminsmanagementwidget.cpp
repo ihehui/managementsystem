@@ -11,7 +11,7 @@
 #include "admininfowidget.h"
 
 
-#include "HHSharedGUI/hdataoutputdialog.h"
+#include "HHSharedGUI/DataOutputDialog"
 
 
 namespace HEHUI
@@ -131,44 +131,34 @@ QVariant AdminUserInfoModel::data ( const QModelIndex &index, int role) const
         switch (index.column()) {
         case 0:
             return info->getUserID();
-            break;
 
         case 1:
             return info->getUserName();
-            break;
 
         case 2:
             return info->businessAddress;
-            break;
 
         case 3:
             return info->lastLoginIP;
-            break;
 
         case 4:
             return info->lastLoginPC;
-            break;
 
         case 5:
             return info->lastLoginTime;
-            break;
 
         case 6:
             return info->readonly ? tr("Yes") : tr("No");
-            break;
 
         case 7:
             return info->active ? tr("Yes") : tr("No");
-            break;
 
         case 8:
             return info->remark;
-            break;
 
 
         default:
             return QVariant();
-            break;
         }
     }
 

@@ -20,7 +20,7 @@
     //#include "../../sharedms/global_shared.h"
 #endif
 
-#include "HHSharedGUI/hdatabaseconnecter.h"
+#include "HHSharedGUI/DatabaseConnecter"
 
 
 

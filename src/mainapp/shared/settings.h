@@ -6,11 +6,9 @@
 
 #include "app_constants.h"
 
-//#include "../../shared/gui/settingsbase.h"
-//#include "singleton.h"
 
-#include "HHSharedCore/hsingleton.h"
-#include "HHSharedGUI/hsettingsbase.h"
+#include "HHSharedCore/Singleton"
+#include "HHSharedGUI/SettingsBase"
 
 
 

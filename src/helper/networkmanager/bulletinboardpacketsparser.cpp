@@ -46,7 +46,7 @@
 //#endif
 
 
-#include "HHSharedGUI/himageresourcebase.h"
+#include "HHSharedGUI/ImageResourceBase"
 
 #ifdef Q_OS_WIN32
     #include "HHSharedSystemUtilities/WinUtilities"

@@ -40,9 +40,8 @@
 #include "resourcesmanagerinstance.h"
 
 
-#include "HHSharedCore/hcryptography.h"
-//#include "HHSharedNetwork/hpacketparserbase.h"
-#include "HHSharedCore/hutilities.h"
+#include "HHSharedCore/Cryptography"
+#include "HHSharedCore/CoreUtilities"
 
 
 namespace HEHUI

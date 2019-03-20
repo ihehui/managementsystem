@@ -41,7 +41,7 @@
 #include "../clientresourcesmanager.h"
 #include "../../sharedms/mspackets.h"
 
-#include "HHSharedNetwork/hnetworkutilities.h"
+#include "HHSharedNetwork/NetworkUtilities"
 
 
 namespace HEHUI

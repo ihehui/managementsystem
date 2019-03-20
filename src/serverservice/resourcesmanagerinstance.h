@@ -12,7 +12,7 @@
 
 #include "../sharedms/resourcesmanager.h"
 
-#include "HHSharedCore/hsingleton.h"
+#include "HHSharedCore/Singleton"
 
 namespace HEHUI
 {

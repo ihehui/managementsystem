@@ -1,15 +1,11 @@
 
-
-//#include <QApplication>
-//#include <QDesktopWidget>
-//#include <QLabel>
 #include <QtCore/QDir>
 #include <QtCore/QSettings>
 
 #include "app_constants.h"
 #include "clientservice/clientservice.h"
 
-//#include "HHSharedCore/hlogdebug.h"
+//#include "HHSharedCore/LogDebug"
 #include "HHSharedCore/MessageLogger"
 #include "HHSharedCore/CrashHandler"
 

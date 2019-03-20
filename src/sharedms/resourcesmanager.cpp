@@ -13,8 +13,7 @@
 #include "resourcesmanager.h"
 
 
-#include "HHSharedNetwork/hnetworkutilities.h"
-//#include "HHSharedNetwork/hpacketstreamoperator.h"
+#include "HHSharedNetwork/NetworkUtilities"
 
 
 namespace HEHUI

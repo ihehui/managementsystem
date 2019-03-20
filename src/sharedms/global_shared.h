@@ -169,7 +169,7 @@
 //    #define ERROR_CODE_NO_ERROR  0
 //#endif
 
-#include "HHSharedNetwork/hglobal_network.h"
+#include "HHSharedNetwork/Global_Network"
 #include "sharedmslib.h"
 
 

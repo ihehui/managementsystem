@@ -20,9 +20,9 @@
 #include "systemsummaryinfo.h"
 
 
-#include "HHSharedCore/hglobal_core.h"
-#include "HHSharedCore/hutilities.h"
-#include "HHSharedNetwork/hnetworkutilities.h"
+#include "HHSharedCore/GlobalCore"
+#include "HHSharedCore/CoreUtilities"
+#include "HHSharedNetwork/NetworkUtilities"
 
 #ifdef Q_OS_WIN
     #include "HHSharedSystemUtilities/hwindowsmanagement.h"

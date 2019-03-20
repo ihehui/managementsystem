@@ -36,16 +36,11 @@
 #include "../about/aboutdialog.h"
 #include "../shared/settings.h"
 
-//#include "../../shared/core/database/databaseutility.h"
-//#include "../../shared/gui/login/loginbase.h"
-//#include "../../shared/gui/plugin/guiinterface.h"
-//#include "../../shared/gui/plugin/pluginmanager/pluginmanagerwindow.h"
-
-#include "HHSharedCore/hdatabaseutility.h"
-#include "HHSharedGUI/hloginbase.h"
-#include "HHSharedGUI/hguiinterface.h"
-#include "HHSharedGUI/hpluginmanagerwindow.h"
-#include "HHSharedCore/hutilities.h"
+#include "HHSharedCore/DatabaseUtility"
+#include "HHSharedGUI/LoginBase"
+#include "HHSharedGUI/GUIInterface"
+#include "HHSharedGUI/PluginManagerWindow"
+#include "HHSharedCore/CoreUtilities"
 
 
 

@@ -5,7 +5,7 @@
 
 #include "sharedmslib.h"
 
-#include "HHSharedCore/huserbase.h"
+#include "HHSharedCore/UserBase"
 
 
 

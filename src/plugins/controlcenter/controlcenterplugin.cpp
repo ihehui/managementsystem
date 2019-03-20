@@ -34,9 +34,9 @@
 #include "constants.h"
 
 
-#include "HHSharedCore/huser.h"
-#include "HHSharedCore/hsettingscore.h"
-#include "HHSharedGUI/hloginbase.h"
+#include "HHSharedCore/User"
+#include "HHSharedCore/SettingsCore"
+#include "HHSharedGUI/LoginBase"
 
 
 namespace HEHUI

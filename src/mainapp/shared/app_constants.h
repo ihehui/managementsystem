@@ -9,7 +9,7 @@
 #define APP_CONSTANTS_H_
 
 //#include "../../shared/core/global_core.h"
-#include "HHSharedCore/hglobal_core.h"
+#include "HHSharedCore/GlobalCore"
 
 
 #ifndef APP_NAME

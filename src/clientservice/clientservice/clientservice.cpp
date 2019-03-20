@@ -10,8 +10,8 @@
 #include "../sharedms/global_shared.h"
 #include "../sharedms/announcementinfo.h"
 
-#include "HHSharedNetwork/hnetworkutilities.h"
-#include "HHSharedCore/hutilities.h"
+#include "HHSharedNetwork/NetworkUtilities"
+#include "HHSharedCore/CoreUtilities"
 #include "HHSharedCore/MessageLogger"
 
 

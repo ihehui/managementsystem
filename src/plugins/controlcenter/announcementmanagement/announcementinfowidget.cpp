@@ -7,7 +7,7 @@
 
 #include "announcementinfowidget.h"
 
-#include "HHSharedGUI/hdataoutputdialog.h"
+#include "HHSharedGUI/DataOutputDialog"
 
 namespace HEHUI
 {

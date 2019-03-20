@@ -1,8 +1,8 @@
 #ifndef ADMINUSER_H
 #define ADMINUSER_H
 
-#include "HHSharedCore/huserbase.h"
-#include "HHSharedGUI/hlogindlg.h"
+#include "HHSharedCore/UserBase"
+#include "HHSharedGUI/LoginDlg"
 
 
 #include "networkmanager/controlcenterpacketsparser.h"

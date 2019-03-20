@@ -6,8 +6,8 @@
 #include "app_constants.h"
 #include "serverservice/serverservice.h"
 
-#include "HHSharedCore/hlogdebug.h"
-#include "HHSharedCore/hglobal_core.h"
+#include "HHSharedCore/LogDebug"
+#include "HHSharedCore/GlobalCore"
 #include "HHSharedCore/MessageLogger"
 #include "HHSharedCore/CrashHandler"
 

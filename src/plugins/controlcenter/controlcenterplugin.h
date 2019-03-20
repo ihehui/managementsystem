@@ -40,9 +40,8 @@
 
 #include "controlcenter.h"
 
-//#include "../../shared/gui/plugin/guipluginbase.h"
-#include "HHSharedGUI/hguipluginbase.h"
-#include "HHSharedCore/hglobal_core.h"
+#include "HHSharedGUI/GUIPluginBase"
+#include "HHSharedCore/GlobalCore"
 
 namespace HEHUI
 {

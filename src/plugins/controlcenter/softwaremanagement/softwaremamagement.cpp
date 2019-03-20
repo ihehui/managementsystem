@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QMenu>
 
-#include "HHSharedGUI/hdataoutputdialog.h"
+#include "HHSharedGUI/DataOutputDialog"
 
 
 namespace HEHUI

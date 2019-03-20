@@ -41,8 +41,8 @@
 #include "packetmanager/serverpacketsparser.h"
 #include "../resourcesmanagerinstance.h"
 
-#include "HHSharedCore/hdatabaseutility.h"
-#include "HHSharedService/hservice.h"
+#include "HHSharedCore/DatabaseUtility"
+#include "HHSharedService/Service"
 
 
 

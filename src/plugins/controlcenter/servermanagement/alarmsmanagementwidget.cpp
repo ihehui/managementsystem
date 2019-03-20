@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <QTimer>
 
-#include "HHSharedGUI/hdataoutputdialog.h"
+#include "HHSharedGUI/DataOutputDialog"
 
 
 namespace HEHUI

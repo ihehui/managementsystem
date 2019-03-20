@@ -4,7 +4,7 @@
 #include <QMenu>
 
 #include "../adminuser.h"
-#include "HHSharedGUI/hdataoutputdialog.h"
+#include "HHSharedGUI/DataOutputDialog"
 
 #include "HHSharedSystemUtilities/SystemUtilities"
 

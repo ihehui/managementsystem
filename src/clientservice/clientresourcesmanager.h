@@ -14,7 +14,7 @@
 
 
 //#include "HHSharedCore/huser.h"
-#include "HHSharedCore/hsingleton.h"
+#include "HHSharedCore/Singleton"
 
 namespace HEHUI
 {

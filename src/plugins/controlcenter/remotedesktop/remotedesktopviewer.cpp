@@ -16,7 +16,7 @@
 #endif
 
 
-#include "HHSharedGUI/himageresourcebase.h"
+#include "HHSharedGUI/ImageResourceBase"
 
 
 namespace HEHUI

@@ -23,11 +23,11 @@
 
 #include "../../sharedms/settings.h"
 
-#include "HHSharedCore/hglobal_core.h"
-#include "HHSharedCore/hutilities.h"
-#include "HHSharedGUI/hdatabaseconnecter.h"
-#include "HHSharedGUI/hdataoutputdialog.h"
-#include "HHSharedNetwork/hnetworkutilities.h"
+#include "HHSharedCore/GlobalCore"
+#include "HHSharedCore/CoreUtilities"
+#include "HHSharedGUI/DatabaseConnecter"
+#include "HHSharedGUI/DataOutputDialog"
+#include "HHSharedNetwork/NetworkUtilities"
 
 
 namespace HEHUI
