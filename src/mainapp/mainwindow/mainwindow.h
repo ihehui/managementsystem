@@ -52,7 +52,7 @@ class MainWindow: public MainWindowBase
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0, GUIUtilities::WindowPosition positon = GUIUtilities::CENTER);
+    MainWindow(const QString &settingsFile, QWidget *parent = 0);
     ~MainWindow();
 
     QSystemTrayIcon *SystemTrayIcon();
@@ -80,10 +80,6 @@ public slots:
     void slotAbout();
 
     void slotQuit();
-
-    void savePreferedStyle(const QString &preferedStyle);
-    void saveUsingStylePalette(bool useStylePalette);
-    void savePreferedLanguage(const QString &preferedLanguage);
 
 
 private slots:

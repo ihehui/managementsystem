@@ -46,11 +46,11 @@ int main(int argc, char *argv[])
 //    }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    HEHUI::Settings settings;
+    //HEHUI::Settings settings;
     if(arguments.contains("-log", Qt::CaseInsensitive)){
-        settings.enableLog(true, QString(APP_NAME).remove(" "));
+        HEHUI::Settings::instance()->enableLog(true, QString(APP_NAME).remove(" "));
     }else{
-        settings.enableLog(false);
+        HEHUI::Settings::instance()->enableLog(false);
     }
     LOGWARNING<<"Application started.";
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,15 +82,15 @@ int main(int argc, char *argv[])
 
     //创建主窗口
     //Create the main window
-    HEHUI::MainWindow w;
+    HEHUI::MainWindow mw(HEHUI::Settings::instance()->fileName());
     showSplashMessage(splash, QObject::tr("Loading Plugins"));
-    w.loadPlugins();
-    w.show();
+    mw.loadPlugins();
+    mw.show();
 
 
     //结束Splash Screen
     //Finish the Splash Screen
-    splash->finish(&w);
+    splash->finish(&mw);
     delete splash;
 
 
