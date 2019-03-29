@@ -215,6 +215,16 @@ QByteArray ClientInfo::getHardwareJsonData() const
     return doc.toJson(QJsonDocument::Compact);
 }
 
+bool ClientInfo::isUnixLikeSystem()
+{
+    if(osVersion.trimmed().isEmpty()){return false;}
+
+    return osVersion.contains("linux", Qt::CaseInsensitive) ||
+            osVersion.contains("unix", Qt::CaseInsensitive) ||
+            osVersion.contains("bsd", Qt::CaseInsensitive) ||
+            osVersion.contains("osx", Qt::CaseInsensitive);
+
+}
 
 void ClientInfo::setAssetNO(const QString &assetNO)
 {

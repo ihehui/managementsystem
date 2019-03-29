@@ -223,6 +223,7 @@ void AdminUser::processLoginResult(const AdminLoginPacket &packet)
         delete m_loginDlg;
         m_loginDlg = 0;
         emit signalVerified();
+        m_controlCenterPacketsParser->setSocketConnectedToServer(packet.getSocketID());
     } else {
         m_loginDlg->setErrorMessage(packet.LoginResult.message);
     }

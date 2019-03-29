@@ -159,7 +159,29 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     ui.tabWidget->removeTab(index);
     ui.tabLocalManagement->setEnabled(false);
 
+    ui.toolButtonChangeWorkgroup->setEnabled(false);
+    ui.toolButtonChangeWorkgroup->hide();
+    ui.workgroupLineEdit->setReadOnly(true);
+    ui.workgroupLineEdit->setEnabled(false);
+
+    ui.installationDateLineEdit->setReadOnly(true);
+    ui.installationDateLineEdit->setEnabled(false);
+    ui.installDatelabel->hide();
+    ui.installationDateLineEdit->hide();
+
+    ui.lineEditOSKey->setReadOnly(true);
+    ui.lineEditOSKey->setEnabled(false);
+    ui.labelOSKey->hide();
+    ui.lineEditOSKey->hide();
+
+    ui.groupBoxUSB->setEnabled(false);
+    ui.groupBoxUSB->hide();
+
+    ui.groupBoxTemperatures->setEnabled(false);
+    ui.groupBoxTemperatures->hide();
+
 #endif
+
 
     administratorsManagementMenu = 0;
 
@@ -185,6 +207,18 @@ SystemManagementWidget::SystemManagementWidget(RTP *rtp, ControlCenterPacketsPar
     }
 
     ui.tabWidget->setEnabled(false);
+
+    if(clientInfo && clientInfo->isUnixLikeSystem()){
+        ui.comboBoxRemoteApplicationPath->setCurrentText("/bin/sh");
+
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabSoftware));
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabProcessMonitor));
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabUsers));
+        ui.tabWidget->removeTab(ui.tabWidget->indexOf(ui.tabServices));
+    }
+
+    connect(ui.toolButtonClearOutput, SIGNAL(clicked()), ui.textBrowserRemoteApplicationOutput, SLOT(clear()));
+
 
 }
 
@@ -380,7 +414,7 @@ void SystemManagementWidget::on_toolButtonVerify_clicked()
         QString err = m_rtp->lastErrorString();
         m_rtp->closeSocket(m_peerSocket);
         m_peerSocket = INVALID_SOCK_ID;
-        QMessageBox::critical(this, tr("Error"), tr("Can not send request to server!<br>%1").arg(err));
+        QMessageBox::critical(this, tr("Error"), tr("Can not send request to server!") + QString("<p>%1</p>").arg(err));
         ui.toolButtonVerify->setEnabled(true);
         return;
     }
@@ -486,11 +520,6 @@ void SystemManagementWidget::on_toolButtonModifyAssetNO_clicked()
 
 void SystemManagementWidget::on_toolButtonShutdown_clicked()
 {
-    //    if(!verifyPrivilege()){
-    //        return;
-    //    }
-
-
     ShutdownDialog dlg(this);
     if(dlg.exec() != QDialog::Accepted) {
         return;
@@ -501,35 +530,6 @@ void SystemManagementWidget::on_toolButtonShutdown_clicked()
         QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
         return;
     }
-
-    //    QAction *action = qobject_cast<QAction*>(sender());
-    //    if(!action){return;}
-
-    //    bool reboot = true;
-    //    QString text;
-    //    if(action == ui.actionReboot){
-    //        text = tr("reboot");
-    //        reboot = true;
-    //    }else{
-    //        text = tr("shutdown");
-    //        reboot = false;
-    //    }
-    //    text = tr("Do you really want to <b><font color = 'red'>%1</font></b> the computer? ").arg(text);
-
-
-    //    int ret = QMessageBox::question(this, tr("Question"), text, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-    //    if(ret == QMessageBox::No){
-    //        return;
-    //    }
-
-    //    bool ok = controlCenterPacketsParser->sendRequestShutdownPacket(m_peerSocket, reboot, true, 10, "Shutdown.............");
-    //    if(!ok){
-    //        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
-    //        return;
-    //    }
-
-    //    ui.toolButtonShutdown->setEnabled(false);
-
 }
 
 void SystemManagementWidget::on_toolButtonRenameComputer_clicked()
@@ -564,23 +564,26 @@ void SystemManagementWidget::on_toolButtonRenameComputer_clicked()
         return;
     }
 
-    QString domainAdminName = "",  domainAdminPassword = "";
+    QString sysAdminName = "";
+    QString sysAdminPassword = "";
+
+#ifdef Q_OS_WIN
     if(m_isJoinedToDomain) {
-        bool ok = false;
-        domainAdminName = QInputDialog::getText(this, tr("Authentication Required"),
+        ok = false;
+        sysAdminName = QInputDialog::getText(this, tr("Authentication Required"),
                                                 tr("Domain Admin Name:"), QLineEdit::Normal,
                                                 "", &ok);
 
-        if(ok && !domainAdminName.isEmpty()) {
+        if(ok && !sysAdminName.isEmpty()) {
             ok = false;
             do {
-                domainAdminPassword = QInputDialog::getText(this, tr("Authentication Required"),
+                sysAdminPassword = QInputDialog::getText(this, tr("Authentication Required"),
                                       tr("Domain Admin Password:"), QLineEdit::Password,
                                       "", &ok);
                 if (!ok) {
                     return;
                 }
-                if(domainAdminName.isEmpty()) {
+                if(sysAdminPassword.isEmpty()) {
                     QMessageBox::critical(this, tr("Error"), tr("Domain admin password is required!"));
                 } else {
                     break;
@@ -590,10 +593,28 @@ void SystemManagementWidget::on_toolButtonRenameComputer_clicked()
 
     }
 
+#else
+    ok = false;
+    do {
+        sysAdminPassword = QInputDialog::getText(this, tr("Authentication Required"),
+                              tr("Root Password:"), QLineEdit::Password,
+                              "", &ok);
+        if (!ok) {
+            return;
+        }
+        if(sysAdminPassword.isEmpty()) {
+            QMessageBox::critical(this, tr("Error"), tr("Root password is required!"));
+        } else {
+            break;
+        }
+    } while (ok);
 
-    ok = controlCenterPacketsParser->sendRenameComputerPacket(m_peerSocket, m_peerAssetNO, newComputerName, m_adminUser->getUserID(), domainAdminName, domainAdminPassword);
+#endif
+
+
+    ok = controlCenterPacketsParser->sendRenameComputerPacket(m_peerSocket, m_peerAssetNO, newComputerName, m_adminUser->getUserID(), sysAdminName, sysAdminPassword);
     if(!ok) {
-        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!<br>%1").arg(m_rtp->lastErrorString()));
+        QMessageBox::critical(this, tr("Error"), tr("Can not send data to peer!") + QString("<p>%1</p>").arg(m_rtp->lastErrorString()));
         return;
     }
 
@@ -931,7 +952,7 @@ void SystemManagementWidget::on_toolButtonSendCommand_clicked()
     ui.comboBoxCommand->setEditText("");
     ui.comboBoxCommand->setFocus();
 
-    //ui.textBrowserRemoteApplicationOutput->append(cmd + "\n");
+    ui.textBrowserRemoteApplicationOutput->append(cmd + "\n");
 
 }
 
@@ -983,9 +1004,6 @@ void SystemManagementWidget::processClientOnlineStatusChangedPacket(SOCKETID soc
 
 void SystemManagementWidget::processAdminConnectionToClientPacket(const AdminConnectionToClientPacket &packet)
 {
-    if(packet.getSocketID() != m_peerSocket) {
-        return;
-    }
 
     AdminConnectionToClientPacket::PacketInfoType InfoType = packet.InfoType;
     switch (InfoType) {
@@ -996,6 +1014,10 @@ void SystemManagementWidget::processAdminConnectionToClientPacket(const AdminCon
 
     case AdminConnectionToClientPacket::ADMINCONNECTION_RESPONSE_AUTH:
     {
+        if(packet.getSocketID() != m_adminUser->socketConnectedToServer()) {
+            return;
+        }
+
         if(packet.adminID != m_adminUser->getUserID()){
             return;
         }
@@ -1015,7 +1037,11 @@ void SystemManagementWidget::processAdminConnectionToClientPacket(const AdminCon
 
     case AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_RESULT:
     {
-        if(packet.getSocketID() != m_peerSocket || (packet.adminID != m_adminUser->getUserID())) {
+        if(packet.getSocketID() != m_peerSocket) {
+            return;
+        }
+
+        if(packet.adminID != m_adminUser->getUserID()) {
             return;
         }
 

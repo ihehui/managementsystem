@@ -82,27 +82,18 @@ void Process::stopProcess()
     m_exeFilePath = "";
 
     emit signalProcessStateChanged(m_running, QString("Process exited with code %1").arg(process->exitCode()));
-
-
-
 }
 
 void Process::readProcessOutput()
 {
-
     QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
     emit signalProcessOutputRead(output);
-
-
 }
 
 void Process::readProcessError()
 {
-
     QString output = QString::fromLocal8Bit(process->readAllStandardError());
     emit signalProcessOutputRead(output);
-
-
 }
 
 void Process::writeDataToProcess(const QString &data)
@@ -117,7 +108,6 @@ void Process::writeDataToProcess(const QString &data)
     //QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-16LE"));
 
     // process->write((data+"\n").toStdString().c_str());
-
 
 }
 
@@ -157,16 +147,12 @@ void Process::processErrorOccured(QProcess::ProcessError error)
 
     }
 
-
-
 }
 
 void Process::processStarted()
 {
-
     m_running = true;
     emit signalProcessStateChanged(m_running);
-
 }
 
 

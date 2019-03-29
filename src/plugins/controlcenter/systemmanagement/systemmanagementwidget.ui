@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>813</width>
-    <height>632</height>
+    <width>979</width>
+    <height>930</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -748,64 +748,6 @@
           <bool>false</bool>
          </property>
          <layout class="QGridLayout" name="gridLayout_9">
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayoutRemoteApplication">
-            <item>
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>Remote &amp;Application:</string>
-              </property>
-              <property name="buddy">
-               <cstring>comboBoxRemoteApplicationPath</cstring>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="comboBoxRemoteApplicationPath">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>Application to run on the remote computer</string>
-              </property>
-              <property name="statusTip">
-               <string>Application to run on the remote computer</string>
-              </property>
-              <property name="editable">
-               <bool>true</bool>
-              </property>
-              <item>
-               <property name="text">
-                <string notr="true">CMD.EXE</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="toolButtonRunRemoteApplication">
-              <property name="toolTip">
-               <string>Run the application on the remote computer</string>
-              </property>
-              <property name="statusTip">
-               <string>Run the application on the remote computer</string>
-              </property>
-              <property name="text">
-               <string>&amp;Run</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../controlcenter.qrc">
-                <normaloff>:/icon/resources/images/start.png</normaloff>:/icon/resources/images/start.png</iconset>
-              </property>
-              <property name="autoRaise">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
           <item row="1" column="0">
            <widget class="QTextBrowser" name="textBrowserRemoteApplicationOutput">
             <property name="font">
@@ -868,6 +810,84 @@
               </property>
               <property name="shortcut">
                <string>Ctrl+Return</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayoutRemoteApplication">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Remote &amp;Application:</string>
+              </property>
+              <property name="buddy">
+               <cstring>comboBoxRemoteApplicationPath</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBoxRemoteApplicationPath">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Application to run on the remote computer</string>
+              </property>
+              <property name="statusTip">
+               <string>Application to run on the remote computer</string>
+              </property>
+              <property name="editable">
+               <bool>true</bool>
+              </property>
+              <item>
+               <property name="text">
+                <string notr="true">CMD.EXE</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButtonRunRemoteApplication">
+              <property name="toolTip">
+               <string>Run the application on the remote computer</string>
+              </property>
+              <property name="statusTip">
+               <string>Run the application on the remote computer</string>
+              </property>
+              <property name="text">
+               <string>&amp;Run</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../controlcenter.qrc">
+                <normaloff>:/icon/resources/images/start.png</normaloff>:/icon/resources/images/start.png</iconset>
+              </property>
+              <property name="autoRaise">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButtonClearOutput">
+              <property name="toolTip">
+               <string>Clear Output</string>
+              </property>
+              <property name="statusTip">
+               <string>Clear Output</string>
+              </property>
+              <property name="text">
+               <string>&amp;Run</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../controlcenter.qrc">
+                <normaloff>:/icon/resources/images/clear.png</normaloff>:/icon/resources/images/clear.png</iconset>
+              </property>
+              <property name="autoRaise">
+               <bool>true</bool>
               </property>
              </widget>
             </item>

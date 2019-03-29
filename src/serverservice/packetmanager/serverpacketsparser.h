@@ -157,7 +157,7 @@ qDebug()<<"--sendServerDeclarePacket(...)  peerAddress:"<<peerAddress<<"  peerPo
         return m_rtp->sendReliableData(socketID, &ba);
     }
 
-    bool sendAdminRequestConnectionAuthPacket(SOCKETID adminSocketID, const QString &adminID, int adminToken, const QString &hostName)
+    bool sendAdminRequestConnectionAuthPacket(SOCKETID clientSocketID, const QString &adminID, int adminToken, const QString &hostName)
     {
         //qWarning()<<"----sendAdminRequestConnectionAuthPacket(...):"<<adminID<<" verified:"<<verified;
 
@@ -168,7 +168,7 @@ qDebug()<<"--sendServerDeclarePacket(...)  peerAddress:"<<peerAddress<<"  peerPo
         packet.hostName = hostName;
 
         QByteArray ba = packet.toByteArray();
-        return m_rtp->sendReliableData(adminSocketID, &ba);
+        return m_rtp->sendReliableData(clientSocketID, &ba);
     }
 
     bool sendClientResponseAdminConnectionAuthPacket(SOCKETID adminSocketID, const QString &adminID, bool verified, int clientToken, quint8 errorCode, const QString &errorMessage)

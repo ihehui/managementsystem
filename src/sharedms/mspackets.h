@@ -384,6 +384,7 @@ private:
 public:
     quint8 logType;
     QString log;
+    qint64 timeToSecsSinceEpoch;
 };
 ////////////////////////////////////////////////////////////////////////
 

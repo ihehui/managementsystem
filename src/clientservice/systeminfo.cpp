@@ -89,8 +89,7 @@ QByteArray SystemInfo::getOSInfo()
     users.removeDuplicates();
     obj["Users"] = users.join(";");
 
-    HardwareInfo hwi;
-    hwi.getOSInfo(&obj);
+    SystemUtilities::getOSInfo(&obj);
 
 #ifdef Q_OS_WIN32
 

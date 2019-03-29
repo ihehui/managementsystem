@@ -53,6 +53,10 @@ private slots:
 
     void serverLookedUp(const QHostInfo &host);
 
+    bool isPacketFromOnlinePeer(const MSPacket *packet, bool adminPacket);
+    bool isOnlineAdminPacket(const MSPacket *packet, bool sendErrorMessageBack = true);
+
+
     void serverFound(const ServerDiscoveryPacket &packet);
 
     void processSetupUSBSDPacket(const USBDevPacket &packet);

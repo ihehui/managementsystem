@@ -3,6 +3,7 @@
 #include "global_shared.h"
 #include "HHSharedNetwork/PacketBase"
 #include "HHSharedCore/Cryptography"
+#include <QDateTime>
 
 
 namespace HEHUI
@@ -876,6 +877,7 @@ void ClientLogPacket::init()
 {
     log = "";
     logType = quint8(MS::LOG_Unknown) ;
+    timeToSecsSinceEpoch = QDateTime::currentDateTime().toSecsSinceEpoch();
 }
 
 void ClientLogPacket::parsePacketBody(QByteArray &packetBody)
@@ -883,7 +885,7 @@ void ClientLogPacket::parsePacketBody(QByteArray &packetBody)
     QDataStream in(&packetBody, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_4_8);
 
-    in >> logType >> log;
+    in >> logType >> log >> timeToSecsSinceEpoch;
 }
 
 QByteArray ClientLogPacket::packBodyData()
@@ -892,7 +894,7 @@ QByteArray ClientLogPacket::packBodyData()
     QDataStream out(&ba, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_8);
 
-    out << logType << log;
+    out << logType << log << timeToSecsSinceEpoch;
 
     return ba;
 }

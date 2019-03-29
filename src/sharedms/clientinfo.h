@@ -36,6 +36,8 @@ public:
     QByteArray getOSJsonData() const;
     QByteArray getHardwareJsonData() const;
 
+    bool isUnixLikeSystem();
+
 
     void setAssetNO(const QString &assetNO);
     QString getAssetNO() const;

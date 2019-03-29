@@ -108,7 +108,8 @@ private slots:
 
     void processAdminLoginPacket(const AdminLoginPacket &packet);
     void processAdminOnlineStatusChangedPacket(SOCKETID socketID, const QString &adminComputerName, const QString &adminName, bool online);
-
+    void processAdminConnectionToClientPacket(const AdminConnectionToClientPacket &packet);
+    bool isPacketFromOnlinePeer(const MSPacket *packet, bool adminPacket);
 
     void peerConnected(const QHostAddress &peerAddress, quint16 peerPort);
     void signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort);

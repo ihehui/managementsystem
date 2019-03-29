@@ -39,6 +39,7 @@
 #include "HHSharedCore/DatabaseUtility"
 #include "HHSharedGUI/LoginBase"
 #include "HHSharedGUI/GUIInterface"
+#include "HHSharedGUI/GUIPluginBase"
 #include "HHSharedGUI/PluginManagerWindow"
 #include "HHSharedCore/CoreUtilities"
 
@@ -194,10 +195,6 @@ void MainWindow::initUI()
     //connect(ui.menuSubWindows, SIGNAL(aboutToShow()), this, SLOT(slotUpdateWindowActions()));
     connect(ui.mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(slotUpdateWindowActions()));
 
-
-
-
-
 }
 
 void MainWindow::slotInitPlugin(AbstractPluginInterface *plugin)
@@ -214,106 +211,7 @@ void MainWindow::slotInitPlugin(AbstractPluginInterface *plugin)
         pluginsMenu->addMenu(guiPlugin->menu());
         ui.toolBarPlugins->addAction(guiPlugin->menu()->menuAction());
     }
-
-    //	int pluginsCount = guiPluginsList().size();
-    //	if(!pluginsCount){
-    //		return;
-    //	}
-    //
-    //        QToolBar *pluginsToolBar = new QToolBar(tr("Plugins"), this);
-    //        insertToolBar(ui.toolBarHelp, pluginsToolBar);
-    //
-    //	for(int i = 0; i< pluginsCount; i++){
-    //                GUIInterface *plugin = guiPluginsList().at(i);
-    //                if(plugin){
-    //                    plugin->initialize(ui.mdiArea, ui.menuPlugins, pluginsToolBar, systemTray, APP_NAME, APP_VERSION);
-    //                    ui.menuPlugins->addMenu(plugin->menu());
-    //                    pluginsToolBar->addAction(plugin->menu()->menuAction());
-    //                }
-    //}
-
 }
-
-
-//void MainWindow::setupMenus() {
-//    qDebug()<<"----MainWindow::setupMenus()";
-
-
-//    QStringList translationLanguages = Utilities::availableTranslationLanguages(qmPath);
-//    //如果没有找到语言文件或者首选语言是英语,则将"en_US"置为选中
-//    //If language files found or the preferred language is English, set the "en_US" menu checked
-//    if (translationLanguages.isEmpty()) {
-//            ui.actionLanguageDefaultEnglish->setChecked(true);
-//            return;
-//    }
-
-//    if (!translationLanguages.contains(qmLocale)){
-//            qmLocale = "en_US";
-//    }
-
-//    if(qmLocale == "en_US"){
-//        ui.actionLanguageDefaultEnglish->setChecked(true);
-//    }
-
-//    //为每一个语言文件生成动作为菜单
-//    //Make action and menu for each language file
-//    for (int i = 0; i < translationLanguages.size(); i++){
-//        QString translationLanguage = translationLanguages[i];
-//            QAction *action = new QAction(tr("&%1 %2") .arg(i + 1).arg(translationLanguage), this);
-//            action->setCheckable(true);
-//            action->setData(translationLanguage);
-
-//            ui.menuLanguage->addAction(action);
-//            languageActionGroup->addAction(action);
-
-//            if (qmLocale == translationLanguage) {
-//                    action->setChecked(true);
-//                    action->trigger();
-//            }
-
-//    }
-
-//	//更新样式菜单
-//	//update Style Menu
-//	foreach(QAction *action, ui.menuStyle->actions()){
-//		if(action->data().toString() == Settings::instance()->getStyle()){
-//			action->setChecked(true);
-//		}
-//	}
-//	ui.actionUseStylesPalette->setChecked(Settings::instance()->getPalette());
-
-//}
-
-/*
-
-void MainWindow::restoreWindowState() {
-    restoreState( Settings::instance()->value( "MainWindow/State" ).toByteArray() );
-    QPoint p = Settings::instance()->value( "MainWindow/Position" ).toPoint();
-    QSize s = Settings::instance()->value( "MainWindow/Size" ).toSize();
-    if ( !p.isNull() && !s.isNull() )
-    {
-        resize( s );
-        move( p );
-    }
-
-    if ( Settings::instance()->value( "MainWindow/Maximized", false ).toBool() )
-        showMaximized();
-
-    if ( Settings::instance()->value( "MainWindow/Hidden", false ).toBool() )
-            hide();
-
-}
-
-void MainWindow::saveWindowState() {
-
-    Settings::instance()->setValue( "MainWindow/Position", pos() );
-    Settings::instance()->setValue( "MainWindow/Size", size() );
-    Settings::instance()->setValue( "MainWindow/State", saveState() );
-    Settings::instance()->setValue( "MainWindow/Hidden", isHidden() );
-
-}
-*/
-
 
 void MainWindow::setupSystemTray()
 {
@@ -368,111 +266,11 @@ void MainWindow::slotIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
-
-
-
-
-
-/*
-void MainWindow::slotSystemInfo() {
-    //如果窗口已打开,
-    //If the window has already been opened, activate it
-    //if(SystemInfo::isRunning() == true){
-    //     foreach (QMdiSubWindow *window, ui.mdiArea->subWindowList()) {
-    //    	 SystemInfo *systemInfo = qobject_cast<SystemInfo *>(window->widget());
-    //         if (systemInfo)
-    //        	 ui.mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
-    //             return ;
-    //     }
-
-    //	return;
-    //}
-
-    //SystemInfo *systemInfo = new SystemInfo(this);
-    //ui.mdiArea->addSubWindow(systemInfo, Qt::Dialog);
-    //systemInfo->show();
-
-    QMessageBox::information(this,tr("~_~"),tr(" Not accomplished !"));
-    qDebug() << "slotSystemInfo";
-
-
-}
-
-
-
-
-void MainWindow::slotUserManager(){
-    //如果窗口已打开,
-    //If the window has already been opened, activate it
-    //if(UserManagerMainWindow::isRunning() == true){
-
-    //     foreach (QMdiSubWindow *window, ui.mdiArea->subWindowList()) {
-    //    	 UserManagerMainWindow *userManager = qobject_cast<UserManagerMainWindow *>(window->widget());
-    //         if (userManager)
-    //        	 ui.mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
-    //             return ;
-    //     }
-
-    //	return;
-    //}
-
-
-
-    User user;
-    LoginBase login(&user);
-    if (!login.isVerified()) {
-        return ;
-    }
-
-
-    //UserManagerMainWindow *userManager = new UserManagerMainWindow(this);
-    //ui.mdiArea->addSubWindow(userManager, Qt::Dialog);
-    //userManager->show();
-
-    QMessageBox::information(this,tr("~_~"),tr(" Not accomplished !"));
-    qDebug() << "slotUserManager";
-
-}
-
-void MainWindow::slotSqlExplorer(){
-    //如果窗口已打开,
-    //If the window has already been opened, activate it
-    //if(SqlExplorer::isRunning() == true){
-    //     foreach (QMdiSubWindow *window, ui.mdiArea->subWindowList()) {
-    //    	 SqlExplorer *sqlExplorer = qobject_cast<SqlExplorer *>(window->widget());
-    //         if (sqlExplorer)
-    //        	 ui.mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
-    //             return ;
-    //     }
-//
-    //	return;
-    //}
-
-
-    User user;
-    LoginBase login(&user);
-    if (!login.isVerified()) {
-        return ;
-    }
-
-    //SqlExplorer *sqlExplorer = new SqlExplorer(this);
-    //ui.mdiArea->addSubWindow(sqlExplorer, Qt::Dialog);
-    //sqlExplorer->show();
-    QMessageBox::information(this,tr("~_~"),tr(" Not accomplished !"));
-    qDebug() << "slotSqlExplorer";
-
-}
-*/
-
-
-
 void MainWindow::slotSystemConfig()
 {
     QMessageBox::information(this, tr("~_~"), tr(" Not accomplished !"));
     qDebug() << "----MainWindow::slotSystemConfig()";
 }
-
-
 
 void MainWindow::slotBugReport()
 {
@@ -535,6 +333,9 @@ void MainWindow::slotUpdateWindowActions()
 
     ui.actionNextSubWindow->setEnabled(hasSubWindows);
     ui.actionPreviousSubWindow->setEnabled(hasSubWindows);
+
+    ui.menuSubWindows->setEnabled(hasSubWindows);
+
 
     /*
 

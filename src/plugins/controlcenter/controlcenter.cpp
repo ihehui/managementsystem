@@ -58,6 +58,10 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
     ui.comboBoxOSVersion->addItem("WIN_2012", QVariant("2012"));
     ui.comboBoxOSVersion->addItem("WIN_8.1", QVariant("8.1"));
     ui.comboBoxOSVersion->addItem("WIN_10", QVariant("10"));
+    ui.comboBoxOSVersion->addItem("Linux", QVariant("LINUX"));
+    ui.comboBoxOSVersion->addItem("UNIX", QVariant("UNIX"));
+    ui.comboBoxOSVersion->addItem("BSD", QVariant("BSD"));
+    ui.comboBoxOSVersion->addItem("MAC OS", QVariant("MACOS"));
     ui.comboBoxOSVersion->setCurrentIndex(0);
 
 
@@ -102,9 +106,7 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
     connect(ui.tableViewClientList, SIGNAL(clicked(const QModelIndex &)), this, SLOT(slotShowClientInfo(const QModelIndex &)));
     //connect(ui.tableViewClientList->selectionModel(), SIGNAL(currentRowChanged(QModelIndex &,QModelIndex &)), this, SLOT(slotShowUserInfo(const QModelIndex &)));
     connect(ui.tableViewClientList, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(slotRemoteManagement(const QModelIndex &)));
-
-    connect(ui.tableViewClientList, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(slotShowCustomContextMenu(QPoint)));
+    connect(ui.tableViewClientList, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotShowCustomContextMenu(QPoint)));
 
     connect(ui.actionRemoteDesktop, SIGNAL(triggered()), this, SLOT(slotRemoteDesktop()));
 
@@ -125,6 +127,17 @@ ControlCenter::ControlCenter(const QString appName, QWidget *parent)
     proxyModel->setSourceModel(clientInfoModel);
     proxyModel->setDynamicSortFilter(true);
     ui.tableViewClientList->setModel(proxyModel);
+#if QT_VERSION >= 0x050000
+    ui.tableViewClientList->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui.tableViewClientList->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+
+    //ui.tableViewClientList->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    ui.tableViewClientList->horizontalHeader()->setResizeMode(0, QHeaderView::ResizeToContents);
+    ui.tableViewClientList->horizontalHeader()->setResizeMode(1, QHeaderView::ResizeToContents);
+
+    //ui.tableViewClientList->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+#endif
 
 
     this->installEventFilter(this);

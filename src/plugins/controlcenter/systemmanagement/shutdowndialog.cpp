@@ -6,6 +6,12 @@ ShutdownDialog::ShutdownDialog(QWidget *parent) :
     ui(new Ui::ShutdownDialog)
 {
     ui->setupUi(this);
+
+#ifdef Q_OS_LINUX
+    ui->checkBoxForceAppsClosed->setEnabled(false);
+    ui->checkBoxForceAppsClosed->hide();
+#endif
+
 }
 
 ShutdownDialog::~ShutdownDialog()

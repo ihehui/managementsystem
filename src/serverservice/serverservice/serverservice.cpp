@@ -208,6 +208,7 @@ bool ServerService::startMainService()
 
     connect(serverPacketsParser, SIGNAL(signalAdminLogin(const AdminLoginPacket &)), this, SLOT(processAdminLoginPacket(const AdminLoginPacket &)), Qt::QueuedConnection);
     connect(serverPacketsParser, SIGNAL(signalAdminOnlineStatusChanged(SOCKETID, const QString &, const QString &, bool)), this, SLOT(processAdminOnlineStatusChangedPacket(SOCKETID, const QString &, const QString &, bool)), Qt::QueuedConnection);
+    connect(serverPacketsParser, SIGNAL(signalAdminConnectionToClientPacketReceived(const AdminConnectionToClientPacket &)), this, SLOT(processAdminConnectionToClientPacket(const AdminConnectionToClientPacket &)), Qt::QueuedConnection);
 
     connect(serverPacketsParser, SIGNAL(signalSystemAlarmsPacketReceived(const SystemAlarmsPacket &)), this, SLOT(processSystemAlarmsPacket(const SystemAlarmsPacket &)), Qt::QueuedConnection);
 
@@ -254,14 +255,17 @@ void ServerService::saveClientLog(const ClientLogPacket &packet)
     QString clientAddress = packet.getPeerHostAddress().toString();
     quint8 logType = packet.logType;
     QString log = packet.log;
+    log = log.replace("'", "\\'");
+    log = log.replace("\"", "\\\"");
 
-    QString statement = QString("call sp_Logs_Save('%1', '%2', %3, '%4', '%5', '%6');")
+    qint64 timeToSecsSinceEpoch = packet.timeToSecsSinceEpoch;
+
+    QString statement = QString("call sp_Logs_Save('%1', '%2', %3, '%4', '%5');")
                         .arg(assetNO)
                         .arg(clientAddress)
                         .arg(logType)
                         .arg(log)
-                        .arg("NULL")
-                        .arg("1970-01-01")
+                        .arg(QDateTime::fromSecsSinceEpoch(timeToSecsSinceEpoch).toString("yyyy-MM-dd hh:mm:ss"))
                         ;
 
     if(!execQuery(statement)) {
@@ -457,6 +461,7 @@ void ServerService::processClientInfoPacket(const ClientInfoPacket &packet)
         clientInfoRequested(packet.getSocketID(), packet.assetNO, packet.infoType);
     } else {
         clientInfoPacketReceived(packet.getSenderID(), packet.data, packet.infoType, QString("%1:%2").arg(packet.getPeerHostAddress().toString()).arg(packet.getPeerHostPort()) );
+        processClientOnlineStatusChangedPacket(packet.getSocketID(), packet.getSenderID(), true, packet.getPeerHostAddress().toString(), packet.getPeerHostPort());
     }
 
 }
@@ -540,18 +545,6 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
     }
 
     QString assetNO = info->getAssetNO();
-
-    //    QString computerName = info->getComputerName();
-    //    QString osInfo = info->getOSVersion();
-    //    QString installationDate = info->getInstallationDate();
-    //    QString osKey = info->getOsKey();
-    //    QString workgroupName = info->getWorkgroup();
-    //    bool isJoinedToDomain = info->isJoinedToDomain();
-    //    QString usersInfo = info->getUsers();
-    //    QString admins = info->getAdministrators();
-    //    QString ipInfo = info->getIP();
-    //    QString clientVersion = info->getClientVersion();
-
     QString externalIPInfo = info->getExternalIPInfo();
     QString lastOnlineTime = info->getLastOnlineTime();
     info->setJsonData(osData);
@@ -577,78 +570,6 @@ void ServerService::processOSInfo(ClientInfo *info, const QByteArray &osData)
     }
 
     QString statement;
-    //    if(isRecordExistInDB(assetNO)){
-    //        qDebug()<<"Client Info Exists!";
-
-    //        statement = "UPDATE OS SET LastOnlineTime = NULL ";
-
-    //        if(computerName != newComputerName){
-    //            statement += QString(", ComputerName = '%1' ").arg(newComputerName);
-    //        }
-
-    //        if(osInfo != newOSInfo){
-    //            statement += QString(", OSVersion = '%1' ").arg(newOSInfo);
-    //        }
-
-    //        if(installationDate != newinstallationDate){
-    //            statement += QString(", InstallationDate = '%1' ").arg(newinstallationDate);
-    //        }
-
-    //        if(osKey != newOSKey){
-    //            statement += QString(", OSKey = '%1' ").arg(newOSKey);
-    //        }
-
-    //        if(workgroupName != newworkgroupName){
-    //            statement += QString(", Workgroup = '%1' ").arg(newworkgroupName);
-    //        }
-
-    //        if(isJoinedToDomain != newJoinedToDomain){
-    //            statement += QString(", JoinedToDomain = %1 ").arg(newJoinedToDomain?1:0);
-    //        }
-
-    //        if(usersInfo != newUsers){
-    //            QString tempUsersInfo = newUsers;
-    //            tempUsersInfo.replace("\\", "\\\\");
-    //            statement += QString(", Users = '%1' ").arg(tempUsersInfo);
-    //        }
-
-    //        if(admins != newadmins){
-    //            QString tempAdminsInfo = newadmins;
-    //            tempAdminsInfo.replace("\\", "\\\\");
-    //            statement += QString(", Administrators = '%1' ").arg(tempAdminsInfo);
-    //        }
-
-    //        if(ipInfo != newipInfo){
-    //            statement += QString(", IP = '%1' ").arg(newipInfo);
-    //        }
-
-    //        if(clientVersion != newclientVersion){
-    //            statement += QString(", ClientVersion = '%1' ").arg(newclientVersion);
-    //        }
-
-    //        statement += QString("WHERE AssetNO = '%1'").arg(assetNO);
-    //        //qWarning()<<"Update Client Info For Computer "<<computerName << " "<<networkInfo;
-    //        //qWarning()<<statement;
-
-    //    }else{
-    //        qDebug()<<"Client OS Info Not Exists!";
-
-    //        statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11' ); ")
-    //                .arg(assetNO)
-    //                .arg(newComputerName)
-    //                .arg(newOSInfo)
-    //                .arg(newinstallationDate)
-    //                .arg(newOSKey)
-    //                .arg(newworkgroupName)
-    //                .arg(QVariant(newJoinedToDomain).toUInt())
-    //                .arg(newUsers)
-    //                .arg(newadmins)
-    //                .arg(newipInfo)
-    //                .arg(newclientVersion)
-    //                ;
-    //    }
-
-
     statement = QString("call sp_OS_Update('%1', '%2', '%3', '%4', '%5', '%6', %7, '%8', '%9', '%10', '%11', '%12', %13 ); ")
                 .arg(assetNO)
                 .arg(newComputerName)
@@ -1154,10 +1075,119 @@ void ServerService::processAdminOnlineStatusChangedPacket(SOCKETID socketID, con
 
 }
 
+void ServerService::processAdminConnectionToClientPacket(const AdminConnectionToClientPacket &packet)
+{
+    qDebug() << "--ServerService::processAdminConnectionToClientPacket(...)";
+
+    AdminConnectionToClientPacket::PacketInfoType InfoType = packet.InfoType;
+    switch (InfoType) {
+    case AdminConnectionToClientPacket::ADMINCONNECTION_ADMIN_ASK_SERVER_AUTH:
+    {
+        if(!isPacketFromOnlinePeer(&packet, true)){
+            QString msg = QString("Packet source verification failed!");
+            serverPacketsParser->sendClientResponseAdminConnectionAuthPacket(packet.getSocketID(), packet.getSenderID(), false, 0, MS::ERROR_VERIFICATION_FAILED, msg);
+            qCritical()<<msg;
+            return;
+        }
+
+        QString adminID = packet.getSenderID();
+        QString clientID = packet.clientID;
+        int adminToken = packet.adminToken;
+        QString adminHostName = packet.hostName;
+
+        ClientInfo *info = 0;
+        if(clientInfoHash.contains(clientID)) {
+            info = clientInfoHash.value(clientID);
+        } else {
+            QString msg = QString("No client '%1' found!").arg(clientID);;
+            serverPacketsParser->sendClientResponseAdminConnectionAuthPacket(packet.getSocketID(), adminID, false, 0, MS::ERROR_ID_NOT_EXIST, msg);
+            qCritical()<<msg;
+            return;
+        }
+
+        SOCKETID sid = clientSocketsHash.key(clientID);
+        if(!sid) {
+            QString msg = QString("Client '%1' is offline!").arg(clientID);;
+            serverPacketsParser->sendClientResponseAdminConnectionAuthPacket(packet.getSocketID(), adminID, false, 0, MS::ERROR_OBJECT_OFFLINE, msg);
+            qCritical()<<msg;
+            return;
+        }
+
+        bool ok =  serverPacketsParser->sendAdminRequestConnectionAuthPacket(sid, adminID, adminToken, adminHostName);
+        if(!ok){
+            QString msg = QString("Failed to send data to client '%1'!").arg(clientID);;
+            serverPacketsParser->sendClientResponseAdminConnectionAuthPacket(packet.getSocketID(), adminID, false, 0, MS::ERROR_NETWORK_ERROR, msg);
+            qCritical()<<msg;
+            return;
+        }
+
+    }
+        break;
+
+    case AdminConnectionToClientPacket::ADMINCONNECTION_RESPONSE_AUTH:
+    {
+        //in >> adminID >> ok >> clientToken >> errorCode >> errorMessage;
+
+        if(!isPacketFromOnlinePeer(&packet, false)){
+            QString msg = QString("Packet source verification failed!");
+            serverPacketsParser->sendClientResponseAdminConnectionAuthPacket(packet.getSocketID(), packet.getSenderID(), false, 0, MS::ERROR_VERIFICATION_FAILED, msg);
+            qCritical()<<msg;
+            return;
+        }
+
+        QString clientID = packet.getSenderID();
+        QString adminID = packet.adminID;
+        quint8 verified = packet.ok;
+        int clientToken = packet.clientToken;
+        quint8 errorCode = packet.errorCode;
+        QString errorMessage = packet.errorMessage;
+
+        SOCKETID adminSocket = onlineAdminSockets.key(adminID);
+        if(!adminSocket){
+            return;
+        }
+
+        bool ok = serverPacketsParser->sendClientResponseAdminConnectionAuthPacket(adminSocket, adminID, verified, clientToken, errorCode, errorMessage);
+        if(!ok){
+            QString msg = QString("Failed to send data to admin '%1'!").arg(adminID);;
+            qCritical()<<msg;
+            return;
+        }
+
+    }
+        break;
+
+    case AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_RESULT:
+    case AdminConnectionToClientPacket::ADMINCONNECTION_SERVER_ASK_CLIENT_AUTH:
+    case AdminConnectionToClientPacket::ADMINCONNECTION_CONNECTION_REQUEST:
+        break;
+
+
+    default:
+        break;
+    }
+
+}
+
+bool ServerService::isPacketFromOnlinePeer(const MSPacket *packet,  bool adminPacket)
+{
+    if(!packet){return false;}
+
+    QString senderID = packet->getSenderID().trimmed();
+    if(senderID.isEmpty()){return false;}
+
+    if(adminPacket){
+        if(onlineAdminSockets.value(packet->getSocketID()) != senderID){return false;}
+    }else{
+        if(clientSocketsHash.value(packet->getSocketID()) != senderID){return false;}
+    }
+
+    return true;
+}
+
 void ServerService::peerConnected(const QHostAddress &peerAddress, quint16 peerPort)
 {
     qDebug() << QString("Connected! " + peerAddress.toString() + ":" + QString::number(peerPort));
-
 }
 
 void ServerService::signalConnectToPeerTimeout(const QHostAddress &peerAddress, quint16 peerPort)
@@ -1306,7 +1336,7 @@ bool ServerService::execQuery(const QString &statement, QString *errorString )
 
     if(!query->exec(statement)) {
         QSqlError error = query->lastError();
-        QString msg = QString("Can not execute the SQL statement! %1 Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
+        QString msg = QString("Can not execute the SQL statement! %1. Error Type:%2 Error NO.:%3").arg(error.text()).arg(error.type()).arg(error.number());
         logMessage(msg, QtServiceBase::Error);
         if(errorString) {
             *errorString = msg;

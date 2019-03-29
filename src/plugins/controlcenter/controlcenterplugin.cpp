@@ -55,43 +55,6 @@ ControlCenterPlugin::~ControlCenterPlugin()
     qDebug() << "--ControlCenterPlugin::~ControlCenterPlugin()";
 }
 
-
-/*
-bool SystemInfoPlugin::init( QWidget * parentWidget, QMenu *menu, QToolBar *toolBar, QSystemTrayIcon *systemTrayIcon, const QString& pName, const QString& pVersion  ){
-    setParent(parentWidget);
-    this->parentWidget = parentWidget;
-    this->systemTrayIcon = systemTrayIcon;
-    QAction *action = new QAction(icon(), name(), parentWidget);
-    action->setToolTip(toolTip());
-    action->setStatusTip(toolTip());
-    action->setWhatsThis(whatsThis());
-    connect(action, SIGNAL(triggered()), this, SLOT(slotRun()));
-
-    if(menu){
-        menu->addAction(action);
-    }
-
-    if(toolBar){
-        toolBar->addAction(action);
-    }
-
-    if(systemTrayIcon){
-        //TODO:
-        //systemTrayMenu->addAction(action);
-    }
-
-    return true;
-
-}
-
-
-QWidget * SystemInfoPlugin::parentWidgetOfPlugin(){
-
-    return parentWidget;
-}
-
-*/
-
 bool ControlCenterPlugin::isSingle()
 {
     return true;
@@ -199,22 +162,6 @@ void ControlCenterPlugin::slotMainActionForMenuTriggered()
         widgetList.append(wgt);
     }
 
-//    if(parentWidget){
-//        if(QMdiArea *mdiArea = qobject_cast<QMdiArea *>(parentWidget)){
-//            QMdiSubWindow *subWindow = new QMdiSubWindow;
-//            subWindow->setWidget(wgt);
-//            subWindow->setAttribute(Qt::WA_DeleteOnClose);
-//            mdiArea->addSubWindow(subWindow);
-//            //connect(this, SIGNAL(signalPluginToBeUnloaded()), subWindow, SLOT(close()));
-
-//            widgetList.append(subWindow);
-//        }else{
-//            widgetList.append(wgt);
-//        }
-//    }else{
-//        widgetList.append(wgt);
-//    }
-
     wgt->show();
 }
 
@@ -226,11 +173,6 @@ void ControlCenterPlugin::slotWidgetDestoryed(QObject *obj)
     if(wgt) {
         widgetList.removeAll(wgt);
     }
-
-//    ControlCenter *controlCenter = static_cast<ControlCenter *> (sender());
-//    if(controlCenter){
-//        widgetList.removeAll(controlCenter);
-//    }
 }
 
 

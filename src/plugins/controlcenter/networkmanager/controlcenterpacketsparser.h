@@ -195,7 +195,7 @@ public slots:
         qDebug() << "----sendRemoteConsoleCMDFromServerPacket(...)";
 
         RemoteConsolePacket packet;
-        packet.InfoType = RemoteConsolePacket::REMOTECONSOLE_OPEN;
+        packet.InfoType = RemoteConsolePacket::REMOTECONSOLE_COMMAND;
         packet.Command.command = command;
 
         QByteArray ba = packet.toByteArray();
